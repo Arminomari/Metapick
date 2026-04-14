@@ -1,0 +1,12 @@
+.env
+.env.*
+node_modules/
+dist/
+bin/
+obj/
+*.user
+*.suo
+.vs/
+logs/
+uploads/
+*.log

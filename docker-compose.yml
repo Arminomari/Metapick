@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # ── PostgreSQL ──────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: creatorpay-db
+    environment:
+      POSTGRES_DB: creatorpay
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend API ─────────────────────────────────
+  api:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+    container_name: creatorpay-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=creatorpay;Username=postgres;Password=postgres
+      - Jwt__Secret=DevSecret-Change-In-Production-Must-Be-At-Least-32-Chars!
+      - Jwt__Issuer=CreatorPay
+      - Jwt__Audience=CreatorPay
+    ports:
+      - "5000:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ── Background Worker ───────────────────────────
+  worker:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile.worker
+    container_name: creatorpay-worker
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=creatorpay;Username=postgres;Password=postgres
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ── Frontend ────────────────────────────────────
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    container_name: creatorpay-frontend
+    ports:
+      - "5173:443"
+      - "5174:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
