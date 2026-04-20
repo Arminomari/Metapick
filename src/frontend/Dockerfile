@@ -8,7 +8,7 @@ ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
 FROM nginx:alpine AS runtime
-ARG NGINX_CONF=nginx.conf
+ARG NGINX_CONF=nginx.prod.conf
 # Generate self-signed SSL certificate (dev only, skipped if no ssl block in conf)
 RUN apk add --no-cache openssl && \
     mkdir -p /etc/nginx/ssl && \
