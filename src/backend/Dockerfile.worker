@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
 WORKDIR /src
 
 COPY CreatorPay.Domain/CreatorPay.Domain.csproj CreatorPay.Domain/
@@ -10,7 +10,7 @@ RUN dotnet restore CreatorPay.Worker/CreatorPay.Worker.csproj
 COPY . .
 RUN dotnet publish CreatorPay.Worker/CreatorPay.Worker.csproj -c Release -o /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "CreatorPay.Worker.dll"]
