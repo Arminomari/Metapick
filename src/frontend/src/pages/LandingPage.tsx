@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 
 export function LandingPage() {
   const navigate = useNavigate();
   const { isAuthenticated, role } = useAuthStore();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleJoinCreator = () => {
     if (isAuthenticated) {
@@ -25,21 +27,60 @@ export function LandingPage() {
     <div className="min-h-screen" style={{ background: '#0a0a0f', color: '#fafafa', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
       {/* NAV */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, background: 'rgba(10,10,15,.7)', backdropFilter: 'blur(16px)', borderBottom: '1px solid #1e1e2e' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, maxWidth: 1100, margin: '0 auto', padding: '0 1.5rem' }}>
-          <a href="/" style={{ fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', color: '#fafafa' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, maxWidth: 1100, margin: '0 auto', padding: '0 1.25rem' }}>
+          <a href="/" style={{ fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', color: '#fafafa', flexShrink: 0 }}>
             Meta<span style={{ color: '#e84393' }}>Pick</span>
           </a>
-          <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+
+          {/* Desktop center links */}
+          <div className="hidden-mobile" style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
             <a href="#creators" style={{ fontSize: '.875rem', color: '#8b8ba3', textDecoration: 'none' }}>For Creators</a>
             <a href="#brands" style={{ fontSize: '.875rem', color: '#8b8ba3', textDecoration: 'none' }}>For Brands</a>
             <a href="#how-it-works" style={{ fontSize: '.875rem', color: '#8b8ba3', textDecoration: 'none' }}>How It Works</a>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+
+          {/* Desktop right buttons */}
+          <div className="hidden-mobile" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
             <button onClick={() => navigate('/login')} style={{ background: 'none', border: 'none', color: '#8b8ba3', fontSize: '.875rem', cursor: 'pointer', padding: '.5rem 1rem' }}>Logga in</button>
             <button onClick={() => navigate('/register')} style={{ background: '#e84393', color: '#fff', border: 'none', padding: '.5rem 1.25rem', borderRadius: '.5rem', fontSize: '.875rem', fontWeight: 600, cursor: 'pointer' }}>Skapa konto</button>
           </div>
+
+          {/* Mobile: login + hamburger */}
+          <div className="show-mobile" style={{ display: 'none', alignItems: 'center', gap: '.5rem' }}>
+            <button onClick={() => navigate('/login')} style={{ background: 'none', border: 'none', color: '#8b8ba3', fontSize: '.875rem', cursor: 'pointer', padding: '.375rem .75rem' }}>Logga in</button>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              style={{ background: 'none', border: 'none', color: '#8b8ba3', cursor: 'pointer', padding: '.375rem' }}
+              aria-label="Meny"
+            >
+              {mobileMenuOpen
+                ? <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+              }
+            </button>
+          </div>
         </div>
+
+        {/* Mobile dropdown */}
+        {mobileMenuOpen && (
+          <div style={{ borderTop: '1px solid #1e1e2e', padding: '1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '.75rem', background: 'rgba(10,10,15,.95)' }}>
+            <a href="#creators" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '.9rem', color: '#8b8ba3', textDecoration: 'none' }}>For Creators</a>
+            <a href="#brands" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '.9rem', color: '#8b8ba3', textDecoration: 'none' }}>For Brands</a>
+            <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '.9rem', color: '#8b8ba3', textDecoration: 'none' }}>How It Works</a>
+            <button onClick={() => navigate('/register')} style={{ background: '#e84393', color: '#fff', border: 'none', padding: '.625rem 1.25rem', borderRadius: '.5rem', fontSize: '.875rem', fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>
+              Skapa konto
+            </button>
+          </div>
+        )}
       </nav>
+
+      <style>{`
+        @keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+        @media(max-width:640px){
+          .hidden-mobile{display:none!important}
+          .show-mobile{display:flex!important}
+        }
+      `}</style>
 
       {/* HERO */}
       <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', position: 'relative', paddingTop: 64 }}>
@@ -78,7 +119,6 @@ export function LandingPage() {
             <span key={i} style={{ margin: '0 2.5rem', fontSize: '1.25rem', fontWeight: 700, color: 'rgba(138,138,163,.35)', userSelect: 'none' }}>{b}</span>
           ))}
         </div>
-        <style>{`@keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}`}</style>
       </section>
 
       {/* FEATURES */}

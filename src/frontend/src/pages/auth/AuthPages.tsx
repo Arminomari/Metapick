@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/authStore';
 
 const metapickStyles = {
   page: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0f', padding: '2rem 1rem' } as React.CSSProperties,
-  card: { width: '100%', maxWidth: 480, background: '#14141f', border: '1px solid #1e1e2e', borderRadius: '1rem', padding: '2.5rem' } as React.CSSProperties,
+  card: { width: '100%', maxWidth: 480, background: '#14141f', border: '1px solid #1e1e2e', borderRadius: '1rem', padding: 'clamp(1.25rem, 5vw, 2.5rem)' } as React.CSSProperties,
   title: { fontSize: '1.5rem', fontWeight: 700, textAlign: 'center', marginBottom: '1.5rem', color: '#fafafa' } as React.CSSProperties,
   label: { display: 'block', fontSize: '.875rem', fontWeight: 500, marginBottom: '.25rem', color: '#8b8ba3' } as React.CSSProperties,
   input: { width: '100%', borderRadius: '.5rem', border: '1px solid #1e1e2e', background: '#0a0a0f', padding: '.625rem .75rem', fontSize: '.875rem', color: '#fafafa', outline: 'none' } as React.CSSProperties,
@@ -99,16 +99,35 @@ export function RegisterPage() {
       await register.mutateAsync(payload);
       setSubmitted(true);
     } catch (err: any) {
+      console.error('Register error:', err?.response?.status, err?.response?.data ?? err?.message);
+      const status = err?.response?.status;
       const resp = err?.response?.data;
-      // FluentValidation returns { errors: { Field: ["msg"] } }
-      if (resp?.errors) {
-        const msgs = Object.values(resp.errors).flat() as string[];
-        setError(msgs.join('. '));
-      } else if (resp?.error?.message) {
-        setError(resp.error.message);
-      } else {
-        setError('Registrering misslyckades. Försök igen.');
+
+      if (!err?.response) {
+        // Network error – API unreachable
+        setError('Kunde inte nå servern. Kontrollera att backend-API:et körs.');
+        return;
       }
+      if (status === 429) {
+        setError('För många försök. Vänta en minut och försök igen.');
+        return;
+      }
+      // FluentValidation / ASP.NET model state: { errors: { Field: ["msg"] } }
+      if (resp?.errors && typeof resp.errors === 'object') {
+        const msgs = (Object.values(resp.errors) as string[][]).flat().filter(Boolean);
+        if (msgs.length) { setError(msgs.join('. ')); return; }
+      }
+      // Custom API error: { error: { message: "..." } }
+      if (resp?.error?.message) {
+        setError(resp.error.message);
+        return;
+      }
+      // title field from ProblemDetails
+      if (resp?.title) {
+        setError(resp.title);
+        return;
+      }
+      setError(`Registrering misslyckades (${status ?? 'nätverksfel'}). Öppna konsolen för detaljer.`);
     }
   };
 
@@ -139,6 +158,12 @@ export function RegisterPage() {
           <div>
             <label style={metapickStyles.label}>Lösenord * <span style={{ fontSize: '.75rem', color: '#555' }}>(minst 8 tecken)</span></label>
             <input type="password" value={form.password} onChange={set('password')} required minLength={8} style={metapickStyles.input} />
+            <ul style={{ fontSize: '.72rem', color: '#666', marginTop: '.375rem', paddingLeft: '1rem', lineHeight: 1.8 }}>
+              <li style={{ color: /[A-Z]/.test(form.password) ? '#4caf50' : '#666' }}>Minst en versal (A–Z)</li>
+              <li style={{ color: /[a-z]/.test(form.password) ? '#4caf50' : '#666' }}>Minst en gemen (a–z)</li>
+              <li style={{ color: /[0-9]/.test(form.password) ? '#4caf50' : '#666' }}>Minst en siffra (0–9)</li>
+              <li style={{ color: form.password.length >= 8 ? '#4caf50' : '#666' }}>Minst 8 tecken</li>
+            </ul>
           </div>
 
           {form.role === 'Creator' && (

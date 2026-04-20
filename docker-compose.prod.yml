@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # ── Caddy (reverse proxy + automatic HTTPS) ────
+  caddy:
+    image: caddy:2-alpine
+    container_name: clipreach-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      - DOMAIN=${DOMAIN}
+    depends_on:
+      - frontend
+      - api
+
+  # ── PostgreSQL ──────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: clipreach-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend API ─────────────────────────────────
+  api:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+    container_name: clipreach-api
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - Jwt__Secret=${JWT_SECRET}
+      - Jwt__Issuer=${JWT_ISSUER}
+      - Jwt__Audience=${JWT_AUDIENCE}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ── Background Worker ───────────────────────────
+  worker:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile.worker
+    container_name: clipreach-worker
+    restart: unless-stopped
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ── Frontend ────────────────────────────────────
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+      args:
+        - NGINX_CONF=nginx.prod.conf
+    container_name: clipreach-frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

@@ -93,7 +93,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
     {
-        policy.WithOrigins(builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? ["http://localhost:5173"])
+        var origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
+            ?? builder.Configuration["CORS_ORIGINS"]?.Split(',', StringSplitOptions.RemoveEmptyEntries)
+            ?? ["http://localhost:5173"];
+        policy.WithOrigins(origins)
               .WithHeaders("Content-Type", "Authorization", "Accept")
               .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
               .AllowCredentials();

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import api from '@/lib/api';
 import { useTriggerSync } from '@/hooks/api';
 import type { ApiResponse, PagedResult } from '@/types';
@@ -22,11 +23,11 @@ interface PendingUser {
 }
 
 const s = {
-  page: { minHeight: '100vh', background: '#0a0a0f', color: '#fafafa', padding: '2rem' } as React.CSSProperties,
+  page: { minHeight: '100vh', background: '#0a0a0f', color: '#fafafa', padding: 'clamp(1rem, 4vw, 2rem)' } as React.CSSProperties,
   container: { maxWidth: 1100, margin: '0 auto' } as React.CSSProperties,
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' } as React.CSSProperties,
-  title: { fontSize: '1.75rem', fontWeight: 700 } as React.CSSProperties,
-  tabs: { display: 'flex', gap: '.5rem', marginBottom: '2rem' } as React.CSSProperties,
+  header: { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '2rem' } as React.CSSProperties,
+  title: { fontSize: 'clamp(1.25rem, 4vw, 1.75rem)', fontWeight: 700 } as React.CSSProperties,
+  tabs: { display: 'flex', flexWrap: 'wrap', gap: '.5rem', marginBottom: '2rem' } as React.CSSProperties,
   tab: (active: boolean) => ({ padding: '.5rem 1rem', borderRadius: '.5rem', border: '1px solid #1e1e2e', background: active ? '#e84393' : 'transparent', color: active ? '#fff' : '#8b8ba3', cursor: 'pointer', fontSize: '.875rem', fontWeight: 600 }) as React.CSSProperties,
   card: { background: '#14141f', border: '1px solid #1e1e2e', borderRadius: '1rem', padding: '1.5rem', marginBottom: '1rem' } as React.CSSProperties,
   badge: (status: string) => {
@@ -44,7 +45,7 @@ const s = {
   },
   btnApprove: { padding: '.5rem 1.25rem', borderRadius: '.5rem', background: '#4caf50', color: '#fff', border: 'none', fontWeight: 600, fontSize: '.8rem', cursor: 'pointer' } as React.CSSProperties,
   btnReject: { padding: '.5rem 1.25rem', borderRadius: '.5rem', background: '#f44336', color: '#fff', border: 'none', fontWeight: 600, fontSize: '.8rem', cursor: 'pointer' } as React.CSSProperties,
-  detailRow: { display: 'flex', gap: '1rem', marginBottom: '.5rem', fontSize: '.875rem' } as React.CSSProperties,
+  detailRow: { display: 'flex', flexWrap: 'wrap', gap: '.5rem', marginBottom: '.5rem', fontSize: '.875rem' } as React.CSSProperties,
   detailLabel: { color: '#8b8ba3', minWidth: 160 } as React.CSSProperties,
   detailValue: { color: '#fafafa' } as React.CSSProperties,
   empty: { textAlign: 'center', padding: '4rem 0', color: '#8b8ba3' } as React.CSSProperties,
@@ -84,7 +85,9 @@ function useRejectUser() {
 
 export function AdminDashboardPage() {
   const [page] = useState(1);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'active' | 'rejected'>('pending');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const filter = (searchParams.get('tab') as 'all' | 'pending' | 'active' | 'rejected') || 'pending';
+  const setFilter = (f: 'all' | 'pending' | 'active' | 'rejected') => setSearchParams({ tab: f });
   const { data, isLoading } = usePendingUsers(page);
   const approveUser = useApproveUser();
   const rejectUser = useRejectUser();
@@ -119,7 +122,7 @@ export function AdminDashboardPage() {
             <h1 style={s.title}>Admin Panel</h1>
             <p style={{ color: '#8b8ba3', fontSize: '.9rem' }}>Hantera användarregistreringar</p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem' }}>
             <button
               onClick={() => triggerSync.mutate()}
               disabled={triggerSync.isPending}
@@ -155,7 +158,7 @@ export function AdminDashboardPage() {
 
         {filteredUsers.map((user) => (
           <div key={user.id} style={s.card}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '.75rem', marginBottom: '1rem' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginBottom: '.5rem' }}>
                   <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>

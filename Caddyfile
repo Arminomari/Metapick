@@ -1,0 +1,9 @@
+{$DOMAIN} {
+    # Automatic HTTPS via Let's Encrypt
+    
+    # Frontend (SPA)
+    reverse_proxy /api/* api:8080
+
+    # Everything else → frontend nginx
+    reverse_proxy frontend:80
+}
