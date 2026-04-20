@@ -107,9 +107,18 @@ builder.Services.AddCors(options =>
 });
 
 // ── Hangfire ───────────────────────────────────────────
+var hangfireConn = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? builder.Configuration["DATABASE_URL"]
+    ?? builder.Configuration["DATABASE_PRIVATE_URL"];
+if (hangfireConn != null && hangfireConn.StartsWith("postgresql://"))
+{
+    var uri = new Uri(hangfireConn);
+    var ui = uri.UserInfo.Split(':');
+    hangfireConn = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={ui[0]};Password={ui[1]};SSL Mode=Require;Trust Server Certificate=true";
+}
 builder.Services.AddHangfire(config =>
     config.UsePostgreSqlStorage(options =>
-        options.UseNpgsqlConnection(builder.Configuration.GetConnectionString("DefaultConnection"))));
+        options.UseNpgsqlConnection(hangfireConn)));
 // HangfireServer only on Worker – API is client-only
 
 // ── Health checks ─────────────────────────────────────
@@ -179,8 +188,7 @@ app.MapHealthChecks("/health/ready",
         Predicate = check => check.Tags.Contains("ready")
     });
 
-// ── Database migration (dev) ───────────────────────────
-if (app.Environment.IsDevelopment())
+// ── Database migration (always) ───────────────────────
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<CreatorPay.Infrastructure.Data.AppDbContext>();

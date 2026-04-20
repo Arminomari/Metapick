@@ -16,8 +16,20 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
     {
         // ── Database ───────────────────────────────────
+        // Support both Npgsql format and Railway's postgresql:// URL format
+        var connStr = config.GetConnectionString("DefaultConnection")
+            ?? config["DATABASE_URL"]
+            ?? config["DATABASE_PRIVATE_URL"];
+
+        if (connStr != null && connStr.StartsWith("postgresql://"))
+        {
+            var uri = new Uri(connStr);
+            var userInfo = uri.UserInfo.Split(':');
+            connStr = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
+        }
+
         services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(config.GetConnectionString("DefaultConnection"),
+            options.UseNpgsql(connStr,
                 npgsql =>
                 {
                     npgsql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
