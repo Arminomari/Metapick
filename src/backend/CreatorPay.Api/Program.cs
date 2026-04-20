@@ -159,7 +159,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
 app.UseRateLimiter();
 app.UseCors("Frontend");
 app.UseAuthentication();
