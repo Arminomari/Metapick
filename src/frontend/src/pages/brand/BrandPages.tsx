@@ -207,7 +207,12 @@ export function CreateCampaignPage() {
     }
 
     try {
-      const result = await create.mutateAsync(form as unknown as Record<string, unknown>);
+      const payload = {
+        ...form,
+        startDate: form.startDate ? `${form.startDate}T00:00:00` : form.startDate,
+        endDate: form.endDate ? `${form.endDate}T00:00:00` : form.endDate,
+      };
+      const result = await create.mutateAsync(payload as unknown as Record<string, unknown>);
       navigate(`/brand/campaigns/${result.id}`);
     } catch (err: any) {
       const resp = err?.response?.data;

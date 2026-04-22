@@ -114,8 +114,11 @@ export function BrowseCampaignsPage() {
     setApplyingId(campaignId);
     try {
       await apply.mutateAsync({ campaignId, message: 'Jag vill gärna delta i denna kampanj!' });
-    } catch {
-      alert('Kunde inte skicka ansökan');
+    } catch (err: any) {
+      const msg = err?.response?.data?.error?.message
+        ?? err?.response?.data?.title
+        ?? 'Kunde inte skicka ansökan';
+      alert(msg);
     }
     setApplyingId(null);
   };
