@@ -41,6 +41,11 @@ public class CampaignService : ICampaignService
         if (!Enum.TryParse<PayoutModel>(request.PayoutModel, out var payoutModel))
             return Errors.Validation("Invalid payout model");
 
+        if (request.EndDate.Date <= DateTime.UtcNow.Date)
+            return Errors.Validation("End date must be in the future");
+        if (request.StartDate.Date > request.EndDate.Date)
+            return Errors.Validation("Start date cannot be after end date");
+
         var campaign = new Campaign
         {
             BrandProfileId = brand.Id,
@@ -297,6 +302,9 @@ public class CampaignService : ICampaignService
         if (request.StartDate.HasValue) campaign.StartDate = request.StartDate.Value;
         if (request.EndDate.HasValue) campaign.EndDate = request.EndDate.Value;
 
+        if (campaign.EndDate.Date <= DateTime.UtcNow.Date)
+            return Errors.Validation("End date must be in the future");
+
         await _uow.SaveChangesAsync(ct);
         var approvedCount = campaign.Assignments.Count(a => a.Status == AssignmentStatus.Active);
         var totalViews = campaign.Assignments.Sum(a => a.TotalVerifiedViews);
@@ -337,8 +345,9 @@ public class CampaignService : ICampaignService
     public async Task<Result<PagedResult<CampaignBrowseDto>>> BrowseCampaignsAsync(
         string? category, string? country, int page, int pageSize, CancellationToken ct = default)
     {
+        var today = DateTime.UtcNow.Date;
         var query = _campaigns.Query()
-            .Where(c => c.Status == CampaignStatus.Active && !c.IsDeleted && c.EndDate > DateTime.UtcNow);
+            .Where(c => c.Status == CampaignStatus.Active && !c.IsDeleted && c.EndDate.Date >= today);
 
         if (!string.IsNullOrEmpty(category))
             query = query.Where(c => c.Category == category);
@@ -405,8 +414,9 @@ public class CampaignService : ICampaignService
             }
         }
 
+        var today = DateTime.UtcNow.Date;
         var query = _campaigns.Query()
-            .Where(c => c.Status == CampaignStatus.Active && !c.IsDeleted && c.EndDate > DateTime.UtcNow);
+            .Where(c => c.Status == CampaignStatus.Active && !c.IsDeleted && c.EndDate.Date >= today);
 
         if (!string.IsNullOrEmpty(category))
             query = query.Where(c => c.Category == category);

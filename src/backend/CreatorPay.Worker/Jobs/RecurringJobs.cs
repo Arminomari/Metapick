@@ -26,9 +26,10 @@ public class CampaignExpirationJob
 
     public async Task ExecuteAsync()
     {
+        var today = DateTime.UtcNow.Date;
         var expired = await _campaigns.Query()
             .Where(c => (c.Status == CampaignStatus.Active || c.Status == CampaignStatus.Paused)
-                && c.EndDate < DateTime.UtcNow)
+                && c.EndDate.Date < today)
             .ToListAsync();
 
         _logger.LogInformation("CampaignExpirationJob: {Count} campaigns to expire", expired.Count);

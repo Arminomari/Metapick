@@ -10,15 +10,18 @@ namespace CreatorPay.Application.Services;
 
 public class CreatorService : ICreatorService
 {
+    private readonly IRepository<User> _users;
     private readonly IRepository<CreatorProfile> _creators;
     private readonly IRepository<TikTokAccount> _tiktokAccounts;
     private readonly IUnitOfWork _uow;
 
     public CreatorService(
+        IRepository<User> users,
         IRepository<CreatorProfile> creators,
         IRepository<TikTokAccount> tiktokAccounts,
         IUnitOfWork uow)
     {
+        _users = users;
         _creators = creators;
         _tiktokAccounts = tiktokAccounts;
         _uow = uow;
@@ -26,9 +29,7 @@ public class CreatorService : ICreatorService
 
     public async Task<Result<CreatorProfileDto>> GetProfileAsync(Guid userId)
     {
-        var creator = await _creators.Query()
-            .Include(c => c.TikTokAccount)
-            .FirstOrDefaultAsync(c => c.UserId == userId);
+        var creator = await GetOrCreateCreatorProfileAsync(userId);
         if (creator == null) return Errors.NotFound("Creator profile");
 
         return MapToDto(creator);
@@ -36,9 +37,7 @@ public class CreatorService : ICreatorService
 
     public async Task<Result<CreatorProfileDto>> UpdateProfileAsync(Guid userId, UpdateCreatorProfileRequest request)
     {
-        var creator = await _creators.Query()
-            .Include(c => c.TikTokAccount)
-            .FirstOrDefaultAsync(c => c.UserId == userId);
+        var creator = await GetOrCreateCreatorProfileAsync(userId);
         if (creator == null) return Errors.NotFound("Creator profile");
 
         creator.DisplayName = request.DisplayName;
@@ -138,4 +137,37 @@ public class CreatorService : ICreatorService
             c.TikTokAccount != null && c.TikTokAccount.IsActive,
             c.TikTokAccount?.TikTokUsername, c.CreatedAt,
             c.ProfileTags?.ToList() ?? []);
+
+    private async Task<CreatorProfile?> GetOrCreateCreatorProfileAsync(Guid userId)
+    {
+        var creator = await _creators.Query()
+            .Include(c => c.TikTokAccount)
+            .FirstOrDefaultAsync(c => c.UserId == userId);
+        if (creator != null) return creator;
+
+        var user = await _users.GetByIdAsync(userId);
+        if (user == null || user.Role != UserRole.Creator) return null;
+
+        var displayName = !string.IsNullOrWhiteSpace(user.FirstName)
+            ? user.FirstName
+            : user.Email.Split('@')[0];
+
+        var created = new CreatorProfile
+        {
+            UserId = user.Id,
+            DisplayName = displayName,
+            Bio = "",
+            Category = "Övrigt",
+            Country = "SE",
+            Language = "sv",
+            Status = user.Status == UserStatus.Active ? CreatorStatus.Approved : CreatorStatus.Pending
+        };
+
+        _creators.Add(created);
+        await _uow.SaveChangesAsync();
+
+        return await _creators.Query()
+            .Include(c => c.TikTokAccount)
+            .FirstOrDefaultAsync(c => c.UserId == userId);
+    }
 }

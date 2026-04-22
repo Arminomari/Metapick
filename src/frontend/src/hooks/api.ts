@@ -146,6 +146,7 @@ export function useBrowseCampaigns(category?: string, country?: string, page = 1
       });
       return res.data.data;
     },
+    refetchInterval: 10_000,
   });
 }
 

@@ -200,6 +200,12 @@ export function CreateCampaignPage() {
       return;
     }
 
+    const today = new Date().toISOString().slice(0, 10);
+    if (form.endDate && form.endDate <= today) {
+      setError('Slutdatumet måste vara i framtiden.');
+      return;
+    }
+
     if (form.payoutRules.some(r => r.amount <= 0)) {
       setError('Alla utbetalningsbelopp måste vara större än 0.');
       return;
