@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLogin, useRegister } from '@/hooks/api';
 import { useAuthStore } from '@/stores/authStore';
 import { DateInput } from '@/components/ui/DateInput';
+import { ALL_TAGS } from '@/lib/tags';
 
 const metapickStyles = {
   page: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0f', padding: '2rem 1rem' } as React.CSSProperties,
@@ -73,7 +74,8 @@ export function RegisterPage() {
   const [form, setForm] = useState({
     email: '', password: '', role: defaultRole,
     displayName: '', companyName: '', organizationNumber: '', contactPhone: '',
-    tikTokUsername: '', bio: '', category: 'Övrigt', dateOfBirth: '',
+    tikTokUsername: '', bio: '', category: 'Övrigt', dateOfBirth: '', country: 'SE',
+    profileTags: [] as string[],
   });
   const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -86,6 +88,10 @@ export function RegisterPage() {
     // Validate required fields
     if (form.role === 'Creator') {
       if (!form.displayName.trim()) { setError('Visningsnamn krävs'); return; }
+      if (!form.bio.trim()) { setError('Bio krävs'); return; }
+      if (!form.category.trim()) { setError('Kategori krävs'); return; }
+      if (!form.country.trim()) { setError('Land krävs'); return; }
+      if (!form.profileTags || form.profileTags.length === 0) { setError('Minst en expertis-tagg krävs'); return; }
     }
     if (form.role === 'Brand') {
       if (!form.companyName.trim()) { setError('Företagsnamn krävs'); return; }
@@ -96,6 +102,7 @@ export function RegisterPage() {
       const payload = {
         ...form,
         dateOfBirth: form.dateOfBirth || null,
+        profileTags: form.profileTags.length > 0 ? form.profileTags : null,
       };
       await register.mutateAsync(payload);
       setSubmitted(true);
@@ -174,30 +181,77 @@ export function RegisterPage() {
                 <input type="text" value={form.displayName} onChange={set('displayName')} required placeholder="Ditt namn eller alias" style={metapickStyles.input} />
               </div>
               <div>
-                <label style={metapickStyles.label}>TikTok-användarnamn</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
-                  <span style={{ color: '#8b8ba3', fontSize: '1rem' }}>@</span>
-                  <input type="text" value={form.tikTokUsername} onChange={set('tikTokUsername')} placeholder="dittanvändarnamn" style={{ ...metapickStyles.input, flex: 1 }} />
-                </div>
-                <p style={{ fontSize: '.7rem', color: '#555', marginTop: '.25rem' }}>
-                  Valfritt — du kopplar ditt TikTok-konto via OAuth efter registrering.
-                </p>
+                <label style={metapickStyles.label}>Bio *</label>
+                <textarea value={form.bio} onChange={set('bio')} required rows={3} placeholder="Berätta om dig och ditt innehåll — varför ska brands samarbeta med dig?" style={{ ...metapickStyles.input, resize: 'vertical' } as React.CSSProperties} />
               </div>
-              <div>
-                <label style={metapickStyles.label}>Kategori</label>
-                <select value={form.category} onChange={set('category')} style={metapickStyles.select}>
-                  {['Övrigt', 'Mode', 'Skönhet', 'Mat', 'Teknik', 'Gaming', 'Sport', 'Musik', 'Resor', 'Livsstil', 'Humor'].map(c => (
-                    <option key={c} value={c}>{c}</option>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                <div>
+                  <label style={metapickStyles.label}>Kategori *</label>
+                  <select value={form.category} onChange={set('category')} required style={metapickStyles.select}>
+                    {['Övrigt', 'Mode', 'Skönhet', 'Mat', 'Teknik', 'Gaming', 'Sport', 'Musik', 'Resor', 'Livsstil', 'Humor'].map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={metapickStyles.label}>Land *</label>
+                  <select value={form.country} onChange={set('country')} required style={metapickStyles.select}>
+                    <option value="SE">Sverige</option>
+                    <option value="NO">Norge</option>
+                    <option value="DK">Danmark</option>
+                    <option value="FI">Finland</option>
+                  </select>
+                </div>
+              </div>
+              <div style={{ background: '#0a0a0f', border: '1px solid #1e1e2e', borderRadius: '.5rem', padding: '1rem' }}>
+                <label style={{ ...metapickStyles.label, marginBottom: '.75rem' }}>Expertis-taggar * — vad är du bra på?</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.5rem', maxHeight: '10rem', overflowY: 'auto' }}>
+                  {ALL_TAGS.map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => {
+                        const updated = form.profileTags.includes(tag)
+                          ? form.profileTags.filter(t => t !== tag)
+                          : [...form.profileTags, tag];
+                        setForm({ ...form, profileTags: updated });
+                      }}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        borderRadius: '999px',
+                        border: form.profileTags.includes(tag) ? '2px solid #e84393' : '1px solid #1e1e2e',
+                        background: form.profileTags.includes(tag) ? 'rgba(232,67,147,.2)' : 'transparent',
+                        color: form.profileTags.includes(tag) ? '#e84393' : '#8b8ba3',
+                        fontSize: '.85rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {form.profileTags.includes(tag) ? '✓ ' : ''}{tag}
+                    </button>
                   ))}
-                </select>
+                </div>
+                {form.profileTags.length === 0 && (
+                  <p style={{ fontSize: '.75rem', color: '#555', marginTop: '.5rem' }}>Välj minst en tagg</p>
+                )}
+                {form.profileTags.length > 0 && (
+                  <p style={{ fontSize: '.75rem', color: '#8b8ba3', marginTop: '.5rem' }}>Valt: {form.profileTags.length} tagg(ar)</p>
+                )}
               </div>
               <div>
                 <label style={metapickStyles.label}>Födelsedatum</label>
                 <DateInput value={form.dateOfBirth} onChange={v => setForm({ ...form, dateOfBirth: v })} style={metapickStyles.input} />
               </div>
               <div>
-                <label style={metapickStyles.label}>Bio</label>
-                <textarea value={form.bio} onChange={set('bio')} rows={3} placeholder="Berätta kort om dig och ditt innehåll..." style={{ ...metapickStyles.input, resize: 'vertical' } as React.CSSProperties} />
+                <label style={metapickStyles.label}>TikTok-användarnamn</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+                  <span style={{ color: '#8b8ba3', fontSize: '1rem' }}>@</span>
+                  <input type="text" value={form.tikTokUsername} onChange={set('tikTokUsername')} placeholder="dittanvändarnamn" style={{ ...metapickStyles.input, flex: 1 }} />
+                </div>
+                <p style={{ fontSize: '.7rem', color: '#555', marginTop: '.25rem' }}>
+                  Valfritt — du kopplar ditt TikTok-konto via OAuth efter godkännande.
+                </p>
               </div>
             </>
           )}
@@ -256,7 +310,7 @@ export function PendingApprovalPage() {
           Din ansökan har skickats!
         </h1>
         <p style={{ color: '#8b8ba3', fontSize: '.9rem', lineHeight: 1.7, marginBottom: '2rem' }}>
-          Tack för din registrering! Vi granskar nu din ansökan. Du kommer att kunna logga in så snart en administratör har godkänt ditt konto. Detta brukar ta 1-2 arbetsdagar.
+          Tack för din registrering! Vi granskar nu din profil och ansökan. Du kommer att kunna logga in så snart en administratör har godkänt ditt konto. Detta brukar ta 1-2 arbetsdagar.
         </p>
 
         <div style={{ background: 'rgba(232,67,147,.08)', border: '1px solid rgba(232,67,147,.15)', borderRadius: '.75rem', padding: '1rem', marginBottom: '2rem' }}>

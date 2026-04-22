@@ -23,7 +23,7 @@ public record RegisterRequest(
     string? CompanyName, string? OrganizationNumber, string? ContactPhone,
     // Creator-specific
     string? DisplayName, string? Country, string? Bio, string? Category,
-    string? TikTokUsername, DateOnly? DateOfBirth);
+    string? TikTokUsername, DateOnly? DateOfBirth, List<string>? ProfileTags);
 public record LoginRequest(string Email, string Password);
 public record RefreshTokenRequest(string RefreshToken);
 public record ChangePasswordRequest(string CurrentPassword, string NewPassword);

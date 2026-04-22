@@ -86,6 +86,7 @@ public class AuthService : IAuthService
                 Country = request.Country ?? "SE",
                 Language = "sv",
                 DateOfBirth = request.DateOfBirth,
+                ProfileTags = request.ProfileTags?.ToArray() ?? [],
                 Status = CreatorStatus.Pending
             };
             _creators.Add(creator);
