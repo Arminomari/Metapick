@@ -43,6 +43,7 @@ public static class ServiceCollectionExtensions
         // ── Application services ───────────────────────
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IAdminUserService, AdminUserService>();
+        services.AddScoped<IBrandService, BrandService>();
         services.AddScoped<ICreatorService, CreatorService>();
         services.AddScoped<ICampaignService, CampaignService>();
         services.AddScoped<IApplicationService, ApplicationService>();

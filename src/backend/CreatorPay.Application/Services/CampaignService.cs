@@ -133,16 +133,87 @@ public class CampaignService : ICampaignService
 
         if (campaign == null) return Errors.NotFound("Campaign", campaignId);
         if (campaign.Status != CampaignStatus.Draft)
-            return Errors.Conflict("Campaign can only be published from Draft status");
+            return Errors.Conflict("Campaign can only be submitted from Draft status");
         if (!campaign.PayoutRules.Any())
             return Errors.Validation("Campaign must have at least one payout rule");
+
+        campaign.Status = CampaignStatus.PendingReview;
+        campaign.ModerationStatus = ModerationStatus.Pending;
+
+        await _uow.SaveChangesAsync(ct);
+        await _audit.LogAsync(brandUserId, "Campaign.SubmittedForReview", "Campaign", campaign.Id);
+
+        var approvedCount = campaign.Assignments.Count(a => a.Status == AssignmentStatus.Active);
+        var totalViews = campaign.Assignments.Sum(a => a.TotalVerifiedViews);
+        return MapToDetail(campaign, approvedCount, totalViews);
+    }
+
+    public async Task<Result<PagedResult<AdminCampaignDto>>> ListPendingReviewCampaignsAsync(int page, int pageSize, CancellationToken ct = default)
+    {
+        var query = _campaigns.Query()
+            .Include(c => c.BrandProfile)
+            .Where(c => c.Status == CampaignStatus.PendingReview && !c.IsDeleted);
+
+        var totalCount = await query.CountAsync(ct);
+        var items = await query
+            .OrderByDescending(c => c.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(c => new AdminCampaignDto(
+                c.Id, c.Name, c.BrandProfile.CompanyName, c.Category, c.Country,
+                c.Status.ToString(), c.Budget, c.MaxCreators, c.StartDate, c.EndDate,
+                c.CreatedAt, null))
+            .ToListAsync(ct);
+
+        return new PagedResult<AdminCampaignDto>
+        {
+            Data = items, Page = page, PageSize = pageSize, TotalCount = totalCount
+        };
+    }
+
+    public async Task<Result<CampaignDetailDto>> ApproveCampaignAsync(Guid campaignId, Guid adminId, CancellationToken ct = default)
+    {
+        var campaign = await _campaigns.Query()
+            .Include(c => c.PayoutRules)
+            .Include(c => c.Requirements)
+            .Include(c => c.Rules)
+            .Include(c => c.Assignments)
+            .FirstOrDefaultAsync(c => c.Id == campaignId && !c.IsDeleted, ct);
+
+        if (campaign == null) return Errors.NotFound("Campaign", campaignId);
+        if (campaign.Status != CampaignStatus.PendingReview)
+            return Errors.Conflict("Campaign is not pending review");
 
         campaign.Status = CampaignStatus.Active;
         campaign.PublishedAt = DateTime.UtcNow;
         campaign.ModerationStatus = ModerationStatus.Approved;
 
         await _uow.SaveChangesAsync(ct);
-        await _audit.LogAsync(brandUserId, "Campaign.Published", "Campaign", campaign.Id);
+        await _audit.LogAsync(adminId, "Campaign.Approved", "Campaign", campaign.Id);
+
+        var approvedCount = campaign.Assignments.Count(a => a.Status == AssignmentStatus.Active);
+        var totalViews = campaign.Assignments.Sum(a => a.TotalVerifiedViews);
+        return MapToDetail(campaign, approvedCount, totalViews);
+    }
+
+    public async Task<Result<CampaignDetailDto>> RejectCampaignAsync(Guid campaignId, Guid adminId, string reason, CancellationToken ct = default)
+    {
+        var campaign = await _campaigns.Query()
+            .Include(c => c.PayoutRules)
+            .Include(c => c.Requirements)
+            .Include(c => c.Rules)
+            .Include(c => c.Assignments)
+            .FirstOrDefaultAsync(c => c.Id == campaignId && !c.IsDeleted, ct);
+
+        if (campaign == null) return Errors.NotFound("Campaign", campaignId);
+        if (campaign.Status != CampaignStatus.PendingReview)
+            return Errors.Conflict("Campaign is not pending review");
+
+        campaign.Status = CampaignStatus.Draft;
+        campaign.ModerationStatus = ModerationStatus.Rejected;
+
+        await _uow.SaveChangesAsync(ct);
+        await _audit.LogAsync(adminId, "Campaign.Rejected", "Campaign", campaign.Id);
 
         var approvedCount = campaign.Assignments.Count(a => a.Status == AssignmentStatus.Active);
         var totalViews = campaign.Assignments.Sum(a => a.TotalVerifiedViews);

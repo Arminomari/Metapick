@@ -409,3 +409,34 @@ export function useTriggerSync() {
     },
   });
 }
+
+// ── Brand hooks ────────────────────────────────────────
+export function useBrandProfile() {
+  return useQuery({
+    queryKey: ['brand-profile'],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<{ id: string; companyName: string; website?: string; industry: string; description?: string; contactPhone?: string; status: string }>>('/brand/profile');
+      return res.data.data;
+    },
+  });
+}
+
+export function useUpdateBrandProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { companyName: string; website?: string; industry: string; description?: string; contactPhone?: string }) => {
+      const res = await api.put('/brand/profile', data);
+      return res.data.data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['brand-profile'] }),
+  });
+}
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: async (data: { currentPassword: string; newPassword: string }) => {
+      const res = await api.post('/auth/change-password', data);
+      return res.data;
+    },
+  });
+}

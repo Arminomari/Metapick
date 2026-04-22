@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { DateInput } from '@/components/ui/DateInput';
 import {
   useBrowseCampaigns, useCreatorAssignments, useAssignmentDetail,
   useCreatorPayouts, useApplyToCampaign, useSubmitVideo, useMyApplications,
@@ -603,7 +604,7 @@ export function CreatorProfilePage() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Födelsedatum</label>
-            <input type="date" value={form.dateOfBirth} onChange={set('dateOfBirth')} disabled={!editing}
+            <DateInput value={form.dateOfBirth} onChange={v => setForm({ ...form, dateOfBirth: v })} disabled={!editing}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60" />
           </div>
 

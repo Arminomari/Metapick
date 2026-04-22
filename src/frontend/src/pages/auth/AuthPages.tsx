@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLogin, useRegister } from '@/hooks/api';
 import { useAuthStore } from '@/stores/authStore';
+import { DateInput } from '@/components/ui/DateInput';
 
 const metapickStyles = {
   page: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0f', padding: '2rem 1rem' } as React.CSSProperties,
@@ -192,7 +193,7 @@ export function RegisterPage() {
               </div>
               <div>
                 <label style={metapickStyles.label}>Födelsedatum</label>
-                <input type="date" value={form.dateOfBirth} onChange={set('dateOfBirth')} style={metapickStyles.input} />
+                <DateInput value={form.dateOfBirth} onChange={v => setForm({ ...form, dateOfBirth: v })} style={metapickStyles.input} />
               </div>
               <div>
                 <label style={metapickStyles.label}>Bio</label>

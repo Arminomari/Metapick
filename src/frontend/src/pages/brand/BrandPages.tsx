@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, type FormEvent as ReactFormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useBrandCampaigns, useCampaignDetail, useCampaignAnalytics, useCampaignApplications, usePublishCampaign, useCreateCampaign, useApproveApplication, useRejectApplication, useApproveSubmission, useRejectSubmission, useMarkManualPayoutSent } from '@/hooks/api';
+import { useBrandCampaigns, useCampaignDetail, useCampaignAnalytics, useCampaignApplications, usePublishCampaign, useCreateCampaign, useApproveApplication, useRejectApplication, useApproveSubmission, useRejectSubmission, useMarkManualPayoutSent, useBrandProfile, useUpdateBrandProfile, useChangePassword } from '@/hooks/api';
 import { Button, Card, DataTable, EmptyState, LoadingSpinner, Pagination, StatCard, StatusBadge, type Column } from '@/components/ui';
+import { DateInput } from '@/components/ui/DateInput';
 import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
 import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
 import type { CampaignListItem, ApplicationItem, CreateCampaignRequest, CreatorPerformance, CreatorVideo } from '@/types';
@@ -100,6 +101,11 @@ export function CreateCampaignPage() {
     setForm({ ...form, [key]: val });
   };
 
+  const setNum = (key: keyof CreateCampaignRequest) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const digits = e.target.value.replace(/\D/g, '');
+    setForm({ ...form, [key]: digits ? Number(digits) : 0 });
+  };
+
   // ── Payout model change handler ──
   const handlePayoutModelChange = (model: string) => {
     let rules: CreateCampaignRequest['payoutRules'] = [];
@@ -180,7 +186,7 @@ export function CreateCampaignPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: ReactFormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -218,7 +224,15 @@ export function CreateCampaignPage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-bold">Skapa ny kampanj</h1>
+      <div className="flex items-center gap-3">
+        <button onClick={() => navigate('/brand/campaigns')}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Tillbaka
+        </button>
+        <span className="text-muted-foreground">/</span>
+        <h1 className="text-2xl font-bold">Skapa ny kampanj</h1>
+      </div>
       <Card>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -250,29 +264,32 @@ export function CreateCampaignPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Startdatum *</label>
-              <input type="date" value={form.startDate} onChange={set('startDate')} required
+              <DateInput value={form.startDate} onChange={v => setForm({ ...form, startDate: v })} required
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Slutdatum *</label>
-              <input type="date" value={form.endDate} onChange={set('endDate')} required
+              <DateInput value={form.endDate} onChange={v => setForm({ ...form, endDate: v })} required
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Total budget (SEK) *</label>
-              <input type="number" value={form.budget} onChange={set('budget')} required min={1}
+              <input type="text" inputMode="numeric" value={form.budget || ''} required
+                onChange={setNum('budget')} placeholder="t.ex. 10000"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Max antal creators</label>
-              <input type="number" value={form.maxCreators} onChange={set('maxCreators')} min={1}
+              <input type="text" inputMode="numeric" value={form.maxCreators || ''}
+                onChange={setNum('maxCreators')} placeholder="t.ex. 10"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Antal videos per creator</label>
-              <input type="number" value={form.requiredVideoCount} onChange={set('requiredVideoCount')} min={1}
+              <input type="text" inputMode="numeric" value={form.requiredVideoCount || ''}
+                onChange={setNum('requiredVideoCount')} placeholder="t.ex. 1"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
               <p className="text-xs text-muted-foreground mt-1">Hur många videos varje creator ska leverera</p>
             </div>
@@ -304,14 +321,16 @@ export function CreateCampaignPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium mb-1">Belopp per creator (SEK)</label>
-                    <input type="number" value={form.payoutRules[0]?.amount ?? 0} min={1}
-                      onChange={(e) => updateRule(0, { amount: Number(e.target.value) })}
+                    <input type="text" inputMode="numeric" value={form.payoutRules[0]?.amount || ''}
+                      onChange={(e) => updateRule(0, { amount: Number(e.target.value.replace(/\D/g,'')) || 0 })}
+                      placeholder="t.ex. 500"
                       className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium mb-1">Minsta antal views</label>
-                    <input type="number" value={form.payoutRules[0]?.minViews ?? 1000} min={0} step={100}
-                      onChange={(e) => updateRule(0, { minViews: Number(e.target.value) })}
+                    <input type="text" inputMode="numeric" value={form.payoutRules[0]?.minViews || ''}
+                      onChange={(e) => updateRule(0, { minViews: Number(e.target.value.replace(/\D/g,'')) || 0 })}
+                      placeholder="t.ex. 1000"
                       className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
                   </div>
                 </div>
@@ -327,14 +346,15 @@ export function CreateCampaignPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium mb-1">Pris per 1 000 views (SEK)</label>
-                    <input type="number" step="1" value={form.payoutRules[0]?.amount ?? 50} min={1}
-                      onChange={(e) => updateRule(0, { amount: Number(e.target.value) })}
+                    <input type="text" inputMode="numeric" value={form.payoutRules[0]?.amount || ''}
+                      onChange={(e) => updateRule(0, { amount: Number(e.target.value.replace(/\D/g,'')) || 0 })}
+                      placeholder="t.ex. 50"
                       className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium mb-1">Max per creator (SEK, valfritt)</label>
-                    <input type="number" value={form.payoutRules[0]?.maxPayoutPerCreator ?? ''} min={0}
-                      onChange={(e) => updateRule(0, { maxPayoutPerCreator: e.target.value ? Number(e.target.value) : undefined })}
+                    <input type="text" inputMode="numeric" value={form.payoutRules[0]?.maxPayoutPerCreator ?? ''}
+                      onChange={(e) => { const v = e.target.value.replace(/\D/g,''); updateRule(0, { maxPayoutPerCreator: v ? Number(v) : undefined }); }}
                       placeholder="Ingen gräns"
                       className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
                   </div>
@@ -357,21 +377,23 @@ export function CreateCampaignPage() {
                   <div key={idx} className="flex items-end gap-2">
                     <div className="flex-1">
                       <label className="block text-xs font-medium mb-1">{idx === 0 ? 'Från views' : ''}</label>
-                      <input type="number" value={rule.minViews} min={0} step={100}
-                        onChange={(e) => updateRule(idx, { minViews: Number(e.target.value) })}
+                      <input type="text" inputMode="numeric" value={rule.minViews || ''}
+                        onChange={(e) => updateRule(idx, { minViews: Number(e.target.value.replace(/\D/g,'')) || 0 })}
+                        placeholder="t.ex. 1000"
                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
                     </div>
                     <div className="flex-1">
                       <label className="block text-xs font-medium mb-1">{idx === 0 ? 'Till views' : ''}</label>
-                      <input type="number" value={rule.maxViews ?? ''} min={0} step={100}
-                        onChange={(e) => updateRule(idx, { maxViews: e.target.value ? Number(e.target.value) : undefined })}
+                      <input type="text" inputMode="numeric" value={rule.maxViews ?? ''}
+                        onChange={(e) => { const v = e.target.value.replace(/\D/g,''); updateRule(idx, { maxViews: v ? Number(v) : undefined }); }}
                         placeholder="∞"
                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
                     </div>
                     <div className="flex-1">
                       <label className="block text-xs font-medium mb-1">{idx === 0 ? 'Belopp (SEK)' : ''}</label>
-                      <input type="number" value={rule.amount} min={1}
-                        onChange={(e) => updateRule(idx, { amount: Number(e.target.value) })}
+                      <input type="text" inputMode="numeric" value={rule.amount || ''}
+                        onChange={(e) => updateRule(idx, { amount: Number(e.target.value.replace(/\D/g,'')) || 0 })}
+                        placeholder="t.ex. 500"
                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
                     </div>
                     <button type="button" onClick={() => removeTier(idx)}
@@ -407,7 +429,7 @@ export function CreateCampaignPage() {
           {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="flex gap-3">
             <Button type="submit" disabled={create.isPending}>
-              {create.isPending ? 'Skapar...' : 'Skapa kampanj'}
+              {create.isPending ? 'Skapar...' : 'Skicka för granskning'}
             </Button>
             <Button type="button" variant="secondary" onClick={() => navigate('/brand/campaigns')}>
               Avbryt
@@ -432,6 +454,7 @@ function BrandCampaignTable({ campaigns, onRowClick }: { campaigns: CampaignList
 
 // ── Campaign detail ────────────────────────────────────
 export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) {
+  const navigate = useNavigate();
   const { data: campaign, isLoading } = useCampaignDetail(campaignId);
   const { data: analytics } = useCampaignAnalytics(campaignId);
   const { data: applications } = useCampaignApplications(campaignId);
@@ -448,6 +471,15 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-2">
+        <button onClick={() => navigate('/brand/campaigns')}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Mina kampanjer
+        </button>
+        <span className="text-muted-foreground text-sm">/</span>
+        <span className="text-sm text-muted-foreground">{campaign.name}</span>
+      </div>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{campaign.name}</h1>
@@ -455,8 +487,13 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
         </div>
         {campaign.status === 'Draft' && (
           <Button onClick={() => publish.mutateAsync(campaignId)} disabled={publish.isPending}>
-            Publicera kampanj
+            {publish.isPending ? 'Skickar...' : '📤 Skicka för granskning'}
           </Button>
+        )}
+        {campaign.status === 'PendingReview' && (
+          <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-4 py-2">
+            <span className="text-yellow-400 text-sm font-medium">⏳ Väntar på granskning av admin</span>
+          </div>
         )}
       </div>
 
@@ -746,6 +783,174 @@ export function BrandApplicationsPage() {
         </div>
       ) : (
         <EmptyState title="Inga kampanjer" description="Skapa en kampanj för att börja ta emot ansökningar." />
+      )}
+    </div>
+  );
+}
+
+// ── Brand Settings ─────────────────────────────────────
+export function BrandSettingsPage() {
+  const { data: profile, isLoading } = useBrandProfile();
+  const updateProfile = useUpdateBrandProfile();
+  const changePassword = useChangePassword();
+  const [activeTab, setActiveTab] = useState<'profile' | 'security'>('profile');
+  const [profileForm, setProfileForm] = useState({ companyName: '', website: '', industry: '', description: '', contactPhone: '' });
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [profileMsg, setProfileMsg] = useState('');
+  const [profileError, setProfileError] = useState('');
+  const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirm: '' });
+  const [pwMsg, setPwMsg] = useState('');
+  const [pwError, setPwError] = useState('');
+
+  // Populate form once profile loads
+  if (profile && !profileLoaded) {
+    setProfileForm({
+      companyName: profile.companyName ?? '',
+      website: profile.website ?? '',
+      industry: profile.industry ?? '',
+      description: profile.description ?? '',
+      contactPhone: profile.contactPhone ?? '',
+    });
+    setProfileLoaded(true);
+  }
+
+  const handleProfileSave = async (e: ReactFormEvent) => {
+    e.preventDefault();
+    setProfileError('');
+    setProfileMsg('');
+    try {
+      await updateProfile.mutateAsync(profileForm);
+      setProfileMsg('Profilen sparades!');
+    } catch {
+      setProfileError('Kunde inte spara profilen.');
+    }
+  };
+
+  const handlePasswordChange = async (e: ReactFormEvent) => {
+    e.preventDefault();
+    setPwError('');
+    setPwMsg('');
+    if (pwForm.newPassword !== pwForm.confirm) {
+      setPwError('Lösenorden matchar inte.');
+      return;
+    }
+    if (pwForm.newPassword.length < 8) {
+      setPwError('Lösenordet måste vara minst 8 tecken.');
+      return;
+    }
+    try {
+      await changePassword.mutateAsync({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword });
+      setPwMsg('Lösenordet ändrades!');
+      setPwForm({ currentPassword: '', newPassword: '', confirm: '' });
+    } catch (err: any) {
+      const msg = err?.response?.data?.error?.message;
+      setPwError(msg ?? 'Kunde inte ändra lösenordet. Kontrollera ditt nuvarande lösenord.');
+    }
+  };
+
+  if (isLoading) return <LoadingSpinner />;
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-2xl">🏢</div>
+        <div>
+          <h1 className="text-2xl font-bold">{profile?.companyName ?? 'Inställningar'}</h1>
+          <p className="text-sm text-muted-foreground">{profile?.status === 'Approved' ? '✓ Verifierat konto' : profile?.status}</p>
+        </div>
+      </div>
+
+      {/* Tab selector */}
+      <div className="flex gap-2 border-b border-border pb-0">
+        {([['profile', '👤 Profil'], ['security', '🔒 Lösenord']] as const).map(([key, label]) => (
+          <button key={key} onClick={() => setActiveTab(key)}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${activeTab === key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Profile tab */}
+      {activeTab === 'profile' && (
+        <Card>
+          <h2 className="font-semibold mb-4">Företagsprofil</h2>
+          <form onSubmit={handleProfileSave} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Företagsnamn *</label>
+              <input type="text" value={profileForm.companyName} required
+                onChange={e => setProfileForm({ ...profileForm, companyName: e.target.value })}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Bransch</label>
+                <select value={profileForm.industry} onChange={e => setProfileForm({ ...profileForm, industry: e.target.value })}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                  {['Övrigt', 'Mode', 'Skönhet', 'Mat & Dryck', 'Teknik', 'Gaming', 'Sport', 'Musik', 'Resor', 'Hälsa'].map(i => (
+                    <option key={i} value={i}>{i}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Telefon</label>
+                <input type="tel" value={profileForm.contactPhone}
+                  onChange={e => setProfileForm({ ...profileForm, contactPhone: e.target.value })}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Webbplats</label>
+              <input type="url" value={profileForm.website} placeholder="https://mittföretag.se"
+                onChange={e => setProfileForm({ ...profileForm, website: e.target.value })}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Beskrivning</label>
+              <textarea value={profileForm.description} rows={3}
+                onChange={e => setProfileForm({ ...profileForm, description: e.target.value })}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                placeholder="Berätta om ert företag..." />
+            </div>
+            {profileError && <p className="text-sm text-destructive">{profileError}</p>}
+            {profileMsg && <p className="text-sm text-green-400">{profileMsg}</p>}
+            <Button type="submit" disabled={updateProfile.isPending}>
+              {updateProfile.isPending ? 'Sparar...' : 'Spara ändringar'}
+            </Button>
+          </form>
+        </Card>
+      )}
+
+      {/* Security tab */}
+      {activeTab === 'security' && (
+        <Card>
+          <h2 className="font-semibold mb-4">Byt lösenord</h2>
+          <form onSubmit={handlePasswordChange} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Nuvarande lösenord</label>
+              <input type="password" value={pwForm.currentPassword} required autoComplete="current-password"
+                onChange={e => setPwForm({ ...pwForm, currentPassword: e.target.value })}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Nytt lösenord</label>
+              <input type="password" value={pwForm.newPassword} required autoComplete="new-password" minLength={8}
+                onChange={e => setPwForm({ ...pwForm, newPassword: e.target.value })}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+              <p className="text-xs text-muted-foreground mt-1">Minst 8 tecken</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Bekräfta nytt lösenord</label>
+              <input type="password" value={pwForm.confirm} required autoComplete="new-password"
+                onChange={e => setPwForm({ ...pwForm, confirm: e.target.value })}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+            </div>
+            {pwError && <p className="text-sm text-destructive">{pwError}</p>}
+            {pwMsg && <p className="text-sm text-green-400">{pwMsg}</p>}
+            <Button type="submit" disabled={changePassword.isPending}>
+              {changePassword.isPending ? 'Ändrar...' : 'Byt lösenord'}
+            </Button>
+          </form>
+        </Card>
       )}
     </div>
   );

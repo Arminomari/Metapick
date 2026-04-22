@@ -83,6 +83,7 @@ function NavLinks({ role }: { role: string }) {
       { label: 'Dashboard', path: '/brand' },
       { label: 'Kampanjer', path: '/brand/campaigns' },
       { label: 'Ansökningar', path: '/brand/applications' },
+      { label: '⚙ Inställningar', path: '/brand/settings' },
     ],
     Creator: [
       { label: 'Dashboard', path: '/creator' },
@@ -123,6 +124,7 @@ function MobileNavLinks({ role, onNavigate }: { role: string; onNavigate: () => 
       { label: 'Dashboard', path: '/brand' },
       { label: 'Kampanjer', path: '/brand/campaigns' },
       { label: 'Ansökningar', path: '/brand/applications' },
+      { label: '⚙ Inställningar', path: '/brand/settings' },
     ],
     Creator: [
       { label: 'Dashboard', path: '/creator' },

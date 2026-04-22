@@ -96,6 +96,11 @@ public record CampaignListDto(
     decimal Budget, decimal BudgetSpent, int MaxCreators, int ApprovedCreatorCount,
     DateTime StartDate, DateTime EndDate, DateTime CreatedAt);
 
+public record AdminCampaignDto(
+    Guid Id, string Name, string BrandName, string Category, string Country, string Status,
+    decimal Budget, int MaxCreators, DateTime StartDate, DateTime EndDate, DateTime CreatedAt,
+    string? RejectionReason);
+
 public record CampaignDetailDto(
     Guid Id, string Name, string Description, string? TargetAudience,
     string Country, string? Region, string Category, string RequiredHashtag,

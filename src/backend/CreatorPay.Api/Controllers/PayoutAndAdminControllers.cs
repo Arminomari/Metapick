@@ -144,6 +144,34 @@ public class AdminUserController : BaseController
     }
 }
 
+[Route("api/admin/campaigns")]
+[Authorize(Policy = "AdminOnly")]
+public class AdminCampaignController : BaseController
+{
+    private readonly ICampaignService _campaigns;
+
+    public AdminCampaignController(ICampaignService campaigns) => _campaigns = campaigns;
+
+    /// <summary>Hämta kampanjer som väntar på granskning</summary>
+    [HttpGet("pending")]
+    public async Task<IActionResult> GetPending(
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+    {
+        (page, pageSize) = ClampPagination(page, pageSize);
+        return ToActionResult(await _campaigns.ListPendingReviewCampaignsAsync(page, pageSize, ct));
+    }
+
+    /// <summary>Godkänn kampanj</summary>
+    [HttpPost("{id:guid}/approve")]
+    public async Task<IActionResult> Approve(Guid id, CancellationToken ct)
+        => ToActionResult(await _campaigns.ApproveCampaignAsync(id, GetUserId(), ct));
+
+    /// <summary>Neka kampanj</summary>
+    [HttpPost("{id:guid}/reject")]
+    public async Task<IActionResult> Reject(Guid id, [FromBody] RejectReasonRequest request, CancellationToken ct)
+        => ToActionResult(await _campaigns.RejectCampaignAsync(id, GetUserId(), request.Reason, ct));
+}
+
 [Route("api/audit")]
 [Authorize(Policy = "AdminOnly")]
 public class AuditController : BaseController
