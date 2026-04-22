@@ -55,7 +55,7 @@ public record UpdateBrandProfileRequest(
 
 // ──── Creator ────
 public record CreatorProfileDto(
-    Guid Id, string DisplayName, string? Bio, string Category, string Country,
+    Guid Id, Guid UserId, string DisplayName, string? Bio, string Category, string Country,
     string Language, string? AvatarUrl, int FollowerCount, int? AverageViews,
     string Status, bool TikTokConnected, string? TikTokUsername, DateTime CreatedAt,
     List<string> ProfileTags);
@@ -143,7 +143,8 @@ public record AssignmentDetailDto(
     string CreatorDisplayName, string Status, long TotalVerifiedViews,
     decimal CurrentPayoutAmount, TrackingTagDto? TrackingTag,
     List<SubmissionDto> Submissions, List<SocialPostInfoDto> SocialPosts,
-    DateTime AssignedAt, DateTime? CompletedAt);
+    DateTime AssignedAt, DateTime? CompletedAt,
+    Guid BrandUserId, Guid CreatorUserId);
 
 public record SocialPostInfoDto(
     Guid Id, string TikTokUrl, string TikTokVideoId, long Views,
@@ -221,3 +222,17 @@ public record ResolveDisputeRequest(string Resolution, string Status);
 public record AuditLogDto(
     Guid Id, Guid? UserId, string Action, string? EntityType,
     Guid? EntityId, string? IpAddress, DateTime CreatedAt);
+
+// ──── Reviews ────
+public record SubmitReviewRequest(int Stars, string? Comment);
+public record ReviewDto(
+    Guid Id, Guid AssignmentId, Guid ReviewerId, string ReviewerRole,
+    string ReviewerName, int Stars, string? Comment, DateTime CreatedAt);
+public record UserReviewSummaryDto(
+    double AverageStars, int TotalReviews, List<ReviewDto> Reviews);
+
+// ──── Chat ────
+public record SendMessageRequest(string Body);
+public record ChatMessageDto(
+    Guid Id, Guid AssignmentId, Guid SenderId, string SenderRole,
+    string SenderName, string Body, bool IsRead, DateTime CreatedAt);

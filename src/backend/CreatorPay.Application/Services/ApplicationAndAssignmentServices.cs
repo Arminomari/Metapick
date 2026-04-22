@@ -510,7 +510,8 @@ public class AssignmentService : IAssignmentService
                 sp.Id, sp.TikTokUrl, sp.TikTokVideoId, sp.LatestViewCount,
                 sp.LatestLikeCount, sp.LatestCommentCount, sp.LatestShareCount,
                 sp.VerificationStatus.ToString(), sp.DiscoveredAt)).ToList() ?? [],
-            a.AssignedAt, a.CompletedAt);
+            a.AssignedAt, a.CompletedAt,
+            a.Campaign.BrandProfile.UserId, a.CreatorProfile.UserId);
 
     private static SubmissionDto MapSubmission(CreatorSubmission s) =>
         new(s.Id, s.AssignmentId, s.TikTokVideoUrl, s.TikTokVideoId,

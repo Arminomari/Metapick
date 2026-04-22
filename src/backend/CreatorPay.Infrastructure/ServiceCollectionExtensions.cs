@@ -54,6 +54,8 @@ public static class ServiceCollectionExtensions
         });
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IAuditService, AuditService>();
+        services.AddScoped<IReviewService, ReviewService>();
+        services.AddScoped<IChatService, ChatService>();
 
         // ── Infrastructure services ────────────────────
         services.AddScoped<ITokenService, JwtTokenService>();

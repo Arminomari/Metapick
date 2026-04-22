@@ -23,6 +23,7 @@ export interface UserProfile {
 
 export interface CreatorProfile {
   id: string;
+  userId: string;
   displayName: string;
   bio?: string;
   category: string;
@@ -196,6 +197,8 @@ export interface AssignmentDetail {
   socialPosts: SocialPostInfo[];
   assignedAt: string;
   completedAt?: string;
+  brandUserId: string;
+  creatorUserId: string;
 }
 
 export interface SocialPostInfo {
@@ -324,4 +327,43 @@ export interface CursorPagedResult<T> {
 export interface ApiError {
   code: string;
   message: string;
+}
+
+// ── Reviews ────────────────────────────────────────────
+export interface ReviewDto {
+  id: string;
+  assignmentId: string;
+  reviewerId: string;
+  reviewerRole: string;
+  reviewerName: string;
+  stars: number;
+  comment?: string;
+  createdAt: string;
+}
+
+export interface UserReviewSummary {
+  averageStars: number;
+  totalReviews: number;
+  reviews: ReviewDto[];
+}
+
+export interface SubmitReviewRequest {
+  stars: number;
+  comment?: string;
+}
+
+// ── Chat ──────────────────────────────────────────────
+export interface ChatMessageDto {
+  id: string;
+  assignmentId: string;
+  senderId: string;
+  senderRole: string;
+  senderName: string;
+  body: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface SendMessageRequest {
+  body: string;
 }

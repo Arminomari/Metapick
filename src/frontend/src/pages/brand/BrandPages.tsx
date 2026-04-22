@@ -1,9 +1,11 @@
 import { useState, type FormEvent as ReactFormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useBrandCampaigns, useCampaignDetail, useCampaignAnalytics, useCampaignApplications, usePublishCampaign, useCreateCampaign, useApproveApplication, useRejectApplication, useApproveSubmission, useRejectSubmission, useMarkManualPayoutSent, useBrandProfile, useUpdateBrandProfile, useChangePassword } from '@/hooks/api';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useBrandCampaigns, useCampaignDetail, useCampaignAnalytics, useCampaignApplications, usePublishCampaign, useCreateCampaign, useApproveApplication, useRejectApplication, useApproveSubmission, useRejectSubmission, useMarkManualPayoutSent, useBrandProfile, useUpdateBrandProfile, useChangePassword, useAssignmentDetail } from '@/hooks/api';
 import { Button, Card, DataTable, EmptyState, LoadingSpinner, Pagination, StatCard, StatusBadge, type Column } from '@/components/ui';
 import { DateInput } from '@/components/ui/DateInput';
 import { TagSelector } from '@/components/ui/TagSelector';
+import { ChatPanel } from '@/components/ui/ChatPanel';
+import { ReviewSection } from '@/components/ui/ReviewSection';
 import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
 import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
 import { PLATFORM_TAGS, NICHE_TAGS } from '@/lib/tags';
@@ -611,6 +613,13 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
                           {markManualPayoutSent.isPending ? 'Markerar...' : 'Betala manuellt'}
                         </Button>
                       )}
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => navigate(`/brand/assignments/${cp.assignmentId}`)}
+                      >
+                        💬 Chatt & Omdöme
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -1011,6 +1020,51 @@ export function BrandSettingsPage() {
           </form>
         </Card>
       )}
+    </div>
+  );
+}
+
+// ── Brand Assignment Detail (chat + review per creator) ─
+export function BrandAssignmentDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { data: assignment, isLoading } = useAssignmentDetail(id!);
+
+  if (isLoading || !assignment) return <LoadingSpinner />;
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      <div className="flex items-center gap-3">
+        <button onClick={() => navigate(-1)}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Tillbaka
+        </button>
+        <span className="text-muted-foreground">/</span>
+        <h1 className="text-xl font-bold">{assignment.campaignName} — {assignment.creatorName ?? 'Creator'}</h1>
+      </div>
+
+      <Card>
+        <div className="flex items-center gap-3 mb-2">
+          <StatusBadge status={assignment.status} />
+          <span className="text-sm text-muted-foreground">{formatNumber(assignment.totalVerifiedViews)} views</span>
+          <span className="text-sm text-muted-foreground">{formatCurrency(assignment.currentPayoutAmount)}</span>
+        </div>
+      </Card>
+
+      <Card>
+        <h2 className="font-semibold mb-3">💬 Meddelanden</h2>
+        <ChatPanel assignmentId={assignment.id} />
+      </Card>
+
+      <Card>
+        <h2 className="font-semibold mb-3">⭐ Omdöme</h2>
+        <ReviewSection
+          assignmentId={assignment.id}
+          revieweeUserId={assignment.creatorUserId}
+          assignmentCompleted={assignment.status === 'Completed'}
+        />
+      </Card>
     </div>
   );
 }

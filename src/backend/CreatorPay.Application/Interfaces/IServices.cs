@@ -126,6 +126,21 @@ public interface IAuditService
     Task<Result<PagedResult<AuditLogDto>>> GetAuditLogsAsync(string? entityType, Guid? entityId, Guid? userId, int page, int pageSize);
 }
 
+public interface IReviewService
+{
+    Task<Result<ReviewDto>> SubmitReviewAsync(Guid assignmentId, Guid reviewerUserId, SubmitReviewRequest request, CancellationToken ct = default);
+    Task<Result<UserReviewSummaryDto>> GetReviewsForUserAsync(Guid targetUserId, CancellationToken ct = default);
+    Task<Result<ReviewDto?>> GetMyReviewForAssignmentAsync(Guid assignmentId, Guid reviewerUserId, CancellationToken ct = default);
+}
+
+public interface IChatService
+{
+    Task<Result<ChatMessageDto>> SendMessageAsync(Guid assignmentId, Guid senderUserId, SendMessageRequest request, CancellationToken ct = default);
+    Task<Result<List<ChatMessageDto>>> GetMessagesAsync(Guid assignmentId, Guid userId, CancellationToken ct = default);
+    Task<Result<bool>> MarkReadAsync(Guid assignmentId, Guid userId, CancellationToken ct = default);
+    Task<Result<int>> GetUnreadCountAsync(Guid userId, CancellationToken ct = default);
+}
+
 public interface ITokenService
 {
     Task<AuthResponse> GenerateTokensAsync(User user);

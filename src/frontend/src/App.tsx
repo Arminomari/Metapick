@@ -9,7 +9,7 @@ import { TikTokCallbackPage } from '@/pages/auth/TikTokCallbackPage';
 import { LandingPage } from '@/pages/LandingPage';
 import { TermsPage, PrivacyPage } from '@/pages/LegalPages';
 import { AdminDashboardPage } from '@/pages/admin/AdminPages';
-import { BrandDashboard, BrandCampaignListPage, BrandCampaignDetailPage, CreateCampaignPage, BrandApplicationsPage, BrandSettingsPage } from '@/pages/brand/BrandPages';
+import { BrandDashboard, BrandCampaignListPage, BrandCampaignDetailPage, CreateCampaignPage, BrandApplicationsPage, BrandSettingsPage, BrandAssignmentDetailPage } from '@/pages/brand/BrandPages';
 import { CreatorDashboard, BrowseCampaignsPage, CreatorAssignmentsPage, AssignmentDetailPage, EarningsPage, CreatorProfilePage } from '@/pages/creator/CreatorPages';
 
 const queryClient = new QueryClient({
@@ -63,6 +63,7 @@ export default function App() {
             <Route path="/brand/campaigns/:id" element={<ProtectedRoute allowedRoles={['Brand']}><CampaignDetailWrapper /></ProtectedRoute>} />
             <Route path="/brand/applications" element={<ProtectedRoute allowedRoles={['Brand']}><BrandApplicationsPage /></ProtectedRoute>} />
             <Route path="/brand/settings" element={<ProtectedRoute allowedRoles={['Brand']}><BrandSettingsPage /></ProtectedRoute>} />
+            <Route path="/brand/assignments/:id" element={<ProtectedRoute allowedRoles={['Brand']}><BrandAssignmentDetailPage /></ProtectedRoute>} />
 
             {/* Creator routes */}
             <Route path="/creator" element={<ProtectedRoute allowedRoles={['Creator']}><CreatorDashboard /></ProtectedRoute>} />

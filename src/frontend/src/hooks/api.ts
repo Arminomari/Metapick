@@ -18,6 +18,11 @@ import type {
   PayoutRequest,
   Submission,
   UserProfile,
+  ReviewDto,
+  UserReviewSummary,
+  ChatMessageDto,
+  SubmitReviewRequest,
+  SendMessageRequest,
 } from '@/types';
 
 // ── Auth hooks ─────────────────────────────────────────
@@ -438,5 +443,87 @@ export function useChangePassword() {
       const res = await api.post('/auth/change-password', data);
       return res.data;
     },
+  });
+}
+
+// ── Review hooks ────────────────────────────────────
+export function useSubmitReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ assignmentId, ...data }: SubmitReviewRequest & { assignmentId: string }) => {
+      const res = await api.post<ApiResponse<ReviewDto>>(`/reviews/assignments/${assignmentId}`, data);
+      return res.data.data;
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ['reviews-mine', vars.assignmentId] });
+      qc.invalidateQueries({ queryKey: ['user-reviews'] });
+    },
+  });
+}
+
+export function useUserReviews(userId: string) {
+  return useQuery({
+    queryKey: ['user-reviews', userId],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<UserReviewSummary>>(`/reviews/users/${userId}`);
+      return res.data.data;
+    },
+    enabled: !!userId,
+  });
+}
+
+export function useMyReviewForAssignment(assignmentId: string) {
+  return useQuery({
+    queryKey: ['reviews-mine', assignmentId],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<ReviewDto | null>>(`/reviews/assignments/${assignmentId}/mine`);
+      return res.data.data;
+    },
+    enabled: !!assignmentId,
+  });
+}
+
+// ── Chat hooks ───────────────────────────────────────
+export function useChatMessages(assignmentId: string) {
+  return useQuery({
+    queryKey: ['chat', assignmentId],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<ChatMessageDto[]>>(`/chat/assignments/${assignmentId}/messages`);
+      return res.data.data;
+    },
+    enabled: !!assignmentId,
+    refetchInterval: 8000, // poll every 8 seconds
+  });
+}
+
+export function useSendMessage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ assignmentId, ...data }: SendMessageRequest & { assignmentId: string }) => {
+      const res = await api.post<ApiResponse<ChatMessageDto>>(`/chat/assignments/${assignmentId}/messages`, data);
+      return res.data.data;
+    },
+    onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: ['chat', vars.assignmentId] }),
+  });
+}
+
+export function useMarkChatRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (assignmentId: string) => {
+      await api.post(`/chat/assignments/${assignmentId}/read`);
+    },
+    onSuccess: (_d, assignmentId) => qc.invalidateQueries({ queryKey: ['chat', assignmentId] }),
+  });
+}
+
+export function useUnreadChatCount() {
+  return useQuery({
+    queryKey: ['chat-unread'],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<number>>('/chat/unread');
+      return res.data.data;
+    },
+    refetchInterval: 15000,
   });
 }

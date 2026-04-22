@@ -41,6 +41,10 @@ public class AppDbContext : DbContext
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<Dispute> Disputes => Set<Dispute>();
 
+    // ── Reviews & Chat ─────────────────────────────────
+    public DbSet<Review> Reviews => Set<Review>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

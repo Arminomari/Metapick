@@ -2,12 +2,15 @@ import { useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { DateInput } from '@/components/ui/DateInput';
 import { TagSelector } from '@/components/ui/TagSelector';
+import { ChatPanel } from '@/components/ui/ChatPanel';
+import { ReviewSection, ReviewList } from '@/components/ui/ReviewSection';
 import { ALL_TAGS } from '@/lib/tags';
 import {
   useBrowseCampaigns, useCreatorAssignments, useAssignmentDetail,
   useCreatorPayouts, useApplyToCampaign, useSubmitVideo, useMyApplications,
   useCreatorProfile, useUpdateCreatorProfile,
   useTikTokStatus, useTikTokDisconnect,
+  useUserReviews,
 } from '@/hooks/api';
 import api from '@/lib/api';
 import { Button, Card, DataTable, EmptyState, LoadingSpinner, Pagination, StatCard, StatusBadge, type Column } from '@/components/ui';
@@ -464,6 +467,19 @@ export function AssignmentDetailPage() {
           <EmptyState title="Inga videos ännu" description="Publicera en TikTok-video med din tracking-tag så hittas den automatiskt, eller skicka in manuellt ovan." />
         )}
       </Card>
+      <Card>
+        <h2 className="font-semibold mb-3">💬 Meddelanden</h2>
+        <ChatPanel assignmentId={assignment.id} />
+      </Card>
+
+      <Card>
+        <h2 className="font-semibold mb-3">⭐ Omdöme</h2>
+        <ReviewSection
+          assignmentId={assignment.id}
+          revieweeUserId={assignment.brandUserId}
+          assignmentCompleted={assignment.status === 'Completed'}
+        />
+      </Card>
     </div>
   );
 }
@@ -676,6 +692,19 @@ export function CreatorProfilePage() {
           <div><span className="text-muted-foreground">Status:</span> <strong>{profile.status}</strong></div>
         </div>
       </Card>
+
+      <CreatorReviewCard userId={profile.userId} />
     </div>
+  );
+}
+
+function CreatorReviewCard({ userId }: { userId: string }) {
+  const { data } = useUserReviews(userId);
+  if (!data || data.totalReviews === 0) return null;
+  return (
+    <Card>
+      <h2 className="font-semibold mb-3">⭐ Omdömen</h2>
+      <ReviewList summary={data} />
+    </Card>
   );
 }

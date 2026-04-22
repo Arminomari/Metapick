@@ -133,7 +133,7 @@ public class CreatorService : ICreatorService
     }
 
     private static CreatorProfileDto MapToDto(CreatorProfile c) =>
-        new(c.Id, c.DisplayName, c.Bio, c.Category, c.Country, c.Language,
+        new(c.Id, c.UserId, c.DisplayName, c.Bio, c.Category, c.Country, c.Language,
             c.AvatarUrl, c.FollowerCount, c.AverageViews, c.Status.ToString(),
             c.TikTokAccount != null && c.TikTokAccount.IsActive,
             c.TikTokAccount?.TikTokUsername, c.CreatedAt,
