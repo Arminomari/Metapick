@@ -116,8 +116,13 @@ public class NotificationController : BaseController
 public class AdminUserController : BaseController
 {
     private readonly IAdminUserService _adminUsers;
+    private readonly ICreatorService _creators;
 
-    public AdminUserController(IAdminUserService adminUsers) => _adminUsers = adminUsers;
+    public AdminUserController(IAdminUserService adminUsers, ICreatorService creators)
+    {
+        _adminUsers = adminUsers;
+        _creators = creators;
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetUsers(
@@ -142,6 +147,20 @@ public class AdminUserController : BaseController
         BackgroundJob.Enqueue<CreatorPay.Application.Interfaces.ICampaignSyncTrigger>(x => x.ExecuteAsync());
         return Ok(new { message = "Synk-jobb startat" });
     }
+}
+
+[Route("api/admin/creators")]
+[Authorize(Policy = "AdminOnly")]
+public class AdminCreatorController : BaseController
+{
+    private readonly ICreatorService _creators;
+
+    public AdminCreatorController(ICreatorService creators) => _creators = creators;
+
+    /// <summary>Hämta en creators profil för admin-granskning</summary>
+    [HttpGet("{userId:guid}")]
+    public async Task<IActionResult> GetCreatorProfile(Guid userId)
+        => ToActionResult(await _creators.GetProfileAsync(userId));
 }
 
 [Route("api/admin/campaigns")]

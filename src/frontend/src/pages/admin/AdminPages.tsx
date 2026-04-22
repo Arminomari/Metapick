@@ -3,8 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import api from '@/lib/api';
 import { useTriggerSync } from '@/hooks/api';
-import type { ApiResponse, PagedResult } from '@/types';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import type { ApiResponse, PagedResult, CreatorProfile } from '@/types';
+import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
 
 interface PendingUser {
   id: string;
@@ -140,11 +140,284 @@ function useRejectUser() {
   });
 }
 
+// ── Admin Creator Profile Page ────────────────────────────────
+function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onBack: () => void }) {
+  const { data: profile, isLoading, isError, error } = useQuery({
+    queryKey: ['admin-creator-profile', creatorId],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<CreatorProfile>>(`/admin/creators/${creatorId}`);
+      return res.data.data;
+    },
+  });
+
+  const approveCreator = useMutation({
+    mutationFn: async () => {
+      const res = await api.post(`/admin/users/${creatorId}/approve`);
+      return res.data.data;
+    },
+    onSuccess: () => {
+      onBack();
+    },
+  });
+
+  const rejectCreator = useMutation({
+    mutationFn: async (reason: string) => {
+      const res = await api.post(`/admin/users/${creatorId}/reject`, { reason });
+      return res.data.data;
+    },
+    onSuccess: () => {
+      onBack();
+    },
+  });
+
+  const [rejectReason, setRejectReason] = useState('');
+
+  if (isLoading) {
+    return (
+      <div style={s.page}>
+        <div style={s.container}>
+          <div style={s.empty}>Laddar profil...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !profile) {
+    return (
+      <div style={s.page}>
+        <div style={s.container}>
+          <button
+            onClick={onBack}
+            style={{ background: 'none', border: 'none', color: '#7c3aed', cursor: 'pointer', fontSize: '.9rem', fontWeight: 600, marginBottom: '1rem' }}
+          >
+            ← Tillbaka
+          </button>
+          <div style={s.empty as React.CSSProperties}>
+            <p style={{ fontSize: '1.25rem', marginBottom: '.5rem' }}>Kunde inte hämta profil</p>
+            <p style={{ fontSize: '.875rem' }}>{getApiErrorMessage(error, 'Okänt fel')}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={s.page}>
+      <div style={s.container}>
+        <button
+          onClick={onBack}
+          style={{ background: 'none', border: 'none', color: '#7c3aed', cursor: 'pointer', fontSize: '.9rem', fontWeight: 600, marginBottom: '1.5rem', textDecoration: 'underline' }}
+        >
+          ← Tillbaka till admin-panel
+        </button>
+
+        <div style={{ background: '#14141f', border: '1px solid #1e1e2e', borderRadius: '1rem', padding: 'clamp(1.5rem, 4vw, 2rem)', marginBottom: '2rem' }}>
+          {/* Profile header */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: '2rem', marginBottom: '2rem' }}>
+            {/* Avatar */}
+            <div
+              style={{
+                width: 120,
+                height: 120,
+                borderRadius: '0.75rem',
+                background: 'linear-gradient(135deg, #7c3aed 0%, #e84393 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff',
+                fontSize: '2.5rem',
+                fontWeight: 700,
+                overflow: 'hidden',
+              }}
+            >
+              {profile.avatarUrl ? (
+                <img src={profile.avatarUrl} alt={profile.displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                profile.displayName?.charAt(0).toUpperCase()
+              )}
+            </div>
+
+            {/* Main info */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
+                <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#fafafa' }}>{profile.displayName}</h1>
+                <span style={s.badge(profile.status || 'Pending')}>
+                  {profile.status === 'Approved' ? 'Godkänd' : profile.status === 'Rejected' ? 'Avvisad' : 'Väntande'}
+                </span>
+              </div>
+              <p style={{ color: '#8b8ba3', fontSize: '.95rem', marginBottom: '0.5rem' }}>
+                📧 {profile.userId || 'user@hidden'}
+              </p>
+              <p style={{ color: '#8b8ba3', fontSize: '.95rem' }}>
+                📍 {profile.country || '–'} · Medlem sedan {new Date(profile.createdAt || '').toLocaleDateString('sv-SE')}
+              </p>
+            </div>
+
+            {/* Status badge */}
+            <div style={{ textAlign: 'right' }}>
+              {profile.tikTokConnected && (
+                <div style={{ display: 'inline-block', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: 'rgba(76,175,80,.15)', color: '#4caf50', fontSize: '.85rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+                  ✓ TikTok kopplat
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Bio */}
+          {profile.bio && (
+            <div style={{ background: '#0a0a0f', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', borderLeft: '3px solid #7c3aed' }}>
+              <p style={{ color: '#fafafa', fontSize: '.95rem', lineHeight: 1.6 }}>{profile.bio}</p>
+            </div>
+          )}
+
+          {/* Stats grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+            <div style={{ background: '#0a0a0f', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+              <p style={{ color: '#8b8ba3', fontSize: '.8rem', marginBottom: '0.25rem' }}>Kategori</p>
+              <p style={{ color: '#fafafa', fontSize: '1.1rem', fontWeight: 600 }}>{profile.category}</p>
+            </div>
+            <div style={{ background: '#0a0a0f', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+              <p style={{ color: '#8b8ba3', fontSize: '.8rem', marginBottom: '0.25rem' }}>Följare</p>
+              <p style={{ color: '#fafafa', fontSize: '1.1rem', fontWeight: 600 }}>{formatNumber(profile.followerCount)}</p>
+            </div>
+            <div style={{ background: '#0a0a0f', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+              <p style={{ color: '#8b8ba3', fontSize: '.8rem', marginBottom: '0.25rem' }}>Snitt-views</p>
+              <p style={{ color: '#fafafa', fontSize: '1.1rem', fontWeight: 600 }}>{profile.averageViews ? formatNumber(profile.averageViews) : '–'}</p>
+            </div>
+            <div style={{ background: '#0a0a0f', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+              <p style={{ color: '#8b8ba3', fontSize: '.8rem', marginBottom: '0.25rem' }}>Språk</p>
+              <p style={{ color: '#fafafa', fontSize: '1.1rem', fontWeight: 600 }}>{profile.language || '–'}</p>
+            </div>
+          </div>
+
+          {/* TikTok info */}
+          {profile.tikTokUsername && (
+            <div style={{ background: '#0a0a0f', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', borderLeft: '3px solid #4caf50' }}>
+              <p style={{ color: '#8b8ba3', fontSize: '.8rem', marginBottom: '0.5rem' }}>🎵 TikTok</p>
+              <a
+                href={`https://www.tiktok.com/@${profile.tikTokUsername}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: '#7c3aed', textDecoration: 'none', fontSize: '1rem', fontWeight: 600 }}
+              >
+                @{profile.tikTokUsername}
+              </a>
+            </div>
+          )}
+
+          {/* Profile tags */}
+          {profile.profileTags && profile.profileTags.length > 0 && (
+            <div style={{ marginBottom: '1.5rem' }}>
+              <p style={{ color: '#8b8ba3', fontSize: '.8rem', marginBottom: '0.75rem' }}>Experttaggar</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                {profile.profileTags.map((tag) => (
+                  <span
+                    key={tag}
+                    style={{
+                      display: 'inline-block',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '999px',
+                      background: 'rgba(124,58,237,.2)',
+                      color: '#c4b5fd',
+                      fontSize: '.85rem',
+                      fontWeight: 600,
+                      border: '1px solid #7c3aed',
+                    }}
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Additional info */}
+          <div style={{ background: '#0a0a0f', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+            <div>
+              <p style={{ color: '#8b8ba3', fontSize: '.75rem', marginBottom: '0.25rem' }}>FÖDSELDATUM</p>
+              <p style={{ color: '#fafafa', fontWeight: 600 }}>{profile.id ? '••••••••' : '–'}</p>
+              <p style={{ color: '#5a5a7a', fontSize: '.75rem', marginTop: '0.25rem' }}>Skyddat för integritet</p>
+            </div>
+            <div>
+              <p style={{ color: '#8b8ba3', fontSize: '.75rem', marginBottom: '0.25rem' }}>MEDLEMSID</p>
+              <p style={{ color: '#fafafa', fontWeight: 600, fontSize: '.85rem', fontFamily: 'monospace' }}>{profile.userId?.slice(0, 8)}...</p>
+            </div>
+            <div>
+              <p style={{ color: '#8b8ba3', fontSize: '.75rem', marginBottom: '0.25rem' }}>REGISTRERAD</p>
+              <p style={{ color: '#fafafa', fontWeight: 600 }}>{new Date(profile.createdAt || '').toLocaleDateString('sv-SE')}</p>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          {profile.status === 'Pending' && (
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+              <button
+                onClick={() => approveCreator.mutate()}
+                disabled={approveCreator.isPending}
+                style={{
+                  ...s.btnApprove,
+                  padding: '0.75rem 1.5rem',
+                  fontSize: '.95rem',
+                  fontWeight: 700,
+                  opacity: approveCreator.isPending ? 0.6 : 1,
+                }}
+              >
+                {approveCreator.isPending ? '✓ Godkänner...' : '✓ Godkänn denna creator'}
+              </button>
+
+              <div style={{ flex: 1, display: 'flex', gap: '.5rem' }}>
+                <input
+                  type="text"
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="Orsak till avvisning..."
+                  style={{ flex: 1, borderRadius: '.5rem', border: '1px solid #1e1e2e', background: '#0a0a0f', padding: '.75rem', fontSize: '.9rem', color: '#fafafa', outline: 'none' }}
+                />
+                <button
+                  onClick={() => rejectCreator.mutate(rejectReason)}
+                  disabled={rejectCreator.isPending || !rejectReason.trim()}
+                  style={{
+                    ...s.btnReject,
+                    padding: '0.75rem 1.5rem',
+                    fontSize: '.95rem',
+                    fontWeight: 700,
+                    opacity: rejectCreator.isPending || !rejectReason.trim() ? 0.6 : 1,
+                  }}
+                >
+                  {rejectCreator.isPending ? '✕ Avvisar...' : '✕ Avvisa'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {profile.status === 'Rejected' && (
+            <div style={{ background: 'rgba(244,67,54,.1)', border: '1px solid #f44336', borderRadius: '0.5rem', padding: '1rem' }}>
+              <p style={{ color: '#f44336', fontSize: '.9rem', fontWeight: 600 }}>❌ Denna profil har avvisats</p>
+            </div>
+          )}
+
+          {profile.status === 'Approved' && (
+            <div style={{ background: 'rgba(76,175,80,.1)', border: '1px solid #4caf50', borderRadius: '0.5rem', padding: '1rem' }}>
+              <p style={{ color: '#4caf50', fontSize: '.9rem', fontWeight: 600 }}>✓ Denna profil är godkänd</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AdminDashboardPage() {
   const [page] = useState(1);
   const [searchParams, setSearchParams] = useSearchParams();
   const section = (searchParams.get('section') as 'users' | 'campaigns') || 'users';
   const filter = (searchParams.get('tab') as 'all' | 'pending' | 'active' | 'rejected') || 'pending';
+  const creatorId = searchParams.get('creatorId');
+
+  // If viewing a creator profile, show that instead
+  if (creatorId) {
+    return <AdminCreatorProfilePage creatorId={creatorId} onBack={() => setSearchParams({ section, tab: filter })} />;
+  }
 
   const setSection = (s: 'users' | 'campaigns') => setSearchParams({ section: s, tab: s === 'users' ? 'pending' : '' });
   const setFilter = (f: 'all' | 'pending' | 'active' | 'rejected') => setSearchParams({ section, tab: f });
@@ -270,7 +543,7 @@ export function AdminDashboardPage() {
             {!isError && filteredUsers.map((user) => (
               <div key={user.id} style={s.card}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '.75rem', marginBottom: '1rem' }}>
-                  <div>
+                  <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginBottom: '.5rem' }}>
                       <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>
                         {user.role === 'Creator' ? user.displayName || user.email : user.companyName || user.email}
@@ -282,12 +555,22 @@ export function AdminDashboardPage() {
                       {user.email} · Registrerad {new Date(user.createdAt).toLocaleDateString('sv-SE')}
                     </p>
                   </div>
-                  <button
-                    onClick={() => setExpandedId(expandedId === user.id ? null : user.id)}
-                    style={{ background: 'none', border: '1px solid #1e1e2e', borderRadius: '.5rem', padding: '.5rem .75rem', color: '#8b8ba3', cursor: 'pointer', fontSize: '.8rem' }}
-                  >
-                    {expandedId === user.id ? 'Dölj detaljer' : 'Visa detaljer'}
-                  </button>
+                  <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center' }}>
+                    {user.role === 'Creator' && (
+                      <button
+                        onClick={() => setSearchParams({ section: 'users', tab: filter, creatorId: user.id })}
+                        style={{ background: 'none', border: '1px solid #7c3aed', borderRadius: '.5rem', padding: '.5rem .75rem', color: '#7c3aed', cursor: 'pointer', fontSize: '.8rem', fontWeight: 600 }}
+                      >
+                        Visa profil
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setExpandedId(expandedId === user.id ? null : user.id)}
+                      style={{ background: 'none', border: '1px solid #1e1e2e', borderRadius: '.5rem', padding: '.5rem .75rem', color: '#8b8ba3', cursor: 'pointer', fontSize: '.8rem' }}
+                    >
+                      {expandedId === user.id ? 'Dölj' : 'Detaljer'}
+                    </button>
+                  </div>
                 </div>
 
                 {expandedId === user.id && (
