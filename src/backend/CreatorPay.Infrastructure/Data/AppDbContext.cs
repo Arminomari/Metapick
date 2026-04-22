@@ -1,5 +1,6 @@
 using CreatorPay.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace CreatorPay.Infrastructure.Data;
 
@@ -64,14 +65,14 @@ public class AppDbContext : DbContext
             .Property(e => e.ContentTags)
             .HasColumnType("text")
             .HasConversion(
-                v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                v => System.Text.Json.JsonSerializer.Deserialize<string[]>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? Array.Empty<string>());
+                v => SerializeStringArray(v),
+                v => DeserializeStringArray(v));
         modelBuilder.Entity<CreatorProfile>()
             .Property(e => e.ProfileTags)
             .HasColumnType("text")
             .HasConversion(
-                v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                v => System.Text.Json.JsonSerializer.Deserialize<string[]>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? Array.Empty<string>());
+                v => SerializeStringArray(v),
+                v => DeserializeStringArray(v));
 
         // Store all enums as strings
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
@@ -97,5 +98,22 @@ public class AppDbContext : DbContext
                 entry.Entity.UpdatedAt = now;
         }
         return base.SaveChangesAsync(cancellationToken);
+    }
+
+    private static string SerializeStringArray(string[]? value)
+        => JsonSerializer.Serialize(value ?? Array.Empty<string>(), (JsonSerializerOptions?)null);
+
+    private static string[] DeserializeStringArray(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return Array.Empty<string>();
+        try
+        {
+            return JsonSerializer.Deserialize<string[]>(raw, (JsonSerializerOptions?)null) ?? Array.Empty<string>();
+        }
+        catch
+        {
+            // Tolerate legacy/plain-text rows instead of crashing all reads.
+            return Array.Empty<string>();
+        }
     }
 }
