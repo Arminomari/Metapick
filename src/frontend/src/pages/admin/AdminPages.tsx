@@ -37,6 +37,13 @@ interface AdminCampaign {
   createdAt: string;
 }
 
+function getApiErrorMessage(error: any, fallback: string) {
+  return error?.response?.data?.error?.message
+    ?? error?.response?.data?.title
+    ?? error?.message
+    ?? fallback;
+}
+
 const s = {
   page: { minHeight: '100vh', background: '#0a0a0f', color: '#fafafa', padding: 'clamp(1rem, 4vw, 2rem)' } as React.CSSProperties,
   container: { maxWidth: 1100, margin: '0 auto' } as React.CSSProperties,
@@ -139,7 +146,7 @@ export function AdminDashboardPage() {
   const setSection = (s: 'users' | 'campaigns') => setSearchParams({ section: s, tab: s === 'users' ? 'pending' : '' });
   const setFilter = (f: 'all' | 'pending' | 'active' | 'rejected') => setSearchParams({ section, tab: f });
 
-  const { data, isLoading } = usePendingUsers(page);
+  const { data, isLoading, isError, error } = usePendingUsers(page);
   const approveUser = useApproveUser();
   const rejectUser = useRejectUser();
   const [rejectingId, setRejectingId] = useState<string | null>(null);
@@ -147,7 +154,7 @@ export function AdminDashboardPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const triggerSync = useTriggerSync();
 
-  const { data: campaignsData, isLoading: campaignsLoading } = usePendingCampaigns(page);
+  const { data: campaignsData, isLoading: campaignsLoading, isError: campaignsError, error: campaignsErrorObj } = usePendingCampaigns(page);
   const approveCampaign = useApproveCampaign();
   const rejectCampaign = useRejectCampaign();
   const [rejectingCampaignId, setRejectingCampaignId] = useState<string | null>(null);
@@ -241,7 +248,14 @@ export function AdminDashboardPage() {
 
             {isLoading && <div style={s.empty}>Laddar...</div>}
 
-            {!isLoading && filteredUsers.length === 0 && (
+            {isError && (
+              <div style={s.empty as React.CSSProperties}>
+                <p style={{ fontSize: '1.25rem', marginBottom: '.5rem' }}>Kunde inte hämta användare</p>
+                <p style={{ fontSize: '.875rem' }}>{getApiErrorMessage(error, 'Okänt fel')}</p>
+              </div>
+            )}
+
+            {!isLoading && !isError && filteredUsers.length === 0 && (
               <div style={s.empty as React.CSSProperties}>
                 <p style={{ fontSize: '1.25rem', marginBottom: '.5rem' }}>Inga användare att visa</p>
                 <p style={{ fontSize: '.875rem' }}>
@@ -250,7 +264,7 @@ export function AdminDashboardPage() {
               </div>
             )}
 
-            {filteredUsers.map((user) => (
+            {!isError && filteredUsers.map((user) => (
               <div key={user.id} style={s.card}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '.75rem', marginBottom: '1rem' }}>
                   <div>
@@ -339,14 +353,21 @@ export function AdminDashboardPage() {
 
             {campaignsLoading && <div style={s.empty}>Laddar...</div>}
 
-            {!campaignsLoading && (campaignsData?.data || []).length === 0 && (
+            {campaignsError && (
+              <div style={s.empty as React.CSSProperties}>
+                <p style={{ fontSize: '1.25rem', marginBottom: '.5rem' }}>Kunde inte hämta kampanjer</p>
+                <p style={{ fontSize: '.875rem' }}>{getApiErrorMessage(campaignsErrorObj, 'Okänt fel')}</p>
+              </div>
+            )}
+
+            {!campaignsLoading && !campaignsError && (campaignsData?.data || []).length === 0 && (
               <div style={s.empty as React.CSSProperties}>
                 <p style={{ fontSize: '1.25rem', marginBottom: '.5rem' }}>Inga kampanjer att granska</p>
                 <p style={{ fontSize: '.875rem' }}>Alla kampanjer är hanterade!</p>
               </div>
             )}
 
-            {(campaignsData?.data || []).map((campaign) => (
+            {!campaignsError && (campaignsData?.data || []).map((campaign) => (
               <div key={campaign.id} style={s.card}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '.75rem', marginBottom: '.75rem' }}>
                   <div>
