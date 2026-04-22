@@ -223,6 +223,8 @@ export function CreateCampaignPage() {
         setError(resp.error.message);
       } else if (resp?.title) {
         setError(resp.title + (resp?.detail ? `: ${resp.detail}` : ''));
+      } else if (err?.response?.status === 401) {
+        setError('Sessionen har gått ut. Logga ut och in igen.');
       } else {
         setError(`Fel ${err?.response?.status ?? '?'}: ${JSON.stringify(resp ?? err?.message ?? 'okänt fel')}`);
       }

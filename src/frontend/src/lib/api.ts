@@ -32,10 +32,12 @@ api.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${data.data.accessToken}`;
           return api(originalRequest);
         } catch {
-          useAuthStore.getState().logout();
-          window.location.href = '/login';
+          // refresh failed — force re-login
         }
       }
+      useAuthStore.getState().logout();
+      window.location.href = '/login';
+      return Promise.reject(error);
     }
     return Promise.reject(error);
   },
