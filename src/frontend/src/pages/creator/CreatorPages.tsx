@@ -18,6 +18,13 @@ import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
 import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
 import type { AssignmentListItem } from '@/types';
 
+function getApiErrorMessage(error: any, fallback: string) {
+  return error?.response?.data?.error?.message
+    ?? error?.response?.data?.title
+    ?? error?.message
+    ?? fallback;
+}
+
 // ── TikTok Alert Banner ────────────────────────────────
 function TikTokAlertBanner({ compact = false }: { compact?: boolean }) {
   const { data: tikTokStatus, isLoading } = useTikTokStatus();
@@ -106,8 +113,8 @@ export function CreatorDashboard() {
 export function BrowseCampaignsPage() {
   const [category] = useState<string>();
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useBrowseCampaigns(category, undefined, page);
-  const { data: myApps } = useMyApplications();
+  const { data, isLoading, isError, error } = useBrowseCampaigns(category, undefined, page);
+  const { data: myApps, isError: myAppsError, error: myAppsErrorObj } = useMyApplications();
   const apply = useApplyToCampaign();
   const [applyingId, setApplyingId] = useState<string | null>(null);
 
@@ -155,7 +162,20 @@ export function BrowseCampaignsPage() {
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Utforska kampanjer</h1>
       <TikTokAlertBanner compact />
-      {isLoading ? <LoadingSpinner /> : (
+      {isError && (
+        <EmptyState
+          title="Kunde inte hämta kampanjer"
+          description={getApiErrorMessage(error, 'Något gick fel när kampanjer skulle hämtas.')}
+        />
+      )}
+      {myAppsError && (
+        <Card className="border-yellow-500/30 bg-yellow-500/10">
+          <p className="text-sm text-yellow-200">
+            Kunde inte hämta dina ansökningar: {getApiErrorMessage(myAppsErrorObj, 'okänt fel')}
+          </p>
+        </Card>
+      )}
+      {!isError && (isLoading ? <LoadingSpinner /> : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {data?.data.map((c) => (
@@ -201,7 +221,7 @@ export function BrowseCampaignsPage() {
           {data && <Pagination page={page} totalCount={data.totalCount} pageSize={data.pageSize} onPageChange={setPage} />}
           {!data?.data.length && <EmptyState title="Inga kampanjer tillgängliga" description="Kom tillbaka senare!" />}
         </>
-      )}
+      ))}
     </div>
   );
 }
@@ -524,7 +544,7 @@ export function EarningsPage() {
 
 // ── Creator Profile ────────────────────────────────────
 export function CreatorProfilePage() {
-  const { data: profile, isLoading } = useCreatorProfile();
+  const { data: profile, isLoading, isError, error } = useCreatorProfile();
   const { data: tikTokStatus } = useTikTokStatus();
   const update = useUpdateCreatorProfile();
   const [editing, setEditing] = useState(false);
@@ -566,6 +586,9 @@ export function CreatorProfilePage() {
   };
 
   if (isLoading) return <LoadingSpinner />;
+  if (isError) {
+    return <EmptyState title="Kunde inte hämta profil" description={getApiErrorMessage(error, 'Ett oväntat fel inträffade.')} />;
+  }
   if (!profile) return <EmptyState title="Profil hittades inte" description="" />;
 
   return (
