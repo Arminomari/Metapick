@@ -57,7 +57,8 @@ public record UpdateBrandProfileRequest(
 public record CreatorProfileDto(
     Guid Id, string DisplayName, string? Bio, string Category, string Country,
     string Language, string? AvatarUrl, int FollowerCount, int? AverageViews,
-    string Status, bool TikTokConnected, string? TikTokUsername, DateTime CreatedAt);
+    string Status, bool TikTokConnected, string? TikTokUsername, DateTime CreatedAt,
+    List<string> ProfileTags);
 
 public record CreatorListDto(
     Guid Id, string DisplayName, string Category, string Country,
@@ -65,7 +66,7 @@ public record CreatorListDto(
 
 public record UpdateCreatorProfileRequest(
     string DisplayName, string? Bio, string Category, string Country, string Language,
-    string? TikTokUsername, DateOnly? DateOfBirth);
+    string? TikTokUsername, DateOnly? DateOfBirth, List<string>? ProfileTags);
 
 // ──── Campaign ────
 public record CreateCampaignRequest(
@@ -78,7 +79,9 @@ public record CreateCampaignRequest(
     string ReviewMode,
     List<CampaignRequirementDto> Requirements,
     List<CampaignRuleDto> Rules,
-    List<PayoutRuleDto> PayoutRules);
+    List<PayoutRuleDto> PayoutRules,
+    string? Perks,
+    List<string>? ContentTags);
 
 public record UpdateCampaignRequest(
     string? Name, string? Description, string? TargetAudience,
@@ -112,13 +115,15 @@ public record CampaignDetailDto(
     List<CampaignRequirementDto> Requirements,
     List<CampaignRuleDto> Rules,
     List<PayoutRuleDto> PayoutRules,
-    DateTime CreatedAt, DateTime? PublishedAt);
+    DateTime CreatedAt, DateTime? PublishedAt,
+    string? Perks, List<string> ContentTags);
 
 public record CampaignBrowseDto(
     Guid Id, string Name, string BrandName, string Category, string Country,
     string Description, int MinViews, string PayoutModel, string PayoutSummary,
     int MaxCreators, int SpotsLeft, DateTime StartDate, DateTime EndDate,
-    List<CampaignRequirementDto> Requirements, string? CoverImageUrl);
+    List<CampaignRequirementDto> Requirements, string? CoverImageUrl,
+    string? Perks, List<string> ContentTags);
 
 // ──── Application ────
 public record ApplyToCampaignRequest(Guid CampaignId, string? Message);

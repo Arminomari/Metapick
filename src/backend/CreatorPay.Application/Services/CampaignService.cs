@@ -62,7 +62,9 @@ public class CampaignService : ICampaignService
             StartDate = DateTime.SpecifyKind(request.StartDate, DateTimeKind.Utc),
             EndDate = DateTime.SpecifyKind(request.EndDate, DateTimeKind.Utc),
             ReviewMode = Enum.TryParse<ReviewMode>(request.ReviewMode, out var rm) ? rm : ReviewMode.ManualReview,
-            Status = CampaignStatus.Draft
+            Status = CampaignStatus.Draft,
+            Perks = request.Perks,
+            ContentTags = request.ContentTags?.ToArray() ?? []
         };
 
         // Add requirements
@@ -369,7 +371,8 @@ public class CampaignService : ICampaignService
             x.ActiveSlots,
             x.Campaign.StartDate, x.Campaign.EndDate,
             x.Requirements,
-            x.Campaign.CoverImageUrl
+            x.Campaign.CoverImageUrl,
+            x.Campaign.Perks, x.Campaign.ContentTags?.ToList() ?? []
         )).ToList();
 
         return new PagedResult<CampaignBrowseDto>
@@ -451,7 +454,8 @@ public class CampaignService : ICampaignService
             c.MaxCreators - c.Assignments.Count(a => a.Status == AssignmentStatus.Active),
             c.StartDate, c.EndDate,
             c.Requirements.Select(r => new CampaignRequirementDto(r.RequirementType.ToString(), r.Value, r.IsRequired)).ToList(),
-            c.CoverImageUrl
+            c.CoverImageUrl,
+            c.Perks, c.ContentTags?.ToList() ?? []
         )).ToList();
 
         return new CursorPagedResult<CampaignBrowseDto>
@@ -566,5 +570,6 @@ public class CampaignService : ICampaignService
             c.Requirements?.Select(r => new CampaignRequirementDto(r.RequirementType.ToString(), r.Value, r.IsRequired)).ToList() ?? [],
             c.Rules?.Select(r => new CampaignRuleDto(r.RuleType.ToString(), r.Description, r.IsMandatory)).ToList() ?? [],
             c.PayoutRules?.Select(r => new PayoutRuleDto(r.PayoutType.ToString(), r.MinViews, r.MaxViews, r.Amount, r.MaxPayoutPerCreator, r.SortOrder)).ToList() ?? [],
-            c.CreatedAt, c.PublishedAt);
+            c.CreatedAt, c.PublishedAt,
+            c.Perks, c.ContentTags?.ToList() ?? []);
 }

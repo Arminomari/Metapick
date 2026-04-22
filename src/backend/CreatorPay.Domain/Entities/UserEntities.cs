@@ -71,6 +71,8 @@ public class CreatorProfile : SoftDeletableEntity
     public string? RejectionReason { get; set; }
     public string? PayoutMethod { get; set; }
     public string? PayoutDetailsEncrypted { get; set; }
+    /// <summary>Creator expertise/platform tags, e.g. ["TikTok Creator","UGC Creator","Beauty"]</summary>
+    public string[] ProfileTags { get; set; } = [];
 
     // Navigation
     public User User { get; set; } = null!;

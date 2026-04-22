@@ -55,6 +55,20 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<BrandProfile>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<CreatorProfile>().HasQueryFilter(e => !e.IsDeleted);
 
+        // Store string[] as JSON text columns
+        modelBuilder.Entity<Campaign>()
+            .Property(e => e.ContentTags)
+            .HasColumnType("text")
+            .HasConversion(
+                v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                v => System.Text.Json.JsonSerializer.Deserialize<string[]>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? Array.Empty<string>());
+        modelBuilder.Entity<CreatorProfile>()
+            .Property(e => e.ProfileTags)
+            .HasColumnType("text")
+            .HasConversion(
+                v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                v => System.Text.Json.JsonSerializer.Deserialize<string[]>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? Array.Empty<string>());
+
         // Store all enums as strings
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {

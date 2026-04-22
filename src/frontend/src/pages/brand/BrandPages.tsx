@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useBrandCampaigns, useCampaignDetail, useCampaignAnalytics, useCampaignApplications, usePublishCampaign, useCreateCampaign, useApproveApplication, useRejectApplication, useApproveSubmission, useRejectSubmission, useMarkManualPayoutSent, useBrandProfile, useUpdateBrandProfile, useChangePassword } from '@/hooks/api';
 import { Button, Card, DataTable, EmptyState, LoadingSpinner, Pagination, StatCard, StatusBadge, type Column } from '@/components/ui';
 import { DateInput } from '@/components/ui/DateInput';
+import { TagSelector } from '@/components/ui/TagSelector';
 import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
 import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
+import { PLATFORM_TAGS, NICHE_TAGS } from '@/lib/tags';
 import type { CampaignListItem, ApplicationItem, CreateCampaignRequest, CreatorPerformance, CreatorVideo } from '@/types';
 
 function getPayoutStatusLabel(status: string) {
@@ -94,6 +96,7 @@ export function CreateCampaignPage() {
     maxCreators: 10, requiredVideoCount: 1, startDate: '', endDate: '', reviewMode: 'ManualReview',
     minViews: 0, requirements: [], rules: [],
     payoutRules: [{ payoutType: 'FixedThreshold', minViews: 1000, amount: 500, sortOrder: 0 }],
+    perks: '', contentTags: [],
   });
 
   const set = (key: keyof CreateCampaignRequest) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -435,6 +438,32 @@ export function CreateCampaignPage() {
               placeholder="Beskriv vad creators ska göra..." />
           </div>
 
+          {/* ── Content Tags ── */}
+          <div className="border border-border rounded-lg p-4 space-y-3 bg-muted/20">
+            <h3 className="font-semibold text-sm">Innehållstaggar <span className="text-muted-foreground font-normal text-xs">— vilken typ av innehåll söker ni?</span></h3>
+            <TagSelector
+              label="Plattform & format"
+              tags={PLATFORM_TAGS}
+              selected={form.contentTags ?? []}
+              onChange={tags => setForm({ ...form, contentTags: tags })}
+            />
+            <TagSelector
+              label="Nisch & kategori"
+              tags={NICHE_TAGS}
+              selected={form.contentTags ?? []}
+              onChange={tags => setForm({ ...form, contentTags: tags })}
+            />
+          </div>
+
+          {/* ── Perks & PR ── */}
+          <div className="border border-border rounded-lg p-4 bg-muted/20">
+            <h3 className="font-semibold text-sm mb-1">Förmåner & PR <span className="text-muted-foreground font-normal text-xs">— valfritt</span></h3>
+            <p className="text-xs text-muted-foreground mb-2">Beskriv vad godkända creators får utöver ersättningen, t.ex. rabattkod, PR-utskick, gratisprodukt</p>
+            <textarea value={form.perks ?? ''} onChange={set('perks')} rows={3}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              placeholder="Exempel: 30% rabattkod på hela sortimentet + PR-paket med produkter värda 500 kr" />
+          </div>
+
           {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="flex gap-3">
             <Button type="submit" disabled={create.isPending}>
@@ -517,6 +546,27 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
         <h2 className="font-semibold mb-2">Beskrivning</h2>
         <p className="text-sm text-muted-foreground">{campaign.description}</p>
       </Card>
+
+      {(campaign.contentTags?.length > 0 || campaign.perks) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {campaign.contentTags?.length > 0 && (
+            <Card>
+              <h2 className="font-semibold mb-2">Innehållstaggar</h2>
+              <div className="flex flex-wrap gap-2">
+                {campaign.contentTags.map(tag => (
+                  <span key={tag} className="px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">{tag}</span>
+                ))}
+              </div>
+            </Card>
+          )}
+          {campaign.perks && (
+            <Card>
+              <h2 className="font-semibold mb-2">🎁 Förmåner för creators</h2>
+              <p className="text-sm text-muted-foreground whitespace-pre-line">{campaign.perks}</p>
+            </Card>
+          )}
+        </div>
+      )}
 
       {analytics && (
         <Card>

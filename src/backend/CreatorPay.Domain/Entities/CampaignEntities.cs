@@ -31,6 +31,10 @@ public class Campaign : SoftDeletableEntity
     public string? CoverImageUrl { get; set; }
     public DateTime? PublishedAt { get; set; }
     public int RowVersion { get; set; }
+    /// <summary>Free-text description of perks/benefits creators receive (discount codes, PR packages, etc.)</summary>
+    public string? Perks { get; set; }
+    /// <summary>Content-type tags the brand is looking for, e.g. ["TikTok Video","Instagram Reels"]</summary>
+    public string[] ContentTags { get; set; } = [];
 
     // Navigation
     public BrandProfile BrandProfile { get; set; } = null!;

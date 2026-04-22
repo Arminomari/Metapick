@@ -48,6 +48,8 @@ public class CreatorService : ICreatorService
         creator.Language = request.Language;
         if (request.DateOfBirth.HasValue)
             creator.DateOfBirth = request.DateOfBirth;
+        if (request.ProfileTags != null)
+            creator.ProfileTags = request.ProfileTags.ToArray();
 
         // Update or create TikTok account
         if (!string.IsNullOrWhiteSpace(request.TikTokUsername))
@@ -134,5 +136,6 @@ public class CreatorService : ICreatorService
         new(c.Id, c.DisplayName, c.Bio, c.Category, c.Country, c.Language,
             c.AvatarUrl, c.FollowerCount, c.AverageViews, c.Status.ToString(),
             c.TikTokAccount != null && c.TikTokAccount.IsActive,
-            c.TikTokAccount?.TikTokUsername, c.CreatedAt);
+            c.TikTokAccount?.TikTokUsername, c.CreatedAt,
+            c.ProfileTags?.ToList() ?? []);
 }

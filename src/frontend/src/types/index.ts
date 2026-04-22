@@ -35,6 +35,7 @@ export interface CreatorProfile {
   tikTokConnected: boolean;
   tikTokUsername?: string;
   createdAt: string;
+  profileTags: string[];
 }
 
 // ── Campaigns ──────────────────────────────────────────
@@ -82,6 +83,8 @@ export interface CampaignDetail {
   payoutRules: PayoutRule[];
   createdAt: string;
   publishedAt?: string;
+  perks?: string;
+  contentTags: string[];
 }
 
 export interface CampaignBrowseItem {
@@ -100,6 +103,8 @@ export interface CampaignBrowseItem {
   endDate: string;
   requirements: CampaignRequirement[];
   coverImageUrl?: string;
+  perks?: string;
+  contentTags: string[];
 }
 
 export interface CampaignRequirement {
@@ -145,6 +150,8 @@ export interface CreateCampaignRequest {
   requirements: { requirementType: string; value: string; isRequired: boolean }[];
   rules: { ruleType: string; description: string; isMandatory: boolean }[];
   payoutRules: { payoutType: string; minViews: number; maxViews?: number; amount: number; maxPayoutPerCreator?: number; sortOrder: number }[];
+  perks?: string;
+  contentTags: string[];
 }
 
 // ── Applications ───────────────────────────────────────

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { DateInput } from '@/components/ui/DateInput';
+import { TagSelector } from '@/components/ui/TagSelector';
+import { ALL_TAGS } from '@/lib/tags';
 import {
   useBrowseCampaigns, useCreatorAssignments, useAssignmentDetail,
   useCreatorPayouts, useApplyToCampaign, useSubmitVideo, useMyApplications,
@@ -171,6 +173,19 @@ export function BrowseCampaignsPage() {
                     <p><strong>Platser kvar:</strong> {c.spotsLeft} av {c.maxCreators}</p>
                     <p><strong>Period:</strong> {formatDate(c.startDate)} – {formatDate(c.endDate)}</p>
                   </div>
+                  {c.contentTags && c.contentTags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {c.contentTags.slice(0, 5).map(tag => (
+                        <span key={tag} className="px-2 py-0.5 rounded-full text-xs bg-primary/10 text-primary border border-primary/20">{tag}</span>
+                      ))}
+                      {c.contentTags.length > 5 && (
+                        <span className="px-2 py-0.5 rounded-full text-xs text-muted-foreground">+{c.contentTags.length - 5}</span>
+                      )}
+                    </div>
+                  )}
+                  {c.perks && (
+                    <p className="text-xs text-muted-foreground mt-2">🎁 {c.perks}</p>
+                  )}
                 </div>
                 <Button className="mt-4 w-full" onClick={() => handleApply(c.id)}
                   disabled={isDisabled(c.id, c.spotsLeft)}
@@ -499,7 +514,7 @@ export function CreatorProfilePage() {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
     displayName: '', bio: '', category: 'Övrigt', country: 'SE', language: 'sv',
-    tikTokUsername: '', dateOfBirth: '',
+    tikTokUsername: '', dateOfBirth: '', profileTags: [] as string[],
   });
   const [saved, setSaved] = useState(false);
   const [initialized, setInitialized] = useState(false);
@@ -514,6 +529,7 @@ export function CreatorProfilePage() {
       language: profile.language,
       tikTokUsername: profile.tikTokUsername ?? '',
       dateOfBirth: '',
+      profileTags: profile.profileTags ?? [],
     });
     setInitialized(true);
   }
@@ -610,6 +626,28 @@ export function CreatorProfilePage() {
             <DateInput value={form.dateOfBirth} onChange={v => setForm({ ...form, dateOfBirth: v })} disabled={!editing}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60" />
           </div>
+
+          {editing && (
+            <div className="border border-border rounded-lg p-4 bg-muted/20">
+              <TagSelector
+                label="Profiltaggar — vad är du expert på?"
+                tags={ALL_TAGS}
+                selected={form.profileTags}
+                onChange={tags => setForm({ ...form, profileTags: tags })}
+                max={10}
+              />
+            </div>
+          )}
+          {!editing && form.profileTags.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium mb-2">Profiltaggar</label>
+              <div className="flex flex-wrap gap-2">
+                {form.profileTags.map(t => (
+                  <span key={t} className="px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/30">{t}</span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {saved && <p className="text-sm text-green-600">✓ Profilen har sparats!</p>}
 
