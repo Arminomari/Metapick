@@ -221,8 +221,10 @@ export function CreateCampaignPage() {
         setError(msgs.join('. '));
       } else if (resp?.error?.message) {
         setError(resp.error.message);
+      } else if (resp?.title) {
+        setError(resp.title + (resp?.detail ? `: ${resp.detail}` : ''));
       } else {
-        setError('Kunde inte skapa kampanjen. Kontrollera att alla fält är korrekt ifyllda.');
+        setError(`Fel ${err?.response?.status ?? '?'}: ${JSON.stringify(resp ?? err?.message ?? 'okänt fel')}`);
       }
     }
   };

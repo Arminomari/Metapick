@@ -227,6 +227,23 @@ app.MapHealthChecks("/health/ready",
         await db.SaveChangesAsync();
         Log.Information("Seeded admin account: admin@metapick.se");
     }
+
+    // ── Auto-approve all pending brand accounts ────────
+    var pendingBrandUsers = await db.Users
+        .Where(u => u.Role == CreatorPay.Domain.Enums.UserRole.Brand
+                 && u.Status == CreatorPay.Domain.Enums.UserStatus.PendingVerification)
+        .ToListAsync();
+    if (pendingBrandUsers.Count > 0)
+    {
+        var pendingBrandIds = pendingBrandUsers.Select(u => u.Id).ToList();
+        var pendingBrandProfiles = await db.Set<CreatorPay.Domain.Entities.BrandProfile>()
+            .Where(b => pendingBrandIds.Contains(b.UserId) && b.Status == CreatorPay.Domain.Enums.BrandStatus.Pending)
+            .ToListAsync();
+        foreach (var u in pendingBrandUsers) u.Status = CreatorPay.Domain.Enums.UserStatus.Active;
+        foreach (var b in pendingBrandProfiles) b.Status = CreatorPay.Domain.Enums.BrandStatus.Approved;
+        await db.SaveChangesAsync();
+        Log.Information("Auto-approved {Count} pending brand accounts", pendingBrandUsers.Count);
+    }
 }
 
 Log.Information("CreatorPay API starting on {Env}", app.Environment.EnvironmentName);
