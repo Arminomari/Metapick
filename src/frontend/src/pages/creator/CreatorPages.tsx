@@ -19,7 +19,10 @@ import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
 import type { AssignmentListItem } from '@/types';
 
 function getApiErrorMessage(error: any, fallback: string) {
-  return error?.response?.data?.error?.message
+  const apiError = error?.response?.data?.error;
+  const detail = Array.isArray(apiError?.details) ? apiError.details[1] ?? apiError.details[0] : undefined;
+  return detail
+    ?? apiError?.message
     ?? error?.response?.data?.title
     ?? error?.message
     ?? fallback;

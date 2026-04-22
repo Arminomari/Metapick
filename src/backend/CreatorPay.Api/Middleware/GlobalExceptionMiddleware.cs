@@ -37,9 +37,18 @@ public class GlobalExceptionMiddleware
         }
         catch (Exception ex)
         {
+            var traceId = context.TraceIdentifier;
             _logger.LogError(ex, "Unhandled exception: {Message}", ex.Message);
             await WriteResponse(context, HttpStatusCode.InternalServerError,
-                new ApiError("INTERNAL_ERROR", "An unexpected error occurred"));
+                new ApiError("INTERNAL_ERROR", $"An unexpected error occurred (ref: {traceId})")
+                {
+                    Details =
+                    [
+                        $"Type: {ex.GetType().Name}",
+                        $"Message: {ex.Message}",
+                        $"TraceId: {traceId}"
+                    ]
+                });
         }
     }
 
