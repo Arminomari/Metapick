@@ -63,9 +63,19 @@ public class AdminUserService : IAdminUserService
             .Where(t => creatorIds.Contains(t.CreatorProfileId))
             .ToListAsync();
 
-        var brandByUser    = brands.ToDictionary(b => b.UserId);
-        var creatorByUser  = creators.ToDictionary(c => c.UserId);
-        var tiktokByCreator = tiktokAccounts.ToDictionary(t => t.CreatorProfileId);
+        // Be defensive against duplicate rows in production data.
+        var brandByUser = brands
+            .OrderByDescending(b => b.CreatedAt)
+            .GroupBy(b => b.UserId)
+            .ToDictionary(g => g.Key, g => g.First());
+        var creatorByUser = creators
+            .OrderByDescending(c => c.CreatedAt)
+            .GroupBy(c => c.UserId)
+            .ToDictionary(g => g.Key, g => g.First());
+        var tiktokByCreator = tiktokAccounts
+            .OrderByDescending(t => t.CreatedAt)
+            .GroupBy(t => t.CreatorProfileId)
+            .ToDictionary(g => g.Key, g => g.First());
 
         var dtos = users.Select(user =>
         {

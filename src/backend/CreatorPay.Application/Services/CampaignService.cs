@@ -345,9 +345,9 @@ public class CampaignService : ICampaignService
     public async Task<Result<PagedResult<CampaignBrowseDto>>> BrowseCampaignsAsync(
         string? category, string? country, int page, int pageSize, CancellationToken ct = default)
     {
-        var today = DateTime.UtcNow.Date;
+        var todayStart = DateTime.UtcNow.Date;
         var query = _campaigns.Query()
-            .Where(c => c.Status == CampaignStatus.Active && !c.IsDeleted && c.EndDate.Date >= today);
+            .Where(c => c.Status == CampaignStatus.Active && !c.IsDeleted && c.EndDate >= todayStart);
 
         if (!string.IsNullOrEmpty(category))
             query = query.Where(c => c.Category == category);
@@ -414,9 +414,9 @@ public class CampaignService : ICampaignService
             }
         }
 
-        var today = DateTime.UtcNow.Date;
+        var todayStart = DateTime.UtcNow.Date;
         var query = _campaigns.Query()
-            .Where(c => c.Status == CampaignStatus.Active && !c.IsDeleted && c.EndDate.Date >= today);
+            .Where(c => c.Status == CampaignStatus.Active && !c.IsDeleted && c.EndDate >= todayStart);
 
         if (!string.IsNullOrEmpty(category))
             query = query.Where(c => c.Category == category);
