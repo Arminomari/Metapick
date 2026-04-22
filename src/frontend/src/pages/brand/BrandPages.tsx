@@ -1,6 +1,6 @@
 import { useState, type FormEvent as ReactFormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useBrandCampaigns, useCampaignDetail, useCampaignAnalytics, useCampaignApplications, usePublishCampaign, useCreateCampaign, useApproveApplication, useRejectApplication, useApproveSubmission, useRejectSubmission, useMarkManualPayoutSent, useBrandProfile, useUpdateBrandProfile, useChangePassword, useAssignmentDetail } from '@/hooks/api';
+import { useBrandCampaigns, useCampaignDetail, useCampaignAnalytics, useCampaignApplications, usePublishCampaign, useCreateCampaign, useApproveApplication, useRejectApplication, useApproveSubmission, useRejectSubmission, useMarkManualPayoutSent, useBrandProfile, useUpdateBrandProfile, useChangePassword, useAssignmentDetail, useChatMessages } from '@/hooks/api';
 import { Button, Card, DataTable, EmptyState, LoadingSpinner, Pagination, StatCard, StatusBadge, type Column } from '@/components/ui';
 import { DateInput } from '@/components/ui/DateInput';
 import { TagSelector } from '@/components/ui/TagSelector';
@@ -19,6 +19,26 @@ function getPayoutStatusLabel(status: string) {
   if (status === 'Pending') return 'Väntar';
   if (status === 'Processing') return 'Bearbetas';
   return status;
+}
+
+function CreatorInlineChat({ assignmentId }: { assignmentId: string }) {
+  const { data: messages = [] } = useChatMessages(assignmentId);
+  const unreadFromCreator = messages.filter((m) => m.senderRole === 'Creator' && !m.isRead).length;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold">Direktchatt</h3>
+        {unreadFromCreator > 0 && (
+          <span className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+            +{unreadFromCreator} nytt
+          </span>
+        )}
+      </div>
+      <ChatPanel assignmentId={assignmentId} />
+    </div>
+  );
 }
 
 // ── Brand Dashboard ────────────────────────────────────
@@ -619,13 +639,6 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
                           {markManualPayoutSent.isPending ? 'Markerar...' : 'Betala manuellt'}
                         </Button>
                       )}
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => navigate(`/brand/assignments/${cp.assignmentId}`)}
-                      >
-                        💬 Chatt & Omdöme
-                      </Button>
                     </div>
                   </div>
                 </div>
@@ -634,60 +647,67 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
                     Creatorn har godkända videos men har inte nått betalningsnivån ännu.
                   </p>
                 )}
-                {cp.videos && cp.videos.length > 0 ? (
-                  <div className="space-y-4">
-                    {cp.videos.map((v: CreatorVideo, i: number) => (
-                      <div key={i} className="bg-muted/30 rounded-lg p-3 space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span>{formatNumber(v.views)} views</span>
-                          <div className="flex items-center gap-2">
-                            <StatusBadge status={v.status} />
-                            <span className="text-xs text-muted-foreground">{formatDate(v.createdAt)}</span>
-                          </div>
-                        </div>
-                        <TikTokEmbed videoUrl={v.videoUrl} compact />
-                        {v.rejectionReason && (
-                          <p className="text-xs text-red-400">Anledning: {v.rejectionReason}</p>
-                        )}
-                        {v.submissionId && v.status !== 'Approved' && v.status !== 'Rejected' && (
-                          <div className="flex items-center gap-2 pt-1">
-                            <Button size="sm" onClick={() => approveSubmission.mutateAsync(v.submissionId!)}
-                              disabled={approveSubmission.isPending}>
-                              ✓ Godkänn
-                            </Button>
-                            {rejectingId === v.submissionId ? (
-                              <div className="flex items-center gap-2 flex-1">
-                                <input type="text" value={rejectReason} onChange={e => setRejectReason(e.target.value)}
-                                  placeholder="Anledning (valfritt)"
-                                  className="flex-1 rounded-md border border-input bg-background px-2 py-1 text-sm" />
-                                <Button size="sm" variant="destructive"
-                                  onClick={() => { rejectSubmission.mutateAsync({ id: v.submissionId!, reason: rejectReason || undefined }); setRejectingId(null); setRejectReason(''); }}
-                                  disabled={rejectSubmission.isPending}>
-                                  Neka
-                                </Button>
-                                <Button size="sm" variant="ghost" onClick={() => { setRejectingId(null); setRejectReason(''); }}>
-                                  Avbryt
-                                </Button>
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                  <div className="xl:col-span-2">
+                    {cp.videos && cp.videos.length > 0 ? (
+                      <div className="space-y-4">
+                        {cp.videos.map((v: CreatorVideo, i: number) => (
+                          <div key={i} className="bg-muted/30 rounded-lg p-3 space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span>{formatNumber(v.views)} views</span>
+                              <div className="flex items-center gap-2">
+                                <StatusBadge status={v.status} />
+                                <span className="text-xs text-muted-foreground">{formatDate(v.createdAt)}</span>
                               </div>
-                            ) : (
-                              <Button size="sm" variant="destructive" onClick={() => setRejectingId(v.submissionId!)}>
-                                ✗ Neka
-                              </Button>
+                            </div>
+                            <TikTokEmbed videoUrl={v.videoUrl} compact />
+                            {v.rejectionReason && (
+                              <p className="text-xs text-red-400">Anledning: {v.rejectionReason}</p>
+                            )}
+                            {v.submissionId && v.status !== 'Approved' && v.status !== 'Rejected' && (
+                              <div className="flex items-center gap-2 pt-1">
+                                <Button size="sm" onClick={() => approveSubmission.mutateAsync(v.submissionId!)}
+                                  disabled={approveSubmission.isPending}>
+                                  ✓ Godkänn
+                                </Button>
+                                {rejectingId === v.submissionId ? (
+                                  <div className="flex items-center gap-2 flex-1">
+                                    <input type="text" value={rejectReason} onChange={e => setRejectReason(e.target.value)}
+                                      placeholder="Anledning (valfritt)"
+                                      className="flex-1 rounded-md border border-input bg-background px-2 py-1 text-sm" />
+                                    <Button size="sm" variant="destructive"
+                                      onClick={() => { rejectSubmission.mutateAsync({ id: v.submissionId!, reason: rejectReason || undefined }); setRejectingId(null); setRejectReason(''); }}
+                                      disabled={rejectSubmission.isPending}>
+                                      Neka
+                                    </Button>
+                                    <Button size="sm" variant="ghost" onClick={() => { setRejectingId(null); setRejectReason(''); }}>
+                                      Avbryt
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <Button size="sm" variant="destructive" onClick={() => setRejectingId(v.submissionId!)}>
+                                    ✗ Neka
+                                  </Button>
+                                )}
+                              </div>
+                            )}
+                            {v.status === 'Approved' && (
+                              <span className="inline-block text-xs text-green-400 font-medium">✓ Godkänd</span>
+                            )}
+                            {v.status === 'Rejected' && (
+                              <span className="inline-block text-xs text-red-400 font-medium">✗ Nekad</span>
                             )}
                           </div>
-                        )}
-                        {v.status === 'Approved' && (
-                          <span className="inline-block text-xs text-green-400 font-medium">✓ Godkänd</span>
-                        )}
-                        {v.status === 'Rejected' && (
-                          <span className="inline-block text-xs text-red-400 font-medium">✗ Nekad</span>
-                        )}
+                        ))}
                       </div>
-                    ))}
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Inga videos ännu</p>
+                    )}
                   </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">Inga videos ännu</p>
-                )}
+                  <div className="xl:col-span-1">
+                    <CreatorInlineChat assignmentId={cp.assignmentId} />
+                  </div>
+                </div>
               </div>
               );
             })}
