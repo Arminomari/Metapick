@@ -30,11 +30,7 @@ public static class ServiceCollectionExtensions
 
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connStr,
-                npgsql =>
-                {
-                    npgsql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
-                    npgsql.EnableRetryOnFailure(3);
-                }));
+                npgsql => npgsql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)));
 
         // ── Repositories ───────────────────────────────
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
