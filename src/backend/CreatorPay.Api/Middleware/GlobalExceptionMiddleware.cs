@@ -10,11 +10,16 @@ public class GlobalExceptionMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<GlobalExceptionMiddleware> _logger;
+    private readonly IHostEnvironment _environment;
 
-    public GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExceptionMiddleware> logger)
+    public GlobalExceptionMiddleware(
+        RequestDelegate next,
+        ILogger<GlobalExceptionMiddleware> logger,
+        IHostEnvironment environment)
     {
         _next = next;
         _logger = logger;
+        _environment = environment;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -39,16 +44,19 @@ public class GlobalExceptionMiddleware
         {
             var traceId = context.TraceIdentifier;
             _logger.LogError(ex, "Unhandled exception: {Message}", ex.Message);
-            await WriteResponse(context, HttpStatusCode.InternalServerError,
-                new ApiError("INTERNAL_ERROR", $"An unexpected error occurred (ref: {traceId})")
-                {
-                    Details =
-                    [
-                        $"Type: {ex.GetType().Name}",
-                        $"Message: {ex.Message}",
-                        $"TraceId: {traceId}"
-                    ]
-                });
+
+            var error = new ApiError("INTERNAL_ERROR", $"An unexpected error occurred (ref: {traceId})");
+            if (_environment.IsDevelopment())
+            {
+                error.Details =
+                [
+                    $"Type: {ex.GetType().Name}",
+                    $"Message: {ex.Message}",
+                    $"TraceId: {traceId}"
+                ];
+            }
+
+            await WriteResponse(context, HttpStatusCode.InternalServerError, error);
         }
     }
 
@@ -59,6 +67,41 @@ public class GlobalExceptionMiddleware
         var json = JsonSerializer.Serialize(new { error = error },
             new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         await context.Response.WriteAsync(json);
+    }
+}
+
+public class SecurityHeadersMiddleware
+{
+    private readonly RequestDelegate _next;
+
+    public SecurityHeadersMiddleware(RequestDelegate next)
+    {
+        _next = next;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        context.Response.OnStarting(() =>
+        {
+            var headers = context.Response.Headers;
+            headers.TryAdd("X-Content-Type-Options", "nosniff");
+            headers.TryAdd("X-Frame-Options", "DENY");
+            headers.TryAdd("Referrer-Policy", "strict-origin-when-cross-origin");
+            headers.TryAdd("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+
+            if (!context.Request.Path.StartsWithSegments("/swagger") &&
+                !context.Request.Path.StartsWithSegments("/hangfire"))
+            {
+                headers.TryAdd(
+                    "Content-Security-Policy",
+                    "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self' data:;"
+                );
+            }
+
+            return Task.CompletedTask;
+        });
+
+        await _next(context);
     }
 }
 

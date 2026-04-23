@@ -125,7 +125,7 @@ public class EncryptionService : IEncryptionService
     /// </summary>
     private readonly byte[] _key;
 
-    public EncryptionService(IConfiguration config)
+    public EncryptionService(IConfiguration config, IHostEnvironment env)
     {
         var b64 = config["Encryption:Key"];
         if (!string.IsNullOrWhiteSpace(b64))
@@ -133,6 +133,10 @@ public class EncryptionService : IEncryptionService
             _key = Convert.FromBase64String(b64);
             if (_key.Length != 32)
                 throw new InvalidOperationException("Encryption:Key must be a 32-byte value (base-64 encoded).");
+        }
+        else if (env.IsProduction())
+        {
+            throw new InvalidOperationException("Encryption:Key must be configured in production.");
         }
         else
         {

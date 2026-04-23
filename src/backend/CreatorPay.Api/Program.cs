@@ -8,6 +8,7 @@ using FluentValidation.AspNetCore;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
@@ -36,19 +37,40 @@ builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>()
 var jwtSecret = builder.Configuration["Jwt:Secret"]
     ?? throw new InvalidOperationException("Jwt:Secret is required");
 
+if (jwtSecret.Length < 32)
+    throw new InvalidOperationException("Jwt:Secret must be at least 32 characters long");
+
+if (!builder.Environment.IsDevelopment() && jwtSecret.Contains("CHANGE-THIS", StringComparison.OrdinalIgnoreCase))
+    throw new InvalidOperationException("Production Jwt:Secret must not use placeholder values");
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+        options.SaveToken = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
+            RequireSignedTokens = true,
+            RequireExpirationTime = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
             ClockSkew = TimeSpan.FromMinutes(1)
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = context =>
+            {
+                var sub = context.Principal?.FindFirst("sub")?.Value;
+                if (!Guid.TryParse(sub, out _))
+                    context.Fail("Invalid subject claim");
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -97,7 +119,17 @@ builder.Services.AddCors(options =>
         var fromEnv = (builder.Configuration["CORS_ORIGINS"] ?? "")
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         var origins = (configured ?? []).Concat(fromEnv).Distinct().ToArray();
-        if (origins.Length == 0) origins = ["http://localhost:5173"];
+        if (origins.Length == 0)
+        {
+            if (builder.Environment.IsDevelopment())
+            {
+                origins = ["http://localhost:5173"];
+            }
+            else
+            {
+                throw new InvalidOperationException("CORS origins must be configured outside development");
+            }
+        }
 
         policy.WithOrigins(origins)
               .WithHeaders("Content-Type", "Authorization", "Accept")
@@ -125,6 +157,13 @@ builder.Services.AddHangfire(config =>
 builder.Services.AddHealthChecks()
     .AddCheck<CreatorPay.Api.Middleware.DatabaseHealthCheck>("database", tags: ["ready"]);
 builder.Services.AddScoped<CreatorPay.Api.Middleware.DatabaseHealthCheck>();
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // ── Controllers & Swagger ──────────────────────────────
 builder.Services.AddControllers()
@@ -167,12 +206,20 @@ var app = builder.Build();
 
 // ── Middleware pipeline ─────────────────────────────────
 app.UseMiddleware<GlobalExceptionMiddleware>();
+app.UseForwardedHeaders();
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseMiddleware<SecurityHeadersMiddleware>();
 
 app.UseRateLimiter();
 app.UseCors("Frontend");
@@ -201,13 +248,28 @@ app.MapHealthChecks("/health/ready",
     await db.Database.MigrateAsync();
 
     // ── Seed admin account ─────────────────────────────
-    var encryption = scope.ServiceProvider.GetRequiredService<CreatorPay.Application.Interfaces.IEncryptionService>();
-    if (!await db.Users.AnyAsync(u => u.Role == CreatorPay.Domain.Enums.UserRole.Admin))
+    var seedAdminEnabled = builder.Configuration.GetValue<bool?>("Bootstrap:SeedAdminEnabled")
+        ?? app.Environment.IsDevelopment();
+    if (seedAdminEnabled && !await db.Users.AnyAsync(u => u.Role == CreatorPay.Domain.Enums.UserRole.Admin))
     {
+        var encryption = scope.ServiceProvider.GetRequiredService<CreatorPay.Application.Interfaces.IEncryptionService>();
+        var adminEmail = builder.Configuration["Bootstrap:AdminEmail"];
+        var adminPassword = builder.Configuration["Bootstrap:AdminPassword"];
+
+        if (string.IsNullOrWhiteSpace(adminEmail))
+            adminEmail = app.Environment.IsDevelopment() ? "admin@metapick.se" : null;
+        if (string.IsNullOrWhiteSpace(adminPassword))
+            adminPassword = app.Environment.IsDevelopment() ? "Admin123!" : null;
+
+        if (string.IsNullOrWhiteSpace(adminEmail) || string.IsNullOrWhiteSpace(adminPassword))
+            throw new InvalidOperationException("Bootstrap admin credentials must be configured when Bootstrap:SeedAdminEnabled is true");
+        if (!app.Environment.IsDevelopment() && adminPassword.Length < 12)
+            throw new InvalidOperationException("Bootstrap admin password must be at least 12 characters outside development");
+
         var admin = new CreatorPay.Domain.Entities.User
         {
-            Email = "admin@metapick.se",
-            PasswordHash = encryption.HashPassword("Admin123!"),
+            Email = adminEmail,
+            PasswordHash = encryption.HashPassword(adminPassword),
             FirstName = "Admin",
             LastName = "MetaPick",
             Role = CreatorPay.Domain.Enums.UserRole.Admin,
@@ -225,24 +287,30 @@ app.MapHealthChecks("/health/ready",
         db.Set<CreatorPay.Domain.Entities.AdminProfile>().Add(adminProfile);
 
         await db.SaveChangesAsync();
-        Log.Information("Seeded admin account: admin@metapick.se");
+        Log.Information("Seeded admin account: {Email}", adminEmail);
     }
 
     // ── Auto-approve all pending brand accounts ────────
-    var pendingBrandUsers = await db.Users
-        .Where(u => u.Role == CreatorPay.Domain.Enums.UserRole.Brand
-                 && u.Status == CreatorPay.Domain.Enums.UserStatus.PendingVerification)
-        .ToListAsync();
-    if (pendingBrandUsers.Count > 0)
+    var autoApprovePendingBrands = builder.Configuration.GetValue<bool?>("Bootstrap:AutoApprovePendingBrands")
+        ?? app.Environment.IsDevelopment();
+    if (autoApprovePendingBrands)
     {
-        var pendingBrandIds = pendingBrandUsers.Select(u => u.Id).ToList();
-        var pendingBrandProfiles = await db.Set<CreatorPay.Domain.Entities.BrandProfile>()
-            .Where(b => pendingBrandIds.Contains(b.UserId) && b.Status == CreatorPay.Domain.Enums.BrandStatus.Pending)
+        var pendingBrandUsers = await db.Users
+            .Where(u => u.Role == CreatorPay.Domain.Enums.UserRole.Brand
+                     && u.Status == CreatorPay.Domain.Enums.UserStatus.PendingVerification)
             .ToListAsync();
-        foreach (var u in pendingBrandUsers) u.Status = CreatorPay.Domain.Enums.UserStatus.Active;
-        foreach (var b in pendingBrandProfiles) b.Status = CreatorPay.Domain.Enums.BrandStatus.Approved;
-        await db.SaveChangesAsync();
-        Log.Information("Auto-approved {Count} pending brand accounts", pendingBrandUsers.Count);
+
+        if (pendingBrandUsers.Count > 0)
+        {
+            var pendingBrandIds = pendingBrandUsers.Select(u => u.Id).ToList();
+            var pendingBrandProfiles = await db.Set<CreatorPay.Domain.Entities.BrandProfile>()
+                .Where(b => pendingBrandIds.Contains(b.UserId) && b.Status == CreatorPay.Domain.Enums.BrandStatus.Pending)
+                .ToListAsync();
+            foreach (var u in pendingBrandUsers) u.Status = CreatorPay.Domain.Enums.UserStatus.Active;
+            foreach (var b in pendingBrandProfiles) b.Status = CreatorPay.Domain.Enums.BrandStatus.Approved;
+            await db.SaveChangesAsync();
+            Log.Warning("Bootstrap auto-approved {Count} pending brand accounts", pendingBrandUsers.Count);
+        }
     }
 }
 

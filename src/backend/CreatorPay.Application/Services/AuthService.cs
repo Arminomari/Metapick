@@ -62,7 +62,6 @@ public class AuthService : IAuthService
 
         if (role == UserRole.Brand)
         {
-            user.Status = UserStatus.Active;
             var brand = new BrandProfile
             {
                 UserId = user.Id,
@@ -71,7 +70,7 @@ public class AuthService : IAuthService
                 Industry = "Övrigt",
                 Country = request.Country ?? "SE",
                 ContactPhone = request.ContactPhone,
-                Status = BrandStatus.Approved
+                Status = BrandStatus.Pending
             };
             _brands.Add(brand);
         }
