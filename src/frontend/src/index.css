@@ -2,39 +2,314 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────
+   MetaPick — Creator-coded design system
+   Warm cream base · sunset accent · bold modern grotesk
+   ───────────────────────────────────────────────────────────── */
+
 @layer base {
   :root {
-    --background: 240 10% 4%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 8%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 8%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 330 80% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 270 50% 25%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 10% 12%;
-    --muted-foreground: 240 10% 60%;
-    --accent: 263 70% 50%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 240 10% 14%;
-    --input: 240 10% 14%;
-    --ring: 330 80% 60%;
-    --radius: 0.5rem;
-    --success: 142.1 76.2% 36.3%;
-    --warning: 38 92% 50%;
+    /* — surfaces — */
+    --background:        38 38% 95%;   /* warm cream, lighter & brighter */
+    --paper:             38 50% 97%;
+    --ivory:             40 60% 98%;
+    --sand:              34 38% 90%;
+    --foreground:        24 18% 12%;   /* warm black ink */
+    --graphite:          24 18% 12%;
+
+    --card:               40 60% 98%;
+    --card-foreground:    24 18% 12%;
+    --popover:            40 60% 98%;
+    --popover-foreground: 24 18% 12%;
+
+    /* — accent: deep sunset coral (more alive than oxblood) — */
+    --primary:           8 78% 52%;
+    --primary-foreground: 38 60% 98%;
+
+    /* — peachy accent for gradient mate — */
+    --accent:            22 88% 62%;
+    --accent-foreground: 24 18% 12%;
+
+    /* — warm taupe — */
+    --secondary:         34 28% 86%;
+    --secondary-foreground: 24 18% 12%;
+
+    --muted:             36 26% 90%;
+    --muted-foreground:  24 8%  38%;
+
+    --destructive:        2 62% 48%;
+    --destructive-foreground: 38 60% 98%;
+
+    --success:           150 38% 36%;
+    --warning:           28 88% 50%;
+
+    --border:            34 24% 82%;
+    --border-strong:     28 18% 60%;
+    --input:             34 24% 82%;
+    --ring:               8 78% 52%;
+    --shadow:            24 30% 14%;
+
+    /* signature sunset gradient — used sparingly, never neon */
+    --gradient-sunset:
+      linear-gradient(135deg,
+        hsl(40  92% 70%) 0%,
+        hsl(22  88% 62%) 35%,
+        hsl(8   78% 52%) 70%,
+        hsl(353 60% 38%) 100%);
+
+    --radius: 20px;
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
+  *,
+  *::before,
+  *::after {
+    border-color: hsl(var(--border));
   }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Inter Tight', Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-feature-settings: 'ss01', 'ss02', 'cv11', 'rlig' 1, 'calt' 1;
+    letter-spacing: -0.01em;
+    line-height: 1.55;
+    position: relative;
+  }
+
+  /* Subtle paper grain — keeps it tactile, not sterile */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.18  0 0 0 0 0.14  0 0 0 0 0.10  0 0 0 0.06 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  /* Sunset wash behind page */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      radial-gradient(80%  60% at 95% -10%, hsl(22 92% 78% / 0.6), transparent 55%),
+      radial-gradient(70%  50% at -5% 110%, hsl(40 90% 80% / 0.45), transparent 60%);
+  }
+
+  #root { position: relative; z-index: 1; }
+
+  h1, h2, h3, h4 {
+    font-family: 'Inter Tight', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-weight: 700;
+    color: hsl(var(--foreground));
+    letter-spacing: -0.035em;
+    line-height: 1.02;
+  }
+
+  p { line-height: 1.6; }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.25);
+    color: hsl(var(--foreground));
+  }
+
+  /* Inputs — soft pill style */
+  input, textarea, select {
+    background: hsl(var(--ivory));
+    color: hsl(var(--foreground));
+    border: 1px solid hsl(var(--border));
+    border-radius: 14px;
+    padding: 0.7rem 1rem;
+    transition: border-color 220ms cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow   220ms cubic-bezier(0.16, 1, 0.3, 1),
+                background   220ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: hsl(var(--primary) / 0.6);
+    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.12);
+    background: hsl(var(--paper));
+  }
+  input::placeholder, textarea::placeholder { color: hsl(var(--muted-foreground) / 0.7); }
+
+  button { font-family: inherit; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--sand));
+    border-radius: 999px;
+    border: 2px solid hsl(var(--background));
+  }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--border-strong)); }
+
+  *:focus-visible {
+    outline: 2px solid hsl(var(--primary) / 0.6);
+    outline-offset: 3px;
+    border-radius: 8px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
+
+@layer components {
+  /* Punchy display heading */
+  .text-display {
+    font-family: 'Inter Tight', Inter, sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.045em;
+    line-height: 0.95;
+  }
+
+  /* Sunset gradient text — saftigt utan att vara neon */
+  .text-sunset {
+    background: var(--gradient-sunset);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .bg-sunset { background: var(--gradient-sunset); }
+
+  /* Eyebrow */
+  .eyebrow {
+    font-family: 'Inter Tight', Inter, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Hairline divider */
+  .hairline {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, hsl(var(--border-strong) / 0.55) 12%, hsl(var(--border-strong) / 0.55) 88%, transparent);
+  }
+
+  /* Surface — friendly rounded card */
+  .surface {
+    background: linear-gradient(180deg, hsl(var(--ivory)) 0%, hsl(var(--card)) 100%);
+    border: 1px solid hsl(var(--border));
+    border-radius: 24px;
+    box-shadow:
+      0 1px 2px hsl(var(--shadow) / 0.04),
+      0 18px 40px -24px hsl(var(--shadow) / 0.18);
+  }
+  .surface-quiet {
+    background: hsl(var(--paper));
+    border: 1px solid hsl(var(--border) / 0.6);
+    border-radius: 20px;
+  }
+  .surface-deep {
+    background: hsl(var(--graphite));
+    color: hsl(var(--ivory));
+    border-radius: 28px;
+  }
+
+  /* Pill button base — extra lift, extra friendly */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 280ms cubic-bezier(0.16, 1, 0.3, 1),
+                background 280ms cubic-bezier(0.16, 1, 0.3, 1),
+                color      280ms cubic-bezier(0.16, 1, 0.3, 1),
+                border     280ms cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+  }
+  .pill:hover:not(:disabled) { transform: translateY(-2px); }
+  .pill:active:not(:disabled) { transform: translateY(0); }
+  .pill:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Sticker — small badge with confident lift */
+  .sticker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.34rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    background: hsl(var(--ivory));
+    color: hsl(var(--foreground));
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 1px 2px hsl(var(--shadow) / 0.04);
+  }
+  .sticker-hot {
+    background: hsl(var(--primary) / 0.10);
+    color: hsl(var(--primary));
+    border-color: hsl(var(--primary) / 0.22);
+  }
+
+  /* Chip (filter / tag) */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.32rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    background: hsl(var(--secondary));
+    color: hsl(var(--secondary-foreground));
+    border: 1px solid hsl(var(--border));
+  }
+
+  .input-underline {
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 1px solid hsl(var(--border-strong)) !important;
+    border-radius: 0 !important;
+    padding-left: 0.25rem !important;
+    padding-right: 0.25rem !important;
+  }
+  .input-underline:focus {
+    border-bottom-color: hsl(var(--primary)) !important;
+    box-shadow: none !important;
+  }
+
+  .col-narrow { max-width: 56ch; }
+  .col-prose  { max-width: 64ch; line-height: 1.65; }
+
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  /* Avatar gradient ring */
+  .avatar-ring {
+    background: var(--gradient-sunset);
+    padding: 2px;
+    border-radius: 999px;
+  }
+}
+
+

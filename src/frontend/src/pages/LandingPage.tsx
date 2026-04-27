@@ -2,6 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 
+/* ─────────────────────────────────────────────────────────────
+   LandingPage — creator-coded edition.
+   Inga påhittade siffror, inga riktiga varumärken, inga
+   påhittade citat eller personer. All copy är generisk
+   produktbeskrivning som inte gör faktiska påståenden.
+   ───────────────────────────────────────────────────────────── */
+
 export function LandingPage() {
   const navigate = useNavigate();
   const { isAuthenticated, role } = useAuthStore();
@@ -24,247 +31,378 @@ export function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: '#0a0a0f', color: '#fafafa', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
-      {/* NAV */}
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, background: 'rgba(10,10,15,.7)', backdropFilter: 'blur(16px)', borderBottom: '1px solid #1e1e2e' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, maxWidth: 1100, margin: '0 auto', padding: '0 1.25rem' }}>
-          <a href="/" style={{ fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', color: '#fafafa', flexShrink: 0 }}>
-            Meta<span style={{ color: '#e84393' }}>Pick</span>
+    <div className="relative min-h-screen overflow-x-hidden">
+      {/* Decorative sunset blobs */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-0 overflow-hidden">
+        <div className="blob h-[460px] w-[460px] -top-20 -left-24 bg-[hsl(22_92%_70%_/_0.5)]" />
+        <div className="blob h-[520px] w-[520px] top-[60vh] -right-32 bg-[hsl(8_78%_60%_/_0.4)]" />
+        <div className="blob h-[360px] w-[360px] top-[140vh] left-[20vw] bg-[hsl(40_92%_70%_/_0.45)]" />
+      </div>
+
+      {/* NAV ──────────────────────────────────────────── */}
+      <nav className="fixed inset-x-0 top-0 z-50 backdrop-blur-md bg-[hsl(var(--background)/0.7)]">
+        <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-5 md:px-10">
+          <a href="/" className="group flex items-center gap-1.5 leading-none" aria-label="MetaPick">
+            <span className="text-display text-[1.55rem]">meta<span className="text-sunset">pick</span></span>
+            <span className="ml-0.5 inline-block h-1.5 w-1.5 rounded-full bg-sunset" aria-hidden />
           </a>
 
-          {/* Desktop center links */}
-          <div className="hidden-mobile" style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-            <a href="#creators" style={{ fontSize: '.875rem', color: '#8b8ba3', textDecoration: 'none' }}>For Creators</a>
-            <a href="#brands" style={{ fontSize: '.875rem', color: '#8b8ba3', textDecoration: 'none' }}>For Brands</a>
-            <a href="#how-it-works" style={{ fontSize: '.875rem', color: '#8b8ba3', textDecoration: 'none' }}>How It Works</a>
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium">
+            <a href="#creators" className="text-muted-foreground hover:text-foreground transition-colors">For Creators</a>
+            <a href="#brands"   className="text-muted-foreground hover:text-foreground transition-colors">For Brands</a>
+            <a href="#how"      className="text-muted-foreground hover:text-foreground transition-colors">How it works</a>
           </div>
 
-          {/* Desktop right buttons */}
-          <div className="hidden-mobile" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
-            <button onClick={() => navigate('/login')} style={{ background: 'none', border: 'none', color: '#8b8ba3', fontSize: '.875rem', cursor: 'pointer', padding: '.5rem 1rem' }}>Logga in</button>
-            <button onClick={() => navigate('/register')} style={{ background: '#e84393', color: '#fff', border: 'none', padding: '.5rem 1.25rem', borderRadius: '.5rem', fontSize: '.875rem', fontWeight: 600, cursor: 'pointer' }}>Skapa konto</button>
+          <div className="hidden md:flex items-center gap-2">
+            <button onClick={() => navigate('/login')}    className="pill h-10 px-5 text-sm text-foreground hover:bg-[hsl(var(--sand))]">Logga in</button>
+            <button onClick={() => navigate('/register')} className="pill h-10 px-5 text-sm bg-foreground text-background hover:opacity-90 shadow-soft">
+              Skapa konto <span aria-hidden>→</span>
+            </button>
           </div>
 
-          {/* Mobile: login + hamburger */}
-          <div className="show-mobile" style={{ display: 'none', alignItems: 'center', gap: '.5rem' }}>
-            <button onClick={() => navigate('/login')} style={{ background: 'none', border: 'none', color: '#8b8ba3', fontSize: '.875rem', cursor: 'pointer', padding: '.375rem .75rem' }}>Logga in</button>
+          <div className="md:hidden flex items-center gap-1">
+            <button onClick={() => navigate('/login')} className="pill h-9 px-3 text-xs">Logga in</button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              style={{ background: 'none', border: 'none', color: '#8b8ba3', cursor: 'pointer', padding: '.375rem' }}
+              className="p-2 text-muted-foreground hover:text-foreground"
               aria-label="Meny"
             >
               {mobileMenuOpen
                 ? <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="13" x2="17" y2="13"/><line x1="3" y1="19" x2="13" y2="19"/></svg>
               }
             </button>
           </div>
         </div>
+        <div className="hairline mx-5 md:mx-10" />
 
-        {/* Mobile dropdown */}
         {mobileMenuOpen && (
-          <div style={{ borderTop: '1px solid #1e1e2e', padding: '1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '.75rem', background: 'rgba(10,10,15,.95)' }}>
-            <a href="#creators" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '.9rem', color: '#8b8ba3', textDecoration: 'none' }}>For Creators</a>
-            <a href="#brands" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '.9rem', color: '#8b8ba3', textDecoration: 'none' }}>For Brands</a>
-            <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '.9rem', color: '#8b8ba3', textDecoration: 'none' }}>How It Works</a>
-            <button onClick={() => navigate('/register')} style={{ background: '#e84393', color: '#fff', border: 'none', padding: '.625rem 1.25rem', borderRadius: '.5rem', fontSize: '.875rem', fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>
-              Skapa konto
-            </button>
+          <div className="md:hidden px-5 py-5 flex flex-col gap-3 bg-[hsl(var(--paper))]">
+            <a href="#creators" onClick={() => setMobileMenuOpen(false)} className="py-1.5 font-medium">For Creators</a>
+            <a href="#brands"   onClick={() => setMobileMenuOpen(false)} className="py-1.5 font-medium">For Brands</a>
+            <a href="#how"      onClick={() => setMobileMenuOpen(false)} className="py-1.5 font-medium">How it works</a>
+            <button onClick={() => navigate('/register')} className="pill mt-2 h-11 px-5 bg-foreground text-background self-start">Skapa konto →</button>
           </div>
         )}
       </nav>
 
-      <style>{`
-        @keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-        @media(max-width:640px){
-          .hidden-mobile{display:none!important}
-          .show-mobile{display:flex!important}
-        }
-      `}</style>
-
-      {/* HERO */}
-      <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', position: 'relative', paddingTop: 64 }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(124,58,237,.3), rgba(232,67,147,.15) 40%, transparent 70%)', pointerEvents: 'none' }} />
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: 800, padding: '0 1.5rem' }}>
-          <div style={{ display: 'inline-block', padding: '.375rem 1rem', border: '1px solid #1e1e2e', borderRadius: 999, fontSize: '.75rem', color: '#8b8ba3', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '1.5rem' }}>
-            The #1 Influencer-Brand Platform
+      {/* HERO ─────────────────────────────────────────── */}
+      <section className="relative pt-32 md:pt-40 pb-16 md:pb-24">
+        <div className="mx-auto max-w-[1280px] px-5 md:px-10">
+          <div className="flex justify-center mb-8">
+            <div className="sticker">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
+              Creator marketplace
+            </div>
           </div>
-          <h1 style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontWeight: 800, lineHeight: 1.1, marginBottom: '1.5rem', letterSpacing: '-.02em' }}>
-            Where Influencers{' '}
-            <span style={{ background: 'linear-gradient(135deg, #e84393, #7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              Meet Brands
-            </span>
+
+          <h1 className="text-display text-center text-[clamp(3rem,10vw,8rem)]">
+            Get paid<br />
+            for your <span className="text-sunset">vibe</span>.
           </h1>
-          <p style={{ fontSize: '1.125rem', color: '#8b8ba3', maxWidth: 600, margin: '0 auto 2.5rem' }}>
-            Connect with top brands, create authentic content, and earn money doing what you love. MetaPick makes it effortless.
+
+          <p className="mt-8 text-center mx-auto col-prose text-[1.1rem] md:text-[1.2rem] text-muted-foreground">
+            MetaPick är creator marketplace där brands och creators möts direkt.
+            Inga cold DMs, inga spreadsheets, ingen agency-mellanhand — bara content och payouts på ett ställe.
           </p>
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={handleJoinCreator} style={{ padding: '.875rem 2rem', borderRadius: '.75rem', fontSize: '1rem', fontWeight: 600, cursor: 'pointer', background: '#e84393', color: '#fff', border: 'none' }}>
-              Join as Creator →
+
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+            <button
+              onClick={handleJoinCreator}
+              className="pill h-14 px-9 text-[1rem] bg-foreground text-background hover:opacity-95 shadow-lift"
+            >
+              Bli creator <span aria-hidden>→</span>
             </button>
-            <button onClick={handleForBrands} style={{ padding: '.875rem 2rem', borderRadius: '.75rem', fontSize: '1rem', fontWeight: 600, cursor: 'pointer', background: 'transparent', color: '#fafafa', border: '1px solid #1e1e2e' }}>
-              For Brands
+            <button
+              onClick={handleForBrands}
+              className="pill h-14 px-9 text-[1rem] bg-[hsl(var(--ivory))] text-foreground border border-[hsl(var(--border))] hover:bg-[hsl(var(--sand))]"
+            >
+              Jag är ett brand
             </button>
           </div>
-        </div>
-      </section>
 
-      {/* BRANDS MARQUEE */}
-      <section style={{ padding: '4rem 0', borderTop: '1px solid #1e1e2e', borderBottom: '1px solid #1e1e2e', overflow: 'hidden' }}>
-        <p style={{ textAlign: 'center', fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.2em', color: '#8b8ba3', marginBottom: '2rem' }}>
-          Trusted by leading brands
-        </p>
-        <div style={{ display: 'flex', whiteSpace: 'nowrap', animation: 'scroll 25s linear infinite' }}>
-          {['NIKE', 'ADIDAS', 'H&M', 'ZARA', 'ASOS', 'PUMA', 'GUCCI', 'DIOR', 'CHANEL', 'BURBERRY'].concat(['NIKE', 'ADIDAS', 'H&M', 'ZARA', 'ASOS', 'PUMA', 'GUCCI', 'DIOR', 'CHANEL', 'BURBERRY']).map((b, i) => (
-            <span key={i} style={{ margin: '0 2.5rem', fontSize: '1.25rem', fontWeight: 700, color: 'rgba(138,138,163,.35)', userSelect: 'none' }}>{b}</span>
-          ))}
-        </div>
-      </section>
-
-      {/* FEATURES */}
-      <section id="brands" style={{ padding: '6rem 0' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 1.5rem' }}>
-          <h2 style={{ fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', fontWeight: 800, textAlign: 'center', marginBottom: '1rem' }}>Built for Both Sides</h2>
-          <p style={{ textAlign: 'center', color: '#8b8ba3', maxWidth: 480, margin: '0 auto 4rem' }}>
-            Whether you're a brand looking for reach or a creator looking for income — MetaPick has you covered.
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            Gratis att registrera · Kom igång på minuter
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', maxWidth: 900, margin: '0 auto' }}>
-            <div style={{ borderRadius: '1rem', padding: '2rem', border: '1px solid rgba(124,58,237,.2)', background: 'rgba(45,27,78,.4)' }}>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '.75rem' }}>For Brands</h3>
-              <p style={{ color: '#8b8ba3', fontSize: '.9rem', marginBottom: '1.5rem' }}>
-                Find the perfect creators for your campaigns. Target by niche, audience size, and engagement rate.
-              </p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginBottom: '1rem', fontSize: '.875rem' }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#e84393', flexShrink: 0 }} /> Launch campaigns in minutes
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', fontSize: '.875rem' }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#e84393', flexShrink: 0 }} /> Track real-time performance
-              </div>
-            </div>
-            <div id="creators" style={{ borderRadius: '1rem', padding: '2rem', border: '1px solid rgba(232,67,147,.15)', background: 'rgba(232,67,147,.08)' }}>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '.75rem' }}>For Creators</h3>
-              <p style={{ color: '#8b8ba3', fontSize: '.9rem', marginBottom: '1.5rem' }}>
-                Discover brand deals that match your style. No more cold DMs — brands come to you.
-              </p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginBottom: '1rem', fontSize: '.875rem' }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#e84393', flexShrink: 0 }} /> Get discovered by top brands
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', fontSize: '.875rem' }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#e84393', flexShrink: 0 }} /> Transparent earnings & payouts
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* HOW IT WORKS */}
-      <section id="how-it-works" style={{ padding: '6rem 0' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 1.5rem' }}>
-          <h2 style={{ fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', fontWeight: 800, textAlign: 'center', marginBottom: '1rem' }}>How It Works</h2>
-          <p style={{ textAlign: 'center', color: '#8b8ba3', maxWidth: 480, margin: '0 auto 4rem' }}>
-            Three simple steps to start earning as a creator.
-          </p>
-          <div style={{ maxWidth: 600, margin: '0 auto' }}>
-            {[
-              { num: '01', title: 'Discover', desc: 'Browse brands and campaigns that fit your niche and audience.' },
-              { num: '02', title: 'Create & Share', desc: 'Create authentic content and share it with your followers.' },
-              { num: '03', title: 'Earn', desc: 'Get paid directly through the platform. No hassle, no delays.' },
-            ].map((step, i) => (
-              <div key={i} style={{ display: 'flex', gap: '1.5rem' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(232,67,147,.15)', border: '1px solid rgba(232,67,147,.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#e84393', fontSize: '.875rem', flexShrink: 0 }}>
-                    {i + 1}
+          {/* Visual mockup — abstract gradient surfaces, no fake metrics */}
+          <div className="relative mt-20 md:mt-28 mx-auto max-w-[1080px]">
+            <div className="grid grid-cols-12 gap-4 md:gap-6">
+              {/* Big gradient hero card — abstract */}
+              <div
+                className="col-span-12 md:col-span-7 relative aspect-[16/10] rounded-[28px] overflow-hidden shadow-floaty bg-sunset"
+                aria-hidden
+              >
+                <div className="absolute inset-0 mix-blend-overlay opacity-30 bg-[radial-gradient(ellipse_at_top_right,_white,_transparent_60%)]" />
+                <div className="absolute inset-0 p-7 md:p-9 flex flex-col justify-between text-[hsl(var(--ivory))]">
+                  <div className="flex items-center gap-3">
+                    <div className="avatar-ring">
+                      <div className="h-10 w-10 rounded-full bg-[hsl(var(--ivory))]" />
+                    </div>
+                    <div className="h-3 w-24 rounded-full bg-white/40" />
+                    <span className="ml-auto sticker !bg-white/20 !border-white/30 !text-white !backdrop-blur-sm">Preview</span>
                   </div>
-                  {i < 2 && <div style={{ width: 1, flex: 1, background: '#1e1e2e', margin: '.5rem 0' }} />}
-                </div>
-                <div style={{ paddingBottom: i < 2 ? '3rem' : 0 }}>
-                  <span style={{ fontSize: '.75rem', color: '#e84393', fontFamily: 'monospace' }}>{step.num}</span>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '.25rem 0 .5rem' }}>{step.title}</h3>
-                  <p style={{ fontSize: '.875rem', color: '#8b8ba3' }}>{step.desc}</p>
+                  <div>
+                    <div className="text-display text-[clamp(1.75rem,4.5vw,3rem)] leading-[0.95]">
+                      Ditt content,<br />ditt språk.
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className="h-2 w-16 rounded-full bg-white/50" />
+                      <span className="h-2 w-10 rounded-full bg-white/30" />
+                    </div>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* STATS */}
-      <section style={{ padding: '6rem 0', borderTop: '1px solid #1e1e2e', borderBottom: '1px solid #1e1e2e' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 1.5rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '3rem', textAlign: 'center' }}>
-            {[
-              { val: '10,000+', label: 'Creators' },
-              { val: '500+', label: 'Brands' },
-              { val: '€2M+', label: 'Earned by Creators' },
-            ].map((s, i) => (
-              <div key={i}>
-                <div style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 800, background: 'linear-gradient(135deg, #e84393, #7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                  {s.val}
+              {/* Feature card — payouts */}
+              <div className="col-span-7 md:col-span-5 surface aspect-[5/4] md:aspect-auto p-7 md:p-8 flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <span className="eyebrow">Payouts</span>
+                  <span className="sticker">Auto</span>
                 </div>
-                <div style={{ color: '#8b8ba3', marginTop: '.5rem' }}>{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* TESTIMONIALS */}
-      <section style={{ padding: '6rem 0' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 1.5rem' }}>
-          <h2 style={{ fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', fontWeight: 800, textAlign: 'center', marginBottom: '4rem' }}>
-            Loved by Creators & Brands
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', maxWidth: 1000, margin: '0 auto' }}>
-            {[
-              { quote: 'MetaPick changed the game for me. I went from 0 brand deals to working with my dream companies in just 2 months.', name: 'Sara Lindström', role: 'Fashion Creator · 120K followers' },
-              { quote: 'Finding micro-influencers used to take weeks. Now we launch campaigns in hours with creators that actually fit our brand.', name: 'Johan Eriksson', role: 'Marketing Lead, Nordic Brands' },
-              { quote: "The payouts are fast, the dashboard is clean, and I always know what's coming next. Best creator platform I've used.", name: 'Maya Chen', role: 'Lifestyle Creator · 45K followers' },
-            ].map((t, i) => (
-              <div key={i} style={{ background: 'rgba(20,20,31,.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(30,30,46,.5)', borderRadius: '1rem', padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <q style={{ fontSize: '.875rem', color: '#8b8ba3', lineHeight: 1.7, display: 'block', marginBottom: '1.5rem', quotes: 'none' }}>
-                  {t.quote}
-                </q>
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: '.875rem' }}>{t.name}</div>
-                  <div style={{ fontSize: '.75rem', color: '#8b8ba3' }}>{t.role}</div>
+                  <div className="text-display text-sunset text-[clamp(2rem,5vw,3rem)] leading-[1]">Snabba<br />utbetalningar.</div>
+                  <div className="mt-3 text-sm text-muted-foreground">Triggas automatiskt när dina mål nås.</div>
+                </div>
+                <div className="flex items-center gap-2 -space-x-3">
+                  {['linear-gradient(135deg,#FFD27A,#FF8A4C)','linear-gradient(135deg,#FF8A4C,#E8423E)','linear-gradient(135deg,#E8423E,#7C2D2D)','linear-gradient(135deg,#FFB677,#FF6B6B)','linear-gradient(135deg,#F1C27D,#E07856)'].map((g, i) => (
+                    <div key={i} className="h-9 w-9 rounded-full ring-2 ring-[hsl(var(--card))]" style={{ background: g }} aria-hidden />
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* CTA */}
-      <section style={{ padding: '6rem 0' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 1.5rem' }}>
-          <div style={{ background: 'linear-gradient(135deg, #2d1b4e, rgba(124,58,237,.2), rgba(232,67,147,.15))', borderRadius: '1.5rem', padding: '5rem 2rem', textAlign: 'center' }}>
-            <h2 style={{ fontSize: 'clamp(1.75rem, 4vw, 3rem)', fontWeight: 800, marginBottom: '1rem' }}>Ready to grow?</h2>
-            <p style={{ color: '#8b8ba3', maxWidth: 440, margin: '0 auto 2rem' }}>
-              Join thousands of creators and brands already using MetaPick to build partnerships that matter.
-            </p>
-            <button onClick={() => navigate('/register')} style={{ background: '#e84393', color: '#fff', border: 'none', padding: '.875rem 2.5rem', borderRadius: '.75rem', fontSize: '1rem', fontWeight: 600, cursor: 'pointer' }}>
-              Get Started →
-            </button>
-          </div>
-        </div>
-      </section>
+              {/* Brief skeleton card — abstract, no real brand */}
+              <div className="col-span-12 md:col-span-5 surface p-7 flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-9 w-9 rounded-2xl bg-foreground" aria-hidden />
+                    <div className="h-3 w-28 rounded-full bg-[hsl(var(--muted))]" aria-hidden />
+                  </div>
+                  <span className="sticker">Brief</span>
+                </div>
+                <div className="text-display text-[1.5rem]">Så ser en brief ut.</div>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="chip">Nisch</span>
+                  <span className="chip">Audience</span>
+                  <span className="chip">Marknad</span>
+                </div>
+                <div className="hairline" />
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Tydliga villkor</span>
+                  <span className="font-semibold">Per creator</span>
+                </div>
+              </div>
 
-      {/* FOOTER */}
-      <footer style={{ borderTop: '1px solid #1e1e2e', padding: '3rem 0' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 1.5rem' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1.5rem' }}>
-            <a href="/" style={{ fontSize: '1.125rem', fontWeight: 700, textDecoration: 'none', color: '#fafafa' }}>
-              Meta<span style={{ color: '#e84393' }}>Pick</span>
-            </a>
-            <div style={{ display: 'flex', gap: '1.5rem' }}>
-              <a href="#creators" style={{ fontSize: '.875rem', color: '#8b8ba3', textDecoration: 'none' }}>For Creators</a>
-              <a href="#brands" style={{ fontSize: '.875rem', color: '#8b8ba3', textDecoration: 'none' }}>For Brands</a>
-              <a href="#" style={{ fontSize: '.875rem', color: '#8b8ba3', textDecoration: 'none' }}>About</a>
-              <a href="#" style={{ fontSize: '.875rem', color: '#8b8ba3', textDecoration: 'none' }}>Privacy</a>
+              {/* Auto-tracking card */}
+              <div className="col-span-12 md:col-span-7 surface-deep relative overflow-hidden p-7 md:p-9 flex items-center gap-7">
+                <div aria-hidden className="blob h-60 w-60 -top-10 -right-10 bg-[hsl(22_92%_60%_/_0.5)]" />
+                <div className="relative">
+                  <div className="eyebrow !text-[hsl(var(--ivory)/0.6)]">Tracking</div>
+                  <div className="mt-3 text-display text-[clamp(1.6rem,3.2vw,2.4rem)] text-[hsl(var(--ivory))]">
+                    Views räknas<br />
+                    <span className="text-sunset">automatiskt</span>.
+                  </div>
+                  <div className="mt-4 text-sm text-[hsl(var(--ivory)/0.75)] max-w-[34ch]">
+                    Anslut ditt TikTok-konto via TikToks officiella API. Ingen screenshot-jakt, inga spreadsheets.
+                  </div>
+                </div>
+                <div className="hidden sm:block ml-auto relative shrink-0 w-32 h-56 rounded-[28px] bg-[hsl(var(--graphite))] ring-4 ring-[hsl(var(--ivory)/0.1)] shadow-floaty overflow-hidden">
+                  <div className="absolute inset-2 rounded-[22px] bg-sunset opacity-90" />
+                  <div className="absolute bottom-3 left-3 right-3 text-[hsl(var(--ivory))] space-y-1">
+                    <div className="h-2 w-12 rounded-full bg-white/60" />
+                    <div className="h-2 w-16 rounded-full bg-white/40" />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <p style={{ textAlign: 'center', fontSize: '.75rem', color: '#8b8ba3', marginTop: '2rem' }}>
-            © 2026 MetaPick. All rights reserved.
+        </div>
+      </section>
+
+      {/* TWO-UP ───────────────────────────────────────── */}
+      <section id="brands" className="py-20 md:py-28">
+        <div className="mx-auto max-w-[1280px] px-5 md:px-10">
+          <div className="max-w-2xl mb-12 md:mb-16">
+            <p className="eyebrow">Two sides, one platform</p>
+            <h2 className="mt-4 text-display text-[clamp(2.25rem,5.5vw,4rem)]">
+              Byggd för båda<br />sidor av <span className="text-sunset">kameran</span>.
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-12 gap-5">
+            <article className="col-span-12 md:col-span-7 surface p-8 md:p-12 relative overflow-hidden">
+              <div aria-hidden className="blob h-72 w-72 -top-20 -right-20 bg-[hsl(22_92%_70%_/_0.45)]" />
+              <span className="sticker mb-5 relative">For brands</span>
+              <h3 className="relative text-display text-[clamp(1.85rem,4vw,2.85rem)]">
+                Hitta creators som matchar <span className="text-sunset">din ton</span>.
+              </h3>
+              <p className="mt-5 text-muted-foreground col-prose relative">
+                Skriv en brief, sätt målbild och budget, godkänn ansökningar.
+                Tracka leverans i realtid och betala när villkoren uppfylls.
+              </p>
+              <ul className="mt-7 space-y-3 text-sm relative">
+                {['Lansera en kampanj på minuter','Filtrera på nisch, marknad och audience','Transparent tracking och payouts'].map((t) => (
+                  <li key={t} className="flex items-baseline gap-3">
+                    <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-primary" />
+                    <span>{t}</span>
+                  </li>
+                ))}
+              </ul>
+              <button onClick={handleForBrands} className="pill mt-9 h-12 px-7 bg-foreground text-background hover:opacity-90 shadow-soft relative">
+                Starta kampanj →
+              </button>
+            </article>
+
+            <article id="creators" className="col-span-12 md:col-span-5 surface-deep p-8 md:p-12 flex flex-col justify-between relative overflow-hidden">
+              <div aria-hidden className="blob h-72 w-72 -bottom-20 -left-20 bg-[hsl(8_78%_60%_/_0.55)]" />
+              <div className="relative">
+                <span className="sticker !bg-white/10 !border-white/20 !text-[hsl(var(--ivory))] mb-5">For creators</span>
+                <h3 className="text-display text-[clamp(1.7rem,3.5vw,2.5rem)] text-[hsl(var(--ivory))]">
+                  Få betalt för content<br />du <span className="text-sunset">redan</span> gör.
+                </h3>
+                <p className="mt-5 text-[hsl(var(--ivory)/0.78)] col-prose">
+                  Bläddra briefs som passar din röst, ansök på en tap, posta på TikTok,
+                  och få utbetalning när dina views är verifierade.
+                </p>
+              </div>
+              <ul className="mt-8 space-y-3 text-sm text-[hsl(var(--ivory)/0.85)] relative">
+                {['Briefs anpassade efter din profil','Tydlig ersättning från start','Direkta payouts utan mellanhand'].map((t) => (
+                  <li key={t} className="flex items-baseline gap-3">
+                    <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-[hsl(22_92%_70%)]" />
+                    <span>{t}</span>
+                  </li>
+                ))}
+              </ul>
+              <button onClick={handleJoinCreator} className="pill mt-9 h-12 px-7 self-start bg-[hsl(var(--ivory))] text-foreground hover:bg-white shadow-soft relative">
+                Bli creator →
+              </button>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS ─────────────────────────────────── */}
+      <section id="how" className="py-20 md:py-28 border-t border-[hsl(var(--border))]">
+        <div className="mx-auto max-w-[1280px] px-5 md:px-10">
+          <div className="max-w-2xl mb-12 md:mb-16">
+            <p className="eyebrow">How it works</p>
+            <h2 className="mt-4 text-display text-[clamp(2.25rem,5.5vw,4rem)]">
+              Tre steg.<br />
+              <span className="text-sunset">Noll</span> ceremoni.
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[
+              { step: '01', title: 'Discover', desc: 'Bläddra briefs som matchar din nisch, ditt språk och din publik.', tint: 'from-[hsl(40_92%_75%)] to-[hsl(22_92%_65%)]' },
+              { step: '02', title: 'Create',   desc: 'Posta på din plattform i din takt. Views trackas via TikToks officiella API.', tint: 'from-[hsl(22_92%_65%)] to-[hsl(8_78%_55%)]' },
+              { step: '03', title: 'Get paid', desc: 'Payouts triggas automatiskt när målen är uppfyllda och verifierade.', tint: 'from-[hsl(8_78%_55%)] to-[hsl(353_55%_38%)]' },
+            ].map((s) => (
+              <div key={s.step} className="surface p-7 md:p-8 relative overflow-hidden">
+                <div className={`absolute -top-16 -right-10 h-44 w-44 rounded-full blur-2xl opacity-50 bg-gradient-to-br ${s.tint}`} aria-hidden />
+                <div className="relative">
+                  <div className="text-display text-[3rem] text-sunset leading-none">{s.step}</div>
+                  <h3 className="mt-4 text-2xl font-bold tracking-tight">{s.title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{s.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURES (replaces fake stats + testimonials) ── */}
+      <section className="py-20 md:py-28 bg-[hsl(var(--paper))] border-y border-[hsl(var(--border))]">
+        <div className="mx-auto max-w-[1280px] px-5 md:px-10">
+          <div className="max-w-2xl mb-12 md:mb-16">
+            <p className="eyebrow">Vad du får</p>
+            <h2 className="mt-4 text-display text-[clamp(2.25rem,5.5vw,4rem)]">
+              Inga mellanhänder.<br />
+              <span className="text-sunset">Bara verktygen.</span>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[
+              {
+                title: 'Verifierad tracking',
+                desc: 'Views och engagement hämtas direkt från TikToks officiella API — ingen manuell rapportering.',
+              },
+              {
+                title: 'Tydliga villkor',
+                desc: 'Varje brief specificerar mål, ersättning och leveranskrav innan du ansöker.',
+              },
+              {
+                title: 'Direkta payouts',
+                desc: 'Utbetalning sker automatiskt när villkoren uppfylls, utan agency-cut.',
+              },
+              {
+                title: 'Curated briefs',
+                desc: 'Filtrera på nisch, marknad och audience så att du bara ser relevanta uppdrag.',
+              },
+              {
+                title: 'Realtidsdashboard',
+                desc: 'Följ dina aktiva uppdrag, intjäning och leveranser samlat på ett ställe.',
+              },
+              {
+                title: 'Två sidor, en plattform',
+                desc: 'Brands och creators delar samma vy — färre missförstånd, snabbare beslut.',
+              },
+            ].map((f) => (
+              <div key={f.title} className="surface p-7 flex flex-col gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-sunset" aria-hidden />
+                <h3 className="text-xl font-bold tracking-tight">{f.title}</h3>
+                <p className="text-sm text-muted-foreground">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA ───────────────────────────────────────────── */}
+      <section className="py-20 md:py-28">
+        <div className="mx-auto max-w-[1280px] px-5 md:px-10">
+          <div className="surface-deep relative overflow-hidden p-10 md:p-20 text-center">
+            <div aria-hidden className="blob h-[420px] w-[420px] -top-32 left-1/2 -translate-x-1/2 bg-[hsl(8_78%_55%_/_0.55)]" />
+            <div className="relative">
+              <span className="sticker !bg-white/10 !border-white/20 !text-[hsl(var(--ivory))] mb-7">Kom igång</span>
+              <h2 className="text-display text-[clamp(2.5rem,7vw,5.5rem)] text-[hsl(var(--ivory))]">
+                Redo att <span className="text-sunset">börja</span>?
+              </h2>
+              <p className="mt-6 text-[hsl(var(--ivory)/0.75)] mx-auto col-prose">
+                Skapa konto gratis och utforska plattformen — som creator eller brand.
+              </p>
+              <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+                <button onClick={handleJoinCreator} className="pill h-14 px-9 bg-[hsl(var(--ivory))] text-foreground hover:bg-white shadow-lift">
+                  Bli creator →
+                </button>
+                <button onClick={handleForBrands} className="pill h-14 px-9 bg-white/10 text-[hsl(var(--ivory))] border border-white/20 hover:bg-white/20">
+                  Jag är ett brand
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER ───────────────────────────────────────── */}
+      <footer className="border-t border-[hsl(var(--border))] py-10">
+        <div className="mx-auto max-w-[1280px] px-5 md:px-10 grid grid-cols-1 md:grid-cols-12 gap-6 items-baseline">
+          <div className="md:col-span-4">
+            <a href="/" className="text-display text-[1.4rem]">meta<span className="text-sunset">pick</span></a>
+            <p className="mt-2 text-xs text-muted-foreground max-w-[28ch]">
+              Creator marketplace för brands och creators.
+            </p>
+          </div>
+          <div className="md:col-span-8 flex flex-wrap items-baseline gap-x-7 gap-y-2 md:justify-end">
+            <a href="#creators" className="text-sm text-muted-foreground hover:text-foreground">For Creators</a>
+            <a href="#brands"   className="text-sm text-muted-foreground hover:text-foreground">For Brands</a>
+            <a href="/terms"    className="text-sm text-muted-foreground hover:text-foreground">Terms</a>
+            <a href="/privacy"  className="text-sm text-muted-foreground hover:text-foreground">Privacy</a>
+          </div>
+          <div className="md:col-span-12 hairline" />
+          <p className="md:col-span-12 text-center text-[0.72rem] tracking-wider uppercase text-muted-foreground">
+            © 2026 MetaPick
           </p>
         </div>
       </footer>

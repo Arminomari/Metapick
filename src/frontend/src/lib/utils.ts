@@ -22,26 +22,27 @@ export function formatDateTime(date: string): string {
 }
 
 export function getStatusColor(status: string): string {
+  // Warm editorial palette — soft tinted backgrounds, deep ink foregrounds.
   const colors: Record<string, string> = {
-    Active: 'bg-green-900/30 text-green-400',
-    Approved: 'bg-green-900/30 text-green-400',
-    Completed: 'bg-blue-900/30 text-blue-400',
-    Verified: 'bg-green-900/30 text-green-400',
-    Pending: 'bg-yellow-900/30 text-yellow-400',
-    PendingApproval: 'bg-yellow-900/30 text-yellow-400',
-    PendingReview: 'bg-yellow-900/30 text-yellow-400',
-    PendingVerification: 'bg-yellow-900/30 text-yellow-400',
-    Draft: 'bg-gray-800/50 text-gray-400',
-    Paused: 'bg-orange-900/30 text-orange-400',
-    Rejected: 'bg-red-900/30 text-red-400',
-    Suspended: 'bg-red-900/30 text-red-400',
-    Flagged: 'bg-red-900/30 text-red-400',
-    Failed: 'bg-red-900/30 text-red-400',
-    Cancelled: 'bg-gray-800/50 text-gray-500',
-    ReadyForManualPayment: 'bg-emerald-900/30 text-emerald-300',
-    AwaitingThreshold: 'bg-yellow-900/30 text-yellow-300',
-    Processing: 'bg-sky-900/30 text-sky-300',
-    UnderReview: 'bg-amber-900/30 text-amber-300',
+    Active:               'bg-[hsl(90_22%_32%_/_0.12)]  text-[hsl(90_22%_24%)]   ring-1 ring-[hsl(90_22%_32%_/_0.25)]',
+    Approved:             'bg-[hsl(90_22%_32%_/_0.12)]  text-[hsl(90_22%_24%)]   ring-1 ring-[hsl(90_22%_32%_/_0.25)]',
+    Verified:             'bg-[hsl(90_22%_32%_/_0.12)]  text-[hsl(90_22%_24%)]   ring-1 ring-[hsl(90_22%_32%_/_0.25)]',
+    Completed:            'bg-[hsl(28_14%_13%_/_0.06)]  text-[hsl(28_14%_18%)]   ring-1 ring-[hsl(28_14%_13%_/_0.18)]',
+    Pending:              'bg-[hsl(36_55%_88%)]         text-[hsl(28_65%_28%)]   ring-1 ring-[hsl(28_65%_38%_/_0.30)]',
+    PendingApproval:      'bg-[hsl(36_55%_88%)]         text-[hsl(28_65%_28%)]   ring-1 ring-[hsl(28_65%_38%_/_0.30)]',
+    PendingReview:        'bg-[hsl(36_55%_88%)]         text-[hsl(28_65%_28%)]   ring-1 ring-[hsl(28_65%_38%_/_0.30)]',
+    PendingVerification:  'bg-[hsl(36_55%_88%)]         text-[hsl(28_65%_28%)]   ring-1 ring-[hsl(28_65%_38%_/_0.30)]',
+    UnderReview:          'bg-[hsl(36_55%_88%)]         text-[hsl(28_65%_28%)]   ring-1 ring-[hsl(28_65%_38%_/_0.30)]',
+    AwaitingThreshold:    'bg-[hsl(36_55%_88%)]         text-[hsl(28_65%_28%)]   ring-1 ring-[hsl(28_65%_38%_/_0.30)]',
+    Processing:           'bg-[hsl(353_36%_92%)]        text-[hsl(353_52%_28%)]  ring-1 ring-[hsl(353_52%_28%_/_0.22)]',
+    ReadyForManualPayment:'bg-[hsl(90_22%_32%_/_0.12)]  text-[hsl(90_22%_24%)]   ring-1 ring-[hsl(90_22%_32%_/_0.25)]',
+    Draft:                'bg-[hsl(36_22%_82%_/_0.6)]   text-[hsl(28_8%_42%)]    ring-1 ring-[hsl(36_22%_70%)]',
+    Paused:               'bg-[hsl(28_65%_38%_/_0.10)]  text-[hsl(28_65%_28%)]   ring-1 ring-[hsl(28_65%_38%_/_0.25)]',
+    Rejected:             'bg-[hsl(2_48%_42%_/_0.10)]   text-[hsl(2_48%_32%)]    ring-1 ring-[hsl(2_48%_42%_/_0.25)]',
+    Suspended:            'bg-[hsl(2_48%_42%_/_0.10)]   text-[hsl(2_48%_32%)]    ring-1 ring-[hsl(2_48%_42%_/_0.25)]',
+    Flagged:              'bg-[hsl(2_48%_42%_/_0.10)]   text-[hsl(2_48%_32%)]    ring-1 ring-[hsl(2_48%_42%_/_0.25)]',
+    Failed:               'bg-[hsl(2_48%_42%_/_0.10)]   text-[hsl(2_48%_32%)]    ring-1 ring-[hsl(2_48%_42%_/_0.25)]',
+    Cancelled:            'bg-[hsl(36_22%_82%_/_0.6)]   text-[hsl(28_8%_42%)]    ring-1 ring-[hsl(36_22%_70%)]',
   };
-  return colors[status] ?? 'bg-gray-800/50 text-gray-400';
+  return colors[status] ?? 'bg-[hsl(36_22%_82%_/_0.6)] text-[hsl(28_8%_42%)] ring-1 ring-[hsl(36_22%_70%)]';
 }

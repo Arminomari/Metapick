@@ -49,20 +49,52 @@ export function BrandDashboard() {
   const campaigns = data?.data ?? [];
   const active = campaigns.filter((c) => c.status === 'Active');
   const totalBudget = campaigns.reduce((sum, c) => sum + c.budget, 0);
-  const totalSpent = campaigns.reduce((sum, c) => sum + c.budgetSpent, 0);
+  const totalSpent  = campaigns.reduce((sum, c) => sum + c.budgetSpent, 0);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Brand Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard label="Aktiva kampanjer" value={active.length} />
-        <StatCard label="Totalt antal kampanjer" value={campaigns.length} />
-        <StatCard label="Total budget" value={formatCurrency(totalBudget)} />
-        <StatCard label="Totalt spenderat" value={formatCurrency(totalSpent)} />
+    <div className="space-y-12">
+      {/* Header */}
+      <header className="grid grid-cols-12 gap-x-6 items-end">
+        <div className="col-span-12 md:col-span-8">
+          <p className="eyebrow">Brand desk · Dashboard</p>
+          <h1 className="mt-3 text-display text-[clamp(2.25rem,5vw,3.75rem)]">
+            Dina <span className="text-sunset">kampanjer</span>,<br />
+            live just nu.
+          </h1>
+        </div>
+        <div className="col-span-12 md:col-span-4 md:text-right">
+          <p className="text-sm text-muted-foreground col-prose md:ml-auto">
+            Lägesbild över aktiva briefs, budget i rörelse, och vad som väntar härnäst.
+          </p>
+        </div>
+      </header>
+
+      <div className="hairline" />
+
+      {/* Asymmetric stat row */}
+      <div className="grid grid-cols-12 gap-4">
+        <div className="col-span-12 md:col-span-4">
+          <StatCard label="Aktiva kampanjer"        value={active.length} />
+        </div>
+        <div className="col-span-6  md:col-span-2">
+          <StatCard label="Totalt"                  value={campaigns.length} />
+        </div>
+        <div className="col-span-6  md:col-span-3">
+          <StatCard label="Total budget"            value={formatCurrency(totalBudget)} />
+        </div>
+        <div className="col-span-12 md:col-span-3">
+          <StatCard label="Spenderat"               value={formatCurrency(totalSpent)} subValue={totalBudget ? `${Math.round((totalSpent / totalBudget) * 100)}% av budget` : undefined} />
+        </div>
       </div>
-      <Card>
-        <h2 className="text-lg font-semibold mb-4">Senaste kampanjer</h2>
-        <BrandCampaignTable campaigns={campaigns.slice(0, 5)} />
+
+      <Card className="!p-0 overflow-hidden">
+        <div className="px-6 pt-6 pb-2 flex items-baseline justify-between">
+          <h2 className="text-2xl font-bold tracking-tight">Senaste kampanjer</h2>
+          <span className="eyebrow">{campaigns.length} totalt</span>
+        </div>
+        <div className="px-2 pb-4">
+          <BrandCampaignTable campaigns={campaigns.slice(0, 5)} />
+        </div>
       </Card>
     </div>
   );
@@ -76,12 +108,20 @@ export function BrandCampaignListPage() {
   const { data, isLoading } = useBrandCampaigns(status, page);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Mina kampanjer</h1>
-        <Button onClick={() => navigate('/brand/campaigns/new')}>+ Ny kampanj</Button>
-      </div>
-      <div className="flex gap-2">
+    <div className="space-y-6">
+      <header className="grid grid-cols-12 gap-x-6 items-end">
+        <div className="col-span-12 md:col-span-8">
+          <p className="eyebrow">Brand desk · Kampanjer</p>
+          <h1 className="mt-3 text-display text-[clamp(2rem,4.5vw,3.25rem)]">
+            Mina <span className="text-sunset">kampanjer</span>
+          </h1>
+        </div>
+        <div className="col-span-12 md:col-span-4 md:text-right">
+          <Button onClick={() => navigate('/brand/campaigns/new')}>+ Ny kampanj</Button>
+        </div>
+      </header>
+      <div className="hairline" />
+      <div className="flex flex-wrap gap-2">
         {['Alla', 'Draft', 'Active', 'Paused', 'Completed'].map((s) => (
           <Button key={s} variant={status === (s === 'Alla' ? undefined : s) ? 'primary' : 'secondary'} size="sm"
             onClick={() => { setStatus(s === 'Alla' ? undefined : s); setPage(1); }}>
@@ -90,16 +130,20 @@ export function BrandCampaignListPage() {
         ))}
       </div>
       {isLoading ? <LoadingSpinner /> : (
-        <Card>
+        <Card className="!p-0">
           {data?.data.length ? (
-            <>
+            <div className="px-2 py-3">
               <BrandCampaignTable campaigns={data.data} onRowClick={(c) => navigate(`/brand/campaigns/${c.id}`)} />
-              <Pagination page={page} totalCount={data.totalCount} pageSize={data.pageSize} onPageChange={setPage} />
-            </>
+              <div className="px-4">
+                <Pagination page={page} totalCount={data.totalCount} pageSize={data.pageSize} onPageChange={setPage} />
+              </div>
+            </div>
           ) : (
-            <EmptyState title="Inga kampanjer" description="Skapa din första kampanj för att komma igång." action={
-              <Button onClick={() => navigate('/brand/campaigns/new')}>Skapa kampanj</Button>
-            } />
+            <div className="p-6">
+              <EmptyState title="Inga kampanjer än" description="Skapa din första kampanj för att komma igång." action={
+                <Button onClick={() => navigate('/brand/campaigns/new')}>Skapa kampanj</Button>
+              } />
+            </div>
           )}
         </Card>
       )}

@@ -48,9 +48,11 @@ function TikTokAlertBanner({ compact = false }: { compact?: boolean }) {
 
   if (compact) {
     return (
-      <div className="flex items-center gap-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-4 py-3">
-        <span className="text-yellow-400 text-lg">⚠️</span>
-        <p className="text-sm text-yellow-200 flex-1">
+      <div className="flex items-center gap-3 rounded-[14px] border border-[hsl(var(--warning)/0.35)] bg-[hsl(var(--warning)/0.07)] px-4 py-3">
+        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[hsl(var(--warning)/0.18)] text-[hsl(var(--warning))]" aria-hidden>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+        </span>
+        <p className="text-sm text-[hsl(var(--warning))] flex-1">
           Anslut ditt TikTok-konto för automatisk tracking.{' '}
           <Link to="/creator/profile" className="text-primary hover:underline font-medium">Gå till profilen →</Link>
         </p>
@@ -59,19 +61,21 @@ function TikTokAlertBanner({ compact = false }: { compact?: boolean }) {
   }
 
   return (
-    <Card className="border-yellow-500/30 bg-yellow-500/5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center text-xl">🎵</div>
+    <Card className="!border-[hsl(var(--warning)/0.35)] !bg-[hsl(var(--warning)/0.05)]">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-4">
+          <div className="h-11 w-11 rounded-full bg-[hsl(var(--warning)/0.15)] flex items-center justify-center text-[hsl(var(--warning))]" aria-hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12V3h4a4 4 0 0 0 4 4"/><path d="M9 12a4 4 0 1 0 4 4V3"/></svg>
+          </div>
           <div>
-            <h3 className="font-semibold text-yellow-200">Anslut ditt TikTok-konto</h3>
-            <p className="text-sm text-muted-foreground">
-              Koppla ditt konto för att automatiskt spåra views, engagement och intjäning från kampanjer.
+            <h3 className="text-xl font-bold tracking-tight">Anslut ditt TikTok-konto</h3>
+            <p className="text-sm text-muted-foreground col-prose">
+              Koppla ditt konto för att automatiskt spåra views, engagement och intjäning.
             </p>
           </div>
         </div>
         <Button onClick={handleConnect} disabled={connecting} size="sm">
-          {connecting ? 'Ansluter...' : '🎵 Anslut TikTok'}
+          {connecting ? 'Ansluter…' : 'Anslut TikTok'}
         </Button>
       </div>
     </Card>
@@ -91,22 +95,46 @@ export function CreatorDashboard() {
   const totalViews = (assignments?.data ?? []).reduce((sum, a) => sum + a.totalVerifiedViews, 0);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Creator Dashboard</h1>
+    <div className="space-y-12">
+      {/* Header */}
+      <header className="grid grid-cols-12 gap-x-6 items-end">
+        <div className="col-span-12 md:col-span-8">
+          <p className="eyebrow">Creator studio · Dashboard</p>
+          <h1 className="mt-3 text-display text-[clamp(2.25rem,5vw,3.75rem)]">
+            Din <span className="text-sunset">vibe</span>,<br />
+            i siffror.
+          </h1>
+        </div>
+        <div className="col-span-12 md:col-span-4 md:text-right">
+          <p className="text-sm text-muted-foreground col-prose md:ml-auto">
+            Aktiva uppdrag, verifierade views, och vad som faktiskt landat på kontot.
+          </p>
+        </div>
+      </header>
+
       <TikTokAlertBanner />
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard label="Aktiva uppdrag" value={active.length} />
-        <StatCard label="Total verifierade views" value={formatNumber(totalViews)} />
-        <StatCard label="Total intjänat" value={formatCurrency(totalEarned)} />
-        <StatCard label="Skickat till dig" value={formatCurrency(paidOut)} />
+
+      <div className="hairline" />
+
+      <div className="grid grid-cols-12 gap-4">
+        <div className="col-span-6 md:col-span-3"><StatCard label="Aktiva uppdrag" value={active.length} /></div>
+        <div className="col-span-6 md:col-span-3"><StatCard label="Verifierade views" value={formatNumber(totalViews)} /></div>
+        <div className="col-span-6 md:col-span-3"><StatCard label="Intjänat" value={formatCurrency(totalEarned)} /></div>
+        <div className="col-span-6 md:col-span-3"><StatCard label="Skickat till dig" value={formatCurrency(paidOut)} /></div>
       </div>
-      <Card>
-        <h2 className="text-lg font-semibold mb-4">Aktiva uppdrag</h2>
-        {active.length ? (
-          <AssignmentTable assignments={active} />
-        ) : (
-          <EmptyState title="Inga aktiva uppdrag" description="Utforska kampanjer och ansök!" />
-        )}
+
+      <Card className="!p-0 overflow-hidden">
+        <div className="px-6 pt-6 pb-2 flex items-baseline justify-between">
+          <h2 className="text-2xl font-bold tracking-tight">Aktiva uppdrag</h2>
+          <span className="eyebrow">{active.length} live</span>
+        </div>
+        <div className="px-2 pb-4">
+          {active.length ? (
+            <AssignmentTable assignments={active} />
+          ) : (
+            <EmptyState title="Inga aktiva uppdrag" description="Utforska kampanjer och ansök till de som matchar din röst." />
+          )}
+        </div>
       </Card>
     </div>
   );
@@ -162,9 +190,22 @@ export function BrowseCampaignsPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Utforska kampanjer</h1>
+    <div className="space-y-6">
+      <header className="grid grid-cols-12 gap-x-6 items-end">
+        <div className="col-span-12 md:col-span-8">
+          <p className="eyebrow">Creator studio · Utforska</p>
+          <h1 className="mt-3 text-display text-[clamp(2rem,4.5vw,3.25rem)]">
+            Välj din nästa <span className="text-sunset">drop</span>.
+          </h1>
+        </div>
+        <div className="col-span-12 md:col-span-4 md:text-right">
+          <p className="text-sm text-muted-foreground col-prose md:ml-auto">
+            Kuraterade kampanjer som matchar din röst, ditt språk och din publik.
+          </p>
+        </div>
+      </header>
       <TikTokAlertBanner compact />
+      <div className="hairline" />
       {isError && (
         <EmptyState
           title="Kunde inte hämta kampanjer"
@@ -172,57 +213,71 @@ export function BrowseCampaignsPage() {
         />
       )}
       {myAppsError && (
-        <Card className="border-yellow-500/30 bg-yellow-500/10">
-          <p className="text-sm text-yellow-200">
+        <Card className="!border-[hsl(var(--warning)/0.4)] !bg-[hsl(var(--warning)/0.06)]">
+          <p className="text-sm text-[hsl(var(--warning))]">
             Kunde inte hämta dina ansökningar: {getApiErrorMessage(myAppsErrorObj, 'okänt fel')}
           </p>
         </Card>
       )}
       {!isError && (isLoading ? <LoadingSpinner /> : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {data?.data.map((c) => (
-              <Card key={c.id} className="flex flex-col justify-between">
-                <div>
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold">{c.name}</h3>
-                    <span className="text-xs text-muted-foreground">{c.brandName}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{c.description}</p>
-                  <div className="flex flex-wrap gap-2 text-xs mb-3">
-                    <span className="bg-muted px-2 py-1 rounded">{c.category}</span>
-                    <span className="bg-muted px-2 py-1 rounded">{c.country}</span>
-                    <span className="bg-muted px-2 py-1 rounded">{c.payoutModel}</span>
-                  </div>
-                  <div className="text-sm space-y-1">
-                    <p><strong>Ersättning:</strong> {c.payoutSummary}</p>
-                    <p><strong>Platser kvar:</strong> {c.spotsLeft} av {c.maxCreators}</p>
-                    <p><strong>Period:</strong> {formatDate(c.startDate)} – {formatDate(c.endDate)}</p>
-                  </div>
-                  {c.contentTags && c.contentTags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {c.contentTags.slice(0, 5).map(tag => (
-                        <span key={tag} className="px-2 py-0.5 rounded-full text-xs bg-primary/10 text-primary border border-primary/20">{tag}</span>
-                      ))}
-                      {c.contentTags.length > 5 && (
-                        <span className="px-2 py-0.5 rounded-full text-xs text-muted-foreground">+{c.contentTags.length - 5}</span>
-                      )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {data?.data.map((c, i) => {
+              // Slight asymmetric rhythm — every 5th card is taller
+              const tall = i % 5 === 0;
+              return (
+                <Card key={c.id} className={`flex flex-col justify-between ${tall ? 'lg:row-span-2' : ''}`}>
+                  <div>
+                    <div className="flex justify-between items-start mb-3 gap-2">
+                      <h3 className="text-[1.25rem] font-bold leading-tight tracking-tight">{c.name}</h3>
+                      <span className="eyebrow shrink-0">{c.brandName}</span>
                     </div>
-                  )}
-                  {c.perks && (
-                    <p className="text-xs text-muted-foreground mt-2">🎁 {c.perks}</p>
-                  )}
-                </div>
-                <Button className="mt-4 w-full" onClick={() => handleApply(c.id)}
-                  disabled={isDisabled(c.id, c.spotsLeft)}
-                  variant={getButtonVariant(c.id)}>
-                  {getButtonLabel(c.id, c.spotsLeft)}
-                </Button>
-              </Card>
-            ))}
+                    <p className="text-sm text-muted-foreground line-clamp-3 mb-4 col-prose">{c.description}</p>
+                    <div className="flex flex-wrap gap-1.5 text-xs mb-4">
+                      <span className="chip">{c.category}</span>
+                      <span className="chip">{c.country}</span>
+                      <span className="chip">{c.payoutModel}</span>
+                    </div>
+                    <div className="hairline mb-4" />
+                    <dl className="space-y-2 text-sm">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <dt className="eyebrow">Ersättning</dt>
+                        <dd className="font-medium text-right">{c.payoutSummary}</dd>
+                      </div>
+                      <div className="flex items-baseline justify-between gap-3">
+                        <dt className="eyebrow">Platser</dt>
+                        <dd className="font-medium">{c.spotsLeft} av {c.maxCreators}</dd>
+                      </div>
+                      <div className="flex items-baseline justify-between gap-3">
+                        <dt className="eyebrow">Period</dt>
+                        <dd className="text-xs text-muted-foreground">{formatDate(c.startDate)} – {formatDate(c.endDate)}</dd>
+                      </div>
+                    </dl>
+                    {c.contentTags && c.contentTags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-4">
+                        {c.contentTags.slice(0, 5).map(tag => (
+                          <span key={tag} className="px-2 py-0.5 rounded-full text-[0.7rem] bg-[hsl(var(--primary)/0.08)] text-primary border border-[hsl(var(--primary)/0.18)]">{tag}</span>
+                        ))}
+                        {c.contentTags.length > 5 && (
+                          <span className="px-2 py-0.5 rounded-full text-[0.7rem] text-muted-foreground">+{c.contentTags.length - 5}</span>
+                        )}
+                      </div>
+                    )}
+                    {c.perks && (
+                      <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1.5"><span className="sticker sticker-hot !py-0.5 !px-2 !text-[0.7rem]">Perk</span> {c.perks}</p>
+                    )}
+                  </div>
+                  <Button className="mt-6 w-full" onClick={() => handleApply(c.id)}
+                    disabled={isDisabled(c.id, c.spotsLeft)}
+                    variant={getButtonVariant(c.id)}>
+                    {getButtonLabel(c.id, c.spotsLeft)}
+                  </Button>
+                </Card>
+              );
+            })}
           </div>
           {data && <Pagination page={page} totalCount={data.totalCount} pageSize={data.pageSize} onPageChange={setPage} />}
-          {!data?.data.length && <EmptyState title="Inga kampanjer tillgängliga" description="Kom tillbaka senare!" />}
+          {!data?.data.length && <EmptyState title="Inga kampanjer tillgängliga" description="Kom tillbaka senare — nya brief släpps löpande." />}
         </>
       ))}
     </div>
