@@ -23,6 +23,8 @@ public class AppDbContext : DbContext
     public DbSet<CampaignApplication> CampaignApplications => Set<CampaignApplication>();
     public DbSet<CreatorCampaignAssignment> Assignments => Set<CreatorCampaignAssignment>();
     public DbSet<TrackingTag> TrackingTags => Set<TrackingTag>();
+    public DbSet<TrackingLink> TrackingLinks => Set<TrackingLink>();
+    public DbSet<LinkTrackingClick> LinkTrackingClicks => Set<LinkTrackingClick>();
 
     // ── Social posts & verification ────────────────────
     public DbSet<CreatorSubmission> Submissions => Set<CreatorSubmission>();

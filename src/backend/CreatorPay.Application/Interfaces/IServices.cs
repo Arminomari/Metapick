@@ -78,6 +78,16 @@ public interface IAssignmentService
     Task<Result<SubmissionDto>> RejectSubmissionAsync(Guid submissionId, Guid brandUserId, string? reason, CancellationToken ct = default);
 }
 
+public record LinkClickContext(string? Referrer, string? UserAgent, string? IpHash);
+public record LinkRedirectResult(string TargetUrl);
+
+public interface ITrackingLinkService
+{
+    Task<Result<TrackingLinkDto>> CreateLinkAsync(Guid assignmentId, Guid brandUserId, CreateTrackingLinkRequest request, CancellationToken ct = default);
+    Task<Result<List<TrackingLinkDto>>> GetAssignmentLinksAsync(Guid assignmentId, Guid userId, CancellationToken ct = default);
+    Task<Result<LinkRedirectResult>> RegisterClickAsync(string code, LinkClickContext context, CancellationToken ct = default);
+}
+
 public interface ITikTokConnectService
 {
     string GetAuthorizationUrl(Guid userId);

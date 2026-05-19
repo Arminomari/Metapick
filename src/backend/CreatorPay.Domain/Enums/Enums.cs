@@ -21,6 +21,7 @@ public enum VerificationStatus { Pending = 0, Verified = 1, Rejected = 2, Manual
 public enum SubmissionStatus { Pending = 0, Matched = 1, Rejected = 2, ManualReview = 3, Approved = 4 }
 
 public enum PayoutType { FixedThreshold = 0, Tiered = 1, CPM = 2, BonusAboveThreshold = 3 }
+public enum PayoutTriggerType { Views = 0, Clicks = 1 }
 public enum PayoutCalculationStatus { Preliminary = 0, Verified = 1, Locked = 2, Overridden = 3, Disputed = 4 }
 
 public enum PayoutStatus

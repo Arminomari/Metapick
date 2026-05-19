@@ -127,6 +127,9 @@ export interface PayoutRule {
   amount: number;
   maxPayoutPerCreator?: number;
   sortOrder: number;
+  triggerType?: 'Views' | 'Clicks';
+  minClicks?: number;
+  maxClicks?: number;
 }
 
 export interface CreateCampaignRequest {
@@ -150,7 +153,7 @@ export interface CreateCampaignRequest {
   reviewMode: string;
   requirements: { requirementType: string; value: string; isRequired: boolean }[];
   rules: { ruleType: string; description: string; isMandatory: boolean }[];
-  payoutRules: { payoutType: string; minViews: number; maxViews?: number; amount: number; maxPayoutPerCreator?: number; sortOrder: number }[];
+  payoutRules: { payoutType: string; minViews: number; maxViews?: number; amount: number; maxPayoutPerCreator?: number; sortOrder: number; triggerType?: 'Views' | 'Clicks'; minClicks?: number; maxClicks?: number }[];
   perks?: string;
   contentTags: string[];
 }
@@ -179,6 +182,7 @@ export interface AssignmentListItem {
   campaignName: string;
   status: string;
   totalVerifiedViews: number;
+  totalTrackedClicks: number;
   currentPayoutAmount: number;
   assignedAt: string;
 }
@@ -191,6 +195,7 @@ export interface AssignmentDetail {
   creatorName: string;
   status: string;
   totalVerifiedViews: number;
+  totalTrackedClicks: number;
   currentPayoutAmount: number;
   trackingTag?: TrackingTag;
   submissions: Submission[];
@@ -275,8 +280,9 @@ export interface Notification {
 export interface CampaignAnalytics {
   campaignId: string;
   totalViews: number;
+  totalClicks: number;
   totalCreators: number;
-  totalPayout: number;
+  totalPayoutEstimate: number;
   budgetSpent: number;
   budgetRemaining: number;
   creatorPerformance: CreatorPerformance[];
@@ -287,6 +293,8 @@ export interface CreatorPerformance {
   creatorId: string;
   displayName: string;
   views: number;
+  clicks: number;
+  clickThroughRate: number;
   payoutAmount: number;
   status: string;
   payoutStatus: string;
@@ -299,6 +307,7 @@ export interface CreatorVideo {
   videoUrl: string;
   videoId: string | null;
   views: number;
+  clicks: number;
   status: string;
   rejectionReason?: string;
   createdAt: string;

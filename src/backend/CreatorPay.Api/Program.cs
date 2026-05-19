@@ -95,6 +95,15 @@ builder.Services.AddRateLimiter(options =>
         limiterOptions.QueueLimit = 0;
     });
 
+    // Public tracking redirect endpoint: allow bursts but protect from abuse.
+    options.AddFixedWindowLimiter("tracking", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 300;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 0;
+    });
+
     // Global: max 120 requests/minute per IP (general throttle)
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
         RateLimitPartition.GetFixedWindowLimiter(

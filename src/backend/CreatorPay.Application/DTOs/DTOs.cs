@@ -92,7 +92,16 @@ public record UpdateCampaignRequest(
 
 public record CampaignRequirementDto(string RequirementType, string Value, bool IsRequired);
 public record CampaignRuleDto(string RuleType, string Description, bool IsMandatory);
-public record PayoutRuleDto(string PayoutType, long MinViews, long? MaxViews, decimal Amount, decimal? MaxPayoutPerCreator, int SortOrder);
+public record PayoutRuleDto(
+    string PayoutType,
+    long MinViews,
+    long? MaxViews,
+    decimal Amount,
+    decimal? MaxPayoutPerCreator,
+    int SortOrder,
+    string TriggerType = "Views",
+    long MinClicks = 0,
+    long? MaxClicks = null);
 
 public record CampaignListDto(
     Guid Id, string Name, string Category, string Country, string Status,
@@ -136,11 +145,12 @@ public record ApplicationDto(
 // ──── Assignment ────
 public record AssignmentListDto(
     Guid Id, Guid CampaignId, string CampaignName,
-    string Status, long TotalVerifiedViews, decimal CurrentPayoutAmount, DateTime AssignedAt);
+    string Status, long TotalVerifiedViews, long TotalTrackedClicks, decimal CurrentPayoutAmount, DateTime AssignedAt);
 
 public record AssignmentDetailDto(
     Guid Id, Guid CampaignId, string CampaignName, Guid CreatorProfileId,
     string CreatorDisplayName, string Status, long TotalVerifiedViews,
+    long TotalTrackedClicks,
     decimal CurrentPayoutAmount, TrackingTagDto? TrackingTag,
     List<SubmissionDto> Submissions, List<SocialPostInfoDto> SocialPosts,
     DateTime AssignedAt, DateTime? CompletedAt,
@@ -151,6 +161,19 @@ public record SocialPostInfoDto(
     long Likes, long Comments, long Shares, string Status, DateTime DiscoveredAt);
 
 public record TrackingTagDto(Guid Id, string TagCode, string RecommendedHashtag, bool IsActive);
+
+public record CreateTrackingLinkRequest(string TargetUrl, string? Label, string? PreferredCode = null);
+public record TrackingLinkDto(
+    Guid Id,
+    Guid AssignmentId,
+    Guid CampaignId,
+    Guid CreatorProfileId,
+    string Code,
+    string TargetUrl,
+    string? Label,
+    long TotalClicks,
+    bool IsActive,
+    DateTime CreatedAt);
 
 // ──── Submissions ────
 public record SubmitVideoRequest(string VideoUrl, string? Notes);
@@ -195,16 +218,16 @@ public record CampaignEarningDto(
     Guid CampaignId, string CampaignName, long Views, decimal Earned, string Status);
 
 public record CampaignAnalyticsDto(
-    Guid CampaignId, long TotalViews, int TotalCreators, decimal TotalPayoutEstimate,
+    Guid CampaignId, long TotalViews, long TotalClicks, int TotalCreators, decimal TotalPayoutEstimate,
     decimal BudgetSpent, decimal BudgetRemaining,
     List<CreatorPerformanceDto> CreatorPerformance);
 
 public record CreatorPerformanceDto(
-    Guid AssignmentId, Guid CreatorId, string DisplayName, long Views, decimal PayoutAmount, string Status,
+    Guid AssignmentId, Guid CreatorId, string DisplayName, long Views, long Clicks, decimal ClickThroughRate, decimal PayoutAmount, string Status,
     string PayoutStatus, DateTime? PaidAt,
     List<CreatorVideoDto> Videos);
 
-public record CreatorVideoDto(Guid? SubmissionId, string VideoUrl, string? VideoId, long Views, string Status, string? RejectionReason, DateTime CreatedAt);
+public record CreatorVideoDto(Guid? SubmissionId, string VideoUrl, string? VideoId, long Views, long Clicks, string Status, string? RejectionReason, DateTime CreatedAt);
 
 // ──── Notification ────
 public record NotificationDto(

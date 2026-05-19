@@ -340,7 +340,7 @@ export function useAssignmentDetail(id: string) {
 export function useSubmitVideo() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ assignmentId, ...data }: { assignmentId: string; videoUrl: string; caption?: string }) => {
+    mutationFn: async ({ assignmentId, ...data }: { assignmentId: string; videoUrl: string; notes?: string }) => {
       const res = await api.post(`/assignments/${assignmentId}/submit`, data);
       return res.data.data;
     },

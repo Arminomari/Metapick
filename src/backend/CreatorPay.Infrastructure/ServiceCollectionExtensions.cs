@@ -44,6 +44,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICampaignService, CampaignService>();
         services.AddScoped<IApplicationService, ApplicationService>();
         services.AddScoped<IAssignmentService, AssignmentService>();
+        services.AddScoped<ITrackingLinkService, TrackingLinkService>();
         services.AddScoped<IPayoutService, PayoutService>();
         services.AddScoped<IFraudService, FraudService>();
         services.AddScoped<ITikTokConnectService, TikTokConnectService>();

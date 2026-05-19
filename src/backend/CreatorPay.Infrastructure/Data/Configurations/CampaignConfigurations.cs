@@ -1,4 +1,5 @@
 using CreatorPay.Domain.Entities;
+using CreatorPay.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -76,6 +77,7 @@ public class PayoutRuleConfiguration : IEntityTypeConfiguration<PayoutRule>
         b.ToTable("payout_rules");
         b.HasKey(e => e.Id);
         b.Property(e => e.PayoutType).HasMaxLength(20).IsRequired();
+        b.Property(e => e.TriggerType).HasMaxLength(20).HasDefaultValue(PayoutTriggerType.Views).IsRequired();
         b.Property(e => e.Amount).HasPrecision(18, 2);
         b.Property(e => e.MaxPayoutPerCreator).HasPrecision(18, 2);
         b.HasIndex(e => e.CampaignId);
@@ -110,6 +112,8 @@ public class AssignmentConfiguration : IEntityTypeConfiguration<CreatorCampaignA
 
         b.HasOne(e => e.TrackingTag).WithOne(t => t.Assignment)
             .HasForeignKey<TrackingTag>(t => t.AssignmentId).OnDelete(DeleteBehavior.Cascade);
+        b.HasMany(e => e.TrackingLinks).WithOne(tl => tl.Assignment)
+            .HasForeignKey(tl => tl.AssignmentId).OnDelete(DeleteBehavior.Cascade);
         b.HasMany(e => e.Submissions).WithOne(s => s.Assignment)
             .HasForeignKey(s => s.AssignmentId).OnDelete(DeleteBehavior.Restrict);
     }
@@ -125,5 +129,49 @@ public class TrackingTagConfiguration : IEntityTypeConfiguration<TrackingTag>
         b.Property(e => e.RecommendedHashtag).HasMaxLength(100);
         b.HasIndex(e => e.TagCode).IsUnique();
         b.HasIndex(e => e.AssignmentId).IsUnique();
+    }
+}
+
+public class TrackingLinkConfiguration : IEntityTypeConfiguration<TrackingLink>
+{
+    public void Configure(EntityTypeBuilder<TrackingLink> b)
+    {
+        b.ToTable("tracking_links");
+        b.HasKey(e => e.Id);
+        b.Property(e => e.Code).HasMaxLength(32).IsRequired();
+        b.Property(e => e.TargetUrl).HasMaxLength(2000).IsRequired();
+        b.Property(e => e.Label).HasMaxLength(120);
+        b.Property(e => e.TotalClicks).HasDefaultValue(0);
+        b.HasIndex(e => e.Code).IsUnique();
+        b.HasIndex(e => e.AssignmentId);
+        b.HasIndex(e => new { e.CampaignId, e.CreatorProfileId });
+
+        b.HasOne(e => e.Campaign)
+            .WithMany()
+            .HasForeignKey(e => e.CampaignId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        b.HasOne(e => e.CreatorProfile)
+            .WithMany()
+            .HasForeignKey(e => e.CreatorProfileId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class LinkTrackingClickConfiguration : IEntityTypeConfiguration<LinkTrackingClick>
+{
+    public void Configure(EntityTypeBuilder<LinkTrackingClick> b)
+    {
+        b.ToTable("link_tracking_clicks");
+        b.HasKey(e => e.Id);
+        b.Property(e => e.Referrer).HasMaxLength(1024);
+        b.Property(e => e.UserAgent).HasMaxLength(1024);
+        b.Property(e => e.IpHash).HasMaxLength(128);
+        b.HasIndex(e => new { e.TrackingLinkId, e.ClickedAt });
+
+        b.HasOne(e => e.TrackingLink)
+            .WithMany(l => l.Clicks)
+            .HasForeignKey(e => e.TrackingLinkId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -97,7 +97,6 @@ public class ApplicationService : IApplicationService
             {
                 app.Status = ApplicationStatus.Approved;
                 app.ReviewedAt = DateTime.UtcNow;
-                app.RejectionReason = "Auto-godkänd";
                 await CreateAssignment(campaign, creator, app);
             }
 
@@ -368,6 +367,7 @@ public class AssignmentService : IAssignmentService
             .Include(a => a.Campaign).ThenInclude(c => c.BrandProfile)
             .Include(a => a.CreatorProfile)
             .Include(a => a.TrackingTag)
+            .Include(a => a.TrackingLinks)
             .Include(a => a.Submissions)
             .Include(a => a.SocialPosts)
             .FirstOrDefaultAsync(a => a.Id == assignmentId, ct);
@@ -391,6 +391,7 @@ public class AssignmentService : IAssignmentService
 
         var query = _assignments.Query()
             .Include(a => a.Campaign)
+            .Include(a => a.TrackingLinks)
             .Where(a => a.CreatorProfileId == creator.Id);
 
         if (Enum.TryParse<AssignmentStatus>(status, out var s))
@@ -405,7 +406,8 @@ public class AssignmentService : IAssignmentService
 
         var dtos = items.Select(a => new AssignmentListDto(
             a.Id, a.CampaignId, a.Campaign.Name, a.Status.ToString(),
-            a.TotalVerifiedViews, a.CurrentPayoutAmount, a.AssignedAt)).ToList();
+            a.TotalVerifiedViews, a.TrackingLinks.Where(tl => tl.IsActive).Sum(tl => tl.TotalClicks),
+            a.CurrentPayoutAmount, a.AssignedAt)).ToList();
 
         return new PagedResult<AssignmentListDto>
         {
@@ -500,7 +502,7 @@ public class AssignmentService : IAssignmentService
     private static AssignmentDetailDto MapToDetail(CreatorCampaignAssignment a) =>
         new(a.Id, a.CampaignId, a.Campaign.Name, a.CreatorProfileId,
             a.CreatorProfile.DisplayName, a.Status.ToString(),
-            a.TotalVerifiedViews, a.CurrentPayoutAmount,
+            a.TotalVerifiedViews, a.TrackingLinks.Where(tl => tl.IsActive).Sum(tl => tl.TotalClicks), a.CurrentPayoutAmount,
             a.TrackingTag != null ? new TrackingTagDto(a.TrackingTag.Id, a.TrackingTag.TagCode,
                 a.TrackingTag.RecommendedHashtag, a.TrackingTag.IsActive) : null,
             a.Submissions?.Select(s => new SubmissionDto(s.Id, s.AssignmentId, s.TikTokVideoUrl,

@@ -69,8 +69,11 @@ public class PayoutRule : BaseEntity
 {
     public Guid CampaignId { get; set; }
     public PayoutType PayoutType { get; set; }
+    public PayoutTriggerType TriggerType { get; set; } = PayoutTriggerType.Views;
     public long MinViews { get; set; }
     public long? MaxViews { get; set; }
+    public long MinClicks { get; set; }
+    public long? MaxClicks { get; set; }
     public decimal Amount { get; set; }
     public string Currency { get; set; } = "SEK";
     public decimal? MaxPayoutPerCreator { get; set; }
@@ -113,6 +116,7 @@ public class CreatorCampaignAssignment : BaseEntity
     public CreatorProfile CreatorProfile { get; set; } = null!;
     public CampaignApplication Application { get; set; } = null!;
     public TrackingTag? TrackingTag { get; set; }
+    public ICollection<TrackingLink> TrackingLinks { get; set; } = new List<TrackingLink>();
     public ICollection<CreatorSubmission> Submissions { get; set; } = new List<CreatorSubmission>();
     public ICollection<SocialPost> SocialPosts { get; set; } = new List<SocialPost>();
     public ICollection<PayoutCalculation> PayoutCalculations { get; set; } = new List<PayoutCalculation>();

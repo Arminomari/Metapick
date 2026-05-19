@@ -393,6 +393,7 @@ function AssignmentTable({ assignments, onRowClick }: { assignments: AssignmentL
     { header: 'Kampanj', accessor: 'campaignName' },
     { header: 'Status', accessor: (a) => <StatusBadge status={a.status} /> },
     { header: 'Views', accessor: (a) => formatNumber(a.totalVerifiedViews) },
+    { header: 'Klick', accessor: (a) => formatNumber(a.totalTrackedClicks) },
     { header: 'Intjänat', accessor: (a) => formatCurrency(a.currentPayoutAmount) },
     { header: 'Tilldelad', accessor: (a) => formatDate(a.assignedAt) },
   ];

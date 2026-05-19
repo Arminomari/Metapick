@@ -105,11 +105,18 @@ public class CampaignService : ICampaignService
         {
             if (Enum.TryParse<PayoutType>(pr.PayoutType, out var pt))
             {
+                var triggerType = Enum.TryParse<PayoutTriggerType>(pr.TriggerType, out var tt)
+                    ? tt
+                    : PayoutTriggerType.Views;
+
                 campaign.PayoutRules.Add(new PayoutRule
                 {
                     PayoutType = pt,
+                    TriggerType = triggerType,
                     MinViews = pr.MinViews,
                     MaxViews = pr.MaxViews,
+                    MinClicks = pr.MinClicks,
+                    MaxClicks = pr.MaxClicks,
                     Amount = pr.Amount,
                     MaxPayoutPerCreator = pr.MaxPayoutPerCreator,
                     SortOrder = pr.SortOrder
@@ -482,6 +489,7 @@ public class CampaignService : ICampaignService
         var campaign = await _campaigns.Query()
             .Include(c => c.Assignments).ThenInclude(a => a.CreatorProfile)
             .Include(c => c.Assignments).ThenInclude(a => a.SocialPosts)
+            .Include(c => c.Assignments).ThenInclude(a => a.TrackingLinks)
             .Include(c => c.Assignments).ThenInclude(a => a.Submissions)
             .Include(c => c.Assignments).ThenInclude(a => a.PayoutCalculations)
                 .ThenInclude(pc => pc.PayoutRequest)
@@ -498,7 +506,7 @@ public class CampaignService : ICampaignService
                 var videos = a.SocialPosts
                     .Where(sp => sp.IsActive)
                     .Select(sp => new CreatorVideoDto(
-                        sp.SubmissionId, sp.TikTokUrl, sp.TikTokVideoId, sp.LatestViewCount,
+                        sp.SubmissionId, sp.TikTokUrl, sp.TikTokVideoId, sp.LatestViewCount, 0,
                         sp.VerificationStatus.ToString(),
                         sp.SubmissionId.HasValue && submissionDict.TryGetValue(sp.SubmissionId.Value, out var sub)
                             ? sub.RejectionReason
@@ -510,7 +518,7 @@ public class CampaignService : ICampaignService
                 var submissionOnlyVideos = a.Submissions
                     .Where(s => !a.SocialPosts.Any(sp => sp.SubmissionId == s.Id))
                     .Select(s => new CreatorVideoDto(
-                        s.Id, s.TikTokVideoUrl, s.TikTokVideoId, 0,
+                        s.Id, s.TikTokVideoUrl, s.TikTokVideoId, 0, 0,
                         s.Status.ToString(), s.RejectionReason, s.CreatedAt))
                     .ToList();
 
@@ -533,9 +541,14 @@ public class CampaignService : ICampaignService
                     .Select(t => (DateTime?)(t.CompletedAt ?? t.InitiatedAt))
                     .FirstOrDefault();
 
+                var totalClicks = a.TrackingLinks.Where(tl => tl.IsActive).Sum(tl => tl.TotalClicks);
+                var ctr = a.TotalVerifiedViews > 0
+                    ? Math.Round(totalClicks / (decimal)a.TotalVerifiedViews, 4)
+                    : 0m;
+
                 return new CreatorPerformanceDto(
                     a.Id, a.CreatorProfileId, a.CreatorProfile?.DisplayName ?? "Okänd creator",
-                    a.TotalVerifiedViews, a.CurrentPayoutAmount, a.Status.ToString(),
+                    a.TotalVerifiedViews, totalClicks, ctr, a.CurrentPayoutAmount, a.Status.ToString(),
                     payoutStatus, paidAt,
                     videos);
             })
@@ -544,6 +557,7 @@ public class CampaignService : ICampaignService
         return new CampaignAnalyticsDto(
             campaign.Id,
             creatorPerf.Sum(c => c.Views),
+            creatorPerf.Sum(c => c.Clicks),
             creatorPerf.Count,
             creatorPerf.Sum(c => c.PayoutAmount),
             campaign.BudgetSpent,
@@ -579,7 +593,16 @@ public class CampaignService : ICampaignService
             c.StartDate, c.EndDate, c.Status.ToString(),
             c.Requirements?.Select(r => new CampaignRequirementDto(r.RequirementType.ToString(), r.Value, r.IsRequired)).ToList() ?? [],
             c.Rules?.Select(r => new CampaignRuleDto(r.RuleType.ToString(), r.Description, r.IsMandatory)).ToList() ?? [],
-            c.PayoutRules?.Select(r => new PayoutRuleDto(r.PayoutType.ToString(), r.MinViews, r.MaxViews, r.Amount, r.MaxPayoutPerCreator, r.SortOrder)).ToList() ?? [],
+            c.PayoutRules?.Select(r => new PayoutRuleDto(
+                r.PayoutType.ToString(),
+                r.MinViews,
+                r.MaxViews,
+                r.Amount,
+                r.MaxPayoutPerCreator,
+                r.SortOrder,
+                r.TriggerType.ToString(),
+                r.MinClicks,
+                r.MaxClicks)).ToList() ?? [],
             c.CreatedAt, c.PublishedAt,
             c.Perks, c.ContentTags?.ToList() ?? []);
 }

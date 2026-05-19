@@ -818,6 +818,16 @@ function CampaignApplicationsSection({ campaignId, campaignName }: { campaignId:
   const approve = useApproveApplication();
   const reject = useRejectApplication();
   const navigate = useNavigate();
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+
+  const handleReject = async (id: string) => {
+    const reason = rejectReason.trim();
+    if (!reason) return;
+    await reject.mutateAsync({ id, reason });
+    setRejectingId(null);
+    setRejectReason('');
+  };
 
   const pendingCount = applications?.data.filter((a) => a.status === 'Pending').length ?? 0;
   const totalCount = applications?.totalCount ?? 0;
@@ -879,15 +889,33 @@ function CampaignApplicationsSection({ campaignId, campaignName }: { campaignId:
               </div>
               <div className="flex items-center gap-2">
                 <StatusBadge status={a.status} />
-                {a.status === 'Pending' && (
+                {a.status === 'Pending' && rejectingId !== a.id && (
                   <>
                     <Button size="sm" onClick={() => approve.mutateAsync({ id: a.id })} disabled={approve.isPending}>
                       Godkänn
                     </Button>
-                    <Button size="sm" variant="destructive" onClick={() => reject.mutateAsync({ id: a.id, reason: 'Avvisad av varumärke' })} disabled={reject.isPending}>
+                    <Button size="sm" variant="destructive" onClick={() => { setRejectingId(a.id); setRejectReason(''); }} disabled={reject.isPending}>
                       Neka
                     </Button>
                   </>
+                )}
+                {a.status === 'Pending' && rejectingId === a.id && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      autoFocus
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                      placeholder="Anledning till nekande..."
+                      className="rounded-md border border-input bg-background px-2 py-1 text-sm"
+                    />
+                    <Button size="sm" variant="destructive" onClick={() => handleReject(a.id)} disabled={reject.isPending || !rejectReason.trim()}>
+                      Bekräfta
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => { setRejectingId(null); setRejectReason(''); }}>
+                      Avbryt
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
