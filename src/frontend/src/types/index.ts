@@ -37,6 +37,126 @@ export interface CreatorProfile {
   tikTokUsername?: string;
   createdAt: string;
   profileTags: string[];
+  instagramUsername?: string;
+  instagramFollowerCount: number;
+  website?: string;
+  openToPrOffers: boolean;
+}
+
+// ── Portfolio ──────────────────────────────────────────
+export type PortfolioMediaType = 'Image' | 'Video' | 'TikTok' | 'Instagram' | 'Link';
+
+export interface PortfolioItem {
+  id: string;
+  title: string;
+  description?: string;
+  mediaType: PortfolioMediaType;
+  mediaUrl: string;
+  thumbnailUrl?: string;
+  category?: string;
+  brandName?: string;
+  views?: number;
+  likes?: number;
+  sortOrder: number;
+  isFeatured: boolean;
+  createdAt: string;
+}
+
+// ── Creator discovery (brand-facing) ───────────────────
+export interface CreatorDiscoveryItem {
+  id: string;
+  userId: string;
+  displayName: string;
+  bio?: string;
+  category: string;
+  country: string;
+  language: string;
+  avatarUrl?: string;
+  followerCount: number;
+  averageViews?: number;
+  tikTokConnected: boolean;
+  tikTokUsername?: string;
+  tikTokFollowerCount: number;
+  instagramUsername?: string;
+  instagramFollowerCount: number;
+  profileTags: string[];
+  portfolioItemCount: number;
+  averageRating: number;
+  reviewCount: number;
+  completedCampaigns: number;
+  openToPrOffers: boolean;
+}
+
+export interface CreatorPublicProfile {
+  id: string;
+  userId: string;
+  displayName: string;
+  bio?: string;
+  category: string;
+  country: string;
+  language: string;
+  avatarUrl?: string;
+  website?: string;
+  followerCount: number;
+  averageViews?: number;
+  tikTokConnected: boolean;
+  tikTokUsername?: string;
+  tikTokFollowerCount: number;
+  instagramUsername?: string;
+  instagramFollowerCount: number;
+  profileTags: string[];
+  openToPrOffers: boolean;
+  portfolio: PortfolioItem[];
+  averageRating: number;
+  reviewCount: number;
+  recentReviews: ReviewDto[];
+  completedCampaigns: number;
+  createdAt: string;
+}
+
+// ── PR Hub ─────────────────────────────────────────────
+export type PrOfferType = 'ProductGifting' | 'Paid' | 'Hybrid' | 'Event';
+export type PrOfferStatus = 'Sent' | 'Viewed' | 'Accepted' | 'Declined' | 'Withdrawn' | 'Expired' | 'Completed';
+
+export interface PrOffer {
+  id: string;
+  brandProfileId: string;
+  brandName: string;
+  brandLogoUrl?: string;
+  creatorProfileId: string;
+  creatorName: string;
+  creatorAvatarUrl?: string;
+  campaignId?: string;
+  campaignName?: string;
+  title: string;
+  message: string;
+  offerType: PrOfferType;
+  category: string;
+  compensationAmount?: number;
+  currency: string;
+  productDescription?: string;
+  productValue?: number;
+  deadline?: string;
+  status: PrOfferStatus;
+  responseMessage?: string;
+  createdAssignmentId?: string;
+  viewedAt?: string;
+  respondedAt?: string;
+  createdAt: string;
+}
+
+export interface PrCategoryCount {
+  category: string;
+  count: number;
+}
+
+export interface PrOfferStats {
+  totalSent: number;
+  pending: number;
+  viewed: number;
+  accepted: number;
+  declined: number;
+  byCategory: PrCategoryCount[];
 }
 
 // ── Campaigns ──────────────────────────────────────────

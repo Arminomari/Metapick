@@ -49,6 +49,22 @@ public class CreatorService : ICreatorService
             creator.DateOfBirth = request.DateOfBirth;
         if (request.ProfileTags != null)
             creator.ProfileTags = request.ProfileTags.ToArray();
+        // Previously these fields were silently dropped on update.
+        if (request.AvatarUrl != null)
+            creator.AvatarUrl = string.IsNullOrWhiteSpace(request.AvatarUrl) ? null : request.AvatarUrl.Trim();
+        if (request.FollowerCount.HasValue && request.FollowerCount.Value >= 0)
+            creator.FollowerCount = request.FollowerCount.Value;
+        if (request.AverageViews.HasValue && request.AverageViews.Value >= 0)
+            creator.AverageViews = request.AverageViews.Value;
+        if (request.InstagramUsername != null)
+            creator.InstagramUsername = string.IsNullOrWhiteSpace(request.InstagramUsername)
+                ? null : request.InstagramUsername.TrimStart('@').Trim();
+        if (request.InstagramFollowerCount.HasValue && request.InstagramFollowerCount.Value >= 0)
+            creator.InstagramFollowerCount = request.InstagramFollowerCount.Value;
+        if (request.Website != null)
+            creator.Website = string.IsNullOrWhiteSpace(request.Website) ? null : request.Website.Trim();
+        if (request.OpenToPrOffers.HasValue)
+            creator.OpenToPrOffers = request.OpenToPrOffers.Value;
 
         // Update or create TikTok account
         if (!string.IsNullOrWhiteSpace(request.TikTokUsername))
@@ -136,7 +152,8 @@ public class CreatorService : ICreatorService
             c.AvatarUrl, c.FollowerCount, c.AverageViews, c.Status.ToString(),
             c.TikTokAccount != null && c.TikTokAccount.IsActive,
             c.TikTokAccount?.TikTokUsername, c.CreatedAt,
-            c.ProfileTags?.ToList() ?? []);
+            c.ProfileTags?.ToList() ?? [],
+            c.InstagramUsername, c.InstagramFollowerCount, c.Website, c.OpenToPrOffers);
 
     private async Task<CreatorProfile?> GetOrCreateCreatorProfileAsync(Guid userId)
     {

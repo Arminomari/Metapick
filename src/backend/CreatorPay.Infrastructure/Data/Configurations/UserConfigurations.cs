@@ -72,7 +72,11 @@ public class CreatorProfileConfiguration : IEntityTypeConfiguration<CreatorProfi
         b.Property(e => e.AvatarUrl).HasMaxLength(1000);
         b.Property(e => e.Status).HasMaxLength(20).IsRequired();
         b.Property(e => e.IsDeleted).HasDefaultValue(false);
+        b.Property(e => e.InstagramUsername).HasMaxLength(100);
+        b.Property(e => e.Website).HasMaxLength(500);
         b.HasIndex(e => e.UserId).IsUnique();
+        // Discovery filters most commonly hit these columns.
+        b.HasIndex(e => new { e.Status, e.Category });
 
         b.HasOne(e => e.TikTokAccount).WithOne(t => t.CreatorProfile)
             .HasForeignKey<TikTokAccount>(t => t.CreatorProfileId).OnDelete(DeleteBehavior.Cascade);
@@ -80,6 +84,10 @@ public class CreatorProfileConfiguration : IEntityTypeConfiguration<CreatorProfi
             .HasForeignKey(a => a.CreatorProfileId).OnDelete(DeleteBehavior.Restrict);
         b.HasMany(e => e.Assignments).WithOne(a => a.CreatorProfile)
             .HasForeignKey(a => a.CreatorProfileId).OnDelete(DeleteBehavior.Restrict);
+        b.HasMany(e => e.PortfolioItems).WithOne(p => p.CreatorProfile)
+            .HasForeignKey(p => p.CreatorProfileId).OnDelete(DeleteBehavior.Cascade);
+        b.HasMany(e => e.ReceivedPrOffers).WithOne(p => p.CreatorProfile)
+            .HasForeignKey(p => p.CreatorProfileId).OnDelete(DeleteBehavior.Restrict);
     }
 }
 

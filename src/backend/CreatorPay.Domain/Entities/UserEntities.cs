@@ -74,12 +74,23 @@ public class CreatorProfile : SoftDeletableEntity
     /// <summary>Creator expertise/platform tags, e.g. ["TikTok Creator","UGC Creator","Beauty"]</summary>
     public string[] ProfileTags { get; set; } = [];
 
+    // ── Instagram (optional, manually connected) ──────────
+    public string? InstagramUsername { get; set; }
+    public int InstagramFollowerCount { get; set; }
+
+    /// <summary>Free-text personal site / linktree shown on the public profile.</summary>
+    public string? Website { get; set; }
+    /// <summary>Whether the creator allows brands to send direct PR offers.</summary>
+    public bool OpenToPrOffers { get; set; } = true;
+
     // Navigation
     public User User { get; set; } = null!;
     public TikTokAccount? TikTokAccount { get; set; }
     public ICollection<CampaignApplication> Applications { get; set; } = new List<CampaignApplication>();
     public ICollection<CreatorCampaignAssignment> Assignments { get; set; } = new List<CreatorCampaignAssignment>();
     public ICollection<PayoutRequest> PayoutRequests { get; set; } = new List<PayoutRequest>();
+    public ICollection<PortfolioItem> PortfolioItems { get; set; } = new List<PortfolioItem>();
+    public ICollection<PrOffer> ReceivedPrOffers { get; set; } = new List<PrOffer>();
 }
 
 public class TikTokAccount : BaseEntity

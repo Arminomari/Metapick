@@ -23,6 +23,11 @@ import type {
   ChatMessageDto,
   SubmitReviewRequest,
   SendMessageRequest,
+  PortfolioItem,
+  CreatorDiscoveryItem,
+  CreatorPublicProfile,
+  PrOffer,
+  PrOfferStats,
 } from '@/types';
 
 // ── Auth hooks ─────────────────────────────────────────
@@ -526,5 +531,175 @@ export function useUnreadChatCount() {
       return res.data.data;
     },
     refetchInterval: 15000,
+  });
+}
+
+// ── Portfolio hooks (creator) ──────────────────────────
+export function usePortfolio() {
+  return useQuery({
+    queryKey: ['portfolio'],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<PortfolioItem[]>>('/creator/portfolio');
+      return res.data.data;
+    },
+  });
+}
+
+export function useAddPortfolioItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: Partial<PortfolioItem>) => {
+      const res = await api.post<ApiResponse<PortfolioItem>>('/creator/portfolio', data);
+      return res.data.data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['portfolio'] }),
+  });
+}
+
+export function useUpdatePortfolioItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...data }: Partial<PortfolioItem> & { id: string }) => {
+      const res = await api.put<ApiResponse<PortfolioItem>>(`/creator/portfolio/${id}`, data);
+      return res.data.data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['portfolio'] }),
+  });
+}
+
+export function useDeletePortfolioItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/creator/portfolio/${id}`);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['portfolio'] }),
+  });
+}
+
+// ── Creator discovery hooks (brand) ────────────────────
+export function useCreatorSearch(params: {
+  search?: string; category?: string; country?: string; minFollowers?: number;
+  tag?: string; openToPrOffers?: boolean; sort?: string; page?: number;
+}) {
+  return useQuery({
+    queryKey: ['creator-search', params],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<PagedResult<CreatorDiscoveryItem>>>('/creators/search', { params });
+      return res.data.data;
+    },
+  });
+}
+
+export function useCreatorPublicProfile(id: string) {
+  return useQuery({
+    queryKey: ['creator-public', id],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<CreatorPublicProfile>>(`/creators/${id}`);
+      return res.data.data;
+    },
+    enabled: !!id,
+  });
+}
+
+// ── PR Hub hooks ───────────────────────────────────────
+export function useCreatePrOffer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: Record<string, unknown>) => {
+      const res = await api.post<ApiResponse<PrOffer>>('/pr-offers', data);
+      return res.data.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['pr-sent'] });
+      qc.invalidateQueries({ queryKey: ['pr-stats'] });
+    },
+  });
+}
+
+export function useSentPrOffers(status?: string, category?: string, page = 1) {
+  return useQuery({
+    queryKey: ['pr-sent', status, category, page],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<PagedResult<PrOffer>>>('/pr-offers/sent', {
+        params: { status, category, page },
+      });
+      return res.data.data;
+    },
+  });
+}
+
+export function usePrStats() {
+  return useQuery({
+    queryKey: ['pr-stats'],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<PrOfferStats>>('/pr-offers/sent/stats');
+      return res.data.data;
+    },
+  });
+}
+
+export function useReceivedPrOffers(status?: string, page = 1) {
+  return useQuery({
+    queryKey: ['pr-received', status, page],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<PagedResult<PrOffer>>>('/pr-offers/received', {
+        params: { status, page },
+      });
+      return res.data.data;
+    },
+  });
+}
+
+export function usePrUnreadCount() {
+  return useQuery({
+    queryKey: ['pr-unread'],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<number>>('/pr-offers/received/unread-count');
+      return res.data.data;
+    },
+    refetchInterval: 30000,
+  });
+}
+
+export function useRespondPrOffer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, accept, responseMessage }: { id: string; accept: boolean; responseMessage?: string }) => {
+      const res = await api.post<ApiResponse<PrOffer>>(`/pr-offers/${id}/respond`, { accept, responseMessage });
+      return res.data.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['pr-received'] });
+      qc.invalidateQueries({ queryKey: ['pr-unread'] });
+    },
+  });
+}
+
+export function useMarkPrViewed() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.post<ApiResponse<PrOffer>>(`/pr-offers/${id}/view`);
+      return res.data.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['pr-received'] });
+      qc.invalidateQueries({ queryKey: ['pr-unread'] });
+    },
+  });
+}
+
+export function useWithdrawPrOffer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.post<ApiResponse<PrOffer>>(`/pr-offers/${id}/withdraw`);
+      return res.data.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['pr-sent'] });
+      qc.invalidateQueries({ queryKey: ['pr-stats'] });
+    },
   });
 }

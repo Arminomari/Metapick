@@ -14,6 +14,8 @@ public class AppDbContext : DbContext
     public DbSet<BrandProfile> BrandProfiles => Set<BrandProfile>();
     public DbSet<CreatorProfile> CreatorProfiles => Set<CreatorProfile>();
     public DbSet<TikTokAccount> TikTokAccounts => Set<TikTokAccount>();
+    public DbSet<PortfolioItem> PortfolioItems => Set<PortfolioItem>();
+    public DbSet<PrOffer> PrOffers => Set<PrOffer>();
 
     // ── Campaigns ──────────────────────────────────────
     public DbSet<Campaign> Campaigns => Set<Campaign>();

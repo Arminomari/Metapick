@@ -610,6 +610,8 @@ export function CreatorProfilePage() {
   const [form, setForm] = useState({
     displayName: '', bio: '', category: 'Övrigt', country: 'SE', language: 'sv',
     tikTokUsername: '', dateOfBirth: '', profileTags: [] as string[],
+    instagramUsername: '', instagramFollowerCount: '', website: '',
+    avatarUrl: '', followerCount: '', averageViews: '', openToPrOffers: true,
   });
   const [saved, setSaved] = useState(false);
   const [initialized, setInitialized] = useState(false);
@@ -625,6 +627,13 @@ export function CreatorProfilePage() {
       tikTokUsername: profile.tikTokUsername ?? '',
       dateOfBirth: '',
       profileTags: profile.profileTags ?? [],
+      instagramUsername: profile.instagramUsername ?? '',
+      instagramFollowerCount: profile.instagramFollowerCount ? String(profile.instagramFollowerCount) : '',
+      website: profile.website ?? '',
+      avatarUrl: profile.avatarUrl ?? '',
+      followerCount: profile.followerCount ? String(profile.followerCount) : '',
+      averageViews: profile.averageViews ? String(profile.averageViews) : '',
+      openToPrOffers: profile.openToPrOffers ?? true,
     });
     setInitialized(true);
   }
@@ -635,7 +644,23 @@ export function CreatorProfilePage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await update.mutateAsync(form);
+      await update.mutateAsync({
+        displayName: form.displayName,
+        bio: form.bio,
+        category: form.category,
+        country: form.country,
+        language: form.language,
+        tikTokUsername: form.tikTokUsername || undefined,
+        dateOfBirth: form.dateOfBirth || undefined,
+        profileTags: form.profileTags,
+        avatarUrl: form.avatarUrl || undefined,
+        followerCount: form.followerCount === '' ? undefined : Number(form.followerCount),
+        averageViews: form.averageViews === '' ? undefined : Number(form.averageViews),
+        instagramUsername: form.instagramUsername || undefined,
+        instagramFollowerCount: form.instagramFollowerCount === '' ? undefined : Number(form.instagramFollowerCount),
+        website: form.website || undefined,
+        openToPrOffers: form.openToPrOffers,
+      });
       setEditing(false);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -724,6 +749,55 @@ export function CreatorProfilePage() {
             <DateInput value={form.dateOfBirth} onChange={v => setForm({ ...form, dateOfBirth: v })} disabled={!editing}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60" />
           </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Instagram-användarnamn</label>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">@</span>
+                <input type="text" value={form.instagramUsername} onChange={set('instagramUsername')} disabled={!editing}
+                  placeholder="dittinstagram"
+                  className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Instagram-följare</label>
+              <input type="text" inputMode="numeric" value={form.instagramFollowerCount} disabled={!editing}
+                onChange={(e) => setForm({ ...form, instagramFollowerCount: e.target.value.replace(/\D/g, '') })}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Följare (TikTok/övrigt)</label>
+              <input type="text" inputMode="numeric" value={form.followerCount} disabled={!editing}
+                onChange={(e) => setForm({ ...form, followerCount: e.target.value.replace(/\D/g, '') })}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Snittvisningar</label>
+              <input type="text" inputMode="numeric" value={form.averageViews} disabled={!editing}
+                onChange={(e) => setForm({ ...form, averageViews: e.target.value.replace(/\D/g, '') })}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Profilbild-URL</label>
+            <input type="url" value={form.avatarUrl} onChange={set('avatarUrl')} disabled={!editing}
+              placeholder="https://…"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Webbplats / Linktree</label>
+            <input type="url" value={form.website} onChange={set('website')} disabled={!editing}
+              placeholder="https://…"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60" />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={form.openToPrOffers} disabled={!editing}
+              onChange={(e) => setForm({ ...form, openToPrOffers: e.target.checked })} />
+            Öppen för direkta PR-erbjudanden från företag
+          </label>
 
           {editing && (
             <div className="border border-border rounded-lg p-4 bg-muted/20">

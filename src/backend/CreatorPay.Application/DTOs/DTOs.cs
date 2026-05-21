@@ -23,7 +23,8 @@ public record RegisterRequest(
     string? CompanyName, string? OrganizationNumber, string? ContactPhone,
     // Creator-specific
     string? DisplayName, string? Country, string? Bio, string? Category,
-    string? TikTokUsername, DateOnly? DateOfBirth, List<string>? ProfileTags);
+    string? TikTokUsername, DateOnly? DateOfBirth, List<string>? ProfileTags,
+    string? InstagramUsername = null);
 public record LoginRequest(string Email, string Password);
 public record RefreshTokenRequest(string RefreshToken);
 public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
@@ -58,7 +59,8 @@ public record CreatorProfileDto(
     Guid Id, Guid UserId, string DisplayName, string? Bio, string Category, string Country,
     string Language, string? AvatarUrl, int FollowerCount, int? AverageViews,
     string Status, bool TikTokConnected, string? TikTokUsername, DateTime CreatedAt,
-    List<string> ProfileTags);
+    List<string> ProfileTags,
+    string? InstagramUsername, int InstagramFollowerCount, string? Website, bool OpenToPrOffers);
 
 public record CreatorListDto(
     Guid Id, string DisplayName, string Category, string Country,
@@ -66,7 +68,68 @@ public record CreatorListDto(
 
 public record UpdateCreatorProfileRequest(
     string DisplayName, string? Bio, string Category, string Country, string Language,
-    string? TikTokUsername, DateOnly? DateOfBirth, List<string>? ProfileTags);
+    string? TikTokUsername, DateOnly? DateOfBirth, List<string>? ProfileTags,
+    string? AvatarUrl = null, int? FollowerCount = null, int? AverageViews = null,
+    string? InstagramUsername = null, int? InstagramFollowerCount = null,
+    string? Website = null, bool? OpenToPrOffers = null);
+
+// ──── Creator discovery (brand-facing search & public profile) ────
+public record CreatorDiscoveryDto(
+    Guid Id, Guid UserId, string DisplayName, string? Bio, string Category, string Country,
+    string Language, string? AvatarUrl, int FollowerCount, int? AverageViews,
+    bool TikTokConnected, string? TikTokUsername, int TikTokFollowerCount,
+    string? InstagramUsername, int InstagramFollowerCount,
+    List<string> ProfileTags, int PortfolioItemCount,
+    double AverageRating, int ReviewCount, int CompletedCampaigns, bool OpenToPrOffers);
+
+public record CreatorPublicProfileDto(
+    Guid Id, Guid UserId, string DisplayName, string? Bio, string Category, string Country,
+    string Language, string? AvatarUrl, string? Website, int FollowerCount, int? AverageViews,
+    bool TikTokConnected, string? TikTokUsername, int TikTokFollowerCount,
+    string? InstagramUsername, int InstagramFollowerCount,
+    List<string> ProfileTags, bool OpenToPrOffers,
+    List<PortfolioItemDto> Portfolio,
+    double AverageRating, int ReviewCount, List<ReviewDto> RecentReviews,
+    int CompletedCampaigns, DateTime CreatedAt);
+
+// ──── Portfolio ────
+public record PortfolioItemDto(
+    Guid Id, string Title, string? Description, string MediaType, string MediaUrl,
+    string? ThumbnailUrl, string? Category, string? BrandName,
+    long? Views, long? Likes, int SortOrder, bool IsFeatured, DateTime CreatedAt);
+
+public record CreatePortfolioItemRequest(
+    string Title, string? Description, string MediaType, string MediaUrl,
+    string? ThumbnailUrl, string? Category, string? BrandName,
+    long? Views, long? Likes, bool IsFeatured = false);
+
+public record UpdatePortfolioItemRequest(
+    string Title, string? Description, string MediaType, string MediaUrl,
+    string? ThumbnailUrl, string? Category, string? BrandName,
+    long? Views, long? Likes, int SortOrder, bool IsFeatured);
+
+// ──── PR Hub (direct brand → creator offers) ────
+public record CreatePrOfferRequest(
+    Guid CreatorProfileId, string Title, string Message, string OfferType, string Category,
+    decimal? CompensationAmount, string? Currency, string? ProductDescription, decimal? ProductValue,
+    DateTime? Deadline, Guid? CampaignId);
+
+public record RespondPrOfferRequest(bool Accept, string? ResponseMessage);
+
+public record PrOfferDto(
+    Guid Id, Guid BrandProfileId, string BrandName, string? BrandLogoUrl,
+    Guid CreatorProfileId, string CreatorName, string? CreatorAvatarUrl,
+    Guid? CampaignId, string? CampaignName,
+    string Title, string Message, string OfferType, string Category,
+    decimal? CompensationAmount, string Currency, string? ProductDescription, decimal? ProductValue,
+    DateTime? Deadline, string Status, string? ResponseMessage,
+    Guid? CreatedAssignmentId, DateTime? ViewedAt, DateTime? RespondedAt, DateTime CreatedAt);
+
+public record PrOfferStatsDto(
+    int TotalSent, int Pending, int Viewed, int Accepted, int Declined,
+    List<PrCategoryCountDto> ByCategory);
+
+public record PrCategoryCountDto(string Category, int Count);
 
 // ──── Campaign ────
 public record CreateCampaignRequest(

@@ -74,7 +74,7 @@ export function RegisterPage() {
   const [form, setForm] = useState({
     email: '', password: '', role: defaultRole,
     displayName: '', companyName: '', organizationNumber: '', contactPhone: '',
-    tikTokUsername: '', bio: '', category: 'Övrigt', dateOfBirth: '', country: 'SE',
+    tikTokUsername: '', instagramUsername: '', bio: '', category: 'Övrigt', dateOfBirth: '', country: 'SE',
     profileTags: [] as string[],
   });
   const [error, setError] = useState('');
@@ -91,6 +91,7 @@ export function RegisterPage() {
       if (!form.bio.trim()) { setError('Bio krävs'); return; }
       if (!form.category.trim()) { setError('Kategori krävs'); return; }
       if (!form.country.trim()) { setError('Land krävs'); return; }
+      if (!form.tikTokUsername.trim()) { setError('TikTok-användarnamn krävs vid registrering'); return; }
       if (!form.profileTags || form.profileTags.length === 0) { setError('Minst en expertis-tagg krävs'); return; }
     }
     if (form.role === 'Brand') {
@@ -244,13 +245,23 @@ export function RegisterPage() {
                 <DateInput value={form.dateOfBirth} onChange={v => setForm({ ...form, dateOfBirth: v })} style={metapickStyles.input} />
               </div>
               <div>
-                <label style={metapickStyles.label}>TikTok-användarnamn</label>
+                <label style={metapickStyles.label}>TikTok-användarnamn *</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
                   <span style={{ color: '#8b8ba3', fontSize: '1rem' }}>@</span>
-                  <input type="text" value={form.tikTokUsername} onChange={set('tikTokUsername')} placeholder="dittanvändarnamn" style={{ ...metapickStyles.input, flex: 1 }} />
+                  <input type="text" value={form.tikTokUsername} onChange={set('tikTokUsername')} required placeholder="dittanvändarnamn" style={{ ...metapickStyles.input, flex: 1 }} />
                 </div>
                 <p style={{ fontSize: '.7rem', color: '#555', marginTop: '.25rem' }}>
-                  Valfritt — du kopplar ditt TikTok-konto via OAuth efter godkännande.
+                  Obligatoriskt. Efter godkännande kopplar du kontot via TikTok OAuth för automatisk tracking.
+                </p>
+              </div>
+              <div>
+                <label style={metapickStyles.label}>Instagram-användarnamn</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+                  <span style={{ color: '#8b8ba3', fontSize: '1rem' }}>@</span>
+                  <input type="text" value={form.instagramUsername} onChange={set('instagramUsername')} placeholder="dittinstagram" style={{ ...metapickStyles.input, flex: 1 }} />
+                </div>
+                <p style={{ fontSize: '.7rem', color: '#555', marginTop: '.25rem' }}>
+                  Valfritt — lägg till om du även är aktiv på Instagram.
                 </p>
               </div>
             </>

@@ -86,11 +86,13 @@ public class AuthService : IAuthService
                 Language = "sv",
                 DateOfBirth = request.DateOfBirth,
                 ProfileTags = request.ProfileTags?.ToArray() ?? [],
+                InstagramUsername = string.IsNullOrWhiteSpace(request.InstagramUsername)
+                    ? null : request.InstagramUsername.TrimStart('@').Trim(),
                 Status = CreatorStatus.Pending
             };
             _creators.Add(creator);
 
-            // If TikTok username provided, create a simplified TikTok account record
+            // TikTok connection is required at sign-up; create the account record.
             if (!string.IsNullOrWhiteSpace(request.TikTokUsername))
             {
                 var tiktokUsername = request.TikTokUsername.TrimStart('@');

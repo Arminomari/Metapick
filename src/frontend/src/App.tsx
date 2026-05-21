@@ -10,7 +10,11 @@ import { LandingPage } from '@/pages/LandingPage';
 import { TermsPage, PrivacyPage } from '@/pages/LegalPages';
 import { AdminDashboardPage } from '@/pages/admin/AdminPages';
 import { BrandDashboard, BrandCampaignListPage, BrandCampaignDetailPage, CreateCampaignPage, BrandApplicationsPage, BrandSettingsPage, BrandAssignmentDetailPage } from '@/pages/brand/BrandPages';
+import { DiscoverCreatorsPage, BrandCreatorDetailPage } from '@/pages/brand/CreatorDiscoveryPages';
+import { BrandPrHubPage } from '@/pages/brand/PrHubPage';
 import { CreatorDashboard, BrowseCampaignsPage, CreatorAssignmentsPage, AssignmentDetailPage, EarningsPage, CreatorProfilePage } from '@/pages/creator/CreatorPages';
+import { CreatorPortfolioPage } from '@/pages/creator/PortfolioPage';
+import { CreatorPrInboxPage } from '@/pages/creator/PrInboxPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -62,6 +66,9 @@ export default function App() {
             <Route path="/brand/campaigns/new" element={<ProtectedRoute allowedRoles={['Brand']}><CreateCampaignPage /></ProtectedRoute>} />
             <Route path="/brand/campaigns/:id" element={<ProtectedRoute allowedRoles={['Brand']}><CampaignDetailWrapper /></ProtectedRoute>} />
             <Route path="/brand/applications" element={<ProtectedRoute allowedRoles={['Brand']}><BrandApplicationsPage /></ProtectedRoute>} />
+            <Route path="/brand/creators" element={<ProtectedRoute allowedRoles={['Brand']}><DiscoverCreatorsPage /></ProtectedRoute>} />
+            <Route path="/brand/creators/:id" element={<ProtectedRoute allowedRoles={['Brand']}><BrandCreatorDetailPage /></ProtectedRoute>} />
+            <Route path="/brand/pr" element={<ProtectedRoute allowedRoles={['Brand']}><BrandPrHubPage /></ProtectedRoute>} />
             <Route path="/brand/settings" element={<ProtectedRoute allowedRoles={['Brand']}><BrandSettingsPage /></ProtectedRoute>} />
             <Route path="/brand/assignments/:id" element={<ProtectedRoute allowedRoles={['Brand']}><BrandAssignmentDetailPage /></ProtectedRoute>} />
 
@@ -70,6 +77,8 @@ export default function App() {
             <Route path="/creator/browse" element={<ProtectedRoute allowedRoles={['Creator']}><BrowseCampaignsPage /></ProtectedRoute>} />
             <Route path="/creator/assignments" element={<ProtectedRoute allowedRoles={['Creator']}><CreatorAssignmentsPage /></ProtectedRoute>} />
             <Route path="/creator/assignments/:id" element={<ProtectedRoute allowedRoles={['Creator']}><AssignmentDetailPage /></ProtectedRoute>} />
+            <Route path="/creator/portfolio" element={<ProtectedRoute allowedRoles={['Creator']}><CreatorPortfolioPage /></ProtectedRoute>} />
+            <Route path="/creator/pr" element={<ProtectedRoute allowedRoles={['Creator']}><CreatorPrInboxPage /></ProtectedRoute>} />
             <Route path="/creator/earnings" element={<ProtectedRoute allowedRoles={['Creator']}><EarningsPage /></ProtectedRoute>} />
             <Route path="/creator/profile" element={<ProtectedRoute allowedRoles={['Creator']}><CreatorProfilePage /></ProtectedRoute>} />
           </Route>

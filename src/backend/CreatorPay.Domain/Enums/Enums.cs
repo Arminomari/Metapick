@@ -50,7 +50,20 @@ public enum NotificationType
     CampaignCompleted = 3, PayoutReady = 4, PayoutCompleted = 5,
     FraudAlert = 6, SystemMessage = 7, BrandApproved = 8,
     CreatorApproved = 9, NewApplication = 10, VideoVerified = 11,
-    SubmissionApproved = 12, SubmissionRejected = 13
+    SubmissionApproved = 12, SubmissionRejected = 13,
+    PrOfferReceived = 14, PrOfferAccepted = 15, PrOfferDeclined = 16
+}
+
+// ── Portfolio & PR Hub ─────────────────────────────────
+public enum PortfolioMediaType { Image = 0, Video = 1, TikTok = 2, Instagram = 3, Link = 4 }
+
+/// <summary>What the brand/restaurant is offering the creator in a direct PR offer.</summary>
+public enum PrOfferType { ProductGifting = 0, Paid = 1, Hybrid = 2, Event = 3 }
+
+public enum PrOfferStatus
+{
+    Sent = 0, Viewed = 1, Accepted = 2, Declined = 3,
+    Withdrawn = 4, Expired = 5, Completed = 6
 }
 
 public enum RequirementType { MinFollowers = 0, MinAvgViews = 1, Country = 2, Category = 3, Language = 4, AccountAge = 5 }

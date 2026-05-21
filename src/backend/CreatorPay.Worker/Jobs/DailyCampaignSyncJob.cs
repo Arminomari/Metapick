@@ -69,6 +69,7 @@ public class DailyCampaignSyncJob : ICampaignSyncTrigger
         while (true)
         {
             var batch = await _campaigns.Query()
+                .Include(c => c.BrandProfile)
                 .Include(c => c.PayoutRules)
                 .Include(c => c.Assignments).ThenInclude(a => a.CreatorProfile).ThenInclude(cp => cp!.TikTokAccount)
                 .Include(c => c.Assignments).ThenInclude(a => a.Submissions)
@@ -140,8 +141,11 @@ public class DailyCampaignSyncJob : ICampaignSyncTrigger
             _logger.LogWarning("Campaign {Id} budget at {Pct}% – sending warning",
                 campaign.Id, (campaign.BudgetSpent / campaign.Budget * 100));
 
-            await _notifications.SendAsync(campaign.BrandProfileId, NotificationType.SystemMessage,
-                $"Kampanjen '{campaign.Name}' har förbrukat {campaign.BudgetSpent:N0} av {campaign.Budget:N0} SEK");
+            // Notifications are addressed by User id, not BrandProfile id — passing the
+            // wrong id violates the User FK and rolls back the entire campaign sync.
+            if (campaign.BrandProfile != null)
+                await _notifications.SendAsync(campaign.BrandProfile.UserId, NotificationType.SystemMessage,
+                    $"Kampanjen '{campaign.Name}' har förbrukat {campaign.BudgetSpent:N0} av {campaign.Budget:N0} SEK");
         }
     }
 

@@ -41,6 +41,35 @@ public interface ICreatorService
     Task<Result<CreatorProfileDto>> RejectCreatorAsync(Guid creatorId, Guid adminId, string reason);
 }
 
+public interface IPortfolioService
+{
+    Task<Result<List<PortfolioItemDto>>> GetMyPortfolioAsync(Guid creatorUserId, CancellationToken ct = default);
+    Task<Result<PortfolioItemDto>> AddItemAsync(Guid creatorUserId, CreatePortfolioItemRequest request, CancellationToken ct = default);
+    Task<Result<PortfolioItemDto>> UpdateItemAsync(Guid itemId, Guid creatorUserId, UpdatePortfolioItemRequest request, CancellationToken ct = default);
+    Task<Result<bool>> DeleteItemAsync(Guid itemId, Guid creatorUserId, CancellationToken ct = default);
+}
+
+public interface ICreatorDiscoveryService
+{
+    Task<Result<PagedResult<CreatorDiscoveryDto>>> SearchAsync(
+        string? search, string? category, string? country, int? minFollowers,
+        string? tag, bool? openToPrOffers, string? sort, int page, int pageSize, CancellationToken ct = default);
+    Task<Result<CreatorPublicProfileDto>> GetPublicProfileAsync(Guid creatorProfileId, CancellationToken ct = default);
+}
+
+public interface IPrOfferService
+{
+    Task<Result<PrOfferDto>> CreateAsync(Guid brandUserId, CreatePrOfferRequest request, CancellationToken ct = default);
+    Task<Result<PrOfferDto>> RespondAsync(Guid offerId, Guid creatorUserId, RespondPrOfferRequest request, CancellationToken ct = default);
+    Task<Result<PrOfferDto>> WithdrawAsync(Guid offerId, Guid brandUserId, CancellationToken ct = default);
+    Task<Result<PrOfferDto>> MarkViewedAsync(Guid offerId, Guid creatorUserId, CancellationToken ct = default);
+    Task<Result<PrOfferDto>> GetAsync(Guid offerId, Guid userId, CancellationToken ct = default);
+    Task<Result<PagedResult<PrOfferDto>>> GetSentAsync(Guid brandUserId, string? status, string? category, int page, int pageSize, CancellationToken ct = default);
+    Task<Result<PagedResult<PrOfferDto>>> GetReceivedAsync(Guid creatorUserId, string? status, int page, int pageSize, CancellationToken ct = default);
+    Task<Result<PrOfferStatsDto>> GetBrandStatsAsync(Guid brandUserId, CancellationToken ct = default);
+    Task<Result<int>> GetCreatorUnreadCountAsync(Guid creatorUserId, CancellationToken ct = default);
+}
+
 public interface ICampaignService
 {
     Task<Result<CampaignDetailDto>> CreateCampaignAsync(Guid brandUserId, CreateCampaignRequest request, CancellationToken ct = default);

@@ -35,15 +35,28 @@ public static class HttpClientExtensions
     public static async Task<HttpClient> RegisterAndLogin(this HttpClient client, string email, string password,
         string role, string firstName = "Test", string lastName = "User")
     {
-        // Register
-        var regRes = await client.PostAsJsonAsync("/api/auth/register", new
+        // Register — include the role-specific fields the RegisterRequestValidator requires.
+        object payload = role switch
         {
-            email,
-            password,
-            firstName,
-            lastName,
-            role
-        });
+            "Creator" => new
+            {
+                email, password, firstName, lastName, role,
+                displayName = $"{firstName} Creator",
+                bio = "Integration test creator profile.",
+                category = "Tech",
+                country = "SE",
+                tikTokUsername = "tt_" + Guid.NewGuid().ToString("N")[..8],
+                profileTags = new[] { "UGC Creator" }
+            },
+            "Brand" => new
+            {
+                email, password, firstName, lastName, role,
+                companyName = $"{firstName} Co",
+                organizationNumber = "556677-8899"
+            },
+            _ => new { email, password, firstName, lastName, role }
+        };
+        var regRes = await client.PostAsJsonAsync("/api/auth/register", payload);
 
         if (!regRes.IsSuccessStatusCode)
         {

@@ -22,6 +22,11 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
         When(x => x.Role == "Creator", () =>
         {
             RuleFor(x => x.DisplayName).NotEmpty().MaximumLength(100);
+            // TikTok connection is mandatory at sign-up (handle now, OAuth verification after approval).
+            RuleFor(x => x.TikTokUsername).NotEmpty()
+                .WithMessage("TikTok-användarnamn krävs vid registrering")
+                .MaximumLength(100);
+            RuleFor(x => x.InstagramUsername).MaximumLength(100);
         });
     }
 }
