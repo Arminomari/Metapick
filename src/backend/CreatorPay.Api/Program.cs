@@ -66,7 +66,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnTokenValidated = context =>
             {
-                var sub = context.Principal?.FindFirst("sub")?.Value;
+                // .NET's JWT handler remaps "sub" → ClaimTypes.NameIdentifier by default,
+                // so check both names — otherwise every authenticated request fails with 401.
+                var sub = context.Principal?.FindFirst("sub")?.Value
+                    ?? context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                 if (!Guid.TryParse(sub, out _))
                     context.Fail("Invalid subject claim");
                 return Task.CompletedTask;

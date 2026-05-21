@@ -69,7 +69,12 @@ public class CreatorService : ICreatorService
         // Update or create TikTok account
         if (!string.IsNullOrWhiteSpace(request.TikTokUsername))
         {
-            var tiktokUsername = request.TikTokUsername.TrimStart('@');
+            var tiktokUsername = request.TikTokUsername.TrimStart('@').Trim();
+            // Unique index on TikTokUsername — block collisions with a clean error (not a 500).
+            var takenByOther = await _tiktokAccounts.Query()
+                .AnyAsync(t => t.TikTokUsername == tiktokUsername && t.CreatorProfileId != creator.Id);
+            if (takenByOther)
+                return Errors.Conflict("Detta TikTok-användarnamn är redan kopplat till ett annat konto");
             if (creator.TikTokAccount != null)
             {
                 creator.TikTokAccount.TikTokUsername = tiktokUsername;

@@ -48,6 +48,19 @@ public class AuthService : IAuthService
             role == UserRole.Admin)
             return Errors.Validation("Invalid role");
 
+        // For creators, the TikTok username has a unique index — check up front so a
+        // collision returns a clean 409 instead of an unhandled DbUpdateException (500).
+        var normalizedTikTok = role == UserRole.Creator && !string.IsNullOrWhiteSpace(request.TikTokUsername)
+            ? request.TikTokUsername.TrimStart('@').Trim()
+            : null;
+        if (normalizedTikTok != null)
+        {
+            var tikTokTaken = await _tiktokAccounts.Query()
+                .AnyAsync(t => t.TikTokUsername == normalizedTikTok);
+            if (tikTokTaken)
+                return Errors.Conflict("Detta TikTok-användarnamn är redan kopplat till ett annat konto");
+        }
+
         var user = new User
         {
             Email = request.Email.ToLowerInvariant(),
@@ -93,9 +106,9 @@ public class AuthService : IAuthService
             _creators.Add(creator);
 
             // TikTok connection is required at sign-up; create the account record.
-            if (!string.IsNullOrWhiteSpace(request.TikTokUsername))
+            if (normalizedTikTok != null)
             {
-                var tiktokUsername = request.TikTokUsername.TrimStart('@');
+                var tiktokUsername = normalizedTikTok;
                 var tiktok = new TikTokAccount
                 {
                     CreatorProfileId = creator.Id,
