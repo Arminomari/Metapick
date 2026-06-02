@@ -16,6 +16,7 @@ import { CreatorStudioDashboard } from '@/pages/creator/CreatorStudio';
 import { BrowseCampaignsPage, CreatorAssignmentsPage, AssignmentDetailPage, EarningsPage, CreatorProfilePage } from '@/pages/creator/CreatorPages';
 import { CreatorPortfolioPage } from '@/pages/creator/PortfolioPage';
 import { CreatorPrInboxPage } from '@/pages/creator/PrInboxPage';
+import { CreatorAnalyticsPage, CreatorLinksPage, CreatorLevelsPage, CreatorSavedPage } from '@/pages/creator/CreatorExtraPages';
 
 function VyrleFrame({ src, title }: { src: string; title: string }) {
   return (
@@ -90,8 +91,12 @@ export default function App() {
             <Route path="/creator/assignments" element={<CreatorAssignmentsPage />} />
             <Route path="/creator/assignments/:id" element={<AssignmentDetailPage />} />
             <Route path="/creator/portfolio" element={<CreatorPortfolioPage />} />
+            <Route path="/creator/analytics" element={<CreatorAnalyticsPage />} />
             <Route path="/creator/pr" element={<CreatorPrInboxPage />} />
+            <Route path="/creator/links" element={<CreatorLinksPage />} />
             <Route path="/creator/earnings" element={<EarningsPage />} />
+            <Route path="/creator/levels" element={<CreatorLevelsPage />} />
+            <Route path="/creator/saved" element={<CreatorSavedPage />} />
             <Route path="/creator/profile" element={<CreatorProfilePage />} />
           </Route>
 

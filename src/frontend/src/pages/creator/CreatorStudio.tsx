@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   useCreatorAssignments, useCreatorPayouts, useCreatorProfile,
-  useNotifications, useBrowseCampaigns, useProfile, useUserReviews,
+  useBrowseCampaigns, useProfile, useUserReviews,
 } from '@/hooks/api';
 import { formatCurrency, formatNumber, formatDate } from '@/lib/utils';
 import type { AssignmentListItem } from '@/types';
@@ -17,42 +17,16 @@ const GRADS = [
 const grad = (s: string) => GRADS[((s || '').charCodeAt(0) || 0) % GRADS.length];
 const initial = (s: string) => (s?.[0] || '?').toUpperCase();
 
-function statusBadge(status: string) {
+function campTag(status: string) {
   const s = (status || '').toLowerCase();
-  if (s === 'active') return <span className="vy-badge peach">ACTIVE</span>;
-  if (s.includes('review') || s.includes('pending')) return <span className="vy-badge lilac">{status.toUpperCase()}</span>;
-  if (s === 'completed' || s === 'paid') return <span className="vy-badge green">{status.toUpperCase()}</span>;
-  if (s.includes('reject')) return <span className="vy-badge red">{status.toUpperCase()}</span>;
-  return <span className="vy-badge grey">{status.toUpperCase()}</span>;
+  if (s.includes('review')) return <span className="vcamp-tag rev">IN REVIEW</span>;
+  if (s === 'active') return <span className="vcamp-tag prog">IN PROGRESS</span>;
+  return <span className="vcamp-tag up">{status.toUpperCase()}</span>;
 }
-
-const Svg = ({ d, sw = 1.7 }: { d: React.ReactNode; sw?: number }) =>
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">{d}</svg>;
-const I = {
-  views: <><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></>,
-  earn: <><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></>,
-  camp: <><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></>,
-  clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
-  check: <path d="m5 12 4 4L19 7" />,
-};
 
 type Metric = 'views' | 'earnings' | 'clicks';
-const metricVal = (a: AssignmentListItem, m: Metric) =>
-  m === 'views' ? a.totalVerifiedViews : m === 'earnings' ? a.currentPayoutAmount : a.totalTrackedClicks;
-const metricFmt = (n: number, m: Metric) => (m === 'earnings' ? formatCurrency(n) : formatNumber(n));
-
-/** Build an area + line path from real per-campaign values (ascending for a clean rising shape). */
-function chartPaths(values: number[], W: number, H: number) {
-  const max = Math.max(1, ...values);
-  const pts = values.map((v, i) => {
-    const x = values.length === 1 ? W / 2 : (i / (values.length - 1)) * W;
-    const y = H - (v / max) * (H - 10) - 4;
-    return [x, y] as const;
-  });
-  const line = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
-  const area = `${line} L${W},${H} L0,${H} Z`;
-  return { line, area, max, pts };
-}
+const mVal = (a: AssignmentListItem, m: Metric) => m === 'views' ? a.totalVerifiedViews : m === 'earnings' ? a.currentPayoutAmount : a.totalTrackedClicks;
+const mFmt = (n: number, m: Metric) => m === 'earnings' ? formatCurrency(n) : formatNumber(n);
 
 export function CreatorStudioDashboard() {
   const navigate = useNavigate();
@@ -63,14 +37,12 @@ export function CreatorStudioDashboard() {
   const { data: profile } = useCreatorProfile();
   const { data: user } = useProfile();
   const { data: reviews } = useUserReviews(user?.id ?? '');
-  const { data: notifRes } = useNotifications();
   const { data: browseRes } = useBrowseCampaigns();
 
-  if (isLoading) return <div className="vy-spinner" />;
+  if (isLoading) return <div style={{ padding: 80, textAlign: 'center', color: 'var(--muted)' }}>Loading…</div>;
 
   const assignments = assignmentsRes?.data ?? [];
   const payouts = payoutsRes?.data ?? [];
-  const notifs = notifRes?.data ?? [];
   const browse = browseRes?.data ?? [];
 
   const active = assignments.filter((a) => a.status === 'Active');
@@ -81,28 +53,36 @@ export function CreatorStudioDashboard() {
   const pending = Math.max(0, totalEarned - paidOut);
   const name = profile?.displayName || 'there';
 
-  // chart data: real per-campaign values for the selected metric (ascending)
-  const chartCampaigns = [...assignments].sort((a, b) => metricVal(a, metric) - metricVal(b, metric)).slice(-8);
-  const values = chartCampaigns.map((a) => metricVal(a, metric));
-  const W = 640, H = 230;
-  const { line, area, max } = chartPaths(values, W, H);
-  const totalMetric = assignments.reduce((s, a) => s + metricVal(a, metric), 0);
-  const avgMetric = assignments.length ? totalMetric / assignments.length : 0;
-  const topCampaign = chartCampaigns[chartCampaigns.length - 1];
+  // chart: real per-campaign values for selected metric, ascending
+  const chartCamps = [...assignments].sort((a, b) => mVal(a, metric) - mVal(b, metric)).slice(-8);
+  const vals = chartCamps.map((a) => mVal(a, metric));
+  const W = 900, H = 300, top = 14, bot = 14;
+  const max = Math.max(1, ...vals);
+  const pts = vals.map((v, i) => {
+    const x = vals.length === 1 ? W / 2 : (i / (vals.length - 1)) * W;
+    const y = top + (1 - v / max) * (H - top - bot);
+    return [x, y] as const;
+  });
+  const line = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+  const areaPath = pts.length ? `${line} L${W},${H} L0,${H} Z` : '';
+  const totalMetric = assignments.reduce((s, a) => s + mVal(a, metric), 0);
+  const avgMetric = assignments.length ? Math.round(totalMetric / assignments.length) : 0;
+  const topCamp = chartCamps[chartCamps.length - 1];
 
-  // rating donut from real reviews
+  // reputation donut from real reviews
   const avgStars = reviews?.averageStars ?? 0;
   const reviewCount = reviews?.totalReviews ?? 0;
-  const ratingScore = Math.round((avgStars / 5) * 100);
-  const C = 314.159, dash = (ratingScore / 100) * C;
+  const score = Math.round((avgStars / 5) * 100);
+  const C = 314.159, dash = (score / 100) * C;
+  const repWord = score >= 90 ? 'Excellent' : score >= 75 ? 'Great' : score >= 50 ? 'Good' : reviewCount ? 'Building' : 'New';
 
   return (
-    <>
+    <section className="view active reveal" data-view="overview">
       {/* HERO */}
-      <div className="vy-hero">
-        <div className="vy-hero-grain" />
-        <div className="vy-hero-glow" />
-        <svg className="vy-hero-star" viewBox="0 0 220 220" fill="none" aria-hidden="true">
+      <div className="hero">
+        <div className="hero-grain" />
+        <div className="hero-glow" />
+        <svg className="hero-star" viewBox="0 0 220 220" fill="none" aria-hidden="true">
           <defs>
             <radialGradient id="hsGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#FFF4EC" /><stop offset="30%" stopColor="#FFD8C7" stopOpacity=".9" /><stop offset="100%" stopColor="#F1A88F" stopOpacity="0" /></radialGradient>
             <linearGradient id="hsCore" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#FFFFFF" /><stop offset="60%" stopColor="#FBEEF6" /><stop offset="100%" stopColor="#EDE1FF" /></linearGradient>
@@ -111,149 +91,133 @@ export function CreatorStudioDashboard() {
           <path d="M110 20 C118 78 142 102 200 110 C142 118 118 142 110 200 C102 142 78 118 20 110 C78 102 102 78 110 20Z" fill="url(#hsCore)" />
           <path d="M110 58 C115 95 125 105 162 110 C125 115 115 125 110 162 C105 125 95 115 58 110 C95 105 105 95 110 58Z" fill="#fff" opacity=".96" />
         </svg>
-        <div className="vy-hero-inner">
-          <div className="vy-hero-eyebrow"><span className="vy-live" /> Creator Studio · Live</div>
-          <h1 className="vy-hero-title">Welcome back, <em>{name}</em></h1>
-          <p className="vy-hero-subt">Verified views, accrued payouts and what is live on your account right now.</p>
-          <div className="vy-kpis">
-            <div className="vy-kpi"><div className="v">{formatNumber(totalViews)}</div><div className="l">Verified views</div></div>
-            <div className="vy-kpi-sep" />
-            <div className="vy-kpi"><div className="v money">{formatCurrency(totalEarned)}</div><div className="l">Total accrued</div></div>
-            <div className="vy-kpi-sep" />
-            <div className="vy-kpi"><div className="v">{formatCurrency(pending)}</div><div className="l">Pending payout</div></div>
-            <div className="vy-kpi-sep" />
-            <div className="vy-kpi"><div className="v">{active.length}</div><div className="l">Active campaigns</div></div>
+        <div className="hero-inner">
+          <div className="hero-eyebrow"><span className="hero-live" /> Creator Studio · Live</div>
+          <h1 className="hero-title">Welcome back, <em>{name}</em></h1>
+          <p className="hero-sub">Verified views, accrued payouts and what is live on your account right now.</p>
+          <div className="hero-kpis">
+            <div className="hero-kpi"><div className="hk-v">{formatNumber(totalViews)}</div><div className="hk-l">Verified views</div></div>
+            <div className="hero-kpi-sep" />
+            <div className="hero-kpi"><div className="hk-v hk-money"><span>{formatCurrency(totalEarned)}</span></div><div className="hk-l">Total accrued</div></div>
+            <div className="hero-kpi-sep" />
+            <div className="hero-kpi"><div className="hk-v">{formatCurrency(pending)}</div><div className="hk-l">Pending payout</div></div>
+            <div className="hero-kpi-sep" />
+            <div className="hero-kpi"><div className="hk-v">{active.length}</div><div className="hk-l">Active campaigns</div></div>
           </div>
         </div>
       </div>
 
-      {/* STAT ROW */}
-      <div className="vy-statrow">
-        <div className="vy-card vy-stat"><div className="vy-stat-ico"><Svg d={I.camp} /></div><div className="vy-stat-lbl">Active campaigns</div><div className="vy-stat-val">{active.length}</div><div className="vy-stat-sub">{assignments.length} total assignments</div></div>
-        <div className="vy-card vy-stat"><div className="vy-stat-ico"><Svg d={I.views} /></div><div className="vy-stat-lbl">Verified views</div><div className="vy-stat-val">{formatNumber(totalViews)}</div><div className="vy-stat-sub">{formatNumber(totalClicks)} tracked clicks</div></div>
-        <div className="vy-card vy-stat"><div className="vy-stat-ico"><Svg d={I.earn} /></div><div className="vy-stat-lbl">Total earned</div><div className="vy-stat-val">{formatCurrency(totalEarned)}</div><div className="vy-stat-sub">accrued across campaigns</div></div>
-        <div className="vy-card vy-stat"><div className="vy-stat-ico"><Svg d={I.clock} /></div><div className="vy-stat-lbl">Paid out</div><div className="vy-stat-val">{formatCurrency(paidOut)}</div><div className="vy-stat-sub">{formatCurrency(pending)} pending</div></div>
-      </div>
-
-      {/* TOP ROW: performance + rating */}
-      <div className="vy-vtop">
-        <div className="vy-card">
-          <div className="vy-perf-head"><h3>Performance by campaign</h3><span className="vy-chip">{assignments.length} campaigns</span></div>
-          <div className="vy-metric-row">
-            <button className={`vy-metric${metric === 'views' ? ' on' : ''}`} onClick={() => setMetric('views')}><span className="ml">Views</span><span className="mv">{formatNumber(totalViews)}</span></button>
-            <button className={`vy-metric${metric === 'earnings' ? ' on' : ''}`} onClick={() => setMetric('earnings')}><span className="ml">Earnings</span><span className="mv">{formatCurrency(totalEarned)}</span></button>
-            <button className={`vy-metric${metric === 'clicks' ? ' on' : ''}`} onClick={() => setMetric('clicks')}><span className="ml">Clicks</span><span className="mv">{formatNumber(totalClicks)}</span></button>
+      {/* TOP: performance + reputation */}
+      <div className="vtop">
+        <div className="card vperf">
+          <div className="vperf-head"><h3>Performance by campaign</h3><span className="vchip">{assignments.length} campaigns</span></div>
+          <div className="vmetric-row" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
+            <button className={`vmetric${metric === 'views' ? ' active' : ''}`} onClick={() => setMetric('views')}><span className="vm-l">Views</span><span className="vm-v">{formatNumber(totalViews)}</span></button>
+            <button className={`vmetric${metric === 'earnings' ? ' active' : ''}`} onClick={() => setMetric('earnings')}><span className="vm-l">Earnings</span><span className="vm-v">{formatCurrency(totalEarned)}</span></button>
+            <button className={`vmetric${metric === 'clicks' ? ' active' : ''}`} onClick={() => setMetric('clicks')}><span className="vm-l">Clicks</span><span className="vm-v">{formatNumber(totalClicks)}</span></button>
           </div>
-          {values.length >= 2 ? (
+          {vals.length >= 2 ? (
             <>
-              <div className="vy-chart">
-                <div className="vy-chart-y">
-                  <span>{metricFmt(max, metric)}</span><span>{metricFmt(max * 0.75, metric)}</span><span>{metricFmt(max * 0.5, metric)}</span><span>{metricFmt(max * 0.25, metric)}</span><span>0</span>
-                </div>
-                <div className="vy-chart-plot">
-                  <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="vy-chart-svg">
+              <div className="vchart">
+                <div className="vchart-y"><span>{mFmt(max, metric)}</span><span>{mFmt(Math.round(max * .75), metric)}</span><span>{mFmt(Math.round(max * .5), metric)}</span><span>{mFmt(Math.round(max * .25), metric)}</span><span>0</span></div>
+                <div className="vchart-plot">
+                  <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="vchart-svg">
                     <defs>
-                      <linearGradient id="vyPerfFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#F1A88F" stopOpacity=".42" /><stop offset="60%" stopColor="#F1A88F" stopOpacity=".1" /><stop offset="100%" stopColor="#F1A88F" stopOpacity="0" /></linearGradient>
-                      <linearGradient id="vyPerfLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#FFD0BC" /><stop offset="100%" stopColor="#E68A6E" /></linearGradient>
+                      <linearGradient id="perfFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#F1A88F" stopOpacity=".42" /><stop offset="55%" stopColor="#F1A88F" stopOpacity=".12" /><stop offset="100%" stopColor="#F1A88F" stopOpacity="0" /></linearGradient>
+                      <linearGradient id="perfLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#FFD0BC" /><stop offset="55%" stopColor="#F1A88F" /><stop offset="100%" stopColor="#E68A6E" /></linearGradient>
                     </defs>
-                    {[0.25, 0.5, 0.75].map((f) => <line key={f} className="gl" x1="0" y1={H * f} x2={W} y2={H * f} />)}
-                    <path d={area} fill="url(#vyPerfFill)" />
-                    <path d={line} fill="none" stroke="url(#vyPerfLine)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
+                    {[57.6, 129.6, 201.6].map((y) => <line key={y} x1="0" y1={y} x2={W} y2={y} stroke="#F5EDE4" strokeWidth="1" />)}
+                    <path d={areaPath} fill="url(#perfFill)" />
+                    <path d={line} fill="none" stroke="url(#perfLine)" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" />
+                    {pts.length > 0 && <circle cx={pts[pts.length - 1][0]} cy={pts[pts.length - 1][1]} r="5.5" fill="#fff" stroke="#F1A88F" strokeWidth="3" />}
                   </svg>
-                  <div className="vy-chart-x">{chartCampaigns.map((a) => <span key={a.id}>{a.campaignName}</span>)}</div>
+                  <div className="vchart-x">{chartCamps.map((a) => <span key={a.id} style={{ maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.campaignName}</span>)}</div>
                 </div>
               </div>
-              <div className="vy-perf-foot">
-                <div className="vy-vf"><div className="l">Top campaign</div><div className="v">{topCampaign?.campaignName ?? '—'}</div></div>
-                <div className="vy-vf"><div className="l">Average</div><div className="v">{metricFmt(Math.round(avgMetric), metric)}</div></div>
-                <div className="vy-vf"><div className="l">Total</div><div className="v">{metricFmt(totalMetric, metric)}</div></div>
-                <Link to="/creator/assignments" className="vy-link" style={{ margin: 0 }}>All campaigns →</Link>
+              <div className="vperf-foot">
+                <div className="vf-stat"><div className="vf-l">Top campaign</div><div className="vf-v">{topCamp?.campaignName ?? '—'}</div></div>
+                <div className="vf-stat"><div className="vf-l">Average</div><div className="vf-v">{mFmt(avgMetric, metric)}</div></div>
+                <div className="vf-stat"><div className="vf-l">Total</div><div className="vf-v">{mFmt(totalMetric, metric)}</div></div>
+                <Link className="vperf-link" to="/creator/assignments" style={{ margin: 0 }}>All campaigns <Arrow /></Link>
               </div>
             </>
           ) : (
-            <div className="vy-empty"><div className="t">Not enough data yet</div><div className="s">Once you have a couple of campaigns running, your performance breakdown shows up here.</div><Link to="/creator/browse" className="vy-btn vy-btn-blush" style={{ marginTop: 16 }}>Discover campaigns</Link></div>
+            <div style={{ padding: '40px 10px', textAlign: 'center' }}>
+              <div style={{ fontWeight: 600 }}>Not enough data yet</div>
+              <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>Once you have a couple of campaigns running, your performance breakdown shows up here.</div>
+              <Link to="/creator/browse" className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 20px', marginTop: 16 }}>Discover campaigns</Link>
+            </div>
           )}
         </div>
 
-        <div className="vy-card" style={{ display: 'flex', flexDirection: 'column' }}>
-          <div className="vy-perf-head"><h3>Creator rating</h3></div>
-          <div className="vy-rep-donut">
+        <div className="card vrep">
+          <div className="vperf-head"><h3>Creator rating</h3></div>
+          <div className="vrep-donut">
             <svg viewBox="0 0 120 120">
               <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(183,188,200,.25)" strokeWidth="9" />
-              <circle cx="60" cy="60" r="50" fill="none" stroke="url(#vyPerfLine)" strokeWidth="9" strokeLinecap="round" strokeDasharray={`${dash} ${C}`} transform="rotate(-90 60 60)" />
+              <circle cx="60" cy="60" r="50" fill="none" stroke="url(#perfLine)" strokeWidth="9" strokeLinecap="round" strokeDasharray={`${dash} ${C}`} transform="rotate(-90 60 60)" />
             </svg>
-            <div className="vy-rep-center">
-              <div className="vy-rep-num">{reviewCount ? avgStars.toFixed(1) : '—'}</div>
-              <div className="vy-rep-lbl" style={{ color: reviewCount ? '#2f9d5b' : 'var(--muted)' }}>{reviewCount ? `${reviewCount} review${reviewCount > 1 ? 's' : ''}` : 'No ratings yet'}</div>
-            </div>
+            <div className="vrep-center"><div className="vrep-num">{reviewCount ? avgStars.toFixed(1) : '—'}</div><div className="vrep-lbl" style={{ color: reviewCount ? '#2f9d5b' : 'var(--muted)' }}>{repWord}</div></div>
           </div>
-          <div className="vy-rep-rows">
+          <div className="vrep-rows">
             {reviews?.reviews?.length ? reviews.reviews.slice(0, 4).map((r) => (
-              <div key={r.id} className="vy-rep-row">
-                <span className="vy-rep-ck"><Svg d={I.check} sw={2} /></span>
-                {r.reviewerName}
-                <b>{r.stars}/5</b>
-              </div>
+              <div key={r.id} className="vrep-row"><span className="vrep-ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 7" /></svg></span>{r.reviewerName}<b>{r.stars}/5</b></div>
             )) : (
-              <div className="vy-empty" style={{ padding: '18px 0' }}><div className="s">Brand ratings from completed campaigns will appear here.</div></div>
+              <div style={{ padding: '14px 0', fontSize: 13, color: 'var(--muted)' }}>Brand ratings from completed campaigns will appear here.</div>
             )}
           </div>
+          <Link className="vperf-link" to="/creator/portfolio">Build your portfolio <Arrow /></Link>
         </div>
       </div>
 
-      {/* BOTTOM SPLIT: active + discover */}
-      <div className="vy-csplit">
-        <div className="vy-card">
-          <div className="vy-perf-head"><h3>Active campaigns</h3><span className="vy-badge peach">{active.length} live</span></div>
+      {/* SPLIT: active + discover */}
+      <div className="vcsplit">
+        <div className="card vcamps">
+          <div className="vperf-head"><h3>Active campaigns</h3></div>
           {active.length ? active.slice(0, 5).map((a) => (
-            <div key={a.id} className="vy-camp" onClick={() => navigate(`/creator/assignments/${a.id}`)}>
-              <span className="vy-camp-thumb" style={{ background: grad(a.campaignName) }}>{initial(a.campaignName)}</span>
-              <div className="vy-camp-main"><div className="vy-camp-b">{a.campaignName}</div><div className="vy-camp-m">Assigned {formatDate(a.assignedAt)}</div>{statusBadge(a.status)}</div>
-              <div className="vy-camp-end"><div className="vy-camp-k">Views</div><div className="vy-camp-v">{formatNumber(a.totalVerifiedViews)}</div></div>
-              <div className="vy-camp-end"><div className="vy-camp-k">Earned</div><div className="vy-camp-v">{formatCurrency(a.currentPayoutAmount)}</div></div>
+            <div key={a.id} className="vcamp" onClick={() => navigate(`/creator/assignments/${a.id}`)}>
+              <span className="vcamp-thumb" style={{ background: grad(a.campaignName) }}><span className="brand-mono">{initial(a.campaignName)}</span></span>
+              <div className="vcamp-main"><div className="vcamp-b">{a.campaignName}</div><div className="vcamp-m">Assigned {formatDate(a.assignedAt)}</div>{campTag(a.status)}</div>
+              <div className="vcamp-end"><div className="vcamp-k">Views</div><div className="vcamp-v">{formatNumber(a.totalVerifiedViews)}</div></div>
+              <div className="vcamp-end"><div className="vcamp-k">Earned</div><div className="vcamp-v">{formatCurrency(a.currentPayoutAmount)}</div></div>
             </div>
           )) : (
-            <div className="vy-empty"><div className="t">No active campaigns yet</div><div className="s">Browse open campaigns and apply to the ones that fit your voice.</div><Link to="/creator/browse" className="vy-btn vy-btn-blush" style={{ marginTop: 16 }}>Discover campaigns</Link></div>
+            <div style={{ padding: '34px 10px', textAlign: 'center' }}>
+              <div style={{ fontWeight: 600 }}>No active campaigns yet</div>
+              <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>Browse open campaigns and apply to the ones that fit your voice.</div>
+              <Link to="/creator/browse" className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 20px', marginTop: 16 }}>Discover campaigns</Link>
+            </div>
           )}
-          {active.length > 0 && <Link to="/creator/assignments" className="vy-link" style={{ marginTop: 'auto', justifyContent: 'center' }}>View all campaigns →</Link>}
+          {active.length > 0 && <Link className="vperf-link center" to="/creator/assignments">View all campaigns <Arrow /></Link>}
         </div>
 
-        <div className="vy-card">
-          <div className="vy-perf-head"><h3>Discover campaigns <span className="vy-ai">Open now</span></h3></div>
-          <div className="vy-disc-sub">Open campaigns matching your market, ready to apply.</div>
+        <div className="card vdisc">
+          <div className="vperf-head"><h3>Discover campaigns <span className="vdisc-ai">Open now</span></h3></div>
+          <div className="vdisc-sub">Open campaigns in your market, ready to apply.</div>
           {browse.length ? browse.slice(0, 4).map((c) => {
             const filled = c.maxCreators ? Math.round(((c.maxCreators - c.spotsLeft) / c.maxCreators) * 100) : 0;
             return (
-              <div key={c.id} className="vy-disc-item" onClick={() => navigate('/creator/browse')}>
-                <span className="vy-disc-score" style={{ '--s': filled } as React.CSSProperties}>
-                  <svg viewBox="0 0 44 44" className="vy-disc-ring"><circle className="vy-disc-track" cx="22" cy="22" r="19" /><circle className="vy-disc-prog" cx="22" cy="22" r="19" stroke="url(#vyPerfLine)" /></svg>
-                  <span className="vy-disc-num">{c.spotsLeft}</span>
+              <div key={c.id} className="vdisc-item" onClick={() => navigate('/creator/browse')}>
+                <span className="vdisc-score" style={{ '--s': filled } as React.CSSProperties}>
+                  <svg viewBox="0 0 44 44" className="vdisc-ring"><circle className="vdisc-track" cx="22" cy="22" r="19" /><circle className="vdisc-prog" cx="22" cy="22" r="19" stroke="url(#perfLine)" /></svg>
+                  <span className="vdisc-num">{c.spotsLeft}</span>
                 </span>
-                <div className="vy-disc-main"><div className="vy-disc-b">{c.name}</div><div className="vy-disc-m">{c.brandName} · {c.category} · {c.payoutSummary}</div><div className="vy-disc-why">{c.spotsLeft} of {c.maxCreators} spots left · min {formatNumber(c.minViews)} views</div></div>
+                <div className="vdisc-main"><div className="vdisc-b">{c.name}</div><div className="vdisc-m">{c.brandName} · {c.category} · {c.payoutSummary}</div><div className="vdisc-why">{c.spotsLeft} of {c.maxCreators} spots left · min {formatNumber(c.minViews)} views</div></div>
               </div>
             );
           }) : (
-            <div className="vy-empty"><div className="t">No open campaigns right now</div><div className="s">New campaigns in your market will appear here as they go live.</div></div>
+            <div style={{ padding: '34px 10px', textAlign: 'center' }}>
+              <div style={{ fontWeight: 600 }}>No open campaigns right now</div>
+              <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>New campaigns in your market will appear here as they go live.</div>
+            </div>
           )}
-          {browse.length > 0 && <Link to="/creator/browse" className="vy-link" style={{ marginTop: 'auto', justifyContent: 'center' }}>Explore all campaigns →</Link>}
+          {browse.length > 0 && <Link className="vperf-link center" to="/creator/browse">Explore all campaigns <Arrow /></Link>}
         </div>
       </div>
-
-      {/* recent activity */}
-      {notifs.length > 0 && (
-        <div className="vy-card" style={{ marginTop: 18 }}>
-          <div className="vy-perf-head"><h3>Recent activity</h3></div>
-          {notifs.slice(0, 5).map((n) => (
-            <div key={n.id} className="vy-row">
-              <span className="vy-mono" style={{ width: 38, height: 38, flex: '0 0 38px', fontSize: 15, background: n.isRead ? 'rgba(183,188,200,.3)' : 'linear-gradient(135deg,#FFD8C7,#F1A88F)' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7" /></svg>
-              </span>
-              <div className="vy-row-main"><div className="vy-row-t">{n.title}</div><div className="vy-row-s" style={{ whiteSpace: 'normal' }}>{n.message}</div></div>
-              <div className="vy-row-end"><div className="vy-row-k">{formatDate(n.createdAt)}</div></div>
-            </div>
-          ))}
-        </div>
-      )}
-    </>
+    </section>
   );
+}
+
+function Arrow() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>;
 }
