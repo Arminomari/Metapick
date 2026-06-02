@@ -45,17 +45,30 @@ export function BrandStudioDashboard() {
   return (
     <>
       <div className="vy-hero">
-        <div className="vy-hero-eyebrow"><span className="vy-live" /> Brand Desk · Live</div>
-        <h1 className="vy-hero-title">Welcome back, <em>{name}</em></h1>
-        <p className="vy-hero-subt">Active briefs, budget in motion and the creators delivering your reach, in real time.</p>
-        <div className="vy-kpis">
-          <div className="vy-kpi"><div className="v">{active.length}</div><div className="l">Active campaigns</div></div>
-          <div className="vy-kpi-sep" />
-          <div className="vy-kpi"><div className="v money">{formatCurrency(totalBudget)}</div><div className="l">Total budget</div></div>
-          <div className="vy-kpi-sep" />
-          <div className="vy-kpi"><div className="v">{formatCurrency(totalSpent)}</div><div className="l">Spent ({spentPct}%)</div></div>
-          <div className="vy-kpi-sep" />
-          <div className="vy-kpi"><div className="v">{totalCreators}</div><div className="l">Approved creators</div></div>
+        <div className="vy-hero-grain" />
+        <div className="vy-hero-glow" />
+        <svg className="vy-hero-star" viewBox="0 0 220 220" fill="none" aria-hidden="true">
+          <defs>
+            <radialGradient id="bhsGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#FFF4EC" /><stop offset="30%" stopColor="#FFD8C7" stopOpacity=".9" /><stop offset="100%" stopColor="#F1A88F" stopOpacity="0" /></radialGradient>
+            <linearGradient id="bhsCore" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#FFFFFF" /><stop offset="60%" stopColor="#FBEEF6" /><stop offset="100%" stopColor="#EDE1FF" /></linearGradient>
+          </defs>
+          <circle cx="110" cy="110" r="104" fill="url(#bhsGlow)" />
+          <path d="M110 20 C118 78 142 102 200 110 C142 118 118 142 110 200 C102 142 78 118 20 110 C78 102 102 78 110 20Z" fill="url(#bhsCore)" />
+          <path d="M110 58 C115 95 125 105 162 110 C125 115 115 125 110 162 C105 125 95 115 58 110 C95 105 105 95 110 58Z" fill="#fff" opacity=".96" />
+        </svg>
+        <div className="vy-hero-inner">
+          <div className="vy-hero-eyebrow"><span className="vy-live" /> Brand Desk · Live</div>
+          <h1 className="vy-hero-title">Welcome back, <em>{name}</em></h1>
+          <p className="vy-hero-subt">Active briefs, budget in motion and the creators delivering your reach, in real time.</p>
+          <div className="vy-kpis">
+            <div className="vy-kpi"><div className="v">{active.length}</div><div className="l">Active campaigns</div></div>
+            <div className="vy-kpi-sep" />
+            <div className="vy-kpi"><div className="v money">{formatCurrency(totalBudget)}</div><div className="l">Total budget</div></div>
+            <div className="vy-kpi-sep" />
+            <div className="vy-kpi"><div className="v">{formatCurrency(totalSpent)}</div><div className="l">Spent ({spentPct}%)</div></div>
+            <div className="vy-kpi-sep" />
+            <div className="vy-kpi"><div className="v">{totalCreators}</div><div className="l">Approved creators</div></div>
+          </div>
         </div>
       </div>
 
@@ -66,25 +79,25 @@ export function BrandStudioDashboard() {
         <div className="vy-card vy-stat"><div className="vy-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{ico.spend}</svg></div><div className="vy-stat-lbl">Spent</div><div className="vy-stat-val">{formatCurrency(totalSpent)}</div><div className="vy-stat-sub">{spentPct}% of budget</div></div>
       </div>
 
-      <div className="vy-split">
+      <div className="vy-csplit">
         <div className="vy-card">
-          <div className="vy-sechead"><h3>Recent campaigns</h3><Link to="/brand/campaigns/new" className="vy-btn vy-btn-primary" style={{ padding: '9px 16px', fontSize: 12.5 }}>+ New campaign</Link></div>
+          <div className="vy-perf-head"><h3>Recent campaigns</h3><Link to="/brand/campaigns/new" className="vy-btn vy-btn-primary" style={{ padding: '9px 16px', fontSize: 12.5 }}>+ New campaign</Link></div>
           {campaigns.length ? campaigns.slice(0, 6).map((c) => {
             const pct = c.budget ? Math.round((c.budgetSpent / c.budget) * 100) : 0;
             return (
-              <div key={c.id} className="vy-row" style={{ cursor: 'pointer' }} onClick={() => navigate(`/brand/campaigns/${c.id}`)}>
-                <span className="vy-mono" style={{ background: grad(c.name) }}>{(c.name[0] || 'C').toUpperCase()}</span>
-                <div className="vy-row-main">
-                  <div className="vy-row-t">{c.name}</div>
-                  <div className="vy-row-s">{c.category} · {formatDate(c.startDate)} – {formatDate(c.endDate)}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 7 }}>
+              <div key={c.id} className="vy-camp" onClick={() => navigate(`/brand/campaigns/${c.id}`)}>
+                <span className="vy-camp-thumb" style={{ background: grad(c.name) }}>{(c.name[0] || 'C').toUpperCase()}</span>
+                <div className="vy-camp-main">
+                  <div className="vy-camp-b">{c.name}</div>
+                  <div className="vy-camp-m">{c.category} · {formatDate(c.startDate)} – {formatDate(c.endDate)}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     {statusBadge(c.status)}
-                    <div className="vy-prog" style={{ flex: 1, maxWidth: 160 }}><span style={{ width: `${pct}%` }} /></div>
+                    <div className="vy-prog" style={{ flex: 1, maxWidth: 140 }}><span style={{ width: `${pct}%` }} /></div>
                     <span style={{ fontSize: 11.5, color: 'var(--muted)', fontWeight: 600 }}>{pct}%</span>
                   </div>
                 </div>
-                <div className="vy-row-end"><div className="vy-row-k">Creators</div><div className="vy-row-v">{c.approvedCreatorCount}/{c.maxCreators}</div></div>
-                <div className="vy-row-end"><div className="vy-row-k">Spent</div><div className="vy-row-v">{formatCurrency(c.budgetSpent)}</div></div>
+                <div className="vy-camp-end"><div className="vy-camp-k">Creators</div><div className="vy-camp-v">{c.approvedCreatorCount}/{c.maxCreators}</div></div>
+                <div className="vy-camp-end"><div className="vy-camp-k">Spent</div><div className="vy-camp-v">{formatCurrency(c.budgetSpent)}</div></div>
               </div>
             );
           }) : (
