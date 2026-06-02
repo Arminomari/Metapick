@@ -2,10 +2,21 @@ import React from 'react';
 import { Navigate, Route, BrowserRouter as Router, Routes, useParams } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
-import { AppLayout } from '@/components/layout/AppLayout';
+import { CreatorShell, BrandShell } from '@/components/layout/VyrleShell';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LoginPage, RegisterPage } from '@/pages/auth/AuthPages';
 import { TikTokCallbackPage } from '@/pages/auth/TikTokCallbackPage';
+import { TermsPage, PrivacyPage } from '@/pages/LegalPages';
+import { AdminDashboardPage } from '@/pages/admin/AdminPages';
+import { BrandStudioDashboard } from '@/pages/brand/BrandStudio';
+import { BrandCampaignListPage, BrandCampaignDetailPage, CreateCampaignPage, BrandApplicationsPage, BrandSettingsPage, BrandAssignmentDetailPage } from '@/pages/brand/BrandPages';
+import { DiscoverCreatorsPage, BrandCreatorDetailPage } from '@/pages/brand/CreatorDiscoveryPages';
+import { BrandPrHubPage } from '@/pages/brand/PrHubPage';
+import { CreatorStudioDashboard } from '@/pages/creator/CreatorStudio';
+import { BrowseCampaignsPage, CreatorAssignmentsPage, AssignmentDetailPage, EarningsPage, CreatorProfilePage } from '@/pages/creator/CreatorPages';
+import { CreatorPortfolioPage } from '@/pages/creator/PortfolioPage';
+import { CreatorPrInboxPage } from '@/pages/creator/PrInboxPage';
+
 function VyrleFrame({ src, title }: { src: string; title: string }) {
   return (
     <iframe
@@ -15,14 +26,6 @@ function VyrleFrame({ src, title }: { src: string; title: string }) {
     />
   );
 }
-import { TermsPage, PrivacyPage } from '@/pages/LegalPages';
-import { AdminDashboardPage } from '@/pages/admin/AdminPages';
-import { BrandDashboard, BrandCampaignListPage, BrandCampaignDetailPage, CreateCampaignPage, BrandApplicationsPage, BrandSettingsPage, BrandAssignmentDetailPage } from '@/pages/brand/BrandPages';
-import { DiscoverCreatorsPage, BrandCreatorDetailPage } from '@/pages/brand/CreatorDiscoveryPages';
-import { BrandPrHubPage } from '@/pages/brand/PrHubPage';
-import { CreatorDashboard, BrowseCampaignsPage, CreatorAssignmentsPage, AssignmentDetailPage, EarningsPage, CreatorProfilePage } from '@/pages/creator/CreatorPages';
-import { CreatorPortfolioPage } from '@/pages/creator/PortfolioPage';
-import { CreatorPrInboxPage } from '@/pages/creator/PrInboxPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,43 +58,41 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <Router>
         <Routes>
-          {/* Public routes */}
+          {/* Public landing — the VYRLE marketing site */}
           <Route path="/" element={<VyrleFrame src="/vyrle.html" title="VYRLE" />} />
-
-          {/* New VYRLE creator dashboard (design), shown after login. Protected. */}
-          <Route path="/studio" element={<ProtectedRoute allowedRoles={['Creator']}><VyrleFrame src="/vyrle-dashboard.html" title="VYRLE Creator Studio" /></ProtectedRoute>} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/auth/tiktok/callback" element={<ProtectedRoute allowedRoles={['Creator']}><TikTokCallbackPage /></ProtectedRoute>} />
 
-          {/* Admin routes – standalone layout */}
+          {/* Admin — standalone layout */}
           <Route path="/admin" element={<ProtectedRoute allowedRoles={['Admin']}><AdminDashboardPage /></ProtectedRoute>} />
 
-          {/* Protected routes inside AppLayout */}
-          <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-            {/* Brand routes */}
-            <Route path="/brand" element={<ProtectedRoute allowedRoles={['Brand']}><BrandDashboard /></ProtectedRoute>} />
-            <Route path="/brand/campaigns" element={<ProtectedRoute allowedRoles={['Brand']}><BrandCampaignListPage /></ProtectedRoute>} />
-            <Route path="/brand/campaigns/new" element={<ProtectedRoute allowedRoles={['Brand']}><CreateCampaignPage /></ProtectedRoute>} />
-            <Route path="/brand/campaigns/:id" element={<ProtectedRoute allowedRoles={['Brand']}><CampaignDetailWrapper /></ProtectedRoute>} />
-            <Route path="/brand/applications" element={<ProtectedRoute allowedRoles={['Brand']}><BrandApplicationsPage /></ProtectedRoute>} />
-            <Route path="/brand/creators" element={<ProtectedRoute allowedRoles={['Brand']}><DiscoverCreatorsPage /></ProtectedRoute>} />
-            <Route path="/brand/creators/:id" element={<ProtectedRoute allowedRoles={['Brand']}><BrandCreatorDetailPage /></ProtectedRoute>} />
-            <Route path="/brand/pr" element={<ProtectedRoute allowedRoles={['Brand']}><BrandPrHubPage /></ProtectedRoute>} />
-            <Route path="/brand/settings" element={<ProtectedRoute allowedRoles={['Brand']}><BrandSettingsPage /></ProtectedRoute>} />
-            <Route path="/brand/assignments/:id" element={<ProtectedRoute allowedRoles={['Brand']}><BrandAssignmentDetailPage /></ProtectedRoute>} />
+          {/* Brand area — VYRLE shell */}
+          <Route element={<ProtectedRoute allowedRoles={['Brand']}><BrandShell /></ProtectedRoute>}>
+            <Route path="/brand" element={<BrandStudioDashboard />} />
+            <Route path="/brand/campaigns" element={<BrandCampaignListPage />} />
+            <Route path="/brand/campaigns/new" element={<CreateCampaignPage />} />
+            <Route path="/brand/campaigns/:id" element={<CampaignDetailWrapper />} />
+            <Route path="/brand/applications" element={<BrandApplicationsPage />} />
+            <Route path="/brand/creators" element={<DiscoverCreatorsPage />} />
+            <Route path="/brand/creators/:id" element={<BrandCreatorDetailPage />} />
+            <Route path="/brand/pr" element={<BrandPrHubPage />} />
+            <Route path="/brand/settings" element={<BrandSettingsPage />} />
+            <Route path="/brand/assignments/:id" element={<BrandAssignmentDetailPage />} />
+          </Route>
 
-            {/* Creator routes */}
-            <Route path="/creator" element={<ProtectedRoute allowedRoles={['Creator']}><CreatorDashboard /></ProtectedRoute>} />
-            <Route path="/creator/browse" element={<ProtectedRoute allowedRoles={['Creator']}><BrowseCampaignsPage /></ProtectedRoute>} />
-            <Route path="/creator/assignments" element={<ProtectedRoute allowedRoles={['Creator']}><CreatorAssignmentsPage /></ProtectedRoute>} />
-            <Route path="/creator/assignments/:id" element={<ProtectedRoute allowedRoles={['Creator']}><AssignmentDetailPage /></ProtectedRoute>} />
-            <Route path="/creator/portfolio" element={<ProtectedRoute allowedRoles={['Creator']}><CreatorPortfolioPage /></ProtectedRoute>} />
-            <Route path="/creator/pr" element={<ProtectedRoute allowedRoles={['Creator']}><CreatorPrInboxPage /></ProtectedRoute>} />
-            <Route path="/creator/earnings" element={<ProtectedRoute allowedRoles={['Creator']}><EarningsPage /></ProtectedRoute>} />
-            <Route path="/creator/profile" element={<ProtectedRoute allowedRoles={['Creator']}><CreatorProfilePage /></ProtectedRoute>} />
+          {/* Creator area — VYRLE shell */}
+          <Route element={<ProtectedRoute allowedRoles={['Creator']}><CreatorShell /></ProtectedRoute>}>
+            <Route path="/creator" element={<CreatorStudioDashboard />} />
+            <Route path="/creator/browse" element={<BrowseCampaignsPage />} />
+            <Route path="/creator/assignments" element={<CreatorAssignmentsPage />} />
+            <Route path="/creator/assignments/:id" element={<AssignmentDetailPage />} />
+            <Route path="/creator/portfolio" element={<CreatorPortfolioPage />} />
+            <Route path="/creator/pr" element={<CreatorPrInboxPage />} />
+            <Route path="/creator/earnings" element={<EarningsPage />} />
+            <Route path="/creator/profile" element={<CreatorProfilePage />} />
           </Route>
 
           {/* Redirect dashboard based on role */}
@@ -110,7 +111,7 @@ function RoleRedirect() {
   switch (role) {
     case 'Admin': return <Navigate to="/admin" replace />;
     case 'Brand': return <Navigate to="/brand" replace />;
-    case 'Creator': return <Navigate to="/studio" replace />;
+    case 'Creator': return <Navigate to="/creator" replace />;
     default: return <Navigate to="/" replace />;
   }
 }
