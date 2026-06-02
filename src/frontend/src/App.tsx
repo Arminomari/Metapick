@@ -57,7 +57,9 @@ export default function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<VyrleFrame src="/vyrle.html" title="VYRLE" />} />
-          <Route path="/studio" element={<VyrleFrame src="/vyrle-dashboard.html" title="VYRLE Creator Studio" />} />
+
+          {/* New VYRLE creator dashboard (design), shown after login. Protected. */}
+          <Route path="/studio" element={<ProtectedRoute allowedRoles={['Creator']}><VyrleFrame src="/vyrle-dashboard.html" title="VYRLE Creator Studio" /></ProtectedRoute>} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/terms" element={<TermsPage />} />
@@ -108,7 +110,7 @@ function RoleRedirect() {
   switch (role) {
     case 'Admin': return <Navigate to="/admin" replace />;
     case 'Brand': return <Navigate to="/brand" replace />;
-    case 'Creator': return <Navigate to="/creator" replace />;
+    case 'Creator': return <Navigate to="/studio" replace />;
     default: return <Navigate to="/" replace />;
   }
 }
