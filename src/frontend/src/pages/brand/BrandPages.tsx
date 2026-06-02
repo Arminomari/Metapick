@@ -1,7 +1,7 @@
 import { useState, type FormEvent as ReactFormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBrandCampaigns, useCampaignDetail, useCampaignAnalytics, useCampaignApplications, usePublishCampaign, useCreateCampaign, useApproveApplication, useRejectApplication, useApproveSubmission, useRejectSubmission, useMarkManualPayoutSent, useBrandProfile, useUpdateBrandProfile, useChangePassword, useAssignmentDetail, useChatMessages } from '@/hooks/api';
-import { Button, Card, DataTable, EmptyState, LoadingSpinner, Pagination, StatCard, StatusBadge, type Column } from '@/components/ui';
+import { Button, Card, DataTable, LoadingSpinner, Pagination, StatCard, StatusBadge, type Column } from '@/components/ui';
 import { DateInput } from '@/components/ui/DateInput';
 import { TagSelector } from '@/components/ui/TagSelector';
 import { ChatPanel } from '@/components/ui/ChatPanel';
@@ -329,94 +329,46 @@ export function CreateCampaignPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div className="flex items-center gap-3">
-        <button onClick={() => navigate('/brand/campaigns')}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-          Tillbaka
-        </button>
-        <span className="text-muted-foreground">/</span>
-        <h1 className="text-2xl font-bold">Skapa ny kampanj</h1>
+    <section className="view active reveal">
+      <button onClick={() => navigate('/brand/campaigns')} className="view-all" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg> Mina kampanjer
+      </button>
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Skapa ny <em>kampanj</em></h1>
+          <p className="page-sub">Sätt upp brief, budget och ersättningsmodell. Kreatörer kan ansöka så snart kampanjen är godkänd.</p>
+        </div>
       </div>
-      <Card>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Kampanjnamn *</label>
-            <input type="text" value={form.name} onChange={set('name')} required
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+      <div className="card" style={{ maxWidth: 760 }}>
+        <form onSubmit={handleSubmit} className="form-grid">
+          <div className="field full"><label>Kampanjnamn *</label><input type="text" value={form.name} onChange={set('name')} required /></div>
+          <div className="field full"><label>Beskrivning *</label><textarea value={form.description} onChange={set('description')} required rows={3} /></div>
+          <div className="field"><label>Kategori</label>
+            <select value={form.category} onChange={set('category')}>
+              {['Övrigt', 'Mode', 'Skönhet', 'Mat', 'Teknik', 'Gaming', 'Sport', 'Musik', 'Resor'].map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Beskrivning *</label>
-            <textarea value={form.description} onChange={set('description')} required rows={3}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Kategori</label>
-              <select value={form.category} onChange={set('category')}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                {['Övrigt', 'Mode', 'Skönhet', 'Mat', 'Teknik', 'Gaming', 'Sport', 'Musik', 'Resor'].map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Hashtag *</label>
-              <input type="text" value={form.requiredHashtag} onChange={set('requiredHashtag')} required placeholder="#mittvarumärke"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Startdatum *</label>
-              <DateInput value={form.startDate} onChange={v => setForm({ ...form, startDate: v })} required
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Slutdatum *</label>
-              <DateInput value={form.endDate} onChange={v => setForm({ ...form, endDate: v })} required
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Total budget (SEK) *</label>
-              <input type="text" inputMode="numeric" value={form.budget || ''} required
-                onChange={setNum('budget')} placeholder="t.ex. 10000"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Max antal creators</label>
-              <input type="text" inputMode="numeric" value={form.maxCreators || ''}
-                onChange={setNum('maxCreators')} placeholder="t.ex. 10"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Antal videos per creator</label>
-              <input type="text" inputMode="numeric" value={form.requiredVideoCount || ''}
-                onChange={setNum('requiredVideoCount')} placeholder="t.ex. 1"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-              <p className="text-xs text-muted-foreground mt-1">Hur många videos varje creator ska leverera</p>
-            </div>
-          </div>
+          <div className="field"><label>Hashtag *</label><input type="text" value={form.requiredHashtag} onChange={set('requiredHashtag')} required placeholder="#mittvarumärke" /></div>
+          <div className="field"><label>Startdatum *</label><DateInput value={form.startDate} onChange={v => setForm({ ...form, startDate: v })} required className="" /></div>
+          <div className="field"><label>Slutdatum *</label><DateInput value={form.endDate} onChange={v => setForm({ ...form, endDate: v })} required className="" /></div>
+          <div className="field"><label>Total budget (SEK) *</label><input type="text" inputMode="numeric" value={form.budget || ''} required onChange={setNum('budget')} placeholder="t.ex. 10000" /></div>
+          <div className="field"><label>Max antal creators</label><input type="text" inputMode="numeric" value={form.maxCreators || ''} onChange={setNum('maxCreators')} placeholder="t.ex. 10" /></div>
+          <div className="field"><label>Antal videos per creator</label><input type="text" inputMode="numeric" value={form.requiredVideoCount || ''} onChange={setNum('requiredVideoCount')} placeholder="t.ex. 1" /><span className="hint" style={{ alignSelf: 'flex-start', color: 'var(--muted)' }}>Hur många videos varje creator ska leverera</span></div>
 
           {/* ── Payout Configuration ── */}
-          <div className="border border-border rounded-lg p-4 space-y-4 bg-muted/20">
-            <h3 className="font-semibold">Utbetalningsmodell</h3>
-            <div className="grid grid-cols-3 gap-2">
+          <div className="field full" style={{ border: '1px solid rgba(241,168,143,.18)', borderRadius: 16, padding: 18, background: 'rgba(255,255,255,.4)', gap: 14 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)' }}>Utbetalningsmodell</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
               {([
                 { value: 'Fixed', label: 'Fast belopp', desc: 'En fast summa per creator som når tröskeln' },
                 { value: 'CPM', label: 'Per visning', desc: 'Betala per 1 000 visningar' },
                 { value: 'Tiered', label: 'Trappsteg', desc: 'Olika belopp vid olika visningsmål' },
               ] as const).map((opt) => (
                 <button key={opt.value} type="button"
-                  className={`rounded-lg border p-3 text-left transition-colors ${form.payoutModel === opt.value
-                    ? 'border-primary bg-primary/10 ring-1 ring-primary'
-                    : 'border-border hover:border-primary/50'}`}
+                  className={`vmetric${form.payoutModel === opt.value ? ' active' : ''}`} style={{ alignItems: 'flex-start' }}
                   onClick={() => handlePayoutModelChange(opt.value)}>
-                  <p className="text-sm font-medium">{opt.label}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{opt.desc}</p>
+                  <span className="vm-v" style={{ fontSize: 14 }}>{opt.label}</span>
+                  <span className="vm-l">{opt.desc}</span>
                 </button>
               ))}
             </div>
@@ -525,51 +477,33 @@ export function CreateCampaignPage() {
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Instruktioner till creators</label>
-            <textarea value={form.contentInstructions ?? ''} onChange={set('contentInstructions')} rows={2}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              placeholder="Beskriv vad creators ska göra..." />
-          </div>
+          <div className="field full"><label>Instruktioner till creators</label><textarea value={form.contentInstructions ?? ''} onChange={set('contentInstructions')} rows={2} placeholder="Beskriv vad creators ska göra..." /></div>
 
           {/* ── Content Tags ── */}
-          <div className="border border-border rounded-lg p-4 space-y-3 bg-muted/20">
-            <h3 className="font-semibold text-sm">Innehållstaggar <span className="text-muted-foreground font-normal text-xs">— vilken typ av innehåll söker ni?</span></h3>
-            <TagSelector
-              label="Plattform & format"
-              tags={PLATFORM_TAGS}
-              selected={form.contentTags ?? []}
-              onChange={tags => setForm({ ...form, contentTags: tags })}
-            />
-            <TagSelector
-              label="Nisch & kategori"
-              tags={NICHE_TAGS}
-              selected={form.contentTags ?? []}
-              onChange={tags => setForm({ ...form, contentTags: tags })}
-            />
+          <div className="field full" style={{ border: '1px solid rgba(241,168,143,.18)', borderRadius: 16, padding: 18, background: 'rgba(255,255,255,.4)', gap: 12 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600 }}>Innehållstaggar <span style={{ color: 'var(--muted)', fontWeight: 400, fontSize: 12.5 }}>— vilken typ av innehåll söker ni?</span></h3>
+            <TagSelector label="Plattform & format" tags={PLATFORM_TAGS} selected={form.contentTags ?? []} onChange={tags => setForm({ ...form, contentTags: tags })} />
+            <TagSelector label="Nisch & kategori" tags={NICHE_TAGS} selected={form.contentTags ?? []} onChange={tags => setForm({ ...form, contentTags: tags })} />
           </div>
 
           {/* ── Perks & PR ── */}
-          <div className="border border-border rounded-lg p-4 bg-muted/20">
-            <h3 className="font-semibold text-sm mb-1">Förmåner & PR <span className="text-muted-foreground font-normal text-xs">— valfritt</span></h3>
-            <p className="text-xs text-muted-foreground mb-2">Beskriv vad godkända creators får utöver ersättningen, t.ex. rabattkod, PR-utskick, gratisprodukt</p>
-            <textarea value={form.perks ?? ''} onChange={set('perks')} rows={3}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              placeholder="Exempel: 30% rabattkod på hela sortimentet + PR-paket med produkter värda 500 kr" />
+          <div className="field full" style={{ border: '1px solid rgba(241,168,143,.18)', borderRadius: 16, padding: 18, background: 'rgba(255,255,255,.4)', gap: 8 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600 }}>Förmåner & PR <span style={{ color: 'var(--muted)', fontWeight: 400, fontSize: 12.5 }}>— valfritt</span></h3>
+            <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>Beskriv vad godkända creators får utöver ersättningen, t.ex. rabattkod, PR-utskick, gratisprodukt</p>
+            <textarea value={form.perks ?? ''} onChange={set('perks')} rows={3} placeholder="Exempel: 30% rabattkod på hela sortimentet + PR-paket med produkter värda 500 kr"
+              style={{ border: '1px solid rgba(241,168,143,.22)', borderRadius: 13, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', background: 'rgba(255,255,255,.7)', resize: 'vertical' }} />
           </div>
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <div className="flex gap-3">
-            <Button type="submit" disabled={create.isPending}>
-              {create.isPending ? 'Skapar...' : 'Skicka för granskning'}
-            </Button>
-            <Button type="button" variant="secondary" onClick={() => navigate('/brand/campaigns')}>
-              Avbryt
-            </Button>
+          <div className="field full">
+            {error && <p style={{ color: 'var(--red)', fontSize: 13, marginBottom: 8 }}>{error}</p>}
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={create.isPending}>{create.isPending ? 'Skapar…' : 'Skicka för granskning'}</button>
+              <button type="button" className="btn-outline" onClick={() => navigate('/brand/campaigns')}>Avbryt</button>
+            </div>
           </div>
         </form>
-      </Card>
-    </div>
+      </div>
+    </section>
   );
 }
 
@@ -602,69 +536,55 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
   if (isLoading || !campaign) return <LoadingSpinner />;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-2">
-        <button onClick={() => navigate('/brand/campaigns')}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-          Mina kampanjer
-        </button>
-        <span className="text-muted-foreground text-sm">/</span>
-        <span className="text-sm text-muted-foreground">{campaign.name}</span>
-      </div>
-      <div className="flex items-center justify-between">
+    <section className="view active reveal">
+      <button onClick={() => navigate('/brand/campaigns')} className="view-all" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg> Mina kampanjer
+      </button>
+      <div className="page-head">
         <div>
-          <h1 className="text-2xl font-bold">{campaign.name}</h1>
-          <StatusBadge status={campaign.status} />
+          <h1 className="page-title">{campaign.name}</h1>
+          <div style={{ marginTop: 10 }}><StatusBadge status={campaign.status} /></div>
         </div>
         {campaign.status === 'Draft' && (
-          <Button onClick={() => publish.mutateAsync(campaignId)} disabled={publish.isPending}>
-            {publish.isPending ? 'Skickar...' : '📤 Skicka för granskning'}
-          </Button>
+          <button className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} onClick={() => publish.mutateAsync(campaignId)} disabled={publish.isPending}>{publish.isPending ? 'Skickar…' : 'Skicka för granskning'}</button>
         )}
         {campaign.status === 'PendingReview' && (
-          <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-4 py-2">
-            <span className="text-yellow-400 text-sm font-medium">⏳ Väntar på granskning av admin</span>
-          </div>
+          <span className="badge amber" style={{ alignSelf: 'center' }}>Väntar på granskning av admin</span>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard label="Total views" value={formatNumber(campaign.totalViews)} />
-        <StatCard label="Budget kvar" value={formatCurrency(campaign.budget - campaign.budgetSpent - campaign.budgetReserved)} />
-        <StatCard label="Aktiva creators" value={`${campaign.approvedCreatorCount} / ${campaign.maxCreators}`} />
-        <StatCard label="Utbetalningsmodell" value={campaign.payoutModel} />
+      <div className="stat-row">
+        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg></div><div><div className="lbl">Total views</div><div className="val">{formatNumber(campaign.totalViews)}</div></div></div></div>
+        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="9" cy="7" rx="6" ry="3" /><path d="M3 7v5c0 1.7 2.7 3 6 3" /><ellipse cx="15" cy="14" rx="6" ry="3" /></svg></div><div><div className="lbl">Budget kvar</div><div className="val">{formatCurrency(campaign.budget - campaign.budgetSpent - campaign.budgetReserved)}</div></div></div></div>
+        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3" /><circle cx="16" cy="9" r="2.5" /><path d="M3 19a6 6 0 0 1 12 0M14 18a5 5 0 0 1 7-1" /></svg></div><div><div className="lbl">Aktiva creators</div><div className="val">{campaign.approvedCreatorCount} / {campaign.maxCreators}</div></div></div></div>
+        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 10h18" /></svg></div><div><div className="lbl">Utbetalningsmodell</div><div className="val" style={{ fontSize: 20 }}>{campaign.payoutModel}</div></div></div></div>
       </div>
 
-      <Card>
-        <h2 className="font-semibold mb-2">Beskrivning</h2>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="sec-head"><h3>Beskrivning</h3></div>
         <p className="text-sm text-muted-foreground">{campaign.description}</p>
-      </Card>
+      </div>
 
       {(campaign.contentTags?.length > 0 || campaign.perks) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16, marginBottom: 16 }}>
           {campaign.contentTags?.length > 0 && (
-            <Card>
-              <h2 className="font-semibold mb-2">Innehållstaggar</h2>
-              <div className="flex flex-wrap gap-2">
-                {campaign.contentTags.map(tag => (
-                  <span key={tag} className="px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">{tag}</span>
-                ))}
-              </div>
-            </Card>
+            <div className="card">
+              <div className="sec-head"><h3>Innehållstaggar</h3></div>
+              <div className="tags">{campaign.contentTags.map(tag => <span key={tag} className="tag g">{tag}</span>)}</div>
+            </div>
           )}
           {campaign.perks && (
-            <Card>
-              <h2 className="font-semibold mb-2">🎁 Förmåner för creators</h2>
-              <p className="text-sm text-muted-foreground whitespace-pre-line">{campaign.perks}</p>
-            </Card>
+            <div className="card">
+              <div className="sec-head"><h3>Förmåner för creators</h3></div>
+              <p className="text-sm text-muted-foreground" style={{ whiteSpace: 'pre-line' }}>{campaign.perks}</p>
+            </div>
           )}
         </div>
       )}
 
       {analytics && (
-        <Card>
-          <h2 className="font-semibold mb-4">Creator-prestanda</h2>
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="sec-head"><h3>Creator-prestanda</h3></div>
           <div className="space-y-6">
             {analytics.creatorPerformance.map((cp: CreatorPerformance) => {
               const approvedCount = cp.videos.filter(v => v.status === 'Approved').length;
@@ -778,58 +698,42 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
               );
             })}
             {analytics.creatorPerformance.length === 0 && (
-              <EmptyState title="Inga aktiva creators" description="Godkänn ansökningar för att se creator-prestanda." />
+              <div style={{ textAlign: 'center', padding: '34px 24px', color: 'var(--muted)' }}>Inga aktiva creators. Godkänn ansökningar för att se creator-prestanda.</div>
             )}
           </div>
-        </Card>
+        </div>
       )}
 
       {applications && (
-        <Card>
-          <h2 className="font-semibold mb-4">Ansökningar ({applications.totalCount})</h2>
+        <div className="card">
+          <div className="sec-head"><h3>Ansökningar ({applications.totalCount})</h3></div>
           {applications.data.length ? (
-            <div className="space-y-3">
-              {applications.data.map((a: ApplicationItem) => (
-                <div key={a.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">{a.creatorName}</p>
-                      {a.creatorCategory && <span className="text-xs bg-muted px-2 py-0.5 rounded">{a.creatorCategory}</span>}
-                    </div>
-                    {a.tikTokUsername && (
-                      <a href={`https://www.tiktok.com/@${a.tikTokUsername}`} target="_blank" rel="noopener noreferrer"
-                        className="text-sm text-primary hover:underline">
-                        @{a.tikTokUsername}
-                      </a>
-                    )}
-                    {a.creatorBio && <p className="text-xs text-muted-foreground mt-1">{a.creatorBio}</p>}
-                    <p className="text-sm text-muted-foreground">{a.message}</p>
-                    <p className="text-xs text-muted-foreground">{formatDate(a.createdAt)}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <StatusBadge status={a.status} />
-                    {a.status === 'Pending' && (
-                      <>
-                        <Button size="sm" onClick={() => approve.mutateAsync({ id: a.id })}
-                          disabled={approve.isPending}>
-                          Godkänn
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => reject.mutateAsync({ id: a.id, reason: 'Avvisad av varumärke' })}
-                          disabled={reject.isPending}>
-                          Neka
-                        </Button>
-                      </>
-                    )}
-                  </div>
+            applications.data.map((a: ApplicationItem) => (
+              <div key={a.id} className="list-row" style={{ gap: 14 }}>
+                <span className="mono" style={{ background: grad(a.creatorName) }}>{initial(a.creatorName)}</span>
+                <div className="row-main" style={{ flex: 1 }}>
+                  <div className="t" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{a.creatorName}{a.creatorCategory && <span className="badge grey">{a.creatorCategory}</span>}</div>
+                  {a.tikTokUsername && <a href={`https://www.tiktok.com/@${a.tikTokUsername}`} target="_blank" rel="noopener noreferrer" className="s" style={{ color: '#C26A4A' }}>@{a.tikTokUsername}</a>}
+                  {a.message && <div className="s">{a.message}</div>}
+                  <div className="s" style={{ color: 'var(--muted-2)' }}>{formatDate(a.createdAt)}</div>
                 </div>
-              ))}
-            </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '0 0 auto' }}>
+                  <StatusBadge status={a.status} />
+                  {a.status === 'Pending' && (
+                    <>
+                      <button className="btn-apply" style={{ width: 'auto', padding: '9px 16px', fontSize: 12.5 }} onClick={() => approve.mutateAsync({ id: a.id })} disabled={approve.isPending}>Godkänn</button>
+                      <button className="btn-outline" style={{ padding: '9px 16px', fontSize: 12.5 }} onClick={() => reject.mutateAsync({ id: a.id, reason: 'Avvisad av varumärke' })} disabled={reject.isPending}>Neka</button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))
           ) : (
-            <EmptyState title="Inga ansökningar ännu" description="Väntar på att creators ska ansöka." />
+            <div style={{ textAlign: 'center', padding: '34px 24px', color: 'var(--muted)' }}>Inga ansökningar ännu. Väntar på att creators ska ansöka.</div>
           )}
-        </Card>
+        </div>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -1077,38 +981,31 @@ export function BrandAssignmentDetailPage() {
   if (isLoading || !assignment) return <LoadingSpinner />;
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div className="flex items-center gap-3">
-        <button onClick={() => navigate(-1)}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-          Tillbaka
-        </button>
-        <span className="text-muted-foreground">/</span>
-        <h1 className="text-xl font-bold">{assignment.campaignName} — {assignment.creatorName ?? 'Creator'}</h1>
+    <section className="view active reveal" style={{ maxWidth: 760 }}>
+      <button onClick={() => navigate(-1)} className="view-all" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg> Tillbaka
+      </button>
+      <div className="page-head">
+        <div><h1 className="page-title" style={{ fontSize: 32 }}>{assignment.campaignName} — {assignment.creatorName ?? 'Creator'}</h1></div>
       </div>
 
-      <Card>
-        <div className="flex items-center gap-3 mb-2">
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <StatusBadge status={assignment.status} />
           <span className="text-sm text-muted-foreground">{formatNumber(assignment.totalVerifiedViews)} views</span>
           <span className="text-sm text-muted-foreground">{formatCurrency(assignment.currentPayoutAmount)}</span>
         </div>
-      </Card>
+      </div>
 
-      <Card>
-        <h2 className="font-semibold mb-3">💬 Meddelanden</h2>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="sec-head"><h3>Meddelanden</h3></div>
         <ChatPanel assignmentId={assignment.id} />
-      </Card>
+      </div>
 
-      <Card>
-        <h2 className="font-semibold mb-3">⭐ Omdöme</h2>
-        <ReviewSection
-          assignmentId={assignment.id}
-          revieweeUserId={assignment.creatorUserId}
-          assignmentCompleted={assignment.status === 'Completed'}
-        />
-      </Card>
-    </div>
+      <div className="card">
+        <div className="sec-head"><h3>Omdöme</h3></div>
+        <ReviewSection assignmentId={assignment.id} revieweeUserId={assignment.creatorUserId} assignmentCompleted={assignment.status === 'Completed'} />
+      </div>
+    </section>
   );
 }

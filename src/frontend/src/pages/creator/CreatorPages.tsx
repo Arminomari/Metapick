@@ -235,7 +235,7 @@ export function BrowseCampaignsPage() {
                         <div className="mc"><div className="k">Platser</div><div className="v">{c.spotsLeft} / {c.maxCreators}</div></div>
                         <div className="mc"><div className="k">Period</div><div className="v">{formatDate(c.startDate)} – {formatDate(c.endDate)}</div></div>
                       </div>
-                      <button className={status === 'Approved' || status === 'Rejected' || status === 'Pending' || full ? 'btn-outline' : 'btn-apply'} style={{ width: '100%' }}
+                      <button className={status === 'Approved' || status === 'Rejected' || status === 'Pending' || full ? 'btn-outline' : 'btn-apply'} style={{ width: '100%', marginTop: 'auto' }}
                         onClick={() => handleApply(c.id)} disabled={isDisabled(c.id, c.spotsLeft)}>
                         {getButtonLabel(c.id, c.spotsLeft)}
                       </button>
@@ -410,23 +410,23 @@ export function AssignmentDetailPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <section className="view active reveal">
+      <div className="page-head">
         <div>
-          <h1 className="text-2xl font-bold">{assignment.campaignName}</h1>
-          <StatusBadge status={assignment.status} />
+          <h1 className="page-title">{assignment.campaignName}</h1>
+          <div style={{ marginTop: 10 }}><StatusBadge status={assignment.status} /></div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard label="Verifierade views" value={formatNumber(assignment.totalVerifiedViews)} />
-        <StatCard label="Aktuell ersättning" value={formatCurrency(assignment.currentPayoutAmount)} />
-        <StatCard label="Antal inlämningar" value={assignment.submissions.length} />
+      <div className="stat-row" style={{ gridTemplateColumns: 'repeat(3,minmax(0,1fr))' }}>
+        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg></div><div><div className="lbl">Verifierade views</div><div className="val">{formatNumber(assignment.totalVerifiedViews)}</div></div></div></div>
+        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="9" cy="7" rx="6" ry="3" /><path d="M3 7v5c0 1.7 2.7 3 6 3" /><ellipse cx="15" cy="14" rx="6" ry="3" /></svg></div><div><div className="lbl">Aktuell ersättning</div><div className="val">{formatCurrency(assignment.currentPayoutAmount)}</div></div></div></div>
+        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="m9 12 2 2 4-4" /></svg></div><div><div className="lbl">Antal inlämningar</div><div className="val">{assignment.submissions.length}</div></div></div></div>
       </div>
 
       {assignment.trackingTag && (
-        <Card>
-          <h2 className="font-semibold mb-3">Så här funkar det</h2>
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="sec-head"><h3>Så här funkar det</h3></div>
           <p className="text-sm text-muted-foreground mb-4">
             Lägg till följande i din TikTok-videos beskrivning så hittar vi videon automatiskt:
           </p>
@@ -468,31 +468,25 @@ export function AssignmentDetailPage() {
               🤖 <strong>Automatisk tracking:</strong> Vårt system scannar dagligen efter nya videos. När vi hittar en video som matchar din tag dyker den upp automatiskt nedan — du behöver inte göra något mer efter att du publicerat.
             </p>
           </div>
-        </Card>
+        </div>
       )}
 
       {assignment.status === 'Active' && (
-        <Card>
-          <h2 className="font-semibold mb-2">Skicka in video manuellt</h2>
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="sec-head"><h3>Skicka in video manuellt</h3></div>
           <p className="text-xs text-muted-foreground mb-3">
             Videos som matchar din tracking-tag hittas automatiskt. Använd formuläret nedan om du vill lägga till en video manuellt.
           </p>
-          <form onSubmit={handleSubmit} className="flex gap-2">
-            <input
-              type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="https://www.tiktok.com/@ditt-namn/video/123..."
-              className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
-              required
-            />
-            <Button type="submit" disabled={submitVideo.isPending}>
-              {submitVideo.isPending ? 'Skickar...' : 'Skicka in'}
-            </Button>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 10 }}>
+            <input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://www.tiktok.com/@ditt-namn/video/123..." required
+              style={{ flex: 1, border: '1px solid rgba(241,168,143,.22)', borderRadius: 13, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', background: 'rgba(255,255,255,.7)' }} />
+            <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={submitVideo.isPending}>{submitVideo.isPending ? 'Skickar…' : 'Skicka in'}</button>
           </form>
-        </Card>
+        </div>
       )}
 
-      <Card>
-        <h2 className="font-semibold mb-4">Spårade videos</h2>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="sec-head"><h3>Spårade videos</h3></div>
         {(assignment.socialPosts?.length > 0) ? (
           <div className="space-y-6">
             {assignment.socialPosts.map((sp) => (
@@ -537,23 +531,19 @@ export function AssignmentDetailPage() {
             <p className="text-xs text-muted-foreground">⏳ Väntar på att systemet ska hämta videodata...</p>
           </div>
         ) : (
-          <EmptyState title="Inga videos ännu" description="Publicera en TikTok-video med din tracking-tag så hittas den automatiskt, eller skicka in manuellt ovan." />
+          <div style={{ textAlign: 'center', padding: '34px 24px', color: 'var(--muted)' }}>Inga videos ännu. Publicera en TikTok-video med din tracking-tag så hittas den automatiskt, eller skicka in manuellt ovan.</div>
         )}
-      </Card>
-      <Card>
-        <h2 className="font-semibold mb-3">💬 Meddelanden</h2>
+      </div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="sec-head"><h3>Meddelanden</h3></div>
         <ChatPanel assignmentId={assignment.id} />
-      </Card>
+      </div>
 
-      <Card>
-        <h2 className="font-semibold mb-3">⭐ Omdöme</h2>
-        <ReviewSection
-          assignmentId={assignment.id}
-          revieweeUserId={assignment.brandUserId}
-          assignmentCompleted={assignment.status === 'Completed'}
-        />
-      </Card>
-    </div>
+      <div className="card">
+        <div className="sec-head"><h3>Omdöme</h3></div>
+        <ReviewSection assignmentId={assignment.id} revieweeUserId={assignment.brandUserId} assignmentCompleted={assignment.status === 'Completed'} />
+      </div>
+    </section>
   );
 }
 
