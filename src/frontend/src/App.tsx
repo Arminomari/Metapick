@@ -6,7 +6,15 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LoginPage, RegisterPage } from '@/pages/auth/AuthPages';
 import { TikTokCallbackPage } from '@/pages/auth/TikTokCallbackPage';
-import { LandingPage } from '@/pages/LandingPage';
+function VyrleFrame({ src, title }: { src: string; title: string }) {
+  return (
+    <iframe
+      src={src}
+      title={title}
+      style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', border: 'none' }}
+    />
+  );
+}
 import { TermsPage, PrivacyPage } from '@/pages/LegalPages';
 import { AdminDashboardPage } from '@/pages/admin/AdminPages';
 import { BrandDashboard, BrandCampaignListPage, BrandCampaignDetailPage, CreateCampaignPage, BrandApplicationsPage, BrandSettingsPage, BrandAssignmentDetailPage } from '@/pages/brand/BrandPages';
@@ -48,7 +56,8 @@ export default function App() {
         <Router>
         <Routes>
           {/* Public routes */}
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<VyrleFrame src="/vyrle.html" title="VYRLE" />} />
+          <Route path="/studio" element={<VyrleFrame src="/vyrle-dashboard.html" title="VYRLE Creator Studio" />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/terms" element={<TermsPage />} />
