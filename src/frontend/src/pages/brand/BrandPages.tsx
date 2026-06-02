@@ -11,6 +11,15 @@ import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
 import { PLATFORM_TAGS, NICHE_TAGS } from '@/lib/tags';
 import type { CampaignListItem, ApplicationItem, CreateCampaignRequest, CreatorPerformance, CreatorVideo } from '@/types';
 
+const GRADS = [
+  'linear-gradient(135deg,#FFD8C7,#F1A88F)',
+  'linear-gradient(135deg,#cdb8f2,#9c7de0)',
+  'linear-gradient(135deg,#F2C58A,#e0a04e)',
+  'linear-gradient(135deg,#a9dcc0,#5fb98a)',
+];
+const grad = (s: string) => GRADS[((s || '').charCodeAt(0) || 0) % GRADS.length];
+const initial = (s: string) => (s?.[0] || '?').toUpperCase();
+
 function getPayoutStatusLabel(status: string) {
   if (status === 'ReadyForManualPayment') return 'Redo att betalas';
   if (status === 'AwaitingThreshold') return 'Väntar på views';
@@ -107,47 +116,60 @@ export function BrandCampaignListPage() {
   const navigate = useNavigate();
   const { data, isLoading } = useBrandCampaigns(status, page);
 
+  const tabs: { label: string; val?: string }[] = [
+    { label: 'Alla', val: undefined }, { label: 'Utkast', val: 'Draft' }, { label: 'Aktiva', val: 'Active' }, { label: 'Pausade', val: 'Paused' }, { label: 'Avslutade', val: 'Completed' },
+  ];
+
   return (
-    <div className="space-y-6">
-      <header className="grid grid-cols-12 gap-x-6 items-end">
-        <div className="col-span-12 md:col-span-8">
-          <p className="eyebrow">Brand desk · Kampanjer</p>
-          <h1 className="mt-3 text-display text-[clamp(2rem,4.5vw,3.25rem)]">
-            Mina <span className="text-sunset">kampanjer</span>
-          </h1>
+    <section className="view active reveal">
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Mina <em>kampanjer</em></h1>
+          <p className="page-sub">Alla dina briefs på ett ställe. Spåra budget, creators och status i realtid.</p>
         </div>
-        <div className="col-span-12 md:col-span-4 md:text-right">
-          <Button onClick={() => navigate('/brand/campaigns/new')}>+ Ny kampanj</Button>
-        </div>
-      </header>
-      <div className="hairline" />
-      <div className="flex flex-wrap gap-2">
-        {['Alla', 'Draft', 'Active', 'Paused', 'Completed'].map((s) => (
-          <Button key={s} variant={status === (s === 'Alla' ? undefined : s) ? 'primary' : 'secondary'} size="sm"
-            onClick={() => { setStatus(s === 'Alla' ? undefined : s); setPage(1); }}>
-            {s}
-          </Button>
+        <button className="btn-apply" style={{ width: 'auto', padding: '12px 22px', display: 'inline-flex', alignItems: 'center', gap: 8 }} onClick={() => navigate('/brand/campaigns/new')}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg> Ny kampanj
+        </button>
+      </div>
+
+      <div className="tabs">
+        {tabs.map((t) => (
+          <button key={t.label} className={`tab${status === t.val ? ' active' : ''}`} onClick={() => { setStatus(t.val); setPage(1); }}>{t.label}</button>
         ))}
       </div>
-      {isLoading ? <LoadingSpinner /> : (
-        <Card className="!p-0">
+
+      {isLoading ? <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>Laddar…</div> : (
+        <div className="card">
           {data?.data.length ? (
-            <div className="px-2 py-3">
-              <BrandCampaignTable campaigns={data.data} onRowClick={(c) => navigate(`/brand/campaigns/${c.id}`)} />
-              <div className="px-4">
-                <Pagination page={page} totalCount={data.totalCount} pageSize={data.pageSize} onPageChange={setPage} />
-              </div>
-            </div>
+            <>
+              <div className="sec-head"><h3>{data.totalCount} kampanj{data.totalCount === 1 ? '' : 'er'}</h3></div>
+              {data.data.map((c) => {
+                const pct = c.budget ? Math.round((c.budgetSpent / c.budget) * 100) : 0;
+                return (
+                  <div key={c.id} className="vcamp" onClick={() => navigate(`/brand/campaigns/${c.id}`)}>
+                    <span className="vcamp-thumb" style={{ background: grad(c.name) }}><span className="brand-mono">{initial(c.name)}</span></span>
+                    <div className="vcamp-main">
+                      <div className="vcamp-b">{c.name}</div>
+                      <div className="vcamp-m">{c.category} · {formatDate(c.startDate)} – {formatDate(c.endDate)}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><StatusBadge status={c.status} /><div className="progress-line" style={{ flex: 1, maxWidth: 160, marginTop: 0 }}><span style={{ width: `${pct}%` }} /></div><span style={{ fontSize: 11.5, color: 'var(--muted)', fontWeight: 600 }}>{pct}%</span></div>
+                    </div>
+                    <div className="vcamp-end"><div className="vcamp-k">Creators</div><div className="vcamp-v">{c.approvedCreatorCount}/{c.maxCreators}</div></div>
+                    <div className="vcamp-end"><div className="vcamp-k">Budget</div><div className="vcamp-v">{formatCurrency(c.budgetSpent)}</div></div>
+                  </div>
+                );
+              })}
+              <Pagination page={page} totalCount={data.totalCount} pageSize={data.pageSize} onPageChange={setPage} />
+            </>
           ) : (
-            <div className="p-6">
-              <EmptyState title="Inga kampanjer än" description="Skapa din första kampanj för att komma igång." action={
-                <Button onClick={() => navigate('/brand/campaigns/new')}>Skapa kampanj</Button>
-              } />
+            <div style={{ textAlign: 'center', padding: '44px 24px' }}>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>Inga kampanjer än</div>
+              <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8 }}>Skapa din första kampanj för att komma igång.</div>
+              <button className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 22px', marginTop: 16 }} onClick={() => navigate('/brand/campaigns/new')}>Skapa kampanj</button>
             </div>
           )}
-        </Card>
+        </div>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -834,97 +856,66 @@ function CampaignApplicationsSection({ campaignId, campaignName }: { campaignId:
 
   if (!expanded) {
     return (
-      <div className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+      <div className="vcamp" style={{ borderTop: 'none', padding: '16px 14px', border: '1px solid rgba(241,168,143,.16)', borderRadius: 16, marginBottom: 12, background: 'rgba(255,255,255,.55)' }}
         onClick={() => setExpanded(true)}>
-        <div className="flex items-center gap-3">
-          <h3 className="font-medium">{campaignName}</h3>
-          {pendingCount > 0 && (
-            <span className="bg-primary/20 text-primary text-xs font-bold px-2 py-0.5 rounded-full">
-              {pendingCount} nya
-            </span>
-          )}
+        <span className="vcamp-thumb" style={{ background: grad(campaignName) }}><span className="brand-mono">{initial(campaignName)}</span></span>
+        <div className="vcamp-main">
+          <div className="vcamp-b" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{campaignName}
+            {pendingCount > 0 && <span className="vcamp-tag prog">{pendingCount} NYA</span>}
+          </div>
+          <div className="vcamp-m">{totalCount} ansökning{totalCount === 1 ? '' : 'ar'}</div>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">{totalCount} ansökningar</span>
-          <span className="text-muted-foreground">▸</span>
-        </div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted-2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 6 6 6-6 6" /></svg>
       </div>
     );
   }
 
   return (
-    <Card>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <h3 className="font-semibold">{campaignName}</h3>
-          {pendingCount > 0 && (
-            <span className="bg-primary/20 text-primary text-xs font-bold px-2 py-0.5 rounded-full">
-              {pendingCount} väntar
-            </span>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate(`/brand/campaigns/${campaignId}`)}>
-            Visa kampanj
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => setExpanded(false)}>▾ Minimera</Button>
+    <div className="card" style={{ marginBottom: 14 }}>
+      <div className="sec-head">
+        <h3 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{campaignName}
+          {pendingCount > 0 && <span className="badge green">{pendingCount} väntar</span>}
+        </h3>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="view-all" onClick={() => navigate(`/brand/campaigns/${campaignId}`)}>Visa kampanj</button>
+          <button className="view-all" onClick={() => setExpanded(false)}>Minimera</button>
         </div>
       </div>
-      {isLoading ? <LoadingSpinner /> : applications?.data.length ? (
-        <div className="space-y-3">
-          {applications.data.map((a: ApplicationItem) => (
-            <div key={a.id} className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="font-medium">{a.creatorName}</p>
-                  {a.creatorCategory && <span className="text-xs bg-muted px-2 py-0.5 rounded">{a.creatorCategory}</span>}
-                </div>
-                {a.tikTokUsername && (
-                  <a href={`https://www.tiktok.com/@${a.tikTokUsername}`} target="_blank" rel="noopener noreferrer"
-                    className="text-sm text-primary hover:underline">@{a.tikTokUsername}</a>
-                )}
-                {a.creatorBio && <p className="text-xs text-muted-foreground mt-1">{a.creatorBio}</p>}
-                {a.message && <p className="text-sm text-muted-foreground">{a.message}</p>}
-                <p className="text-xs text-muted-foreground">{formatDate(a.createdAt)}</p>
+      {isLoading ? <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)' }}>Laddar…</div> : applications?.data.length ? (
+        applications.data.map((a: ApplicationItem) => (
+          <div key={a.id} className="list-row" style={{ gap: 14 }}>
+            <span className="mono" style={{ background: grad(a.creatorName) }}>{initial(a.creatorName)}</span>
+            <div className="row-main" style={{ flex: 1 }}>
+              <div className="t" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{a.creatorName}
+                {a.creatorCategory && <span className="badge grey">{a.creatorCategory}</span>}
               </div>
-              <div className="flex items-center gap-2">
-                <StatusBadge status={a.status} />
-                {a.status === 'Pending' && rejectingId !== a.id && (
-                  <>
-                    <Button size="sm" onClick={() => approve.mutateAsync({ id: a.id })} disabled={approve.isPending}>
-                      Godkänn
-                    </Button>
-                    <Button size="sm" variant="destructive" onClick={() => { setRejectingId(a.id); setRejectReason(''); }} disabled={reject.isPending}>
-                      Neka
-                    </Button>
-                  </>
-                )}
-                {a.status === 'Pending' && rejectingId === a.id && (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      autoFocus
-                      value={rejectReason}
-                      onChange={(e) => setRejectReason(e.target.value)}
-                      placeholder="Anledning till nekande..."
-                      className="rounded-md border border-input bg-background px-2 py-1 text-sm"
-                    />
-                    <Button size="sm" variant="destructive" onClick={() => handleReject(a.id)} disabled={reject.isPending || !rejectReason.trim()}>
-                      Bekräfta
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => { setRejectingId(null); setRejectReason(''); }}>
-                      Avbryt
-                    </Button>
-                  </div>
-                )}
-              </div>
+              {a.tikTokUsername && <a href={`https://www.tiktok.com/@${a.tikTokUsername}`} target="_blank" rel="noopener noreferrer" className="s" style={{ color: '#C26A4A' }}>@{a.tikTokUsername}</a>}
+              {a.message && <div className="s">{a.message}</div>}
+              <div className="s" style={{ color: 'var(--muted-2)' }}>{formatDate(a.createdAt)}</div>
             </div>
-          ))}
-        </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '0 0 auto' }}>
+              <StatusBadge status={a.status} />
+              {a.status === 'Pending' && rejectingId !== a.id && (
+                <>
+                  <button className="btn-apply" style={{ width: 'auto', padding: '9px 16px', fontSize: 12.5 }} onClick={() => approve.mutateAsync({ id: a.id })} disabled={approve.isPending}>Godkänn</button>
+                  <button className="btn-outline" style={{ padding: '9px 16px', fontSize: 12.5 }} onClick={() => { setRejectingId(a.id); setRejectReason(''); }} disabled={reject.isPending}>Neka</button>
+                </>
+              )}
+              {a.status === 'Pending' && rejectingId === a.id && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input type="text" autoFocus value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Anledning…"
+                    style={{ border: '1px solid rgba(241,168,143,.3)', borderRadius: 10, padding: '8px 12px', fontSize: 13, fontFamily: 'inherit', background: 'rgba(255,255,255,.7)' }} />
+                  <button className="btn-outline" style={{ padding: '9px 14px', fontSize: 12.5 }} onClick={() => handleReject(a.id)} disabled={reject.isPending || !rejectReason.trim()}>Bekräfta</button>
+                  <button className="view-all" onClick={() => { setRejectingId(null); setRejectReason(''); }}>Avbryt</button>
+                </div>
+              )}
+            </div>
+          </div>
+        ))
       ) : (
-        <EmptyState title="Inga ansökningar" description="Inga creators har ansökt till denna kampanj ännu." />
+        <div style={{ padding: '24px 6px', textAlign: 'center', color: 'var(--muted)' }}>Inga creators har ansökt till denna kampanj ännu.</div>
       )}
-    </Card>
+    </div>
   );
 }
 
@@ -938,19 +929,24 @@ export function BrandApplicationsPage() {
   const relevantCampaigns = campaigns.filter((c) => ['Active', 'Paused', 'Draft'].includes(c.status));
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Ansökningar</h1>
-      <p className="text-muted-foreground">Hantera ansökningar från creators till dina kampanjer.</p>
-      {relevantCampaigns.length ? (
-        <div className="space-y-3">
-          {relevantCampaigns.map((c) => (
-            <CampaignApplicationsSection key={c.id} campaignId={c.id} campaignName={c.name} />
-          ))}
+    <section className="view active reveal">
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Ansökningar</h1>
+          <p className="page-sub">Hantera ansökningar från creators till dina kampanjer. Godkänn de som passar din brief, neka resten.</p>
         </div>
+      </div>
+      {relevantCampaigns.length ? (
+        relevantCampaigns.map((c) => (
+          <CampaignApplicationsSection key={c.id} campaignId={c.id} campaignName={c.name} />
+        ))
       ) : (
-        <EmptyState title="Inga kampanjer" description="Skapa en kampanj för att börja ta emot ansökningar." />
+        <div className="card" style={{ textAlign: 'center', padding: '54px 24px' }}>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>Inga kampanjer</div>
+          <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8 }}>Skapa en kampanj för att börja ta emot ansökningar.</div>
+        </div>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -1017,108 +1013,58 @@ export function BrandSettingsPage() {
   if (isLoading) return <LoadingSpinner />;
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-2xl">🏢</div>
+    <section className="view active reveal">
+      <div className="page-head">
         <div>
-          <h1 className="text-2xl font-bold">{profile?.companyName ?? 'Inställningar'}</h1>
-          <p className="text-sm text-muted-foreground">{profile?.status === 'Approved' ? '✓ Verifierat konto' : profile?.status}</p>
+          <h1 className="page-title">Inställningar</h1>
+          <p className="page-sub">Hantera er företagsprofil och säkerhet. {profile?.status === 'Approved' ? 'Verifierat konto.' : profile?.status}</p>
         </div>
       </div>
 
-      {/* Tab selector */}
-      <div className="flex gap-2 border-b border-border pb-0">
-        {([['profile', '👤 Profil'], ['security', '🔒 Lösenord']] as const).map(([key, label]) => (
-          <button key={key} onClick={() => setActiveTab(key)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${activeTab === key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-            {label}
-          </button>
+      <div className="tabs">
+        {([['profile', 'Profil'], ['security', 'Lösenord']] as const).map(([key, label]) => (
+          <button key={key} className={`tab${activeTab === key ? ' active' : ''}`} onClick={() => setActiveTab(key)}>{label}</button>
         ))}
       </div>
 
-      {/* Profile tab */}
       {activeTab === 'profile' && (
-        <Card>
-          <h2 className="font-semibold mb-4">Företagsprofil</h2>
-          <form onSubmit={handleProfileSave} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Företagsnamn *</label>
-              <input type="text" value={profileForm.companyName} required
-                onChange={e => setProfileForm({ ...profileForm, companyName: e.target.value })}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+        <div className="card" style={{ maxWidth: 720 }}>
+          <div className="sec-head"><h3>Företagsprofil</h3></div>
+          <form onSubmit={handleProfileSave} className="form-grid">
+            <div className="field full"><label>Företagsnamn *</label><input type="text" value={profileForm.companyName} required onChange={e => setProfileForm({ ...profileForm, companyName: e.target.value })} /></div>
+            <div className="field"><label>Bransch</label>
+              <select value={profileForm.industry} onChange={e => setProfileForm({ ...profileForm, industry: e.target.value })}>
+                {['Övrigt', 'Mode', 'Skönhet', 'Mat & Dryck', 'Teknik', 'Gaming', 'Sport', 'Musik', 'Resor', 'Hälsa'].map(i => <option key={i} value={i}>{i}</option>)}
+              </select>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Bransch</label>
-                <select value={profileForm.industry} onChange={e => setProfileForm({ ...profileForm, industry: e.target.value })}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                  {['Övrigt', 'Mode', 'Skönhet', 'Mat & Dryck', 'Teknik', 'Gaming', 'Sport', 'Musik', 'Resor', 'Hälsa'].map(i => (
-                    <option key={i} value={i}>{i}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Telefon</label>
-                <input type="tel" value={profileForm.contactPhone}
-                  onChange={e => setProfileForm({ ...profileForm, contactPhone: e.target.value })}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-              </div>
+            <div className="field"><label>Telefon</label><input type="tel" value={profileForm.contactPhone} onChange={e => setProfileForm({ ...profileForm, contactPhone: e.target.value })} /></div>
+            <div className="field full"><label>Webbplats</label><input type="url" value={profileForm.website} placeholder="https://mittföretag.se" onChange={e => setProfileForm({ ...profileForm, website: e.target.value })} /></div>
+            <div className="field full"><label>Beskrivning</label><textarea value={profileForm.description} rows={3} onChange={e => setProfileForm({ ...profileForm, description: e.target.value })} placeholder="Berätta om ert företag..." /></div>
+            <div className="field full">
+              {profileError && <p style={{ color: 'var(--red)', fontSize: 13 }}>{profileError}</p>}
+              {profileMsg && <p style={{ color: '#2f9d5b', fontSize: 13 }}>{profileMsg}</p>}
+              <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px', marginTop: 4 }} disabled={updateProfile.isPending}>{updateProfile.isPending ? 'Sparar…' : 'Spara ändringar'}</button>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Webbplats</label>
-              <input type="url" value={profileForm.website} placeholder="https://mittföretag.se"
-                onChange={e => setProfileForm({ ...profileForm, website: e.target.value })}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Beskrivning</label>
-              <textarea value={profileForm.description} rows={3}
-                onChange={e => setProfileForm({ ...profileForm, description: e.target.value })}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                placeholder="Berätta om ert företag..." />
-            </div>
-            {profileError && <p className="text-sm text-destructive">{profileError}</p>}
-            {profileMsg && <p className="text-sm text-green-400">{profileMsg}</p>}
-            <Button type="submit" disabled={updateProfile.isPending}>
-              {updateProfile.isPending ? 'Sparar...' : 'Spara ändringar'}
-            </Button>
           </form>
-        </Card>
+        </div>
       )}
 
-      {/* Security tab */}
       {activeTab === 'security' && (
-        <Card>
-          <h2 className="font-semibold mb-4">Byt lösenord</h2>
-          <form onSubmit={handlePasswordChange} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Nuvarande lösenord</label>
-              <input type="password" value={pwForm.currentPassword} required autoComplete="current-password"
-                onChange={e => setPwForm({ ...pwForm, currentPassword: e.target.value })}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+        <div className="card" style={{ maxWidth: 720 }}>
+          <div className="sec-head"><h3>Byt lösenord</h3></div>
+          <form onSubmit={handlePasswordChange} className="form-grid">
+            <div className="field full"><label>Nuvarande lösenord</label><input type="password" value={pwForm.currentPassword} required autoComplete="current-password" onChange={e => setPwForm({ ...pwForm, currentPassword: e.target.value })} /></div>
+            <div className="field"><label>Nytt lösenord</label><input type="password" value={pwForm.newPassword} required autoComplete="new-password" minLength={8} onChange={e => setPwForm({ ...pwForm, newPassword: e.target.value })} /></div>
+            <div className="field"><label>Bekräfta nytt lösenord</label><input type="password" value={pwForm.confirm} required autoComplete="new-password" onChange={e => setPwForm({ ...pwForm, confirm: e.target.value })} /></div>
+            <div className="field full">
+              {pwError && <p style={{ color: 'var(--red)', fontSize: 13 }}>{pwError}</p>}
+              {pwMsg && <p style={{ color: '#2f9d5b', fontSize: 13 }}>{pwMsg}</p>}
+              <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px', marginTop: 4 }} disabled={changePassword.isPending}>{changePassword.isPending ? 'Ändrar…' : 'Byt lösenord'}</button>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Nytt lösenord</label>
-              <input type="password" value={pwForm.newPassword} required autoComplete="new-password" minLength={8}
-                onChange={e => setPwForm({ ...pwForm, newPassword: e.target.value })}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-              <p className="text-xs text-muted-foreground mt-1">Minst 8 tecken</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Bekräfta nytt lösenord</label>
-              <input type="password" value={pwForm.confirm} required autoComplete="new-password"
-                onChange={e => setPwForm({ ...pwForm, confirm: e.target.value })}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            </div>
-            {pwError && <p className="text-sm text-destructive">{pwError}</p>}
-            {pwMsg && <p className="text-sm text-green-400">{pwMsg}</p>}
-            <Button type="submit" disabled={changePassword.isPending}>
-              {changePassword.isPending ? 'Ändrar...' : 'Byt lösenord'}
-            </Button>
           </form>
-        </Card>
+        </div>
       )}
-    </div>
+    </section>
   );
 }
 

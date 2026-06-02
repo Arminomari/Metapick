@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Button, Card, EmptyState, LoadingSpinner } from '@/components/ui';
 import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
 import { usePortfolio, useAddPortfolioItem, useUpdatePortfolioItem, useDeletePortfolioItem } from '@/hooks/api';
 import { formatNumber } from '@/lib/utils';
 import type { PortfolioItem, PortfolioMediaType } from '@/types';
+
+const GRADS = ['linear-gradient(135deg,#FFD8C7,#F1A88F)', 'linear-gradient(135deg,#cdb8f2,#9c7de0)', 'linear-gradient(135deg,#F2C58A,#e0a04e)', 'linear-gradient(135deg,#a9dcc0,#5fb98a)'];
+const grad = (s: string) => GRADS[((s || '').charCodeAt(0) || 0) % GRADS.length];
 
 const MEDIA_TYPES: { value: PortfolioMediaType; label: string }[] = [
   { value: 'TikTok', label: 'TikTok-video' },
@@ -79,142 +81,90 @@ export function CreatorPortfolioPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <header className="grid grid-cols-12 gap-x-6 items-end">
-        <div className="col-span-12 md:col-span-8">
-          <p className="eyebrow">Creator studio · Portfölj</p>
-          <h1 className="mt-3 text-display text-[clamp(2rem,4.5vw,3.25rem)]">
-            Visa upp ditt <span className="text-sunset">bästa</span>.
-          </h1>
+    <section className="view active reveal" data-view="portfolio">
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Visa upp ditt <em>bästa</em></h1>
+          <p className="page-sub">Företag ser din portfölj när du ansöker eller söks upp. Lägg till dina starkaste samarbeten.</p>
+          {!showForm && (
+            <button className="btn-apply" style={{ width: 'auto', padding: '11px 20px', marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 8 }} onClick={() => { reset(); setShowForm(true); }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg> Lägg till arbete
+            </button>
+          )}
         </div>
-        <div className="col-span-12 md:col-span-4 md:text-right">
-          <p className="text-sm text-muted-foreground col-prose md:ml-auto">
-            Företag ser din portfölj när du ansöker eller söks upp. Lägg till dina starkaste samarbeten.
-          </p>
-        </div>
-      </header>
-      <div className="hairline" />
-
-      {!showForm && (
-        <Button onClick={() => { reset(); setShowForm(true); }}>+ Lägg till arbete</Button>
-      )}
+      </div>
 
       {showForm && (
-        <Card>
-          <h2 className="font-semibold mb-4">{editingId ? 'Redigera arbete' : 'Nytt arbete'}</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Titel *</label>
-              <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="t.ex. Sommarkampanj för X" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Typ av media</label>
-                <select value={form.mediaType} onChange={(e) => setForm({ ...form, mediaType: e.target.value as PortfolioMediaType })}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                  {MEDIA_TYPES.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Kategori</label>
-                <input type="text" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="t.ex. Mat, Mode" />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Media-URL *</label>
-              <input type="url" value={form.mediaUrl} onChange={(e) => setForm({ ...form, mediaUrl: e.target.value })} required
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="https://www.tiktok.com/@.../video/…" />
-            </div>
+        <div className="card" style={{ marginBottom: 16, maxWidth: 860 }}>
+          <div className="sec-head"><h3>{editingId ? 'Redigera arbete' : 'Nytt arbete'}</h3></div>
+          <form onSubmit={handleSubmit} className="form-grid">
+            <div className="field full"><label>Titel *</label><input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required placeholder="t.ex. Sommarkampanj för X" /></div>
+            <div className="field"><label>Typ av media</label><select value={form.mediaType} onChange={(e) => setForm({ ...form, mediaType: e.target.value as PortfolioMediaType })}>{MEDIA_TYPES.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}</select></div>
+            <div className="field"><label>Kategori</label><input type="text" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="t.ex. Mat, Mode" /></div>
+            <div className="field full"><label>Media-URL *</label><input type="url" value={form.mediaUrl} onChange={(e) => setForm({ ...form, mediaUrl: e.target.value })} required placeholder="https://www.tiktok.com/@.../video/…" /></div>
             {(form.mediaType === 'Image' || form.mediaType === 'Video' || form.mediaType === 'Link') && (
-              <div>
-                <label className="block text-sm font-medium mb-1">Miniatyrbild-URL (valfritt)</label>
-                <input type="url" value={form.thumbnailUrl} onChange={(e) => setForm({ ...form, thumbnailUrl: e.target.value })}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="https://…" />
-              </div>
+              <div className="field full"><label>Miniatyrbild-URL (valfritt)</label><input type="url" value={form.thumbnailUrl} onChange={(e) => setForm({ ...form, thumbnailUrl: e.target.value })} placeholder="https://…" /></div>
             )}
-            <div>
-              <label className="block text-sm font-medium mb-1">Beskrivning</label>
-              <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="Vad gjorde du? Vilket resultat?" />
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Varumärke</label>
-                <input type="text" value={form.brandName} onChange={(e) => setForm({ ...form, brandName: e.target.value })}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="t.ex. Café X" />
+            <div className="field full"><label>Beskrivning</label><textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} placeholder="Vad gjorde du? Vilket resultat?" /></div>
+            <div className="field"><label>Varumärke</label><input type="text" value={form.brandName} onChange={(e) => setForm({ ...form, brandName: e.target.value })} placeholder="t.ex. Café X" /></div>
+            <div className="field"><label>Views</label><input type="text" inputMode="numeric" value={form.views} onChange={(e) => setForm({ ...form, views: e.target.value.replace(/\D/g, '') })} placeholder="t.ex. 25000" /></div>
+            <div className="field"><label>Likes</label><input type="text" inputMode="numeric" value={form.likes} onChange={(e) => setForm({ ...form, likes: e.target.value.replace(/\D/g, '') })} placeholder="t.ex. 1200" /></div>
+            <div className="field full checkrow" style={{ flexDirection: 'row', justifyContent: 'flex-start' }}><input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })} /> Markera som utvald (visas först)</div>
+            <div className="field full">
+              {error && <p style={{ color: 'var(--red)', fontSize: 13, marginBottom: 8 }}>{error}</p>}
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={add.isPending || update.isPending}>{add.isPending || update.isPending ? 'Sparar…' : editingId ? 'Spara ändringar' : 'Lägg till'}</button>
+                <button type="button" className="btn-outline" onClick={reset}>Avbryt</button>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Views</label>
-                <input type="text" inputMode="numeric" value={form.views}
-                  onChange={(e) => setForm({ ...form, views: e.target.value.replace(/\D/g, '') })}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="t.ex. 25000" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Likes</label>
-                <input type="text" inputMode="numeric" value={form.likes}
-                  onChange={(e) => setForm({ ...form, likes: e.target.value.replace(/\D/g, '') })}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="t.ex. 1200" />
-              </div>
-            </div>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })} />
-              Markera som utvald (visas först)
-            </label>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <div className="flex gap-3">
-              <Button type="submit" disabled={add.isPending || update.isPending}>
-                {add.isPending || update.isPending ? 'Sparar…' : editingId ? 'Spara ändringar' : 'Lägg till'}
-              </Button>
-              <Button type="button" variant="secondary" onClick={reset}>Avbryt</Button>
             </div>
           </form>
-        </Card>
+        </div>
       )}
 
-      {isLoading ? <LoadingSpinner /> : items && items.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {isLoading ? <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>Laddar…</div> : items && items.length > 0 ? (
+        <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16 }}>
           {items.map((it) => (
-            <Card key={it.id} className="flex flex-col">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <h3 className="font-bold leading-tight">{it.title}</h3>
-                {it.isFeatured && <span className="sticker sticker-hot !py-0.5 !px-2 !text-[0.7rem]">Utvald</span>}
-              </div>
+            <div className="pf-card" key={it.id}>
               {(it.mediaType === 'TikTok') ? (
-                <TikTokEmbed videoUrl={it.mediaUrl} compact />
+                <div className="pf-img" style={{ height: 'auto', background: 'transparent' }}><TikTokEmbed videoUrl={it.mediaUrl} compact /></div>
               ) : it.thumbnailUrl || it.mediaType === 'Image' ? (
-                <a href={it.mediaUrl} target="_blank" rel="noopener noreferrer">
-                  <img src={it.thumbnailUrl || it.mediaUrl} alt={it.title}
-                    className="w-full h-40 object-cover rounded-lg border border-border" />
+                <a href={it.mediaUrl} target="_blank" rel="noopener noreferrer" className="pf-img" style={{ display: 'block', backgroundImage: `url(${it.thumbnailUrl || it.mediaUrl})` }}>
+                  {it.isFeatured && <div className="pf-flag">Utvald</div>}
                 </a>
               ) : (
-                <a href={it.mediaUrl} target="_blank" rel="noopener noreferrer"
-                  className="text-sm text-primary hover:underline break-all">{it.mediaUrl}</a>
-              )}
-              {it.description && <p className="text-sm text-muted-foreground mt-3 line-clamp-3">{it.description}</p>}
-              <div className="flex flex-wrap gap-1.5 mt-3 text-xs">
-                {it.category && <span className="chip">{it.category}</span>}
-                {it.brandName && <span className="chip">{it.brandName}</span>}
-              </div>
-              {(it.views != null || it.likes != null) && (
-                <div className="flex gap-3 text-xs text-muted-foreground mt-2">
-                  {it.views != null && <span>▶ {formatNumber(it.views)} views</span>}
-                  {it.likes != null && <span>❤ {formatNumber(it.likes)}</span>}
+                <div className="pf-img" style={{ background: grad(it.title), display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+                  {it.isFeatured && <div className="pf-flag">Utvald</div>}
+                  <a href={it.mediaUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#fff', fontWeight: 700, textAlign: 'center', wordBreak: 'break-all', fontSize: 13 }}>{it.title}</a>
                 </div>
               )}
-              <div className="flex gap-2 mt-4 pt-3 border-t border-border">
-                <Button size="sm" variant="secondary" onClick={() => startEdit(it)}>Redigera</Button>
-                <Button size="sm" variant="ghost" onClick={() => handleDelete(it.id)} disabled={remove.isPending}>Ta bort</Button>
+              <div className="pf-body">
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                  <div className="t">{it.title}</div>
+                  {it.isFeatured && it.mediaType === 'TikTok' && <span className="badge green">Utvald</span>}
+                </div>
+                <div className="s">{[it.category, it.brandName].filter(Boolean).join(' · ')}</div>
+                {it.description && <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 8, lineHeight: 1.5 }}>{it.description}</p>}
+                {(it.views != null || it.likes != null) && (
+                  <div className="pf-stats">
+                    {it.views != null && <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="12" r="9" /><path d="m10 9 5 3-5 3z" fill="currentColor" stroke="none" /></svg>{formatNumber(it.views)}</span>}
+                    {it.likes != null && <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M12 20s-7-4.3-7-9a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 4.7-7 9-7 9z" /></svg>{formatNumber(it.likes)}</span>}
+                  </div>
+                )}
+                <div className="pf-actions">
+                  <button className="btn-outline" style={{ flex: 1, padding: 10 }} onClick={() => startEdit(it)}>Redigera</button>
+                  <button className="btn-outline" style={{ flex: 1, padding: 10 }} onClick={() => handleDelete(it.id)} disabled={remove.isPending}>Ta bort</button>
+                </div>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       ) : (
-        <EmptyState title="Din portfölj är tom"
-          description="Lägg till dina bästa videos och samarbeten så företag kan se vad du kan."
-          action={<Button onClick={() => { reset(); setShowForm(true); }}>+ Lägg till ditt första arbete</Button>} />
+        <div className="card" style={{ textAlign: 'center', padding: '54px 24px' }}>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>Din portfölj är tom</div>
+          <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8 }}>Lägg till dina bästa videos och samarbeten så företag kan se vad du kan.</div>
+          <button className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 22px', marginTop: 16 }} onClick={() => { reset(); setShowForm(true); }}>Lägg till ditt första arbete</button>
+        </div>
       )}
-    </div>
+    </section>
   );
 }

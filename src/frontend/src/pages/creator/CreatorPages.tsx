@@ -18,6 +18,15 @@ import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
 import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
 import type { AssignmentListItem } from '@/types';
 
+const GRADS = [
+  'linear-gradient(135deg,#FFD8C7,#F1A88F)',
+  'linear-gradient(135deg,#cdb8f2,#9c7de0)',
+  'linear-gradient(135deg,#F2C58A,#e0a04e)',
+  'linear-gradient(135deg,#a9dcc0,#5fb98a)',
+];
+const grad = (s: string) => GRADS[((s || '').charCodeAt(0) || 0) % GRADS.length];
+const initial = (s: string) => (s?.[0] || '?').toUpperCase();
+
 function getApiErrorMessage(error: any, fallback: string) {
   const apiError = error?.response?.data?.error;
   const detail = Array.isArray(apiError?.details) ? apiError.details[1] ?? apiError.details[0] : undefined;
@@ -176,111 +185,75 @@ export function BrowseCampaignsPage() {
     return 'Ansök';
   };
 
-  const getButtonVariant = (campaignId: string): 'primary' | 'secondary' | 'destructive' | 'ghost' => {
-    const status = appStatusMap.get(campaignId);
-    if (status === 'Approved') return 'ghost';
-    if (status === 'Pending') return 'secondary';
-    if (status === 'Rejected') return 'destructive';
-    return 'primary';
-  };
-
   const isDisabled = (campaignId: string, spotsRemaining: number) => {
     if (spotsRemaining <= 0 || applyingId === campaignId) return true;
     return appStatusMap.has(campaignId); // already applied in any status
   };
 
   return (
-    <div className="space-y-6">
-      <header className="grid grid-cols-12 gap-x-6 items-end">
-        <div className="col-span-12 md:col-span-8">
-          <p className="eyebrow">Creator studio · Utforska</p>
-          <h1 className="mt-3 text-display text-[clamp(2rem,4.5vw,3.25rem)]">
-            Välj din nästa <span className="text-sunset">drop</span>.
-          </h1>
+    <section className="view active reveal">
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Hitta din nästa <em>kampanj</em></h1>
+          <p className="page-sub">Kuraterade kampanjer som matchar din röst, ditt språk och din publik.</p>
         </div>
-        <div className="col-span-12 md:col-span-4 md:text-right">
-          <p className="text-sm text-muted-foreground col-prose md:ml-auto">
-            Kuraterade kampanjer som matchar din röst, ditt språk och din publik.
-          </p>
-        </div>
-      </header>
+      </div>
       <TikTokAlertBanner compact />
-      <div className="hairline" />
       {isError && (
-        <EmptyState
-          title="Kunde inte hämta kampanjer"
-          description={getApiErrorMessage(error, 'Något gick fel när kampanjer skulle hämtas.')}
-        />
+        <div className="card" style={{ textAlign: 'center', padding: '40px 24px' }}>
+          <div style={{ fontWeight: 700 }}>Kunde inte hämta kampanjer</div>
+          <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>{getApiErrorMessage(error, 'Något gick fel när kampanjer skulle hämtas.')}</div>
+        </div>
       )}
       {myAppsError && (
-        <Card className="!border-[hsl(var(--warning)/0.4)] !bg-[hsl(var(--warning)/0.06)]">
-          <p className="text-sm text-[hsl(var(--warning))]">
-            Kunde inte hämta dina ansökningar: {getApiErrorMessage(myAppsErrorObj, 'okänt fel')}
-          </p>
-        </Card>
+        <div className="card" style={{ marginTop: 14, borderColor: 'rgba(212,155,46,.4)' }}>
+          <p style={{ color: 'var(--amber)', fontSize: 13 }}>Kunde inte hämta dina ansökningar: {getApiErrorMessage(myAppsErrorObj, 'okänt fel')}</p>
+        </div>
       )}
-      {!isError && (isLoading ? <LoadingSpinner /> : (
+      {!isError && (isLoading ? <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>Laddar…</div> : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {data?.data.map((c, i) => {
-              // Slight asymmetric rhythm — every 5th card is taller
-              const tall = i % 5 === 0;
-              return (
-                <Card key={c.id} className={`flex flex-col justify-between ${tall ? 'lg:row-span-2' : ''}`}>
-                  <div>
-                    <div className="flex justify-between items-start mb-3 gap-2">
-                      <h3 className="text-[1.25rem] font-bold leading-tight tracking-tight">{c.name}</h3>
-                      <span className="eyebrow shrink-0">{c.brandName}</span>
+          {data?.data.length ? (
+            <>
+              <div className="results-meta"><div className="cnt"><span className="live-dot" />{data.totalCount} kampanj{data.totalCount === 1 ? '' : 'er'} tillgängliga</div></div>
+              <div className="grid" style={{ gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16, display: 'grid' }}>
+                {data.data.map((c) => {
+                  const status = appStatusMap.get(c.id);
+                  const full = c.spotsLeft <= 0;
+                  return (
+                    <div className="camp-card" key={c.id}>
+                      <div className="ch">
+                        <span className="mono" style={{ background: grad(c.name) }}>{initial(c.brandName || c.name)}</span>
+                        <div style={{ flex: 1 }}><div className="ttl">{c.name}</div><div className="brand">{c.brandName}</div></div>
+                        {status === 'Approved' ? <span className="badge green">Godkänd</span> : status === 'Pending' ? <span className="badge amber">Skickad</span> : status === 'Rejected' ? <span className="badge red">Nekad</span> : <span className="badge green">Ny</span>}
+                      </div>
+                      <div className="desc">{c.description}</div>
+                      <div className="tags">
+                        <span className="tag g">{c.category}</span><span className="tag">{c.country}</span><span className="tag">{c.payoutModel}</span>
+                      </div>
+                      <div className="meta-cols">
+                        <div className="mc"><div className="k">Ersättning</div><div className="v green">{c.payoutSummary}</div></div>
+                        <div className="mc"><div className="k">Platser</div><div className="v">{c.spotsLeft} / {c.maxCreators}</div></div>
+                        <div className="mc"><div className="k">Period</div><div className="v">{formatDate(c.startDate)} – {formatDate(c.endDate)}</div></div>
+                      </div>
+                      <button className={status === 'Approved' || status === 'Rejected' || status === 'Pending' || full ? 'btn-outline' : 'btn-apply'} style={{ width: '100%' }}
+                        onClick={() => handleApply(c.id)} disabled={isDisabled(c.id, c.spotsLeft)}>
+                        {getButtonLabel(c.id, c.spotsLeft)}
+                      </button>
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-3 mb-4 col-prose">{c.description}</p>
-                    <div className="flex flex-wrap gap-1.5 text-xs mb-4">
-                      <span className="chip">{c.category}</span>
-                      <span className="chip">{c.country}</span>
-                      <span className="chip">{c.payoutModel}</span>
-                    </div>
-                    <div className="hairline mb-4" />
-                    <dl className="space-y-2 text-sm">
-                      <div className="flex items-baseline justify-between gap-3">
-                        <dt className="eyebrow">Ersättning</dt>
-                        <dd className="font-medium text-right">{c.payoutSummary}</dd>
-                      </div>
-                      <div className="flex items-baseline justify-between gap-3">
-                        <dt className="eyebrow">Platser</dt>
-                        <dd className="font-medium">{c.spotsLeft} av {c.maxCreators}</dd>
-                      </div>
-                      <div className="flex items-baseline justify-between gap-3">
-                        <dt className="eyebrow">Period</dt>
-                        <dd className="text-xs text-muted-foreground">{formatDate(c.startDate)} – {formatDate(c.endDate)}</dd>
-                      </div>
-                    </dl>
-                    {c.contentTags && c.contentTags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-4">
-                        {c.contentTags.slice(0, 5).map(tag => (
-                          <span key={tag} className="px-2 py-0.5 rounded-full text-[0.7rem] bg-[hsl(var(--primary)/0.08)] text-primary border border-[hsl(var(--primary)/0.18)]">{tag}</span>
-                        ))}
-                        {c.contentTags.length > 5 && (
-                          <span className="px-2 py-0.5 rounded-full text-[0.7rem] text-muted-foreground">+{c.contentTags.length - 5}</span>
-                        )}
-                      </div>
-                    )}
-                    {c.perks && (
-                      <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1.5"><span className="sticker sticker-hot !py-0.5 !px-2 !text-[0.7rem]">Perk</span> {c.perks}</p>
-                    )}
-                  </div>
-                  <Button className="mt-6 w-full" onClick={() => handleApply(c.id)}
-                    disabled={isDisabled(c.id, c.spotsLeft)}
-                    variant={getButtonVariant(c.id)}>
-                    {getButtonLabel(c.id, c.spotsLeft)}
-                  </Button>
-                </Card>
-              );
-            })}
-          </div>
-          {data && <Pagination page={page} totalCount={data.totalCount} pageSize={data.pageSize} onPageChange={setPage} />}
-          {!data?.data.length && <EmptyState title="Inga kampanjer tillgängliga" description="Kom tillbaka senare — nya brief släpps löpande." />}
+                  );
+                })}
+              </div>
+              <Pagination page={page} totalCount={data.totalCount} pageSize={data.pageSize} onPageChange={setPage} />
+            </>
+          ) : (
+            <div className="card" style={{ textAlign: 'center', padding: '54px 24px' }}>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>Inga kampanjer tillgängliga</div>
+              <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8 }}>Kom tillbaka senare — nya briefs släpps löpande.</div>
+            </div>
+          )}
         </>
       ))}
-    </div>
+    </section>
   );
 }
 
@@ -291,30 +264,51 @@ export function CreatorAssignmentsPage() {
   const navigate = useNavigate();
   const { data, isLoading } = useCreatorAssignments(status, page);
 
+  const tabs: { label: string; val?: string }[] = [
+    { label: 'Alla', val: undefined }, { label: 'Aktiva', val: 'Active' }, { label: 'Avslutade', val: 'Completed' }, { label: 'Pausade', val: 'Paused' },
+  ];
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Mina uppdrag</h1>
-      <div className="flex gap-2">
-        {['Alla', 'Active', 'Completed', 'Paused'].map((s) => (
-          <Button key={s} variant={status === (s === 'Alla' ? undefined : s) ? 'primary' : 'secondary'} size="sm"
-            onClick={() => { setStatus(s === 'Alla' ? undefined : s); setPage(1); }}>
-            {s}
-          </Button>
-        ))}
+    <section className="view active reveal">
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Mina <em>kampanjer</em></h1>
+          <p className="page-sub">Dina aktiva samarbeten, verifierade views och vad du tjänat — allt på ett ställe.</p>
+        </div>
       </div>
-      {isLoading ? <LoadingSpinner /> : (
-        <Card>
+      <div className="tabs">
+        {tabs.map((t) => <button key={t.label} className={`tab${status === t.val ? ' active' : ''}`} onClick={() => { setStatus(t.val); setPage(1); }}>{t.label}</button>)}
+      </div>
+      {isLoading ? <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>Laddar…</div> : (
+        <div className="card">
           {data?.data.length ? (
             <>
-              <AssignmentTable assignments={data.data} onRowClick={(a) => navigate(`/creator/assignments/${a.id}`)} />
+              <div className="sec-head"><h3>{data.totalCount} uppdrag</h3></div>
+              {data.data.map((a) => (
+                <div key={a.id} className="vcamp" onClick={() => navigate(`/creator/assignments/${a.id}`)}>
+                  <span className="vcamp-thumb" style={{ background: grad(a.campaignName) }}><span className="brand-mono">{initial(a.campaignName)}</span></span>
+                  <div className="vcamp-main">
+                    <div className="vcamp-b">{a.campaignName}</div>
+                    <div className="vcamp-m">Tilldelad {formatDate(a.assignedAt)}</div>
+                    <StatusBadge status={a.status} />
+                  </div>
+                  <div className="vcamp-end"><div className="vcamp-k">Views</div><div className="vcamp-v">{formatNumber(a.totalVerifiedViews)}</div></div>
+                  <div className="vcamp-end"><div className="vcamp-k">Klick</div><div className="vcamp-v">{formatNumber(a.totalTrackedClicks)}</div></div>
+                  <div className="vcamp-end"><div className="vcamp-k">Intjänat</div><div className="vcamp-v">{formatCurrency(a.currentPayoutAmount)}</div></div>
+                </div>
+              ))}
               <Pagination page={page} totalCount={data.totalCount} pageSize={data.pageSize} onPageChange={setPage} />
             </>
           ) : (
-            <EmptyState title="Inga uppdrag" description="Ansök till kampanjer för att få ditt första uppdrag!" />
+            <div style={{ textAlign: 'center', padding: '44px 24px' }}>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>Inga uppdrag än</div>
+              <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8 }}>Ansök till kampanjer för att få ditt första uppdrag.</div>
+              <Link to="/creator/browse" className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 22px', marginTop: 16 }}>Hitta kampanjer</Link>
+            </div>
           )}
-        </Card>
+        </div>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -577,27 +571,38 @@ export function EarningsPage() {
   const pending = Math.max(totalEarned - sent, 0);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Intjäning</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard label="Totalt intjänat" value={formatCurrency(totalEarned)} />
-        <StatCard label="Skickat av företag" value={formatCurrency(sent)} />
-        <StatCard label="Kvar att betala" value={formatCurrency(pending)} />
+    <section className="view active reveal" data-view="earnings">
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Din <em>intjäning</em></h1>
+          <p className="page-sub">Vad du tjänat, vad företagen skickat och vad som väntar på utbetalning. Allt hämtas direkt från dina verifierade resultat.</p>
+        </div>
       </div>
-      <Card>
-        <DataTable
-          columns={[
-            { header: 'Kampanj', accessor: (p) => p.campaignName },
-            { header: 'Belopp', accessor: (p) => formatCurrency(p.amount) },
-            { header: 'Status', accessor: (p) => <StatusBadge status={p.status} /> },
-            { header: 'Skickad', accessor: (p) => p.paidAt ? formatDate(p.paidAt) : 'Inte skickad ännu' },
-            { header: 'Registrerad', accessor: (p) => formatDate(p.createdAt) },
-          ]}
-          data={payouts}
-        />
+
+      <div className="stat-row">
+        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="9" cy="7" rx="6" ry="3" /><path d="M3 7v5c0 1.7 2.7 3 6 3M3 12v5c0 1.7 2.7 3 6 3" /><ellipse cx="15" cy="14" rx="6" ry="3" /></svg></div><div><div className="lbl">Totalt intjänat</div><div className="val">{formatCurrency(totalEarned)}</div></div></div></div>
+        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 7" /></svg></div><div><div className="lbl">Skickat av företag</div><div className="val">{formatCurrency(sent)}</div></div></div></div>
+        <div className="card stat"><div className="top"><div className="ico amber"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg></div><div><div className="lbl">Kvar att betala</div><div className="val">{formatCurrency(pending)}</div></div></div></div>
+      </div>
+
+      <div className="card">
+        <div className="sec-head"><h3>Utbetalningar</h3></div>
+        {payouts.length ? payouts.map((p) => (
+          <div key={p.id} className="list-row">
+            <span className="mono sq" style={{ background: grad(p.campaignName) }}>{initial(p.campaignName)}</span>
+            <div className="row-main" style={{ flex: 1 }}>
+              <div className="t">{p.campaignName}</div>
+              <div className="s">Registrerad {formatDate(p.createdAt)}{p.paidAt ? ` · skickad ${formatDate(p.paidAt)}` : ''}</div>
+            </div>
+            <StatusBadge status={p.status} />
+            <div style={{ textAlign: 'right', minWidth: 90 }}><div className="t">{formatCurrency(p.amount)}</div></div>
+          </div>
+        )) : (
+          <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--muted)' }}>Inga utbetalningar än. När en kampanj betalas ut dyker den upp här.</div>
+        )}
         {data && <Pagination page={page} totalCount={data.totalCount} pageSize={data.pageSize} onPageChange={setPage} />}
-      </Card>
-    </div>
+      </div>
+    </section>
   );
 }
 
@@ -676,181 +681,84 @@ export function CreatorProfilePage() {
   if (!profile) return <EmptyState title="Profil hittades inte" description="" />;
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Min profil</h1>
+    <section className="view active reveal" data-view="profile">
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Hantera din <em>profil</em></h1>
+          <p className="page-sub">Uppdatera din profil, publik och kopplade konton så att företag lär känna dig bättre.</p>
+        </div>
         <StatusBadge status={profile.status} />
       </div>
 
-      {/* TikTok connection status */}
-      <TikTokConnectionCard />
+      <div style={{ marginBottom: 16 }}><TikTokConnectionCard /></div>
 
-      {/* Profile form */}
-      <Card>
-        <form onSubmit={handleSave} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Visningsnamn *</label>
-            <input type="text" value={form.displayName} onChange={set('displayName')} required
-              disabled={!editing}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Bio</label>
-            <textarea value={form.bio} onChange={set('bio')} rows={3} disabled={!editing}
-              placeholder="Berätta om dig själv och ditt innehåll..."
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">TikTok-användarnamn</label>
-            {tikTokStatus?.connected && tikTokStatus.isOAuth ? (
-              <div className="flex items-center gap-2 rounded-md border border-green-500/30 bg-green-500/5 px-3 py-2">
-                <span className="text-green-400">✓</span>
-                <span className="text-sm">Kopplat via OAuth: </span>
-                <a href={`https://www.tiktok.com/@${tikTokStatus.username}`} target="_blank" rel="noopener noreferrer"
-                  className="text-primary hover:underline font-medium">@{tikTokStatus.username}</a>
-              </div>
-            ) : tikTokStatus?.connected ? (
-              <div className="flex items-center gap-2 rounded-md border border-yellow-500/30 bg-yellow-500/5 px-3 py-2">
-                <span className="text-yellow-400">⚠</span>
-                <span className="text-sm">@{tikTokStatus.username} (manuellt angiven – anslut via OAuth för automatisk tracking)</span>
-              </div>
+      <div className="card" style={{ maxWidth: 860 }}>
+        <div className="sec-head"><h3>Profilinformation</h3>{!editing && <button className="view-all" onClick={() => setEditing(true)}>Redigera</button>}</div>
+        <form onSubmit={handleSave} className="form-grid">
+          <div className="field"><label>Visningsnamn *</label><input type="text" value={form.displayName} onChange={set('displayName')} required disabled={!editing} /></div>
+          <div className="field"><label>TikTok-användarnamn</label>
+            {tikTokStatus?.connected ? (
+              <input type="text" value={'@' + (tikTokStatus.username || '')} disabled />
             ) : (
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">@</span>
-                <input type="text" value={form.tikTokUsername} onChange={set('tikTokUsername')}
-                  disabled={!editing} placeholder="dittanvändarnamn"
-                  className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60" />
-              </div>
+              <input type="text" value={form.tikTokUsername} onChange={set('tikTokUsername')} disabled={!editing} placeholder="@dittanvändarnamn" />
             )}
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Kategori</label>
-              <select value={form.category} onChange={set('category')} disabled={!editing}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60">
-                {['Övrigt', 'Mode', 'Skönhet', 'Mat', 'Teknik', 'Gaming', 'Sport', 'Musik', 'Resor', 'Livsstil', 'Humor'].map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Land</label>
-              <select value={form.country} onChange={set('country')} disabled={!editing}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60">
-                <option value="SE">Sverige</option>
-                <option value="NO">Norge</option>
-                <option value="DK">Danmark</option>
-                <option value="FI">Finland</option>
-              </select>
-            </div>
+          <div className="field full"><label>Bio</label><textarea value={form.bio} onChange={set('bio')} rows={3} disabled={!editing} placeholder="Berätta om dig själv och ditt innehåll..." /></div>
+          <div className="field"><label>Kategori</label>
+            <select value={form.category} onChange={set('category')} disabled={!editing}>
+              {['Övrigt', 'Mode', 'Skönhet', 'Mat', 'Teknik', 'Gaming', 'Sport', 'Musik', 'Resor', 'Livsstil', 'Humor'].map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Födelsedatum</label>
-            <DateInput value={form.dateOfBirth} onChange={v => setForm({ ...form, dateOfBirth: v })} disabled={!editing}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60" />
+          <div className="field"><label>Land</label>
+            <select value={form.country} onChange={set('country')} disabled={!editing}>
+              <option value="SE">Sverige</option><option value="NO">Norge</option><option value="DK">Danmark</option><option value="FI">Finland</option>
+            </select>
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Instagram-användarnamn</label>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">@</span>
-                <input type="text" value={form.instagramUsername} onChange={set('instagramUsername')} disabled={!editing}
-                  placeholder="dittinstagram"
-                  className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60" />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Instagram-följare</label>
-              <input type="text" inputMode="numeric" value={form.instagramFollowerCount} disabled={!editing}
-                onChange={(e) => setForm({ ...form, instagramFollowerCount: e.target.value.replace(/\D/g, '') })}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60" />
-            </div>
+          <div className="field"><label>Födelsedatum</label><DateInput value={form.dateOfBirth} onChange={v => setForm({ ...form, dateOfBirth: v })} disabled={!editing} className="" /></div>
+          <div className="field"><label>Instagram-användarnamn</label><input type="text" value={form.instagramUsername} onChange={set('instagramUsername')} disabled={!editing} placeholder="@dittinstagram" /></div>
+          <div className="field"><label>Instagram-följare</label><input type="text" inputMode="numeric" value={form.instagramFollowerCount} disabled={!editing} onChange={(e) => setForm({ ...form, instagramFollowerCount: e.target.value.replace(/\D/g, '') })} /></div>
+          <div className="field"><label>Följare (TikTok/övrigt)</label><input type="text" inputMode="numeric" value={form.followerCount} disabled={!editing} onChange={(e) => setForm({ ...form, followerCount: e.target.value.replace(/\D/g, '') })} /></div>
+          <div className="field"><label>Snittvisningar</label><input type="text" inputMode="numeric" value={form.averageViews} disabled={!editing} onChange={(e) => setForm({ ...form, averageViews: e.target.value.replace(/\D/g, '') })} /></div>
+          <div className="field"><label>Profilbild-URL</label><input type="url" value={form.avatarUrl} onChange={set('avatarUrl')} disabled={!editing} placeholder="https://…" /></div>
+          <div className="field"><label>Webbplats / Linktree</label><input type="url" value={form.website} onChange={set('website')} disabled={!editing} placeholder="https://…" /></div>
+          <div className="field full checkrow" style={{ flexDirection: 'row', justifyContent: 'flex-start' }}>
+            <input type="checkbox" checked={form.openToPrOffers} disabled={!editing} onChange={(e) => setForm({ ...form, openToPrOffers: e.target.checked })} /> Öppen för direkta PR-erbjudanden från företag
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Följare (TikTok/övrigt)</label>
-              <input type="text" inputMode="numeric" value={form.followerCount} disabled={!editing}
-                onChange={(e) => setForm({ ...form, followerCount: e.target.value.replace(/\D/g, '') })}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60" />
+          {editing ? (
+            <div className="field full">
+              <TagSelector label="Profiltaggar — vad är du expert på?" tags={ALL_TAGS} selected={form.profileTags} onChange={tags => setForm({ ...form, profileTags: tags })} max={10} />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Snittvisningar</label>
-              <input type="text" inputMode="numeric" value={form.averageViews} disabled={!editing}
-                onChange={(e) => setForm({ ...form, averageViews: e.target.value.replace(/\D/g, '') })}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60" />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Profilbild-URL</label>
-            <input type="url" value={form.avatarUrl} onChange={set('avatarUrl')} disabled={!editing}
-              placeholder="https://…"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Webbplats / Linktree</label>
-            <input type="url" value={form.website} onChange={set('website')} disabled={!editing}
-              placeholder="https://…"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-60" />
-          </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={form.openToPrOffers} disabled={!editing}
-              onChange={(e) => setForm({ ...form, openToPrOffers: e.target.checked })} />
-            Öppen för direkta PR-erbjudanden från företag
-          </label>
-
-          {editing && (
-            <div className="border border-border rounded-lg p-4 bg-muted/20">
-              <TagSelector
-                label="Profiltaggar — vad är du expert på?"
-                tags={ALL_TAGS}
-                selected={form.profileTags}
-                onChange={tags => setForm({ ...form, profileTags: tags })}
-                max={10}
-              />
-            </div>
+          ) : form.profileTags.length > 0 && (
+            <div className="field full"><label>Profiltaggar</label><div className="tags">{form.profileTags.map(t => <span key={t} className="tag g">{t}</span>)}</div></div>
           )}
-          {!editing && form.profileTags.length > 0 && (
-            <div>
-              <label className="block text-sm font-medium mb-2">Profiltaggar</label>
-              <div className="flex flex-wrap gap-2">
-                {form.profileTags.map(t => (
-                  <span key={t} className="px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/30">{t}</span>
-                ))}
-              </div>
+          <div className="field full">
+            {saved && <p style={{ color: '#2f9d5b', fontSize: 13, marginBottom: 8 }}>Profilen har sparats!</p>}
+            <div style={{ display: 'flex', gap: 10 }}>
+              {editing ? (
+                <>
+                  <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={update.isPending}>{update.isPending ? 'Sparar…' : 'Spara profil'}</button>
+                  <button type="button" className="btn-outline" onClick={() => setEditing(false)}>Avbryt</button>
+                </>
+              ) : (
+                <button type="button" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} onClick={() => setEditing(true)}>Redigera profil</button>
+              )}
             </div>
-          )}
-
-          {saved && <p className="text-sm text-green-600">✓ Profilen har sparats!</p>}
-
-          <div className="flex gap-3">
-            {editing ? (
-              <>
-                <Button type="submit" disabled={update.isPending}>
-                  {update.isPending ? 'Sparar...' : 'Spara'}
-                </Button>
-                <Button type="button" variant="secondary" onClick={() => setEditing(false)}>Avbryt</Button>
-              </>
-            ) : (
-              <Button type="button" onClick={() => setEditing(true)}>Redigera profil</Button>
-            )}
           </div>
         </form>
-      </Card>
+      </div>
 
-      {/* Profile stats */}
-      <Card>
-        <h2 className="font-semibold mb-3">Profiluppgifter</h2>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><span className="text-muted-foreground">Följare:</span> <strong>{formatNumber(profile.followerCount)}</strong></div>
-          <div><span className="text-muted-foreground">Snittvisningar:</span> <strong>{profile.averageViews ? formatNumber(profile.averageViews) : '–'}</strong></div>
-          <div><span className="text-muted-foreground">Medlem sedan:</span> <strong>{formatDate(profile.createdAt)}</strong></div>
-          <div><span className="text-muted-foreground">Status:</span> <strong>{profile.status}</strong></div>
+      <div className="card" style={{ maxWidth: 860, marginTop: 16 }}>
+        <div className="sec-head"><h3>Profiluppgifter</h3></div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 16 }}>
+          <div><div className="vcamp-k">Följare</div><div className="vcamp-v" style={{ fontSize: 16 }}>{formatNumber(profile.followerCount)}</div></div>
+          <div><div className="vcamp-k">Snittvisningar</div><div className="vcamp-v" style={{ fontSize: 16 }}>{profile.averageViews ? formatNumber(profile.averageViews) : '–'}</div></div>
+          <div><div className="vcamp-k">Medlem sedan</div><div className="vcamp-v" style={{ fontSize: 16 }}>{formatDate(profile.createdAt)}</div></div>
+          <div><div className="vcamp-k">Status</div><div style={{ marginTop: 3 }}><StatusBadge status={profile.status} /></div></div>
         </div>
-      </Card>
+      </div>
 
-      <CreatorReviewCard userId={profile.userId} />
-    </div>
+      <div style={{ maxWidth: 860, marginTop: 16 }}><CreatorReviewCard userId={profile.userId} /></div>
+    </section>
   );
 }
 

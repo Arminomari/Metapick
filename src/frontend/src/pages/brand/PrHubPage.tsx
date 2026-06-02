@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Card, EmptyState, LoadingSpinner, Pagination, StatCard, StatusBadge } from '@/components/ui';
+import { Pagination, StatusBadge } from '@/components/ui';
 import { useSentPrOffers, usePrStats, useWithdrawPrOffer } from '@/hooks/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { PrOffer } from '@/types';
@@ -8,6 +8,14 @@ import type { PrOffer } from '@/types';
 const OFFER_TYPE_LABELS: Record<string, string> = {
   ProductGifting: 'Produkt / gåva', Paid: 'Betald', Hybrid: 'Produkt + betalt', Event: 'Event',
 };
+const GRADS = ['linear-gradient(135deg,#FFD8C7,#F1A88F)', 'linear-gradient(135deg,#cdb8f2,#9c7de0)', 'linear-gradient(135deg,#F2C58A,#e0a04e)', 'linear-gradient(135deg,#a9dcc0,#5fb98a)'];
+const grad = (s: string) => GRADS[((s || '').charCodeAt(0) || 0) % GRADS.length];
+
+function Stat({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg></div><div><div className="lbl">{label}</div><div className="val">{value}</div></div></div></div>
+  );
+}
 
 export function BrandPrHubPage() {
   const navigate = useNavigate();
@@ -18,70 +26,60 @@ export function BrandPrHubPage() {
   const { data, isLoading } = useSentPrOffers(status, category, page);
   const withdraw = useWithdrawPrOffer();
 
-  return (
-    <div className="space-y-6">
-      <header className="grid grid-cols-12 gap-x-6 items-end">
-        <div className="col-span-12 md:col-span-8">
-          <p className="eyebrow">Brand desk · PR-utskick</p>
-          <h1 className="mt-3 text-display text-[clamp(2rem,4.5vw,3.25rem)]">
-            Din <span className="text-sunset">PR-hubb</span>.
-          </h1>
-        </div>
-        <div className="col-span-12 md:col-span-4 md:text-right">
-          <Button onClick={() => navigate('/brand/creators')}>+ Hitta kreatörer</Button>
-        </div>
-      </header>
-      <div className="hairline" />
+  const tabs: { label: string; val?: string }[] = [
+    { label: 'Alla', val: undefined }, { label: 'Skickade', val: 'Sent' }, { label: 'Sedda', val: 'Viewed' }, { label: 'Accepterade', val: 'Accepted' }, { label: 'Nekade', val: 'Declined' }, { label: 'Tillbakadragna', val: 'Withdrawn' },
+  ];
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <StatCard label="Totalt skickade" value={stats?.totalSent ?? 0} />
-        <StatCard label="Väntar (osedda)" value={stats?.pending ?? 0} />
-        <StatCard label="Sedda" value={stats?.viewed ?? 0} />
-        <StatCard label="Accepterade" value={stats?.accepted ?? 0} />
-        <StatCard label="Nekade" value={stats?.declined ?? 0} />
+  return (
+    <section className="view active reveal" data-view="proffers">
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Din <em>PR-hubb</em></h1>
+          <p className="page-sub">Skicka direkta PR-erbjudanden till kreatörer och följ varje utskick — sett, accepterat, nekat.</p>
+        </div>
+        <button className="btn-apply" style={{ width: 'auto', padding: '12px 22px', display: 'inline-flex', alignItems: 'center', gap: 8 }} onClick={() => navigate('/brand/creators')}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3" /><circle cx="16" cy="9" r="2.5" /><path d="M3 19a6 6 0 0 1 12 0M14 18a5 5 0 0 1 7-1" /></svg> Hitta kreatörer
+        </button>
+      </div>
+
+      <div className="stat-row" style={{ gridTemplateColumns: 'repeat(5,minmax(0,1fr))' }}>
+        <Stat label="Totalt skickade" value={stats?.totalSent ?? 0} />
+        <Stat label="Väntar (osedda)" value={stats?.pending ?? 0} />
+        <Stat label="Sedda" value={stats?.viewed ?? 0} />
+        <Stat label="Accepterade" value={stats?.accepted ?? 0} />
+        <Stat label="Nekade" value={stats?.declined ?? 0} />
       </div>
 
       {stats && stats.byCategory.length > 0 && (
-        <Card>
-          <h2 className="font-semibold mb-3">Per kategori</h2>
-          <div className="flex flex-wrap gap-2">
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="sec-head"><h3>Per kategori</h3></div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {stats.byCategory.map((c) => (
-              <button key={c.category}
-                onClick={() => { setCategory(category === c.category ? undefined : c.category); setPage(1); }}
-                className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${category === c.category
-                  ? 'bg-primary border-primary text-white'
-                  : 'bg-transparent border-border text-muted-foreground hover:border-primary'}`}>
-                {c.category} <span className="font-bold ml-1">{c.count}</span>
+              <button key={c.category} className={`tab${category === c.category ? ' active' : ''}`} onClick={() => { setCategory(category === c.category ? undefined : c.category); setPage(1); }}>
+                {c.category} <b style={{ marginLeft: 4 }}>{c.count}</b>
               </button>
             ))}
           </div>
-        </Card>
+        </div>
       )}
 
-      {/* Status filter */}
-      <div className="flex flex-wrap gap-2">
-        {['Alla', 'Sent', 'Viewed', 'Accepted', 'Declined', 'Withdrawn'].map((s) => (
-          <Button key={s} variant={status === (s === 'Alla' ? undefined : s) ? 'primary' : 'secondary'} size="sm"
-            onClick={() => { setStatus(s === 'Alla' ? undefined : s); setPage(1); }}>
-            {s === 'Alla' ? 'Alla' : s}
-          </Button>
-        ))}
+      <div className="tabs">
+        {tabs.map((t) => <button key={t.label} className={`tab${status === t.val ? ' active' : ''}`} onClick={() => { setStatus(t.val); setPage(1); }}>{t.label}</button>)}
       </div>
 
-      {isLoading ? <LoadingSpinner /> : data && data.data.length > 0 ? (
-        <>
-          <div className="space-y-3">
-            {data.data.map((offer) => <SentOfferRow key={offer.id} offer={offer} onWithdraw={() => withdraw.mutate(offer.id)} withdrawing={withdraw.isPending} />)}
-          </div>
+      {isLoading ? <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>Laddar…</div> : data && data.data.length > 0 ? (
+        <div className="card">
+          {data.data.map((offer) => <SentOfferRow key={offer.id} offer={offer} onWithdraw={() => withdraw.mutate(offer.id)} withdrawing={withdraw.isPending} />)}
           <Pagination page={page} totalCount={data.totalCount} pageSize={data.pageSize} onPageChange={setPage} />
-        </>
+        </div>
       ) : (
-        <EmptyState title="Inga PR-erbjudanden skickade"
-          description="Hitta kreatörer och skicka ditt första PR-erbjudande."
-          action={<Button onClick={() => navigate('/brand/creators')}>Hitta kreatörer</Button>} />
+        <div className="card" style={{ textAlign: 'center', padding: '54px 24px' }}>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>Inga PR-erbjudanden skickade</div>
+          <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8 }}>Hitta kreatörer och skicka ditt första PR-erbjudande.</div>
+          <button className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 22px', marginTop: 16 }} onClick={() => navigate('/brand/creators')}>Hitta kreatörer</button>
+        </div>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -89,38 +87,34 @@ function SentOfferRow({ offer, onWithdraw, withdrawing }: { offer: PrOffer; onWi
   const [open, setOpen] = useState(false);
   const canWithdraw = offer.status === 'Sent' || offer.status === 'Viewed';
   return (
-    <Card>
-      <div className="flex items-center justify-between gap-3 cursor-pointer" onClick={() => setOpen((v) => !v)}>
-        <div className="flex items-center gap-3 min-w-0">
-          {offer.creatorAvatarUrl
-            ? <img src={offer.creatorAvatarUrl} alt={offer.creatorName} className="h-9 w-9 rounded-full object-cover border border-border" />
-            : <div className="h-9 w-9 rounded-full bg-[hsl(var(--sand))] flex items-center justify-center text-sm font-bold">{offer.creatorName.charAt(0)}</div>}
-          <div className="min-w-0">
-            <p className="font-medium truncate">{offer.title}</p>
-            <p className="text-xs text-muted-foreground">Till {offer.creatorName} · {OFFER_TYPE_LABELS[offer.offerType] ?? offer.offerType} · {offer.category}</p>
-          </div>
+    <div className="list-row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0 }}>
+      <div className="vcamp" style={{ borderTop: 'none', paddingTop: 0, paddingBottom: open ? 12 : 0 }} onClick={() => setOpen((v) => !v)}>
+        {offer.creatorAvatarUrl
+          ? <img src={offer.creatorAvatarUrl} alt={offer.creatorName} className="vcamp-thumb" style={{ objectFit: 'cover' }} />
+          : <span className="vcamp-thumb" style={{ background: grad(offer.creatorName) }}><span className="brand-mono">{offer.creatorName.charAt(0).toUpperCase()}</span></span>}
+        <div className="vcamp-main">
+          <div className="vcamp-b">{offer.title}</div>
+          <div className="vcamp-m">Till {offer.creatorName} · {OFFER_TYPE_LABELS[offer.offerType] ?? offer.offerType} · {offer.category}</div>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <span className="text-xs text-muted-foreground hidden md:inline">{formatDate(offer.createdAt)}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '0 0 auto' }}>
+          <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>{formatDate(offer.createdAt)}</span>
           <StatusBadge status={offer.status} />
         </div>
       </div>
       {open && (
-        <div className="mt-3 pt-3 border-t border-border space-y-2 text-sm">
-          <p className="whitespace-pre-line">{offer.message}</p>
-          <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+        <div style={{ paddingTop: 12, borderTop: '1px solid rgba(241,168,143,.12)', fontSize: 13.5 }}>
+          <p style={{ whiteSpace: 'pre-line', color: 'var(--ink-2)', lineHeight: 1.5 }}>{offer.message}</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, fontSize: 12, color: 'var(--muted)', marginTop: 8 }}>
             {offer.compensationAmount != null && offer.compensationAmount > 0 && <span>Ersättning: {formatCurrency(offer.compensationAmount)}</span>}
             {offer.productDescription && <span>Utbud: {offer.productDescription}</span>}
             {offer.deadline && <span>Deadline: {formatDate(offer.deadline)}</span>}
             {offer.viewedAt && <span>Sedd: {formatDate(offer.viewedAt)}</span>}
             {offer.respondedAt && <span>Svar: {formatDate(offer.respondedAt)}</span>}
           </div>
-          {offer.responseMessage && <p className="text-sm">Kreatörens svar: <em>"{offer.responseMessage}"</em></p>}
-          {canWithdraw && (
-            <Button size="sm" variant="ghost" onClick={onWithdraw} disabled={withdrawing}>Dra tillbaka</Button>
-          )}
+          {offer.responseMessage && <p style={{ marginTop: 8 }}>Kreatörens svar: <em>"{offer.responseMessage}"</em></p>}
+          {canWithdraw && <button className="btn-outline" style={{ marginTop: 10, padding: '8px 16px', fontSize: 12.5 }} onClick={onWithdraw} disabled={withdrawing}>Dra tillbaka</button>}
         </div>
       )}
-    </Card>
+    </div>
   );
 }
