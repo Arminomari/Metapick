@@ -90,35 +90,76 @@ function OfferCard({ offer }: { offer: PrOffer }) {
   );
 }
 
-export function CreatorPrInboxPage() {
-  const [status, setStatus] = useState<string>();
-  const { data, isLoading } = useReceivedPrOffers(status);
+const VAL = (o: PrOffer) => (o.productValue ?? 0) + (o.compensationAmount ?? 0);
 
-  const tabs: { label: string; val?: string }[] = [
-    { label: 'Alla', val: undefined }, { label: 'Nya', val: 'Sent' }, { label: 'Sedda', val: 'Viewed' }, { label: 'Accepterade', val: 'Accepted' }, { label: 'Nekade', val: 'Declined' },
+export function CreatorPrInboxPage() {
+  const [tab, setTab] = useState<'all' | 'new' | 'active' | 'history'>('all');
+  const { data, isLoading } = useReceivedPrOffers();
+  const offers = data?.data ?? [];
+
+  const accepted = offers.filter((o) => o.status === 'Accepted' || o.status === 'Completed');
+  const inbox = offers.filter((o) => o.status === 'Sent' || o.status === 'Viewed');
+  const history = offers.filter((o) => o.status === 'Declined' || o.status === 'Completed');
+  const newCount = offers.filter((o) => o.status === 'Sent').length;
+  const valueReceived = accepted.reduce((s, o) => s + VAL(o), 0);
+
+  const shown = tab === 'new' ? inbox.filter((o) => o.status === 'Sent')
+    : tab === 'active' ? accepted
+    : tab === 'history' ? history
+    : offers;
+
+  const tabs: { key: typeof tab; label: string; n?: number }[] = [
+    { key: 'all', label: 'Alla', n: offers.length }, { key: 'new', label: 'Nya', n: newCount }, { key: 'active', label: 'Aktiva', n: accepted.length }, { key: 'history', label: 'Historik', n: history.length },
   ];
 
   return (
     <section className="view active reveal" data-view="proffers">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Dina <em>PR-erbjudanden</em></h1>
-          <p className="page-sub">Direkta PR-erbjudanden från företag och restauranger. Läs detaljerna och tacka ja eller nej.</p>
+          <h1 className="page-title">Din <em>PR-hubb</em></h1>
+          <p className="page-sub">Alla PR-erbjudanden du fått från företag, samlade. Acceptera, följ upp, och se det samlade värdet du behöver redovisa.</p>
+        </div>
+      </div>
+
+      <div className="vstat-row">
+        <div className="card vstat" style={{ background: 'linear-gradient(160deg,#fff,#FFF6F0)' }}>
+          <div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#d7f0e0,#a9dcc0)', color: '#2f7d52' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 10h18M7 15h4" /></svg></div>
+          <div className="vstat-lbl">PR-värde mottaget</div>
+          <div className="vstat-val">{formatCurrency(valueReceived)}</div>
+          <div className="vstat-sub"><span className="vmut">att redovisa · skattepliktigt</span></div>
+        </div>
+        <div className="card vstat">
+          <div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#FFE3D3,#FFC2A6)', color: '#9c4f31' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 7" /></svg></div>
+          <div className="vstat-lbl">Aktiva samarbeten</div>
+          <div className="vstat-val">{accepted.length}</div>
+          <div className="vstat-sub"><span className="vmut">accepterade PR</span></div>
+        </div>
+        <div className="card vstat">
+          <div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#EDE1FF,#cdb8f2)', color: '#6a4ea8' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m12 4 2.3 4.8 5.2.7-3.8 3.6.9 5.1L12 16l-4.6 2.8.9-5.1L4.5 9.5l5.2-.7z" /></svg></div>
+          <div className="vstat-lbl">Nya erbjudanden</div>
+          <div className="vstat-val">{newCount}</div>
+          <div className="vstat-sub"><span className="vmut">väntar på svar</span></div>
+        </div>
+        <div className="card vstat">
+          <div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#FFE9D2,#F2C58A)', color: '#9c6b1c' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="m3 7 9 6 9-6" /></svg></div>
+          <div className="vstat-lbl">Totalt mottagna</div>
+          <div className="vstat-val">{offers.length}</div>
+          <div className="vstat-sub"><span className="vmut">genom tiderna</span></div>
         </div>
       </div>
 
       <div className="tabs">
-        {tabs.map((t) => <button key={t.label} className={`tab${status === t.val ? ' active' : ''}`} onClick={() => setStatus(t.val)}>{t.label}</button>)}
+        {tabs.map((t) => <button key={t.key} className={`tab${tab === t.key ? ' active' : ''}`} onClick={() => setTab(t.key)}>{t.label}{t.n ? ` (${t.n})` : ''}</button>)}
       </div>
 
-      {isLoading ? <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>Laddar…</div> : data && data.data.length > 0 ? (
+      {isLoading ? <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>Laddar…</div> : shown.length > 0 ? (
         <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16 }}>
-          {data.data.map((offer) => <OfferCard key={offer.id} offer={offer} />)}
+          {shown.map((offer) => <OfferCard key={offer.id} offer={offer} />)}
         </div>
       ) : (
         <div className="card" style={{ textAlign: 'center', padding: '54px 24px' }}>
-          <div style={{ fontSize: 18, fontWeight: 700 }}>Inga PR-erbjudanden ännu</div>
-          <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8, maxWidth: 440, marginInline: 'auto' }}>När företag skickar dig ett PR-erbjudande dyker det upp här. Se till att din profil och portfölj är uppdaterad.</div>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>{tab === 'all' ? 'Inga PR-erbjudanden ännu' : 'Inget här ännu'}</div>
+          <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8, maxWidth: 440, marginInline: 'auto' }}>När företag skickar dig ett PR-erbjudande dyker det upp här. Se till att din profil och portfölj är uppdaterad så fler hittar dig.</div>
         </div>
       )}
     </section>

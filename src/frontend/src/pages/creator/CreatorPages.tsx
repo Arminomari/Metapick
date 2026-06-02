@@ -6,7 +6,7 @@ import { ChatPanel } from '@/components/ui/ChatPanel';
 import { ReviewSection, ReviewList } from '@/components/ui/ReviewSection';
 import { ALL_TAGS } from '@/lib/tags';
 import {
-  useBrowseCampaigns, useCreatorAssignments, useAssignmentDetail,
+  useBrowseCampaigns, useCreatorAssignments, useAssignmentDetail, useCampaignDetail,
   useCreatorPayouts, useApplyToCampaign, useSubmitVideo, useMyApplications,
   useCreatorProfile, useUpdateCreatorProfile,
   useTikTokStatus, useTikTokDisconnect,
@@ -264,6 +264,14 @@ export function CreatorAssignmentsPage() {
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
   const { data, isLoading } = useCreatorAssignments(status, page);
+  const { data: allAssignments } = useCreatorAssignments(undefined, 1);
+  const { data: myApps } = useMyApplications();
+
+  const all = allAssignments?.data ?? [];
+  const activeCount = all.filter((a) => ['Active', 'InProgress', 'Submitted', 'Approved'].includes(a.status)).length;
+  const totalViews = all.reduce((s, a) => s + (a.totalVerifiedViews || 0), 0);
+  const totalEarned = all.reduce((s, a) => s + (a.currentPayoutAmount || 0), 0);
+  const pendingApps = (myApps?.data ?? []).filter((a) => a.status === 'Pending');
 
   const tabs: { label: string; val?: string }[] = [
     { label: 'Alla', val: undefined }, { label: 'Aktiva', val: 'Active' }, { label: 'Avslutade', val: 'Completed' }, { label: 'Pausade', val: 'Paused' },
@@ -274,9 +282,20 @@ export function CreatorAssignmentsPage() {
       <div className="page-head">
         <div>
           <h1 className="page-title">Mina <em>kampanjer</em></h1>
-          <p className="page-sub">Dina aktiva samarbeten, verifierade views och vad du tjänat — allt på ett ställe.</p>
+          <p className="page-sub">Det du blivit godkänd till och kör just nu. Verifierade views, klick och intjäning per samarbete.</p>
         </div>
       </div>
+
+      <div className="vstat-row">
+        <div className="card vstat" style={{ background: 'linear-gradient(160deg,#fff,#FFF6F0)' }}>
+          <div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#d7f0e0,#a9dcc0)', color: '#2f7d52' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 7" /></svg></div>
+          <div className="vstat-lbl">Godkänd &amp; aktiv</div><div className="vstat-val">{activeCount}</div><div className="vstat-sub"><span className="vmut">pågående uppdrag</span></div>
+        </div>
+        <div className="card vstat"><div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#FFE3D3,#FFC2A6)', color: '#9c4f31' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg></div><div className="vstat-lbl">Verifierade views</div><div className="vstat-val">{formatNumber(totalViews)}</div><div className="vstat-sub"><span className="vmut">totalt</span></div></div>
+        <div className="card vstat"><div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#EDE1FF,#cdb8f2)', color: '#6a4ea8' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="9" cy="7" rx="6" ry="3" /><path d="M3 7v5c0 1.7 2.7 3 6 3" /><ellipse cx="15" cy="14" rx="6" ry="3" /></svg></div><div className="vstat-lbl">Intjänat</div><div className="vstat-val">{formatCurrency(totalEarned)}</div><div className="vstat-sub"><span className="vmut">över alla kampanjer</span></div></div>
+        <div className="card vstat"><div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#FFE9D2,#F2C58A)', color: '#9c6b1c' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg></div><div className="vstat-lbl">Väntande ansökningar</div><div className="vstat-val">{pendingApps.length}</div><div className="vstat-sub"><span className="vmut">väntar på svar</span></div></div>
+      </div>
+
       <div className="tabs">
         {tabs.map((t) => <button key={t.label} className={`tab${status === t.val ? ' active' : ''}`} onClick={() => { setStatus(t.val); setPage(1); }}>{t.label}</button>)}
       </div>
@@ -398,11 +417,21 @@ function AssignmentTable({ assignments, onRowClick }: { assignments: AssignmentL
 // ── Assignment detail ──────────────────────────────────
 export function AssignmentDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { data: assignment, isLoading } = useAssignmentDetail(id!);
+  const { data: campaign } = useCampaignDetail(assignment?.campaignId ?? '');
   const submitVideo = useSubmitVideo();
   const [videoUrl, setVideoUrl] = useState('');
 
   if (isLoading || !assignment) return <LoadingSpinner />;
+
+  const cpmRule = campaign?.payoutRules?.[0];
+  const payoutDesc = campaign ? (
+    campaign.payoutModel === 'CPM' ? `${cpmRule?.amount ?? 0} kr / 1 000 views`
+    : campaign.payoutModel === 'Tiered' ? 'Trappsteg per views'
+    : `${cpmRule?.amount ?? 0} kr vid ${formatNumber(cpmRule?.minViews ?? 0)}+ views`
+  ) : '—';
+  const daysLeft = campaign?.endDate ? Math.ceil((+new Date(campaign.endDate) - Date.now()) / 86400000) : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -412,6 +441,9 @@ export function AssignmentDetailPage() {
 
   return (
     <section className="view active reveal">
+      <button onClick={() => navigate('/creator/assignments')} className="view-all" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg> Mina kampanjer
+      </button>
       <div className="page-head">
         <div>
           <h1 className="page-title">{assignment.campaignName}</h1>
@@ -419,11 +451,34 @@ export function AssignmentDetailPage() {
         </div>
       </div>
 
-      <div className="stat-row" style={{ gridTemplateColumns: 'repeat(3,minmax(0,1fr))' }}>
+      <div className="stat-row">
         <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg></div><div><div className="lbl">Verifierade views</div><div className="val">{formatNumber(assignment.totalVerifiedViews)}</div></div></div></div>
-        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="9" cy="7" rx="6" ry="3" /><path d="M3 7v5c0 1.7 2.7 3 6 3" /><ellipse cx="15" cy="14" rx="6" ry="3" /></svg></div><div><div className="lbl">Aktuell ersättning</div><div className="val">{formatCurrency(assignment.currentPayoutAmount)}</div></div></div></div>
-        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="m9 12 2 2 4-4" /></svg></div><div><div className="lbl">Antal inlämningar</div><div className="val">{assignment.submissions.length}</div></div></div></div>
+        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="9" cy="7" rx="6" ry="3" /><path d="M3 7v5c0 1.7 2.7 3 6 3" /><ellipse cx="15" cy="14" rx="6" ry="3" /></svg></div><div><div className="lbl">Estimerad ersättning</div><div className="val">{formatCurrency(assignment.currentPayoutAmount)}</div></div></div></div>
+        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 10h18" /></svg></div><div><div className="lbl">Ersättningsmodell</div><div className="val" style={{ fontSize: 18 }}>{payoutDesc}</div></div></div></div>
+        <div className="card stat"><div className="top"><div className="ico amber"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg></div><div><div className="lbl">{daysLeft != null && daysLeft >= 0 ? 'Slutar om' : 'Slutdatum'}</div><div className="val" style={{ fontSize: 20 }}>{daysLeft != null && daysLeft >= 0 ? `${daysLeft} dgr` : campaign?.endDate ? formatDate(campaign.endDate) : '—'}</div></div></div></div>
       </div>
+
+      {campaign && (campaign.requirements?.length > 0 || campaign.contentInstructions || campaign.perks) && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="sec-head"><h3>Kampanjkrav &amp; brief</h3><span style={{ fontSize: 13, color: 'var(--muted)' }}>{campaign.category} · {formatDate(campaign.startDate)} – {formatDate(campaign.endDate)}</span></div>
+          {campaign.contentInstructions && <p style={{ fontSize: 13.5, color: 'var(--ink-2)', lineHeight: 1.6, marginBottom: 14 }}>{campaign.contentInstructions}</p>}
+          {campaign.requirements?.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+              {campaign.requirements.map((r, i) => (
+                <div key={i} className="vrep-row" style={{ fontSize: 13 }}>
+                  <span className="vrep-ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 7" /></svg></span>
+                  {r.value || r.requirementType}{r.isRequired && <span className="badge green" style={{ marginLeft: 8 }}>Krav</span>}
+                </div>
+              ))}
+            </div>
+          )}
+          {campaign.perks && (
+            <div style={{ marginTop: 14, padding: 14, borderRadius: 14, background: 'linear-gradient(135deg,rgba(255,216,199,.5),rgba(237,225,255,.4))', fontSize: 13 }}>
+              <b style={{ color: '#9c4f31' }}>Förmåner:</b> {campaign.perks}
+            </div>
+          )}
+        </div>
+      )}
 
       {assignment.trackingTag && (
         <div className="card" style={{ marginBottom: 16 }}>
