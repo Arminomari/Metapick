@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useCreatorAssignments, useCreatorProfile, useCreatorPayouts } from '@/hooks/api';
 import { formatCurrency, formatNumber } from '@/lib/utils';
+import { AreaChart, Donut, MiniBars, VizDefs, BLUSH } from '@/components/vyrle/Viz';
 
 const GRADS = [
   'linear-gradient(135deg,#FFD8C7,#F1A88F)',
@@ -16,57 +17,151 @@ function Arrow() {
 }
 
 /* ───────────────────────── Analytics ───────────────────────── */
+function shortMoney(n: number) {
+  if (n >= 1e6) return (n / 1e6).toFixed(1).replace('.0', '') + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1).replace('.0', '') + 'K';
+  return String(Math.round(n));
+}
+
 export function CreatorAnalyticsPage() {
   const { data: res, isLoading } = useCreatorAssignments();
+  const { data: profile } = useCreatorProfile();
   const assignments = res?.data ?? [];
 
   const totalViews = assignments.reduce((s, a) => s + (a.totalVerifiedViews || 0), 0);
   const totalClicks = assignments.reduce((s, a) => s + (a.totalTrackedClicks || 0), 0);
   const totalEarned = assignments.reduce((s, a) => s + (a.currentPayoutAmount || 0), 0);
   const ctr = totalViews ? (totalClicks / totalViews) * 100 : 0;
-  const maxViews = Math.max(1, ...assignments.map((a) => a.totalVerifiedViews || 0));
+  const live = assignments.filter((a) => ['Active', 'InProgress', 'Submitted', 'Approved'].includes(a.status)).length;
+  const earningPerView = totalViews ? (totalEarned / totalViews) * 1000 : 0; // per 1k views
+  const avgViews = assignments.length ? totalViews / assignments.length : 0;
+
   const ranked = [...assignments].sort((a, b) => (b.totalVerifiedViews || 0) - (a.totalVerifiedViews || 0));
+  const maxViews = Math.max(1, ...ranked.map((a) => a.totalVerifiedViews || 0));
+
+  // earnings split by campaign (real)
+  const earners = ranked.filter((a) => (a.currentPayoutAmount || 0) > 0).sort((a, b) => b.currentPayoutAmount - a.currentPayoutAmount);
+  const earnSegments = earners.slice(0, 8).map((a, i) => ({ value: a.currentPayoutAmount, color: BLUSH[i % BLUSH.length] }));
+
+  // views-by-campaign chart series (oldest → newest by assignedAt so it reads as a trend)
+  const byTime = [...assignments].sort((a, b) => +new Date(a.assignedAt) - +new Date(b.assignedAt)).slice(-10);
+  const chartVals = byTime.map((a) => a.totalVerifiedViews || 0);
+  const chartLabels = byTime.map((a) => a.campaignName);
 
   return (
     <section className="view active reveal" data-view="analytics">
+      <VizDefs />
       <div className="page-head">
         <div>
-          <h1 className="page-title">Analytics</h1>
-          <p className="page-sub">Verified views, tracked clicks and earnings across every campaign you have run. All numbers come straight from your verified TikTok performance.</p>
+          <h1 className="page-title">Know your <em>numbers</em></h1>
+          <p className="page-sub">A clear read on reach, performance and what actually pays. Every figure is your verified, attributed performance — no estimates.</p>
         </div>
       </div>
 
       {isLoading ? (
         <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>Loading…</div>
       ) : assignments.length === 0 ? (
-        <EmptyCard title="No analytics yet" sub="Once you join a campaign and your videos go live, your verified performance shows up here." cta="Discover campaigns" to="/creator/browse" />
+        <EmptyCard title="No analytics yet" sub="Once you join a campaign and your videos go live, your verified performance shows up here — reach, clicks and earnings, all in one place." cta="Discover campaigns" to="/creator/browse" />
       ) : (
         <>
-          <div className="stat-row">
-            <Stat label="Verified views" val={formatNumber(totalViews)} />
-            <Stat label="Tracked clicks" val={formatNumber(totalClicks)} />
-            <Stat label="Click through rate" val={ctr.toFixed(2) + '%'} />
-            <Stat label="Earnings" val={formatCurrency(totalEarned)} />
+          <div className="vstat-row">
+            <BigStat label="Verified views" val={formatNumber(totalViews)} hint={`across ${assignments.length} campaign${assignments.length === 1 ? '' : 's'}`} tint="peach" featured />
+            <BigStat label="Tracked clicks" val={formatNumber(totalClicks)} hint={`${ctr.toFixed(2)}% click-through`} tint="lilac" />
+            <BigStat label="Earnings" val={formatCurrency(totalEarned)} hint={`${formatCurrency(earningPerView)} / 1K views`} tint="green" money />
+            <BigStat label="Live campaigns" val={String(live)} hint={`${formatNumber(Math.round(avgViews))} avg views`} tint="amber" />
           </div>
 
-          <div className="card">
-            <div className="sec-head"><h3>Performance by campaign</h3><Link to="/creator/assignments" className="view-all">My campaigns</Link></div>
-            {ranked.map((a) => (
-              <div key={a.id} className="list-row">
-                <span className="mono sq" style={{ background: grad(a.campaignName) }}>{initial(a.campaignName)}</span>
-                <div className="row-main" style={{ flex: 1 }}>
-                  <div className="t">{a.campaignName}</div>
-                  <div className="progress-line" style={{ maxWidth: 360 }}><span style={{ width: `${Math.round(((a.totalVerifiedViews || 0) / maxViews) * 100)}%` }} /></div>
-                </div>
-                <div style={{ textAlign: 'right', minWidth: 86 }}><div className="t">{formatNumber(a.totalVerifiedViews || 0)}</div><div className="s">views</div></div>
-                <div style={{ textAlign: 'right', minWidth: 70 }}><div className="t">{formatNumber(a.totalTrackedClicks || 0)}</div><div className="s">clicks</div></div>
-                <div style={{ textAlign: 'right', minWidth: 90 }}><div className="t">{formatCurrency(a.currentPayoutAmount || 0)}</div><div className="s">earned</div></div>
+          <div className="vtop">
+            <div className="card vperf">
+              <div className="vperf-head"><h3>Views by campaign</h3><span className="vchip">{byTime.length} most recent</span></div>
+              {chartVals.length >= 2 ? (
+                <AreaChart id="anViews" values={chartVals} labels={chartLabels} fmtY={shortMoney} height={280} />
+              ) : (
+                <div style={{ padding: '50px 10px', textAlign: 'center', color: 'var(--muted)' }}>Run a couple of campaigns and your view trend draws itself here.</div>
+              )}
+              <div className="vperf-foot">
+                <div className="vf-stat"><div className="vf-l">Total reach</div><div className="vf-v">{formatNumber(totalViews)}</div></div>
+                <div className="vf-stat"><div className="vf-l">Best campaign</div><div className="vf-v">{ranked[0] ? formatNumber(ranked[0].totalVerifiedViews) : '—'}</div></div>
+                <div className="vf-stat"><div className="vf-l">Click-through</div><div className="vf-v">{ctr.toFixed(2)}%</div></div>
+                <Link className="vperf-link" to="/creator/assignments" style={{ margin: 0 }}>My campaigns <Arrow /></Link>
               </div>
-            ))}
+            </div>
+
+            <div className="card vrep">
+              <div className="vperf-head"><h3>Where you earn</h3></div>
+              {earnSegments.length ? (
+                <>
+                  <Donut size={170} segments={earnSegments}>
+                    <div className="vrep-num" style={{ fontSize: 30 }}>{formatCurrency(totalEarned)}</div>
+                    <div className="vrep-lbl" style={{ color: 'var(--muted)', fontWeight: 600 }}>total earned</div>
+                  </Donut>
+                  <div className="an-legend" style={{ marginTop: 'auto' }}>
+                    {earners.slice(0, 4).map((a, i) => (
+                      <div className="li" key={a.id}><span className="dotc" style={{ background: BLUSH[i % BLUSH.length] }} />{a.campaignName}<span className="lv">{formatCurrency(a.currentPayoutAmount)}</span></div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div style={{ padding: '40px 10px', textAlign: 'center', color: 'var(--muted)' }}>No earnings tracked yet. Once a campaign pays out, the split shows here.</div>
+              )}
+              <Link className="vperf-link" to="/creator/earnings" style={{ marginTop: 18 }}>Open earnings <Arrow /></Link>
+            </div>
+          </div>
+
+          <div className="vcsplit" style={{ marginTop: 18 }}>
+            <div className="card">
+              <div className="vperf-head"><h3>Top performing content</h3></div>
+              {ranked.slice(0, 5).map((a) => (
+                <div key={a.id} className="vcamp" style={{ cursor: 'default' }}>
+                  <span className="vcamp-thumb" style={{ background: grad(a.campaignName) }}><span className="brand-mono">{initial(a.campaignName)}</span></span>
+                  <div className="vcamp-main">
+                    <div className="vcamp-b">{a.campaignName}</div>
+                    <div className="progress-line" style={{ maxWidth: 260, marginTop: 6 }}><span style={{ width: `${Math.round(((a.totalVerifiedViews || 0) / maxViews) * 100)}%` }} /></div>
+                  </div>
+                  <div className="vcamp-end"><div className="vcamp-k">Views</div><div className="vcamp-v">{formatNumber(a.totalVerifiedViews || 0)}</div></div>
+                  <div className="vcamp-end"><div className="vcamp-k">Clicks</div><div className="vcamp-v">{formatNumber(a.totalTrackedClicks || 0)}</div></div>
+                </div>
+              ))}
+            </div>
+
+            <div className="card">
+              <div className="vperf-head"><h3>Reach &amp; monetization</h3></div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: 'var(--muted)', marginBottom: 6 }}><span>Audience</span><span>{formatNumber(profile?.followerCount ?? 0)} followers</span></div>
+                  <MiniBars rows={[
+                    { label: 'Click-through', pct: Math.min(100, ctr * 8), value: ctr.toFixed(2) + '%' },
+                    { label: 'Earn / 1K views', pct: Math.min(100, earningPerView * 2), value: formatCurrency(earningPerView) },
+                    { label: 'Avg views', pct: Math.min(100, (avgViews / maxViews) * 100), value: shortMoney(avgViews) },
+                  ]} />
+                </div>
+                <div style={{ borderTop: '1px solid rgba(241,168,143,.12)', paddingTop: 14, display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 14 }}>
+                  <div><div className="vcamp-k">Total clicks</div><div className="vcamp-v" style={{ fontSize: 18 }}>{formatNumber(totalClicks)}</div></div>
+                  <div><div className="vcamp-k">Campaigns run</div><div className="vcamp-v" style={{ fontSize: 18 }}>{assignments.length}</div></div>
+                </div>
+              </div>
+            </div>
           </div>
         </>
       )}
     </section>
+  );
+}
+
+function BigStat({ label, val, hint, tint, featured, money }: { label: string; val: string; hint?: string; tint: 'peach' | 'lilac' | 'green' | 'amber'; featured?: boolean; money?: boolean }) {
+  const ic: Record<string, string> = {
+    peach: 'linear-gradient(140deg,#FFE3D3,#FFC2A6)', lilac: 'linear-gradient(140deg,#EDE1FF,#cdb8f2)', green: 'linear-gradient(140deg,#d7f0e0,#a9dcc0)', amber: 'linear-gradient(140deg,#FFE9D2,#F2C58A)',
+  };
+  const col: Record<string, string> = { peach: '#9c4f31', lilac: '#6a4ea8', green: '#2f7d52', amber: '#9c6b1c' };
+  return (
+    <div className="card vstat">
+      <div className="vstat-ico" style={{ background: ic[tint], color: col[tint] }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M5 20V10M12 20V4M19 20v-6" /></svg>
+      </div>
+      <div className="vstat-lbl">{label}</div>
+      <div className="vstat-val" style={featured || money ? undefined : undefined}>{val}</div>
+      {hint && <div className="vstat-sub"><span className="vmut">{hint}</span></div>}
+    </div>
   );
 }
 
@@ -216,17 +311,6 @@ export function CreatorSavedPage() {
 }
 
 /* ───────────────────────── shared bits ───────────────────────── */
-function Stat({ label, val }: { label: string; val: string }) {
-  return (
-    <div className="card stat">
-      <div className="top">
-        <div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 20V10M12 20V4M19 20v-6" /></svg></div>
-        <div><div className="lbl">{label}</div><div className="val">{val}</div></div>
-      </div>
-    </div>
-  );
-}
-
 function EmptyCard({ title, sub, cta, to }: { title: string; sub: string; cta: string; to: string }) {
   return (
     <div className="card" style={{ textAlign: 'center', padding: '54px 24px' }}>

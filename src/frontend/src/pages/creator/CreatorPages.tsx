@@ -15,6 +15,7 @@ import {
 import api from '@/lib/api';
 import { Button, Card, DataTable, EmptyState, LoadingSpinner, Pagination, StatCard, StatusBadge, type Column } from '@/components/ui';
 import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
+import { Donut, VizDefs, BLUSH } from '@/components/vyrle/Viz';
 import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
 import type { AssignmentListItem } from '@/types';
 
@@ -555,44 +556,142 @@ export function EarningsPage() {
 
   if (isLoading) return <LoadingSpinner />;
   const payouts = data?.data ?? [];
-  const totalEarned = (assignments?.data ?? []).reduce((sum, a) => sum + a.currentPayoutAmount, 0);
-  const sent = payouts.filter((p) => p.status === 'Approved' || p.status === 'Completed' || p.status === 'Processing')
-    .reduce((sum, p) => sum + p.amount, 0);
-  const pending = Math.max(totalEarned - sent, 0);
+  const totalAccrued = (assignments?.data ?? []).reduce((sum, a) => sum + a.currentPayoutAmount, 0);
+
+  const pendingList = payouts.filter((p) => p.status === 'Pending');
+  const approvedList = payouts.filter((p) => p.status === 'Approved' || p.status === 'Processing');
+  const paidList = payouts.filter((p) => p.status === 'Completed');
+
+  const pending = pendingList.reduce((s, p) => s + p.amount, 0);
+  const approved = approvedList.reduce((s, p) => s + p.amount, 0);
+  const paid = paidList.reduce((s, p) => s + p.amount, 0);
+  const lifetime = Math.max(totalAccrued, paid + approved + pending);
+
+  const donutSegs = [
+    { value: paid, color: BLUSH[2] },
+    { value: approved, color: BLUSH[0] },
+    { value: pending, color: BLUSH[3] },
+  ].filter((s) => s.value > 0);
+
+  // top earning brands (real, from paid+approved)
+  const byCampaign = new Map<string, number>();
+  payouts.forEach((p) => byCampaign.set(p.campaignName, (byCampaign.get(p.campaignName) ?? 0) + p.amount));
+  const topBrands = [...byCampaign.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4);
+  const maxBrand = Math.max(1, ...topBrands.map((b) => b[1]));
 
   return (
     <section className="view active reveal" data-view="earnings">
+      <VizDefs />
       <div className="page-head">
         <div>
-          <h1 className="page-title">Din <em>intjäning</em></h1>
-          <p className="page-sub">Vad du tjänat, vad företagen skickat och vad som väntar på utbetalning. Allt hämtas direkt från dina verifierade resultat.</p>
+          <h1 className="page-title">Track your <em>earnings</em></h1>
+          <p className="page-sub">Pending, approved and paid — exactly where every krona stands. Pulled straight from your verified payouts, nothing estimated.</p>
         </div>
       </div>
 
-      <div className="stat-row">
-        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="9" cy="7" rx="6" ry="3" /><path d="M3 7v5c0 1.7 2.7 3 6 3M3 12v5c0 1.7 2.7 3 6 3" /><ellipse cx="15" cy="14" rx="6" ry="3" /></svg></div><div><div className="lbl">Totalt intjänat</div><div className="val">{formatCurrency(totalEarned)}</div></div></div></div>
-        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 7" /></svg></div><div><div className="lbl">Skickat av företag</div><div className="val">{formatCurrency(sent)}</div></div></div></div>
-        <div className="card stat"><div className="top"><div className="ico amber"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg></div><div><div className="lbl">Kvar att betala</div><div className="val">{formatCurrency(pending)}</div></div></div></div>
+      {/* ── the three states that matter ── */}
+      <div className="vstat-row" style={{ gridTemplateColumns: 'repeat(3,minmax(0,1fr))' }}>
+        <PayoutState tone="amber" label="Pending" amount={pending} count={pendingList.length} sub="awaiting brand approval"
+          icon={<><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>} />
+        <PayoutState tone="lilac" label="Approved" amount={approved} count={approvedList.length} sub="cleared, on the way"
+          icon={<path d="m5 12 4 4L19 7" />} />
+        <PayoutState tone="green" label="Paid out" amount={paid} count={paidList.length} sub="landed in your account" featured
+          icon={<><ellipse cx="9" cy="7" rx="6" ry="3" /><path d="M3 7v5c0 1.7 2.7 3 6 3M3 12v5c0 1.7 2.7 3 6 3" /><ellipse cx="15" cy="14" rx="6" ry="3" /></>} />
       </div>
 
-      <div className="card">
-        <div className="sec-head"><h3>Utbetalningar</h3></div>
-        {payouts.length ? payouts.map((p) => (
-          <div key={p.id} className="list-row">
-            <span className="mono sq" style={{ background: grad(p.campaignName) }}>{initial(p.campaignName)}</span>
-            <div className="row-main" style={{ flex: 1 }}>
-              <div className="t">{p.campaignName}</div>
-              <div className="s">Registrerad {formatDate(p.createdAt)}{p.paidAt ? ` · skickad ${formatDate(p.paidAt)}` : ''}</div>
+      <div className="vtop">
+        {/* overview + breakdown */}
+        <div className="card vperf">
+          <div className="vperf-head"><h3>Earnings overview</h3><span className="vchip">{payouts.length} payout{payouts.length === 1 ? '' : 's'}</span></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}>
+            {donutSegs.length ? (
+              <Donut size={150} segments={donutSegs}>
+                <div className="vrep-num" style={{ fontSize: 26 }}>{formatCurrency(lifetime)}</div>
+                <div className="vrep-lbl" style={{ color: 'var(--muted)', fontWeight: 600 }}>lifetime</div>
+              </Donut>
+            ) : (
+              <div style={{ width: 150, height: 150, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 13, textAlign: 'center' }}>No payouts yet</div>
+            )}
+            <div className="an-legend" style={{ flex: 1, minWidth: 200 }}>
+              <div className="li"><span className="dotc" style={{ background: BLUSH[2] }} />Paid out<span className="lv">{formatCurrency(paid)}</span></div>
+              <div className="li"><span className="dotc" style={{ background: BLUSH[0] }} />Approved<span className="lv">{formatCurrency(approved)}</span></div>
+              <div className="li"><span className="dotc" style={{ background: BLUSH[3] }} />Pending<span className="lv">{formatCurrency(pending)}</span></div>
+              {totalAccrued > paid + approved + pending && (
+                <div className="li"><span className="dotc" style={{ background: BLUSH[7] }} />Accruing<span className="lv">{formatCurrency(totalAccrued - paid - approved - pending)}</span></div>
+              )}
             </div>
-            <StatusBadge status={p.status} />
-            <div style={{ textAlign: 'right', minWidth: 90 }}><div className="t">{formatCurrency(p.amount)}</div></div>
           </div>
-        )) : (
-          <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--muted)' }}>Inga utbetalningar än. När en kampanj betalas ut dyker den upp här.</div>
+          <div className="vperf-foot">
+            <div className="vf-stat"><div className="vf-l">Lifetime earned</div><div className="vf-v">{formatCurrency(lifetime)}</div></div>
+            <div className="vf-stat"><div className="vf-l">Avg / payout</div><div className="vf-v">{formatCurrency(payouts.length ? (paid + approved + pending) / payouts.length : 0)}</div></div>
+            <div className="vf-stat"><div className="vf-l">Paid rate</div><div className="vf-v">{payouts.length ? Math.round((paidList.length / payouts.length) * 100) : 0}%</div></div>
+          </div>
+        </div>
+
+        {/* top earning brands */}
+        <div className="card vrep">
+          <div className="vperf-head"><h3>Top earning brands</h3></div>
+          {topBrands.length ? (
+            <div style={{ marginTop: 6 }}>
+              {topBrands.map(([name, amt]) => (
+                <div className="minibar" key={name}><span className="nm" style={{ width: 110, flex: '0 0 110px' }}>{name}</span><span className="track"><span style={{ width: `${Math.round((amt / maxBrand) * 100)}%` }} /></span><span className="pct">{formatCurrency(amt)}</span></div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ padding: '30px 6px', textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Your top paying partners will appear here.</div>
+          )}
+          <div className="vrep-rows" style={{ marginTop: 'auto' }}>
+            <div className="vrep-row"><span className="vrep-ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg></span>Accrued (not requested)<b>{formatCurrency(Math.max(0, totalAccrued - paid - approved - pending))}</b></div>
+          </div>
+        </div>
+      </div>
+
+      {/* pending detail */}
+      {pendingList.length > 0 && (
+        <div className="card" style={{ marginTop: 18 }}>
+          <div className="sec-head"><h3>Pending payouts <span className="badge amber">{pendingList.length}</span></h3></div>
+          {pendingList.map((p) => <PayoutRow key={p.id} p={p} />)}
+        </div>
+      )}
+
+      {/* all payouts */}
+      <div className="card" style={{ marginTop: 18 }}>
+        <div className="sec-head"><h3>Payout history</h3></div>
+        {payouts.length ? payouts.map((p) => <PayoutRow key={p.id} p={p} />) : (
+          <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--muted)' }}>No payouts yet. When a campaign pays out, it shows up here.</div>
         )}
         {data && <Pagination page={page} totalCount={data.totalCount} pageSize={data.pageSize} onPageChange={setPage} />}
       </div>
     </section>
+  );
+}
+
+function PayoutState({ tone, label, amount, count, sub, icon, featured }: { tone: 'amber' | 'lilac' | 'green'; label: string; amount: number; count: number; sub: string; icon: React.ReactNode; featured?: boolean }) {
+  const ic = { amber: 'linear-gradient(140deg,#FFE9D2,#F2C58A)', lilac: 'linear-gradient(140deg,#EDE1FF,#cdb8f2)', green: 'linear-gradient(140deg,#d7f0e0,#a9dcc0)' };
+  const col = { amber: '#9c6b1c', lilac: '#6a4ea8', green: '#2f7d52' };
+  return (
+    <div className="card vstat" style={featured ? { background: 'linear-gradient(160deg,#fff,#FFF6F0)' } : undefined}>
+      <div className="vstat-ico" style={{ background: ic[tone], color: col[tone] }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{icon}</svg>
+      </div>
+      <div className="vstat-lbl">{label}</div>
+      <div className="vstat-val">{formatCurrency(amount)}</div>
+      <div className="vstat-sub"><span className="vmut">{count} payout{count === 1 ? '' : 's'} · {sub}</span></div>
+    </div>
+  );
+}
+
+function PayoutRow({ p }: { p: import('@/types').PayoutRequest }) {
+  return (
+    <div className="list-row">
+      <span className="mono sq" style={{ background: grad(p.campaignName) }}>{initial(p.campaignName)}</span>
+      <div className="row-main" style={{ flex: 1 }}>
+        <div className="t">{p.campaignName}</div>
+        <div className="s">Logged {formatDate(p.createdAt)}{p.paidAt ? ` · paid ${formatDate(p.paidAt)}` : ''}{p.payoutMethod ? ` · ${p.payoutMethod}` : ''}</div>
+      </div>
+      <StatusBadge status={p.status} />
+      <div style={{ textAlign: 'right', minWidth: 96 }}><div className="t">{formatCurrency(p.amount)}</div></div>
+    </div>
   );
 }
 
