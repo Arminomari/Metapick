@@ -33,7 +33,7 @@ export function LoginPage() {
     try {
       const data = await login.mutateAsync({ email, password });
       authStore.login(data);
-      navigate(data.role === 'Admin' ? '/admin' : data.role === 'Brand' ? '/brand' : '/studio');
+      navigate(data.role === 'Admin' ? '/admin' : data.role === 'Brand' ? '/brand' : '/creator');
     } catch (err: any) {
       const msg = err?.response?.data?.error?.message || 'Fel e-post eller lösenord';
       setError(msg);

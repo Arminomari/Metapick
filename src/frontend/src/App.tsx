@@ -108,7 +108,7 @@ function RoleRedirect() {
   switch (role) {
     case 'Admin': return <Navigate to="/admin" replace />;
     case 'Brand': return <Navigate to="/brand" replace />;
-    case 'Creator': return <Navigate to="/studio" replace />;
+    case 'Creator': return <Navigate to="/creator" replace />;
     default: return <Navigate to="/" replace />;
   }
 }
