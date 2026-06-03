@@ -283,14 +283,23 @@ public record CampaignEarningDto(
 public record CampaignAnalyticsDto(
     Guid CampaignId, long TotalViews, long TotalClicks, int TotalCreators, decimal TotalPayoutEstimate,
     decimal BudgetSpent, decimal BudgetRemaining,
-    List<CreatorPerformanceDto> CreatorPerformance);
+    List<CreatorPerformanceDto> CreatorPerformance,
+    // Engagement aggregates (from discovered TikTok posts). Saves are not exposed by the TikTok API yet -> always 0.
+    long TotalLikes = 0, long TotalComments = 0, long TotalShares = 0, long TotalSaves = 0,
+    long Views24h = 0, int TotalPosts = 0);
 
 public record CreatorPerformanceDto(
     Guid AssignmentId, Guid CreatorId, string DisplayName, long Views, long Clicks, decimal ClickThroughRate, decimal PayoutAmount, string Status,
     string PayoutStatus, DateTime? PaidAt,
     List<CreatorVideoDto> Videos);
 
-public record CreatorVideoDto(Guid? SubmissionId, string VideoUrl, string? VideoId, long Views, long Clicks, string Status, string? RejectionReason, DateTime CreatedAt);
+public record CreatorVideoDto(
+    Guid? SubmissionId, string VideoUrl, string? VideoId, long Views, long Clicks, string Status, string? RejectionReason, DateTime CreatedAt,
+    long Likes = 0, long Comments = 0, long Shares = 0, int? DurationSeconds = null, DateTime? PublishedAt = null, List<string>? Hashtags = null);
+
+// Platform-wide CPM benchmark so brands can see how their campaigns compare to the market.
+public record MarketBenchmarkDto(decimal MarketCpm, long TotalViews, decimal TotalSpend, List<NicheBenchmarkDto> ByCategory);
+public record NicheBenchmarkDto(string Category, decimal Cpm, long Views, long AvgViewsPerCampaign, int Campaigns);
 
 // ──── Notification ────
 public record NotificationDto(

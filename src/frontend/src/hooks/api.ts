@@ -6,6 +6,7 @@ import type {
   AssignmentListItem,
   AuthResponse,
   CampaignAnalytics,
+  MarketBenchmark,
   CampaignBrowseItem,
   CampaignDetail,
   CampaignListItem,
@@ -210,6 +211,17 @@ export function useBrandAnalytics() {
   const analytics = analyticsQs.map((q) => q.data).filter(Boolean) as CampaignAnalytics[];
   const isLoading = campaignsQ.isLoading || (campaigns.length > 0 && analyticsQs.some((q) => q.isLoading));
   return { campaigns, analytics, isLoading };
+}
+
+export function useMarketBenchmarks() {
+  return useQuery({
+    queryKey: ['market-benchmarks'],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<MarketBenchmark>>('/campaigns/market-benchmarks');
+      return res.data.data;
+    },
+    staleTime: 5 * 60_000,
+  });
 }
 
 export function useCreateCampaign() {

@@ -406,6 +406,27 @@ export interface CampaignAnalytics {
   budgetSpent: number;
   budgetRemaining: number;
   creatorPerformance: CreatorPerformance[];
+  totalLikes: number;
+  totalComments: number;
+  totalShares: number;
+  totalSaves: number;
+  views24h: number;
+  totalPosts: number;
+}
+
+export interface MarketBenchmark {
+  marketCpm: number;
+  totalViews: number;
+  totalSpend: number;
+  byCategory: NicheBenchmark[];
+}
+
+export interface NicheBenchmark {
+  category: string;
+  cpm: number;
+  views: number;
+  avgViewsPerCampaign: number;
+  campaigns: number;
 }
 
 export interface CreatorPerformance {
@@ -431,6 +452,12 @@ export interface CreatorVideo {
   status: string;
   rejectionReason?: string;
   createdAt: string;
+  likes: number;
+  comments: number;
+  shares: number;
+  durationSeconds?: number | null;
+  publishedAt?: string | null;
+  hashtags?: string[];
 }
 
 // ── API response wrapper ───────────────────────────────

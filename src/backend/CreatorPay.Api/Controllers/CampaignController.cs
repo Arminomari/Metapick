@@ -85,4 +85,10 @@ public class CampaignController : BaseController
     [Authorize(Policy = "BrandOnly")]
     public async Task<IActionResult> Analytics(Guid id, CancellationToken ct)
         => ToActionResult(await _campaigns.GetCampaignAnalyticsAsync(id, GetUserId(), ct));
+
+    /// <summary>Marknads-CPM och nisch-benchmarks över hela plattformen (Brand)</summary>
+    [HttpGet("market-benchmarks")]
+    [Authorize(Policy = "BrandOnly")]
+    public async Task<IActionResult> MarketBenchmarks(CancellationToken ct)
+        => ToActionResult(await _campaigns.GetMarketBenchmarksAsync(ct));
 }

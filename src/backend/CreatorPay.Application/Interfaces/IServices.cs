@@ -82,6 +82,7 @@ public interface ICampaignService
     Task<Result<PagedResult<CampaignBrowseDto>>> BrowseCampaignsAsync(string? category, string? country, int page, int pageSize, CancellationToken ct = default);
     Task<Result<CursorPagedResult<CampaignBrowseDto>>> BrowseCampaignsWithCursorAsync(string? category, string? country, string? cursor, int pageSize, CancellationToken ct = default);
     Task<Result<CampaignAnalyticsDto>> GetCampaignAnalyticsAsync(Guid campaignId, Guid brandUserId, CancellationToken ct = default);
+    Task<Result<MarketBenchmarkDto>> GetMarketBenchmarksAsync(CancellationToken ct = default);
     Task<Result<PagedResult<AdminCampaignDto>>> ListPendingReviewCampaignsAsync(int page, int pageSize, CancellationToken ct = default);
     Task<Result<CampaignDetailDto>> ApproveCampaignAsync(Guid campaignId, Guid adminId, CancellationToken ct = default);
     Task<Result<CampaignDetailDto>> RejectCampaignAsync(Guid campaignId, Guid adminId, string reason, CancellationToken ct = default);

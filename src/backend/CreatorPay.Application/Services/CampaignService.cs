@@ -488,7 +488,7 @@ public class CampaignService : ICampaignService
 
         var campaign = await _campaigns.Query()
             .Include(c => c.Assignments).ThenInclude(a => a.CreatorProfile)
-            .Include(c => c.Assignments).ThenInclude(a => a.SocialPosts)
+            .Include(c => c.Assignments).ThenInclude(a => a.SocialPosts).ThenInclude(sp => sp.MetricSnapshots)
             .Include(c => c.Assignments).ThenInclude(a => a.TrackingLinks)
             .Include(c => c.Assignments).ThenInclude(a => a.Submissions)
             .Include(c => c.Assignments).ThenInclude(a => a.PayoutCalculations)
@@ -511,7 +511,9 @@ public class CampaignService : ICampaignService
                         sp.SubmissionId.HasValue && submissionDict.TryGetValue(sp.SubmissionId.Value, out var sub)
                             ? sub.RejectionReason
                             : null,
-                        sp.DiscoveredAt))
+                        sp.DiscoveredAt,
+                        sp.LatestLikeCount, sp.LatestCommentCount, sp.LatestShareCount,
+                        sp.Duration, sp.PublishedAt, ExtractHashtags(sp.Caption)))
                     .ToList();
 
                 // Also include submissions that don't yet have a SocialPost
@@ -554,6 +556,22 @@ public class CampaignService : ICampaignService
             })
             .ToList();
 
+        // Engagement aggregates across every active discovered post in the campaign.
+        var activePosts = campaign.Assignments
+            .Where(a => a.Status == AssignmentStatus.Active || a.Status == AssignmentStatus.Completed)
+            .SelectMany(a => a.SocialPosts.Where(sp => sp.IsActive))
+            .ToList();
+
+        var totalLikes = activePosts.Sum(sp => sp.LatestLikeCount);
+        var totalComments = activePosts.Sum(sp => sp.LatestCommentCount);
+        var totalShares = activePosts.Sum(sp => sp.LatestShareCount);
+        var totalPosts = activePosts.Count;
+        // Views gained since the previous daily snapshot (24h velocity). 0 until there are at least two snapshots.
+        var views24h = activePosts.Sum(sp => {
+            var snaps = sp.MetricSnapshots.OrderByDescending(m => m.SnapshotDate).Take(2).ToList();
+            return snaps.Count >= 2 ? Math.Max(0, snaps[0].ViewCount - snaps[1].ViewCount) : 0;
+        });
+
         return new CampaignAnalyticsDto(
             campaign.Id,
             creatorPerf.Sum(c => c.Views),
@@ -562,7 +580,58 @@ public class CampaignService : ICampaignService
             creatorPerf.Sum(c => c.PayoutAmount),
             campaign.BudgetSpent,
             campaign.Budget - campaign.BudgetSpent - campaign.BudgetReserved,
-            creatorPerf);
+            creatorPerf,
+            totalLikes, totalComments, totalShares, 0 /* saves: not exposed by TikTok API */,
+            views24h, totalPosts);
+    }
+
+    // Pull #hashtags out of a stored caption (lowercased, de-duped, capped).
+    private static List<string> ExtractHashtags(string? caption)
+    {
+        if (string.IsNullOrWhiteSpace(caption)) return new List<string>();
+        return System.Text.RegularExpressions.Regex.Matches(caption, "#([\\p{L}\\p{N}_]+)")
+            .Select(m => m.Groups[1].Value.ToLowerInvariant())
+            .Distinct()
+            .Take(10)
+            .ToList();
+    }
+
+    public async Task<Result<MarketBenchmarkDto>> GetMarketBenchmarksAsync(CancellationToken ct = default)
+    {
+        // Platform-wide pricing intelligence: views & spend across every campaign that has real reach.
+        var rows = await _campaigns.Query()
+            .Include(c => c.Assignments)
+            .Where(c => c.Assignments.Any())
+            .Select(c => new {
+                c.Category,
+                Views = c.Assignments
+                    .Where(a => a.Status == AssignmentStatus.Active || a.Status == AssignmentStatus.Completed)
+                    .Sum(a => (long?)a.TotalVerifiedViews) ?? 0L,
+                Spend = c.BudgetSpent,
+            })
+            .Where(x => x.Views > 0)
+            .ToListAsync(ct);
+
+        var totalViews = rows.Sum(r => r.Views);
+        var totalSpend = rows.Sum(r => r.Spend);
+        var marketCpm = totalViews > 0 ? Math.Round(totalSpend / totalViews * 1000m, 2) : 0m;
+
+        var byCategory = rows
+            .GroupBy(r => string.IsNullOrWhiteSpace(r.Category) ? "Övrigt" : r.Category)
+            .Select(g => {
+                var v = g.Sum(r => r.Views);
+                var s = g.Sum(r => r.Spend);
+                return new NicheBenchmarkDto(
+                    g.Key,
+                    v > 0 ? Math.Round(s / v * 1000m, 2) : 0m,
+                    v,
+                    g.Count() > 0 ? v / g.Count() : 0,
+                    g.Count());
+            })
+            .OrderByDescending(n => n.Views)
+            .ToList();
+
+        return new MarketBenchmarkDto(marketCpm, totalViews, totalSpend, byCategory);
     }
 
     private static string BuildPayoutSummary(List<PayoutRule> rules)
