@@ -89,10 +89,10 @@ export function LoginPage() {
       <h1 className="auth-title">Logga <em>in</em></h1>
       <p className="auth-sub">Fortsätt där du slutade.</p>
       <form className="auth-form" onSubmit={handleSubmit}>
-        <div className="field"><label>E-post</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" placeholder="du@exempel.se" /></div>
-        <div className="field"><label>Lösenord</label>
+        <div className="field"><label htmlFor="li-email">E-post</label><input id="li-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" placeholder="du@exempel.se" /></div>
+        <div className="field"><label htmlFor="li-pw">Lösenord</label>
           <div className="auth-pw-wrap">
-            <input type={showPw ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" placeholder="••••••••" />
+            <input id="li-pw" type={showPw ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" placeholder="••••••••" />
             <EyeButton on={showPw} onClick={() => setShowPw((v) => !v)} />
           </div>
         </div>
@@ -184,16 +184,16 @@ export function RegisterPage() {
       <h1 className="auth-title">Skapa <em>konto</em></h1>
       <p className="auth-sub">Gå med på under en minut. Vi granskar och godkänner din profil innan du går live.</p>
       <form className="auth-form" onSubmit={handleSubmit}>
-        <div className="auth-role" role="tablist">
-          <button type="button" className={form.role === 'Creator' ? 'on' : ''} onClick={() => setForm({ ...form, role: 'Creator' })}>Jag är kreatör</button>
-          <button type="button" className={form.role === 'Brand' ? 'on' : ''} onClick={() => setForm({ ...form, role: 'Brand' })}>Jag är varumärke</button>
+        <div className="auth-role" role="group" aria-label="Kontotyp">
+          <button type="button" aria-pressed={form.role === 'Creator'} className={form.role === 'Creator' ? 'on' : ''} onClick={() => setForm({ ...form, role: 'Creator' })}>Jag är kreatör</button>
+          <button type="button" aria-pressed={form.role === 'Brand'} className={form.role === 'Brand' ? 'on' : ''} onClick={() => setForm({ ...form, role: 'Brand' })}>Jag är varumärke</button>
         </div>
 
-        <div className="field"><label>E-post *</label><input type="email" value={form.email} onChange={set('email')} required autoComplete="email" placeholder="du@exempel.se" /></div>
+        <div className="field"><label htmlFor="rg-email">E-post *</label><input id="rg-email" type="email" value={form.email} onChange={set('email')} required autoComplete="email" placeholder="du@exempel.se" /></div>
 
-        <div className="field"><label>Lösenord *</label>
+        <div className="field"><label htmlFor="rg-pw">Lösenord *</label>
           <div className="auth-pw-wrap">
-            <input type={showPw ? 'text' : 'password'} value={form.password} onChange={set('password')} required minLength={8} autoComplete="new-password" placeholder="Minst 8 tecken" />
+            <input id="rg-pw" type={showPw ? 'text' : 'password'} value={form.password} onChange={set('password')} required minLength={8} autoComplete="new-password" placeholder="Minst 8 tecken" />
             <EyeButton on={showPw} onClick={() => setShowPw((v) => !v)} />
           </div>
           <div className="auth-rules">
@@ -207,16 +207,16 @@ export function RegisterPage() {
 
         {form.role === 'Creator' && (
           <>
-            <div className="field"><label>Visningsnamn *</label><input type="text" value={form.displayName} onChange={set('displayName')} required placeholder="Ditt namn eller alias" /></div>
-            <div className="field"><label>Bio *</label><textarea value={form.bio} onChange={set('bio')} required rows={3} placeholder="Berätta om dig och ditt innehåll — varför ska varumärken samarbeta med dig?" /></div>
+            <div className="field"><label htmlFor="rg-name">Visningsnamn *</label><input id="rg-name" type="text" value={form.displayName} onChange={set('displayName')} required placeholder="Ditt namn eller alias" /></div>
+            <div className="field"><label htmlFor="rg-bio">Bio *</label><textarea id="rg-bio" value={form.bio} onChange={set('bio')} required rows={3} placeholder="Berätta om dig och ditt innehåll — varför ska varumärken samarbeta med dig?" /></div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }}>
-              <div className="field"><label>Kategori *</label>
-                <select value={form.category} onChange={set('category')} required>
+              <div className="field"><label htmlFor="rg-cat">Kategori *</label>
+                <select id="rg-cat" value={form.category} onChange={set('category')} required>
                   {['Övrigt', 'Mode', 'Skönhet', 'Mat', 'Teknik', 'Gaming', 'Sport', 'Musik', 'Resor', 'Livsstil', 'Humor'].map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
-              <div className="field"><label>Land *</label>
-                <select value={form.country} onChange={set('country')} required>
+              <div className="field"><label htmlFor="rg-country">Land *</label>
+                <select id="rg-country" value={form.country} onChange={set('country')} required>
                   <option value="SE">Sverige</option><option value="NO">Norge</option><option value="DK">Danmark</option><option value="FI">Finland</option>
                 </select>
               </div>
@@ -234,12 +234,12 @@ export function RegisterPage() {
               </div>
             </div>
             <div className="field"><label>Födelsedatum</label><DateInput value={form.dateOfBirth} onChange={(v) => setForm({ ...form, dateOfBirth: v })} className="" /></div>
-            <div className="field"><label>TikTok-användarnamn *</label>
-              <div className="auth-at"><span>@</span><input type="text" value={form.tikTokUsername} onChange={set('tikTokUsername')} required placeholder="dittanvändarnamn" /></div>
+            <div className="field"><label htmlFor="rg-tt">TikTok-användarnamn *</label>
+              <div className="auth-at"><span>@</span><input id="rg-tt" type="text" value={form.tikTokUsername} onChange={set('tikTokUsername')} required placeholder="dittanvändarnamn" /></div>
               <div className="auth-hint">Obligatoriskt. Efter godkännande kopplar du kontot via TikTok för automatisk tracking.</div>
             </div>
-            <div className="field"><label>Instagram-användarnamn</label>
-              <div className="auth-at"><span>@</span><input type="text" value={form.instagramUsername} onChange={set('instagramUsername')} placeholder="dittinstagram" /></div>
+            <div className="field"><label htmlFor="rg-ig">Instagram-användarnamn</label>
+              <div className="auth-at"><span>@</span><input id="rg-ig" type="text" value={form.instagramUsername} onChange={set('instagramUsername')} placeholder="dittinstagram" /></div>
               <div className="auth-hint">Valfritt — lägg till om du även är aktiv på Instagram.</div>
             </div>
           </>
@@ -247,9 +247,9 @@ export function RegisterPage() {
 
         {form.role === 'Brand' && (
           <>
-            <div className="field"><label>Företagsnamn *</label><input type="text" value={form.companyName} onChange={set('companyName')} required /></div>
-            <div className="field"><label>Organisationsnummer *</label><input type="text" value={form.organizationNumber} onChange={set('organizationNumber')} required placeholder="XXXXXX-XXXX" /></div>
-            <div className="field"><label>Kontakttelefon</label><input type="text" value={form.contactPhone} onChange={set('contactPhone')} placeholder="+46…" /></div>
+            <div className="field"><label htmlFor="rg-co">Företagsnamn *</label><input id="rg-co" type="text" value={form.companyName} onChange={set('companyName')} required /></div>
+            <div className="field"><label htmlFor="rg-org">Organisationsnummer *</label><input id="rg-org" type="text" value={form.organizationNumber} onChange={set('organizationNumber')} required placeholder="XXXXXX-XXXX" /></div>
+            <div className="field"><label htmlFor="rg-phone">Kontakttelefon</label><input id="rg-phone" type="text" value={form.contactPhone} onChange={set('contactPhone')} placeholder="+46…" /></div>
           </>
         )}
 

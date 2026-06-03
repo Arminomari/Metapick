@@ -57,7 +57,8 @@ export function BrandAnalyticsPage() {
     e.views += a.totalViews || 0; e.spend += a.budgetSpent || 0; e.clicks += a.totalClicks || 0;
     nicheMap.set(c.category, e);
   });
-  const niches = [...nicheMap.entries()].map(([cat, v]) => ({ cat, ...v, cpm: v.views ? (v.spend / v.views) * 1000 : 0, ctr: v.views ? (v.clicks / v.views) * 100 : 0 })).sort((a, b) => b.views - a.views);
+  const niches = [...nicheMap.entries()].map(([cat, v]) => ({ cat, ...v, cpm: v.views ? (v.spend / v.views) * 1000 : 0, ctr: v.views ? (v.clicks / v.views) * 100 : 0 }))
+    .filter((n) => n.views > 0).sort((a, b) => b.views - a.views);
   const maxNiche = Math.max(1, ...niches.map((n) => n.views));
 
   // ── honest derived insights ──
@@ -146,7 +147,7 @@ export function BrandAnalyticsPage() {
                       <div className="progress-line" style={{ maxWidth: 220, marginTop: 6 }}><span style={{ width: `${Math.round((c.views / maxCreatorViews) * 100)}%` }} /></div>
                     </div>
                     <div className="vcamp-end"><div className="vcamp-k">Views</div><div className="vcamp-v">{formatNumber(c.views)}</div></div>
-                    <div className="vcamp-end"><div className="vcamp-k">CPM</div><div className="vcamp-v">{ccpm ? kr2(ccpm) : '—'}</div></div>
+                    <div className="vcamp-end"><div className="vcamp-k">Kostnad/1K</div><div className="vcamp-v">{ccpm ? kr2(ccpm) : '—'}</div></div>
                   </div>
                 );
               }) : <div style={{ padding: '30px 6px', textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Inga kreatörer med data än.</div>}
