@@ -12,6 +12,7 @@ import { BrandStudioDashboard } from '@/pages/brand/BrandStudio';
 import { BrandCampaignListPage, BrandCampaignDetailPage, CreateCampaignPage, BrandApplicationsPage, BrandSettingsPage, BrandAssignmentDetailPage } from '@/pages/brand/BrandPages';
 import { DiscoverCreatorsPage, BrandCreatorDetailPage } from '@/pages/brand/CreatorDiscoveryPages';
 import { BrandPrHubPage } from '@/pages/brand/PrHubPage';
+import { BrandAnalyticsPage } from '@/pages/brand/AnalyticsPage';
 import { CreatorStudioDashboard } from '@/pages/creator/CreatorStudio';
 import { BrowseCampaignsPage, CreatorAssignmentsPage, AssignmentDetailPage, EarningsPage, CreatorProfilePage } from '@/pages/creator/CreatorPages';
 import { CreatorPortfolioPage } from '@/pages/creator/PortfolioPage';
@@ -73,6 +74,7 @@ export default function App() {
           {/* Brand area — VYRLE shell */}
           <Route element={<ProtectedRoute allowedRoles={['Brand']}><BrandShell /></ProtectedRoute>}>
             <Route path="/brand" element={<BrandStudioDashboard />} />
+            <Route path="/brand/analytics" element={<BrandAnalyticsPage />} />
             <Route path="/brand/campaigns" element={<BrandCampaignListPage />} />
             <Route path="/brand/campaigns/new" element={<CreateCampaignPage />} />
             <Route path="/brand/campaigns/:id" element={<CampaignDetailWrapper />} />

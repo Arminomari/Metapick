@@ -137,6 +137,7 @@ export function BrandShell() {
   const name = profile?.companyName || 'Brand';
   const nav: NavItem[] = [
     { label: 'Dashboard', path: '/brand', icon: 'dashboard' },
+    { label: 'Analytics', path: '/brand/analytics', icon: 'analytics' },
     { label: 'Campaigns', path: '/brand/campaigns', icon: 'campaigns' },
     { label: 'Applications', path: '/brand/applications', icon: 'applications' },
     { label: 'Find Creators', path: '/brand/creators', icon: 'creators' },

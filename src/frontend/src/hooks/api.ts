@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueries, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import type {
   ApiResponse,
@@ -190,6 +190,26 @@ export function useCampaignAnalytics(id: string) {
     },
     enabled: !!id,
   });
+}
+
+/** Brand-wide analytics: every campaign's analytics fetched in parallel and joined to its list item. */
+export function useBrandAnalytics() {
+  const campaignsQ = useBrandCampaigns(undefined, 1);
+  const campaigns = campaignsQ.data?.data ?? [];
+  const analyticsQs = useQueries({
+    queries: campaigns.map((c) => ({
+      queryKey: ['campaign-analytics', c.id],
+      queryFn: async () => {
+        const res = await api.get<ApiResponse<CampaignAnalytics>>(`/campaigns/${c.id}/analytics`);
+        return res.data.data;
+      },
+      enabled: !!c.id,
+      staleTime: 30_000,
+    })),
+  });
+  const analytics = analyticsQs.map((q) => q.data).filter(Boolean) as CampaignAnalytics[];
+  const isLoading = campaignsQ.isLoading || (campaigns.length > 0 && analyticsQs.some((q) => q.isLoading));
+  return { campaigns, analytics, isLoading };
 }
 
 export function useCreateCampaign() {
