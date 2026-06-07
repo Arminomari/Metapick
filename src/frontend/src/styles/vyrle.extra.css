@@ -115,6 +115,28 @@
   .vy-app .auth-star{animation:none}
 }
 
+/* ===================== Global polish & a11y ===================== */
+/* Keyboard focus rings (the brand's blush signature) on every interactive control. */
+.vy-app a:focus-visible,
+.vy-app button:focus-visible,
+.vy-app input:focus-visible,
+.vy-app select:focus-visible,
+.vy-app textarea:focus-visible,
+.vy-app [tabindex]:focus-visible {
+  outline: 2px solid #F1A88F;
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+/* Honour reduced-motion: the mockup's looping/transform animations are tasteful but optional. */
+@media (prefers-reduced-motion: reduce) {
+  .vy-app *, .vy-app *::before, .vy-app *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ===================== ANALYTICS bits ===================== */
 .vy-app .an-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
 @media(max-width:1100px){.vy-app .an-kpi-grid{grid-template-columns:repeat(2,1fr)}}

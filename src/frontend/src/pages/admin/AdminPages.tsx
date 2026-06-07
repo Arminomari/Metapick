@@ -249,7 +249,7 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
                 📧 {profile.userId || 'user@hidden'}
               </p>
               <p style={{ color: '#8b8ba3', fontSize: '.95rem' }}>
-                📍 {profile.country || '–'} · Medlem sedan {new Date(profile.createdAt || '').toLocaleDateString('sv-SE')}
+                📍 {profile.country || '–'} · Medlem sedan {(profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('sv-SE') : '–')}
               </p>
             </div>
 
@@ -344,7 +344,7 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
             </div>
             <div>
               <p style={{ color: '#8b8ba3', fontSize: '.75rem', marginBottom: '0.25rem' }}>REGISTRERAD</p>
-              <p style={{ color: '#fafafa', fontWeight: 600 }}>{new Date(profile.createdAt || '').toLocaleDateString('sv-SE')}</p>
+              <p style={{ color: '#fafafa', fontWeight: 600 }}>{(profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('sv-SE') : '–')}</p>
             </div>
           </div>
 

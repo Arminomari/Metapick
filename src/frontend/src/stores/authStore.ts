@@ -55,7 +55,11 @@ export const useAuthStore = create<AuthState>()(
         }),
     }),
     { name: 'creatorpay-auth',
+      // Persist the tokens too — without them a page refresh keeps isAuthenticated
+      // but loses the bearer token, so the first API call 401s and bounces to /login.
       partialize: (state) => ({
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
         userId: state.userId,
         email: state.email,
         role: state.role,
