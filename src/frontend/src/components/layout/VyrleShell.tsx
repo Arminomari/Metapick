@@ -1,8 +1,9 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
-import { useCreatorProfile, useBrandProfile, useNotifications, usePrUnreadCount } from '@/hooks/api';
+import { useCreatorProfile, useBrandProfile, useNotifications, usePrUnreadCount, useUnreadChatCount } from '@/hooks/api';
 import { formatNumber } from '@/lib/utils';
+import { NotificationsDrawer, MessagesDrawer } from './ShellDrawers';
 
 const S = (d: ReactNode, sw = 1.7) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">{d}</svg>;
 const ICON: Record<string, ReactNode> = {
@@ -25,14 +26,15 @@ const ICON: Record<string, ReactNode> = {
 
 interface NavItem { label: string; path: string; icon: string; badge?: number; tag?: string }
 
-function ShellChrome({ group, nav, name, handle, sub, initial, bellBadge, children }:
-  { group: string; nav: NavItem[]; name: string; handle: string; sub: ReactNode; initial: string; bellBadge: number; children?: ReactNode }) {
+function ShellChrome({ group, role, nav, name, handle, sub, initial, bellBadge, chatBadge, children }:
+  { group: string; role: string; nav: NavItem[]; name: string; handle: string; sub: ReactNode; initial: string; bellBadge: number; chatBadge: number; children?: ReactNode }) {
   const { logout } = useAuthStore();
   const navigate = useNavigate();
   const loc = useLocation();
   const home = nav[0].path;
   const isActive = (p: string) => loc.pathname === p || (p !== home && loc.pathname.startsWith(p + '/'));
   const handleLogout = () => { logout(); navigate('/login'); };
+  const [drawer, setDrawer] = useState<'none' | 'notif' | 'msg'>('none');
 
   return (
     <div className="vy-app">
@@ -82,7 +84,11 @@ function ShellChrome({ group, nav, name, handle, sub, initial, bellBadge, childr
               <span className="kbd">⌘ K</span>
             </div>
             <div className="top-right">
-              <button className="icon-btn" aria-label="Notifications" onClick={() => navigate(home)}>
+              <button className="icon-btn" aria-label="Meddelanden" onClick={() => setDrawer((d) => d === 'msg' ? 'none' : 'msg')}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
+                {chatBadge > 0 && <span className="ping ping-chat">{chatBadge > 9 ? '9+' : chatBadge}</span>}
+              </button>
+              <button className="icon-btn" aria-label="Notiser" onClick={() => setDrawer((d) => d === 'notif' ? 'none' : 'notif')}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7" /><path d="M10.5 20a2 2 0 0 0 3 0" /></svg>
                 {bellBadge > 0 && <span className="ping">{bellBadge > 9 ? '9+' : bellBadge}</span>}
               </button>
@@ -95,6 +101,8 @@ function ShellChrome({ group, nav, name, handle, sub, initial, bellBadge, childr
           <div className="scroll"><Outlet /></div>
         </div>
       </div>
+      <NotificationsDrawer open={drawer === 'notif'} onClose={() => setDrawer('none')} />
+      <MessagesDrawer open={drawer === 'msg'} onClose={() => setDrawer('none')} role={role} />
       {children}
     </div>
   );
@@ -105,6 +113,7 @@ export function CreatorShell() {
   const { data: profile } = useCreatorProfile();
   const { data: notifs } = useNotifications(true);
   const { data: prUnread } = usePrUnreadCount();
+  const { data: chatUnread } = useUnreadChatCount();
 
   const name = profile?.displayName || 'Creator';
   const handle = profile?.tikTokUsername ? '@' + profile.tikTokUsername : (email || '');
@@ -126,13 +135,14 @@ export function CreatorShell() {
       {formatNumber(profile?.followerCount ?? 0)} followers · {profile?.category || 'Creator'}
     </div>
   );
-  return <ShellChrome group="Creator" nav={nav} name={name} handle={handle} sub={sub} initial={(name[0] || 'C').toUpperCase()} bellBadge={notifs?.totalCount ?? 0} />;
+  return <ShellChrome group="Creator" role="Creator" nav={nav} name={name} handle={handle} sub={sub} initial={(name[0] || 'C').toUpperCase()} bellBadge={notifs?.totalCount ?? 0} chatBadge={chatUnread ?? 0} />;
 }
 
 export function BrandShell() {
   const { email } = useAuthStore();
   const { data: profile } = useBrandProfile();
   const { data: notifs } = useNotifications(true);
+  const { data: chatUnread } = useUnreadChatCount();
 
   const name = profile?.companyName || 'Brand';
   const nav: NavItem[] = [
@@ -149,5 +159,5 @@ export function BrandShell() {
       {profile?.industry || 'Brand'} · {profile?.status || ''}
     </div>
   );
-  return <ShellChrome group="Brand" nav={nav} name={name} handle={email || ''} sub={sub} initial={(name[0] || 'B').toUpperCase()} bellBadge={notifs?.totalCount ?? 0} />;
+  return <ShellChrome group="Brand" role="Brand" nav={nav} name={name} handle={email || ''} sub={sub} initial={(name[0] || 'B').toUpperCase()} bellBadge={notifs?.totalCount ?? 0} chatBadge={chatUnread ?? 0} />;
 }
