@@ -514,10 +514,13 @@ section{position:relative}
 /* video reel placeholders (UGC reviews) */
 .vreel{display:flex;flex-direction:column}
 .vr-frame{position:relative;aspect-ratio:9/16;border-radius:var(--radius);overflow:hidden;cursor:pointer;box-shadow:var(--shadow-soft);transition:transform .35s var(--ease),box-shadow .35s;display:flex;align-items:center;justify-content:center}
-.vr-frame::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 40%,transparent,rgba(11,15,23,.18));pointer-events:none}
+.vr-frame::after{content:"";position:absolute;inset:0;z-index:1;background:radial-gradient(120% 80% at 50% 40%,transparent,rgba(11,15,23,.18));pointer-events:none;transition:opacity .3s var(--ease)}
 .vr-frame:hover{transform:translateY(-4px);box-shadow:var(--shadow-card)}
 .vr-frame:focus-visible{outline:2px solid var(--peach-deep);outline-offset:3px}
-.vr-play{position:relative;z-index:2;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.92);color:var(--navy-deep);box-shadow:0 10px 30px rgba(11,15,23,.28);transition:transform .3s var(--ease)}
+.vr-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;background:#0b0f17}
+.vr-frame.playing::after{opacity:0}
+.vr-frame.playing .vr-play{opacity:0;transform:scale(.7);pointer-events:none}
+.vr-play{position:relative;z-index:2;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.92);color:var(--navy-deep);box-shadow:0 10px 30px rgba(11,15,23,.28);transition:transform .3s var(--ease),opacity .25s var(--ease)}
 .vr-play svg{width:26px;height:26px;margin-left:3px}
 .vr-frame:hover .vr-play{transform:scale(1.08)}
 .vr-tag{position:absolute;top:14px;left:14px;z-index:2;font-family:"Manrope";font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:6px 11px;border-radius:980px;background:rgba(255,255,255,.85);color:var(--navy-deep);backdrop-filter:blur(4px)}
@@ -1533,17 +1536,19 @@ section{position:relative}
     <div class="quote-grid">
       <div class="vreel reveal">
         <div class="vr-frame" role="button" tabindex="0" aria-label="Play Maya's review" style="background:linear-gradient(160deg,#FFE3D4,#F1A88F)">
+          <video class="vr-video" src="/reviews/maya.mp4#t=0.1" muted loop playsinline preload="metadata"></video>
           <span class="vr-tag">Creator</span>
           <span class="vr-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
-          <span class="vr-dur">0:38</span>
+          <span class="vr-dur">0:00</span>
         </div>
         <div class="vr-by"><div class="qav" style="background:linear-gradient(150deg,#FFD8C7,#F1A88F)">M</div><div><div class="qn">Maya R.</div><div class="qr">Creator · 184K avg views</div></div></div>
       </div>
       <div class="vreel reveal reveal-d2">
         <div class="vr-frame" role="button" tabindex="0" aria-label="Play Jordan's review" style="background:linear-gradient(160deg,#EDE1FF,#B79CE0)">
+          <video class="vr-video" src="/reviews/jordan.mp4#t=0.1" muted loop playsinline preload="metadata"></video>
           <span class="vr-tag">Creator</span>
           <span class="vr-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
-          <span class="vr-dur">0:45</span>
+          <span class="vr-dur">0:00</span>
         </div>
         <div class="vr-by"><div class="qav" style="background:linear-gradient(150deg,#EDE1FF,#B79CE0)">J</div><div><div class="qn">Jordan T.</div><div class="qr">Creator · 92K avg views</div></div></div>
       </div>
@@ -1708,6 +1713,25 @@ section{position:relative}
     el.innerHTML=s.repeat(5);
   }
   ['qs1','qs2','qs3'].forEach(fillStars);
+
+  // ---- testimonial video reels (click to play with sound, one at a time) ----
+  document.querySelectorAll('.vr-frame').forEach(function(frame){
+    var v=frame.querySelector('.vr-video'); if(!v) return;
+    var dur=frame.querySelector('.vr-dur');
+    v.addEventListener('loadedmetadata',function(){
+      if(dur && isFinite(v.duration)){ var m=Math.floor(v.duration/60), s=Math.floor(v.duration%60); dur.textContent=m+':'+String(s).padStart(2,'0'); }
+    });
+    function toggle(){
+      if(v.paused){
+        document.querySelectorAll('.vr-frame.playing').forEach(function(o){
+          if(o!==frame){ var ov=o.querySelector('.vr-video'); if(ov){ ov.pause(); ov.muted=true; } o.classList.remove('playing'); }
+        });
+        v.muted=false; var p=v.play(); if(p&&p.catch)p.catch(function(){}); frame.classList.add('playing');
+      } else { v.pause(); frame.classList.remove('playing'); }
+    }
+    frame.addEventListener('click',toggle);
+    frame.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggle(); } });
+  });
 
   // ---- nav scroll state ----
   var nav=document.getElementById('nav');
