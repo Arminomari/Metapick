@@ -127,21 +127,16 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
     {
-        var configured = builder.Configuration.GetSection("Cors:Origins").Get<string[]>();
+        var configured = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? Array.Empty<string>();
         var fromEnv = (builder.Configuration["CORS_ORIGINS"] ?? "")
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        var origins = (configured ?? []).Concat(fromEnv).Distinct().ToArray();
-        if (origins.Length == 0)
-        {
-            if (builder.Environment.IsDevelopment())
-            {
-                origins = ["http://localhost:5173"];
-            }
-            else
-            {
-                throw new InvalidOperationException("CORS origins must be configured outside development");
-            }
-        }
+        // Guaranteed production frontends so a missing/incorrect CORS_ORIGINS env can never lock auth out.
+        var defaults = new List<string> { "https://www.vyrle.co", "https://vyrle.co" };
+        if (builder.Environment.IsDevelopment()) defaults.Add("http://localhost:5173");
+        var origins = configured.Concat(fromEnv).Concat(defaults)
+            .Where(o => !string.IsNullOrWhiteSpace(o))
+            .Distinct()
+            .ToArray();
 
         policy.WithOrigins(origins)
               .WithHeaders("Content-Type", "Authorization", "Accept")
