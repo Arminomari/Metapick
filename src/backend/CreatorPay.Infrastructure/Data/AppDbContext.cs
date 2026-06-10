@@ -24,6 +24,7 @@ public class AppDbContext : DbContext
     public DbSet<PayoutRule> PayoutRules => Set<PayoutRule>();
     public DbSet<CampaignApplication> CampaignApplications => Set<CampaignApplication>();
     public DbSet<CreatorCampaignAssignment> Assignments => Set<CreatorCampaignAssignment>();
+    public DbSet<SavedCampaign> SavedCampaigns => Set<SavedCampaign>();
     public DbSet<TrackingTag> TrackingTags => Set<TrackingTag>();
     public DbSet<TrackingLink> TrackingLinks => Set<TrackingLink>();
     public DbSet<LinkTrackingClick> LinkTrackingClicks => Set<LinkTrackingClick>();

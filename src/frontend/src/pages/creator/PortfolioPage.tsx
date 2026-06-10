@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
 import { ReviewList } from '@/components/ui/ReviewSection';
 import { usePortfolio, useAddPortfolioItem, useUpdatePortfolioItem, useDeletePortfolioItem, useCreatorProfile, useCreatorAssignments, useUserReviews } from '@/hooks/api';
+import { useToast, CardSkeleton } from '@/components/vyrle/Toast';
 import { formatNumber, formatDate, formatCurrency } from '@/lib/utils';
 import type { PortfolioItem, PortfolioMediaType } from '@/types';
 
@@ -46,6 +47,8 @@ export function CreatorPortfolioPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState('');
+  const [armedDelete, setArmedDelete] = useState<string | null>(null);
+  const toast = useToast();
 
   const startEdit = (it: PortfolioItem) => {
     setEditingId(it.id);
@@ -92,8 +95,18 @@ export function CreatorPortfolioPage() {
     }
   };
 
+  // Two-step inline confirm: first click arms the button, second deletes.
   const handleDelete = (id: string) => {
-    if (confirm('Ta bort detta portföljobjekt?')) remove.mutate(id);
+    if (armedDelete !== id) {
+      setArmedDelete(id);
+      setTimeout(() => setArmedDelete((cur) => (cur === id ? null : cur)), 4000);
+      return;
+    }
+    setArmedDelete(null);
+    remove.mutate(id, {
+      onSuccess: () => toast.push('Borttaget ur portföljen', 'success'),
+      onError: () => toast.push('Kunde inte ta bort', 'error'),
+    });
   };
 
   return (
@@ -186,7 +199,7 @@ export function CreatorPortfolioPage() {
         </div>
       )}
 
-      {isLoading ? <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>Laddar…</div> : items && items.length > 0 ? (
+      {isLoading ? <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16 }}><CardSkeleton rows={3} /><CardSkeleton rows={3} /><CardSkeleton rows={3} /></div> : items && items.length > 0 ? (
         <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16 }}>
           {items.map((it) => (
             <div className="pf-card" key={it.id}>
@@ -217,7 +230,9 @@ export function CreatorPortfolioPage() {
                 )}
                 <div className="pf-actions">
                   <button className="btn-outline" style={{ flex: 1, padding: 10 }} onClick={() => startEdit(it)}>Redigera</button>
-                  <button className="btn-outline" style={{ flex: 1, padding: 10 }} onClick={() => handleDelete(it.id)} disabled={remove.isPending}>Ta bort</button>
+                  <button className="btn-outline" style={{ flex: 1, padding: 10, ...(armedDelete === it.id ? { borderColor: 'var(--red)', color: 'var(--red)', fontWeight: 600 } : {}) }} onClick={() => handleDelete(it.id)} disabled={remove.isPending}>
+                    {armedDelete === it.id ? 'Säker? Klicka igen' : 'Ta bort'}
+                  </button>
                 </div>
               </div>
             </div>

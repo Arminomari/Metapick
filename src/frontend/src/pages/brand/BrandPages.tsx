@@ -9,6 +9,7 @@ import { ReviewSection } from '@/components/ui/ReviewSection';
 import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
 import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
 import { PLATFORM_TAGS, NICHE_TAGS } from '@/lib/tags';
+import { CardSkeleton } from '@/components/vyrle/Toast';
 import type { CampaignListItem, ApplicationItem, CreateCampaignRequest, CreatorPerformance, CreatorVideo } from '@/types';
 
 const GRADS = [
@@ -138,7 +139,7 @@ export function BrandCampaignListPage() {
         ))}
       </div>
 
-      {isLoading ? <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>Laddar…</div> : (
+      {isLoading ? <CardSkeleton rows={4} /> : (
         <div className="card">
           {data?.data.length ? (
             <>
@@ -785,7 +786,7 @@ function CampaignApplicationsSection({ campaignId, campaignName }: { campaignId:
           <button className="view-all" onClick={() => setExpanded(false)}>Minimera</button>
         </div>
       </div>
-      {isLoading ? <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)' }}>Laddar…</div> : applications?.data.length ? (
+      {isLoading ? <CardSkeleton rows={2} /> : applications?.data.length ? (
         applications.data.map((a: ApplicationItem) => (
           <div key={a.id} className="list-row" style={{ gap: 14 }}>
             <span className="mono" style={{ background: grad(a.creatorName) }}>{initial(a.creatorName)}</span>

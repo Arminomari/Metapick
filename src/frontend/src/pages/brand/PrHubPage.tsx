@@ -4,6 +4,7 @@ import { Pagination, StatusBadge } from '@/components/ui';
 import { useSentPrOffers, usePrStats, useWithdrawPrOffer } from '@/hooks/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { PrOffer } from '@/types';
+import { CardSkeleton } from '@/components/vyrle/Toast';
 
 const OFFER_TYPE_LABELS: Record<string, string> = {
   ProductGifting: 'Produkt / gåva', Paid: 'Betald', Hybrid: 'Produkt + betalt', Event: 'Event',
@@ -67,7 +68,7 @@ export function BrandPrHubPage() {
         {tabs.map((t) => <button key={t.label} className={`tab${status === t.val ? ' active' : ''}`} onClick={() => { setStatus(t.val); setPage(1); }}>{t.label}</button>)}
       </div>
 
-      {isLoading ? <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>Laddar…</div> : data && data.data.length > 0 ? (
+      {isLoading ? <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16 }}><CardSkeleton rows={3} /><CardSkeleton rows={3} /><CardSkeleton rows={3} /></div> : data && data.data.length > 0 ? (
         <div className="card">
           {data.data.map((offer) => <SentOfferRow key={offer.id} offer={offer} onWithdraw={() => withdraw.mutate(offer.id)} withdrawing={withdraw.isPending} />)}
           <Pagination page={page} totalCount={data.totalCount} pageSize={data.pageSize} onPageChange={setPage} />

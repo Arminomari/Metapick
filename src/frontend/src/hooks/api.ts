@@ -7,6 +7,8 @@ import type {
   AuthResponse,
   CampaignAnalytics,
   MarketBenchmark,
+  PayoutMethodInfo,
+  SavedCampaignItem,
   CampaignBrowseItem,
   CampaignDetail,
   CampaignListItem,
@@ -211,6 +213,64 @@ export function useBrandAnalytics() {
   const analytics = analyticsQs.map((q) => q.data).filter(Boolean) as CampaignAnalytics[];
   const isLoading = campaignsQ.isLoading || (campaigns.length > 0 && analyticsQs.some((q) => q.isLoading));
   return { campaigns, analytics, isLoading };
+}
+
+// ── Payout method (creator payment destination) ────────
+export function usePayoutMethod() {
+  return useQuery({
+    queryKey: ['payout-method'],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<PayoutMethodInfo>>('/creator/payout-method');
+      return res.data.data;
+    },
+  });
+}
+
+export function useSetPayoutMethod() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { method: string; details: string; accountHolder?: string }) => {
+      const res = await api.put<ApiResponse<PayoutMethodInfo>>('/creator/payout-method', data);
+      return res.data.data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['payout-method'] }),
+  });
+}
+
+// ── Saved campaigns (creator bookmarks) ────────────────
+export function useSavedCampaigns() {
+  return useQuery({
+    queryKey: ['saved-campaigns'],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<SavedCampaignItem[]>>('/campaigns/saved');
+      return res.data.data;
+    },
+  });
+}
+
+export function useSavedCampaignIds() {
+  return useQuery({
+    queryKey: ['saved-campaign-ids'],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<string[]>>('/campaigns/saved/ids');
+      return res.data.data;
+    },
+  });
+}
+
+export function useToggleSaveCampaign() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ campaignId, save }: { campaignId: string; save: boolean }) => {
+      if (save) await api.post(`/campaigns/${campaignId}/save`);
+      else await api.delete(`/campaigns/${campaignId}/save`);
+      return save;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['saved-campaigns'] });
+      qc.invalidateQueries({ queryKey: ['saved-campaign-ids'] });
+    },
+  });
 }
 
 export function useMarketBenchmarks() {

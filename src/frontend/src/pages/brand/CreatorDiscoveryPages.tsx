@@ -6,6 +6,7 @@ import { useCreatorSearch, useCreatorPublicProfile, useCreatePrOffer } from '@/h
 import { formatNumber } from '@/lib/utils';
 import { ALL_TAGS } from '@/lib/tags';
 import type { CreatorDiscoveryItem, PortfolioItem } from '@/types';
+import { CardSkeleton, PageSkeleton } from '@/components/vyrle/Toast';
 
 const CATEGORIES = ['Övrigt', 'Mode', 'Skönhet', 'Mat', 'Teknik', 'Gaming', 'Sport', 'Musik', 'Resor', 'Livsstil', 'Humor'];
 
@@ -66,7 +67,7 @@ export function DiscoverCreatorsPage() {
         </div>
       </div>
 
-      {isLoading ? <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>Laddar…</div> : data && data.data.length > 0 ? (
+      {isLoading ? <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16 }}><CardSkeleton rows={3} /><CardSkeleton rows={3} /><CardSkeleton rows={3} /></div> : data && data.data.length > 0 ? (
         <>
           <div className="results-meta"><div className="cnt"><span className="live-dot" />{data.totalCount} kreatörer</div></div>
           <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16 }}>
@@ -116,7 +117,7 @@ export function BrandCreatorDetailPage() {
   const { data: creator, isLoading } = useCreatorPublicProfile(id!);
   const [showPr, setShowPr] = useState(false);
 
-  if (isLoading) return <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>Laddar…</div>;
+  if (isLoading) return <PageSkeleton />;
   if (!creator) return (
     <section className="view active reveal"><div className="card" style={{ textAlign: 'center', padding: '54px 24px' }}>
       <div style={{ fontSize: 18, fontWeight: 700 }}>Kreatören hittades inte</div>

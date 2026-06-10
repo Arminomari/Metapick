@@ -175,3 +175,23 @@ public class LinkTrackingClickConfiguration : IEntityTypeConfiguration<LinkTrack
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
+
+public class SavedCampaignConfiguration : IEntityTypeConfiguration<SavedCampaign>
+{
+    public void Configure(EntityTypeBuilder<SavedCampaign> b)
+    {
+        b.ToTable("saved_campaigns");
+        b.HasKey(e => e.Id);
+        b.HasIndex(e => new { e.CreatorProfileId, e.CampaignId }).IsUnique();
+
+        b.HasOne(e => e.CreatorProfile)
+            .WithMany()
+            .HasForeignKey(e => e.CreatorProfileId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        b.HasOne(e => e.Campaign)
+            .WithMany()
+            .HasForeignKey(e => e.CampaignId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}

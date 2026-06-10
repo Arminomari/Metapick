@@ -115,6 +115,27 @@
   .vy-app .auth-star{animation:none}
 }
 
+/* ===================== Toasts ===================== */
+.vy-app .vy-toasts{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:10px;align-items:center;pointer-events:none}
+.vy-app .vy-toast{display:flex;align-items:center;gap:11px;padding:13px 18px;border-radius:980px;pointer-events:auto;
+  background:rgba(20,26,37,.94);backdrop-filter:blur(14px);color:#FFF4EC;font-size:13.5px;font-weight:500;
+  box-shadow:0 18px 44px rgba(11,15,23,.32),inset 0 1px 0 rgba(255,255,255,.08);
+  animation:toastIn .42s cubic-bezier(.34,1.4,.4,1) both}
+.vy-app .vy-toast.leaving{animation:toastOut .4s cubic-bezier(.4,0,.6,1) both}
+.vy-app .vy-toast-ic{display:flex;width:26px;height:26px;border-radius:50%;align-items:center;justify-content:center;flex:0 0 26px}
+.vy-app .vy-toast.success .vy-toast-ic{background:linear-gradient(135deg,#a9dcc0,#5fb98a);color:#0c2b1a}
+.vy-app .vy-toast.error .vy-toast-ic{background:linear-gradient(135deg,#f5b5ae,#e0716a);color:#3d0f0c}
+.vy-app .vy-toast.info .vy-toast-ic{background:linear-gradient(135deg,#FFD8C7,#F1A88F);color:#3a1d12}
+@keyframes toastIn{from{opacity:0;transform:translateY(18px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(10px) scale(.96)}}
+
+/* ===================== Skeleton loaders ===================== */
+.vy-app .vy-skel{display:inline-block;position:relative;overflow:hidden;background:rgba(183,188,200,.18)}
+.vy-app .vy-skel::after{content:"";position:absolute;inset:0;transform:translateX(-100%);
+  background:linear-gradient(90deg,transparent,rgba(255,244,236,.65),transparent);
+  animation:skelSweep 1.5s ease-in-out infinite}
+@keyframes skelSweep{to{transform:translateX(100%)}}
+
 /* ===================== Global polish & a11y ===================== */
 /* Keyboard focus rings (the brand's blush signature) on every interactive control. */
 .vy-app a:focus-visible,

@@ -414,6 +414,19 @@ export interface CampaignAnalytics {
   totalPosts: number;
 }
 
+export interface PayoutMethodInfo {
+  method: string | null;
+  maskedDetails: string | null;
+  accountHolder: string | null;
+  isConfigured: boolean;
+}
+
+export interface SavedCampaignItem {
+  campaignId: string;
+  savedAt: string;
+  campaign: CampaignBrowseItem;
+}
+
 export interface MarketBenchmark {
   marketCpm: number;
   totalViews: number;

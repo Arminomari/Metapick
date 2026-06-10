@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useCreatorProfile, useBrandProfile, useNotifications, usePrUnreadCount, useUnreadChatCount } from '@/hooks/api';
 import { formatNumber } from '@/lib/utils';
 import { NotificationsDrawer, MessagesDrawer } from './ShellDrawers';
+import { ToastProvider } from '@/components/vyrle/Toast';
 
 const S = (d: ReactNode, sw = 1.7) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">{d}</svg>;
 const ICON: Record<string, ReactNode> = {
@@ -38,6 +39,7 @@ function ShellChrome({ group, role, nav, name, handle, sub, initial, bellBadge, 
 
   return (
     <div className="vy-app">
+      <ToastProvider>
       <div className="app">
         <aside className="sidebar">
           <Link to={home} className="brand" aria-label="VYRLE" style={{ textDecoration: 'none' }}>
@@ -104,6 +106,7 @@ function ShellChrome({ group, role, nav, name, handle, sub, initial, bellBadge, 
       <NotificationsDrawer open={drawer === 'notif'} onClose={() => setDrawer('none')} />
       <MessagesDrawer open={drawer === 'msg'} onClose={() => setDrawer('none')} role={role} />
       {children}
+      </ToastProvider>
     </div>
   );
 }

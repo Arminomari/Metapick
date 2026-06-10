@@ -11,7 +11,10 @@ import {
   useCreatorProfile, useUpdateCreatorProfile,
   useTikTokStatus, useTikTokDisconnect,
   useUserReviews,
+  useSavedCampaignIds, useToggleSaveCampaign,
+  usePayoutMethod, useSetPayoutMethod,
 } from '@/hooks/api';
+import { useToast, CardSkeleton } from '@/components/vyrle/Toast';
 import api from '@/lib/api';
 import { Button, Card, DataTable, EmptyState, LoadingSpinner, Pagination, StatCard, StatusBadge, type Column } from '@/components/ui';
 import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
@@ -42,6 +45,7 @@ function getApiErrorMessage(error: any, fallback: string) {
 function TikTokAlertBanner({ compact = false }: { compact?: boolean }) {
   const { data: tikTokStatus, isLoading } = useTikTokStatus();
   const [connecting, setConnecting] = useState(false);
+  const toast = useToast();
 
   if (isLoading || (tikTokStatus?.connected && tikTokStatus?.isOAuth)) return null;
 
@@ -52,7 +56,7 @@ function TikTokAlertBanner({ compact = false }: { compact?: boolean }) {
       window.location.href = res.data.url;
     } catch {
       setConnecting(false);
-      alert('Kunde inte starta TikTok-anslutning.');
+      toast.push('Kunde inte starta TikTok-anslutning.', 'error');
     }
   };
 
@@ -156,24 +160,37 @@ export function BrowseCampaignsPage() {
   const [page, setPage] = useState(1);
   const { data, isLoading, isError, error } = useBrowseCampaigns(category, undefined, page);
   const { data: myApps, isError: myAppsError, error: myAppsErrorObj } = useMyApplications();
+  const { data: savedIds } = useSavedCampaignIds();
+  const toggleSave = useToggleSaveCampaign();
+  const toast = useToast();
   const apply = useApplyToCampaign();
   const [applyingId, setApplyingId] = useState<string | null>(null);
 
   // Build a map of campaignId -> application status from backend data
   const appStatusMap = new Map<string, string>();
   myApps?.data.forEach((a) => appStatusMap.set(a.campaignId, a.status));
+  const savedSet = new Set(savedIds ?? []);
 
   const handleApply = async (campaignId: string) => {
     setApplyingId(campaignId);
     try {
       await apply.mutateAsync({ campaignId, message: 'Jag vill gärna delta i denna kampanj!' });
+      toast.push('Ansökan skickad!', 'success');
     } catch (err: any) {
       const msg = err?.response?.data?.error?.message
         ?? err?.response?.data?.title
         ?? 'Kunde inte skicka ansökan';
-      alert(msg);
+      toast.push(msg, 'error');
     }
     setApplyingId(null);
+  };
+
+  const handleSave = (campaignId: string) => {
+    const save = !savedSet.has(campaignId);
+    toggleSave.mutate({ campaignId, save }, {
+      onSuccess: () => toast.push(save ? 'Sparad i Saved' : 'Borttagen från Saved', 'success'),
+      onError: () => toast.push('Kunde inte spara kampanjen', 'error'),
+    });
   };
 
   const getButtonLabel = (campaignId: string, spotsRemaining: number) => {
@@ -211,7 +228,11 @@ export function BrowseCampaignsPage() {
           <p style={{ color: 'var(--amber)', fontSize: 13 }}>Kunde inte hämta dina ansökningar: {getApiErrorMessage(myAppsErrorObj, 'okänt fel')}</p>
         </div>
       )}
-      {!isError && (isLoading ? <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>Laddar…</div> : (
+      {!isError && (isLoading ? (
+        <div className="grid" style={{ gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16, display: 'grid' }}>
+          <CardSkeleton rows={3} /><CardSkeleton rows={3} /><CardSkeleton rows={3} />
+        </div>
+      ) : (
         <>
           {data?.data.length ? (
             <>
@@ -220,12 +241,17 @@ export function BrowseCampaignsPage() {
                 {data.data.map((c) => {
                   const status = appStatusMap.get(c.id);
                   const full = c.spotsLeft <= 0;
+                  const saved = savedSet.has(c.id);
                   return (
                     <div className="camp-card" key={c.id}>
                       <div className="ch">
                         <span className="mono" style={{ background: grad(c.name) }}>{initial(c.brandName || c.name)}</span>
                         <div style={{ flex: 1 }}><div className="ttl">{c.name}</div><div className="brand">{c.brandName}</div></div>
-                        {status === 'Approved' ? <span className="badge green">Godkänd</span> : status === 'Pending' ? <span className="badge amber">Skickad</span> : status === 'Rejected' ? <span className="badge red">Nekad</span> : <span className="badge green">Ny</span>}
+                        <button className="lt-icbtn" style={{ borderRadius: '50%' }} aria-label={saved ? 'Ta bort från sparade' : 'Spara kampanj'} aria-pressed={saved}
+                          onClick={() => handleSave(c.id)} disabled={toggleSave.isPending}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill={saved ? '#C26A4A' : 'none'} stroke="#C26A4A" strokeWidth="1.6" strokeLinejoin="round"><path d="M7 4h10v16l-5-3-5 3z" /></svg>
+                        </button>
+                        {status === 'Approved' ? <span className="badge green">Godkänd</span> : status === 'Pending' ? <span className="badge amber">Skickad</span> : status === 'Rejected' ? <span className="badge red">Nekad</span> : null}
                       </div>
                       <div className="desc">{c.description}</div>
                       <div className="tags">
@@ -299,7 +325,7 @@ export function CreatorAssignmentsPage() {
       <div className="tabs">
         {tabs.map((t) => <button key={t.label} className={`tab${status === t.val ? ' active' : ''}`} onClick={() => { setStatus(t.val); setPage(1); }}>{t.label}</button>)}
       </div>
-      {isLoading ? <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>Laddar…</div> : (
+      {isLoading ? <CardSkeleton rows={4} /> : (
         <div className="card">
           {data?.data.length ? (
             <>
@@ -337,6 +363,8 @@ function TikTokConnectionCard() {
   const { data: status, isLoading } = useTikTokStatus();
   const disconnect = useTikTokDisconnect();
   const [connecting, setConnecting] = useState(false);
+  const [armDisconnect, setArmDisconnect] = useState(false);
+  const toast = useToast();
 
   const handleConnect = async () => {
     setConnecting(true);
@@ -345,14 +373,22 @@ function TikTokConnectionCard() {
       window.location.href = res.data.url;
     } catch {
       setConnecting(false);
-      alert('Kunde inte starta TikTok-anslutning.');
+      toast.push('Kunde inte starta TikTok-anslutning.', 'error');
     }
   };
 
+  // Two-step inline confirm: first click arms, second confirms.
   const handleDisconnect = () => {
-    if (confirm('Vill du koppla bort ditt TikTok-konto? Automatisk tracking kommer att sluta fungera.')) {
-      disconnect.mutate();
+    if (!armDisconnect) {
+      setArmDisconnect(true);
+      setTimeout(() => setArmDisconnect(false), 4000);
+      return;
     }
+    setArmDisconnect(false);
+    disconnect.mutate(undefined, {
+      onSuccess: () => toast.push('TikTok-kontot bortkopplat', 'success'),
+      onError: () => toast.push('Kunde inte koppla bort kontot', 'error'),
+    });
   };
 
   if (isLoading) return <Card><LoadingSpinner /></Card>;
@@ -388,8 +424,8 @@ function TikTokConnectionCard() {
         </div>
         <div>
           {status?.connected && status?.isOAuth ? (
-            <Button variant="secondary" size="sm" onClick={handleDisconnect} disabled={disconnect.isPending}>
-              {disconnect.isPending ? 'Kopplar bort...' : 'Koppla bort'}
+            <Button variant={armDisconnect ? 'destructive' : 'secondary'} size="sm" onClick={handleDisconnect} disabled={disconnect.isPending}>
+              {disconnect.isPending ? 'Kopplar bort...' : armDisconnect ? 'Klicka igen för att bekräfta' : 'Koppla bort'}
             </Button>
           ) : (
             <Button onClick={handleConnect} disabled={connecting}>
@@ -701,6 +737,9 @@ export function EarningsPage() {
         </div>
       </div>
 
+      {/* payout method */}
+      <div style={{ marginTop: 18 }}><PayoutMethodCard /></div>
+
       {/* pending detail */}
       {pendingList.length > 0 && (
         <div className="card" style={{ marginTop: 18 }}>
@@ -718,6 +757,101 @@ export function EarningsPage() {
         {data && <Pagination page={page} totalCount={data.totalCount} pageSize={data.pageSize} onPageChange={setPage} />}
       </div>
     </section>
+  );
+}
+
+const METHOD_META: Record<string, { label: string; hint: string; placeholder: string; icon: React.ReactNode }> = {
+  BankTransfer: {
+    label: 'Bankkonto', hint: 'Clearing + kontonummer', placeholder: 'XXXX-X XXX XXX XXX-X',
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10h16M5 10 12 5l7 5M6 10v7M10 10v7M14 10v7M18 10v7M4 20h16" /></svg>,
+  },
+  Swish: {
+    label: 'Swish', hint: 'Mobilnummer kopplat till Swish', placeholder: '07X-XXX XX XX',
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="7" y="2" width="10" height="20" rx="2.5" /><path d="M11 18h2" /></svg>,
+  },
+  PayPal: {
+    label: 'PayPal', hint: 'E-postadress för ditt PayPal-konto', placeholder: 'du@exempel.se',
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M7 18 9 6h5a3 3 0 0 1 0 6h-3l-.8 6z" /><path d="M10 9h4a2.5 2.5 0 0 1 0 5h-2.5" /></svg>,
+  },
+};
+
+function PayoutMethodCard() {
+  const { data: pm, isLoading } = usePayoutMethod();
+  const setMethod = useSetPayoutMethod();
+  const toast = useToast();
+  const [editing, setEditing] = useState(false);
+  const [method, setMethodType] = useState('BankTransfer');
+  const [details, setDetails] = useState('');
+  const [holder, setHolder] = useState('');
+
+  const startEdit = () => { setMethodType(pm?.method || 'BankTransfer'); setDetails(''); setHolder(pm?.accountHolder || ''); setEditing(true); };
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await setMethod.mutateAsync({ method, details: details.trim(), accountHolder: holder.trim() || undefined });
+      toast.push('Utbetalningsmetod sparad', 'success');
+      setEditing(false);
+      setDetails('');
+    } catch (err: any) {
+      toast.push(err?.response?.data?.error?.message ?? 'Kunde inte spara utbetalningsmetoden', 'error');
+    }
+  };
+
+  if (isLoading) return <CardSkeleton rows={1} />;
+  const meta = METHOD_META[method] ?? METHOD_META.BankTransfer;
+  const activeMeta = pm?.method ? (METHOD_META[pm.method] ?? METHOD_META.BankTransfer) : null;
+
+  return (
+    <div className="card" style={!pm?.isConfigured && !editing ? { border: '1px solid rgba(212,155,46,.35)' } : undefined}>
+      <div className="sec-head">
+        <h3>Utbetalningsmetod</h3>
+        {pm?.isConfigured && !editing && <button className="view-all" onClick={startEdit}>Ändra</button>}
+      </div>
+
+      {!editing && pm?.isConfigured && activeMeta && (
+        <div className="list-row" style={{ borderTop: 'none', paddingTop: 0 }}>
+          <span className="mono sq" style={{ background: 'linear-gradient(140deg,#FFE3D3,#FFC2A6)', color: '#9c4f31' }}>{activeMeta.icon}</span>
+          <div className="row-main" style={{ flex: 1 }}>
+            <div className="t">{activeMeta.label}</div>
+            <div className="s">{pm.maskedDetails}{pm.accountHolder ? ` · ${pm.accountHolder}` : ''}</div>
+          </div>
+          <span className="badge green">Aktiv</span>
+        </div>
+      )}
+
+      {!editing && !pm?.isConfigured && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 240 }}>
+            <div style={{ fontWeight: 600, fontSize: 14 }}>Lägg till hur du vill få betalt</div>
+            <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 4 }}>Bankkonto, Swish eller PayPal. Detaljerna krypteras och visas aldrig i klartext.</div>
+          </div>
+          <button className="btn-apply" style={{ width: 'auto', padding: '11px 20px' }} onClick={startEdit}>Lägg till metod</button>
+        </div>
+      )}
+
+      {editing && (
+        <form onSubmit={save}>
+          <div className="auth-role" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', marginBottom: 16 }} role="group" aria-label="Metod">
+            {Object.entries(METHOD_META).map(([key, m]) => (
+              <button key={key} type="button" aria-pressed={method === key} className={method === key ? 'on' : ''} onClick={() => setMethodType(key)}>{m.label}</button>
+            ))}
+          </div>
+          <div className="form-grid">
+            <div className="field"><label htmlFor="pm-details">{meta.hint} *</label><input id="pm-details" value={details} onChange={(e) => setDetails(e.target.value)} required minLength={4} maxLength={200} placeholder={meta.placeholder} autoComplete="off" /></div>
+            <div className="field"><label htmlFor="pm-holder">Kontoinnehavare</label><input id="pm-holder" value={holder} onChange={(e) => setHolder(e.target.value)} placeholder="För- och efternamn" /></div>
+            <div className="field full" style={{ flexDirection: 'row', gap: 10 }}>
+              <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={setMethod.isPending}>{setMethod.isPending ? 'Sparar…' : 'Spara metod'}</button>
+              <button type="button" className="btn-outline" onClick={() => setEditing(false)}>Avbryt</button>
+            </div>
+          </div>
+          <div style={{ fontSize: 11.5, color: 'var(--muted-2)', marginTop: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
+            Krypteras med AES-256 innan lagring. Används vid dina utbetalningar.
+          </div>
+        </form>
+      )}
+    </div>
   );
 }
 
@@ -755,6 +889,7 @@ export function CreatorProfilePage() {
   const { data: profile, isLoading, isError, error } = useCreatorProfile();
   const { data: tikTokStatus } = useTikTokStatus();
   const update = useUpdateCreatorProfile();
+  const toast = useToast();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
     displayName: '', bio: '', category: 'Övrigt', country: 'SE', language: 'sv',
@@ -812,9 +947,10 @@ export function CreatorProfilePage() {
       });
       setEditing(false);
       setSaved(true);
+      toast.push('Profilen sparad', 'success');
       setTimeout(() => setSaved(false), 3000);
     } catch {
-      alert('Kunde inte spara profilen');
+      toast.push('Kunde inte spara profilen', 'error');
     }
   };
 

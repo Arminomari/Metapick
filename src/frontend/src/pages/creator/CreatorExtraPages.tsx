@@ -1,7 +1,8 @@
-import { Link } from 'react-router-dom';
-import { useCreatorAssignments, useCreatorProfile, useCreatorPayouts } from '@/hooks/api';
-import { formatCurrency, formatNumber } from '@/lib/utils';
+import { Link, useNavigate } from 'react-router-dom';
+import { useCreatorAssignments, useCreatorProfile, useCreatorPayouts, useSavedCampaigns, useToggleSaveCampaign } from '@/hooks/api';
+import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
 import { AreaChart, Donut, MiniBars, VizDefs, BLUSH } from '@/components/vyrle/Viz';
+import { useToast, CardSkeleton } from '@/components/vyrle/Toast';
 
 const GRADS = [
   'linear-gradient(135deg,#FFD8C7,#F1A88F)',
@@ -59,7 +60,7 @@ export function CreatorAnalyticsPage() {
       </div>
 
       {isLoading ? (
-        <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>Loading…</div>
+        <CardSkeleton rows={4} />
       ) : assignments.length === 0 ? (
         <EmptyCard title="No analytics yet" sub="Once you join a campaign and your videos go live, your verified performance shows up here — reach, clicks and earnings, all in one place." cta="Discover campaigns" to="/creator/browse" />
       ) : (
@@ -297,15 +298,60 @@ export function CreatorLevelsPage() {
 
 /* ───────────────────────── Saved ───────────────────────── */
 export function CreatorSavedPage() {
+  const { data: saved, isLoading } = useSavedCampaigns();
+  const toggleSave = useToggleSaveCampaign();
+  const toast = useToast();
+  const navigate = useNavigate();
+
+  const items = saved ?? [];
+
   return (
     <section className="view active reveal" data-view="saved">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Saved</h1>
-          <p className="page-sub">Bookmark campaigns you want to come back to. Saved campaigns will live here.</p>
+          <h1 className="page-title">Sparat för <em>senare</em></h1>
+          <p className="page-sub">Kampanjer du bokmärkt. Kom tillbaka när du är redo att ansöka — men vänta inte för länge, platserna fylls.</p>
         </div>
       </div>
-      <EmptyCard title="Nothing saved yet" sub="Browse the marketplace and tap save on any campaign that catches your eye to keep it here." cta="Browse campaigns" to="/creator/browse" />
+
+      {isLoading ? (
+        <div className="saved-grid"><CardSkeleton rows={3} /><CardSkeleton rows={3} /><CardSkeleton rows={3} /></div>
+      ) : items.length === 0 ? (
+        <EmptyCard title="Inget sparat ännu" sub="Bläddra bland kampanjerna och tryck på bokmärket på de som fångar ditt öga, så samlas de här." cta="Hitta kampanjer" to="/creator/browse" />
+      ) : (
+        <div className="saved-grid">
+          {items.map(({ campaign: c, savedAt }) => {
+            const full = c.spotsLeft <= 0;
+            return (
+              <div className="camp-card" key={c.id}>
+                <div className="ch">
+                  <span className="mono" style={{ background: grad(c.name) }}>{initial(c.brandName || c.name)}</span>
+                  <div style={{ flex: 1 }}><div className="ttl">{c.name}</div><div className="brand">{c.brandName}</div></div>
+                  <button className="lt-icbtn" style={{ borderRadius: '50%' }} aria-label="Ta bort från sparade"
+                    onClick={() => toggleSave.mutate({ campaignId: c.id, save: false }, { onSuccess: () => toast.push('Borttagen från Saved', 'success') })}
+                    disabled={toggleSave.isPending}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#C26A4A" stroke="#C26A4A" strokeWidth="1.5" strokeLinejoin="round"><path d="M7 4h10v16l-5-3-5 3z" /></svg>
+                  </button>
+                </div>
+                <div className="desc">{c.description}</div>
+                <div className="tags">
+                  <span className="tag g">{c.category}</span><span className="tag">{c.payoutModel}</span>
+                  <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' }}>Sparad <b style={{ color: 'var(--ink)' }}>{formatDate(savedAt)}</b></span>
+                </div>
+                <div className="meta-cols">
+                  <div className="mc"><div className="k">Ersättning</div><div className="v green">{c.payoutSummary}</div></div>
+                  <div className="mc"><div className="k">Platser</div><div className="v">{c.spotsLeft} / {c.maxCreators}</div></div>
+                  <div className="mc"><div className="k">Stänger</div><div className="v">{formatDate(c.endDate)}</div></div>
+                </div>
+                <button className={full ? 'btn-outline' : 'btn-apply'} style={{ width: '100%', marginTop: 'auto' }} disabled={full}
+                  onClick={() => navigate('/creator/browse')}>
+                  {full ? 'Fullbokad' : 'Ansök via Discover'}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }

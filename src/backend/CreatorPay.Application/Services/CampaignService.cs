@@ -13,6 +13,8 @@ public class CampaignService : ICampaignService
     private readonly IUnitOfWork _uow;
     private readonly IRepository<Campaign> _campaigns;
     private readonly IRepository<BrandProfile> _brands;
+    private readonly IRepository<CreatorProfile> _creatorProfiles;
+    private readonly IRepository<SavedCampaign> _savedCampaigns;
     private readonly IAuditService _audit;
     private readonly INotificationService _notifications;
 
@@ -20,12 +22,16 @@ public class CampaignService : ICampaignService
         IUnitOfWork uow,
         IRepository<Campaign> campaigns,
         IRepository<BrandProfile> brands,
+        IRepository<CreatorProfile> creatorProfiles,
+        IRepository<SavedCampaign> savedCampaigns,
         IAuditService audit,
         INotificationService notifications)
     {
         _uow = uow;
         _campaigns = campaigns;
         _brands = brands;
+        _creatorProfiles = creatorProfiles;
+        _savedCampaigns = savedCampaigns;
         _audit = audit;
         _notifications = notifications;
     }
@@ -632,6 +638,81 @@ public class CampaignService : ICampaignService
             .ToList();
 
         return new MarketBenchmarkDto(marketCpm, totalViews, totalSpend, byCategory);
+    }
+
+    // ── Saved campaigns (creator bookmarks) ────────────────
+    public async Task<Result<bool>> SaveCampaignAsync(Guid creatorUserId, Guid campaignId, CancellationToken ct = default)
+    {
+        var creator = await _creatorProfiles.Query().FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
+        if (creator == null) return Errors.NotFound("Creator profile");
+
+        var exists = await _campaigns.Query().AnyAsync(c => c.Id == campaignId && !c.IsDeleted, ct);
+        if (!exists) return Errors.NotFound("Campaign", campaignId);
+
+        var already = await _savedCampaigns.Query()
+            .AnyAsync(s => s.CreatorProfileId == creator.Id && s.CampaignId == campaignId, ct);
+        if (already) return true; // idempotent
+
+        _savedCampaigns.Add(new SavedCampaign { CreatorProfileId = creator.Id, CampaignId = campaignId });
+        await _uow.SaveChangesAsync(ct);
+        return true;
+    }
+
+    public async Task<Result<bool>> UnsaveCampaignAsync(Guid creatorUserId, Guid campaignId, CancellationToken ct = default)
+    {
+        var creator = await _creatorProfiles.Query().FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
+        if (creator == null) return Errors.NotFound("Creator profile");
+
+        var saved = await _savedCampaigns.Query()
+            .FirstOrDefaultAsync(s => s.CreatorProfileId == creator.Id && s.CampaignId == campaignId, ct);
+        if (saved == null) return true; // idempotent
+
+        _savedCampaigns.Remove(saved);
+        await _uow.SaveChangesAsync(ct);
+        return true;
+    }
+
+    public async Task<Result<List<Guid>>> GetSavedCampaignIdsAsync(Guid creatorUserId, CancellationToken ct = default)
+    {
+        var creator = await _creatorProfiles.Query().FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
+        if (creator == null) return new List<Guid>();
+        return await _savedCampaigns.Query()
+            .Where(s => s.CreatorProfileId == creator.Id)
+            .Select(s => s.CampaignId)
+            .ToListAsync(ct);
+    }
+
+    public async Task<Result<List<SavedCampaignDto>>> GetSavedCampaignsAsync(Guid creatorUserId, CancellationToken ct = default)
+    {
+        var creator = await _creatorProfiles.Query().FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
+        if (creator == null) return new List<SavedCampaignDto>();
+
+        var rows = await _savedCampaigns.Query()
+            .Where(s => s.CreatorProfileId == creator.Id)
+            .OrderByDescending(s => s.CreatedAt)
+            .Select(s => new
+            {
+                s.CampaignId,
+                SavedAt = s.CreatedAt,
+                Campaign = s.Campaign,
+                BrandName = s.Campaign.BrandProfile.CompanyName,
+                ActiveSlots = s.Campaign.MaxCreators - s.Campaign.Assignments.Count(a => a.Status == AssignmentStatus.Active),
+                Requirements = s.Campaign.Requirements.Select(r => new CampaignRequirementDto(r.RequirementType.ToString(), r.Value, r.IsRequired)).ToList(),
+                PayoutRules = s.Campaign.PayoutRules.ToList(),
+            })
+            .ToListAsync(ct);
+
+        return rows.Select(x => new SavedCampaignDto(
+            x.CampaignId, x.SavedAt,
+            new CampaignBrowseDto(
+                x.Campaign.Id, x.Campaign.Name, x.BrandName, x.Campaign.Category, x.Campaign.Country,
+                x.Campaign.Description, x.Campaign.MinViews, x.Campaign.PayoutModel.ToString(),
+                BuildPayoutSummary(x.PayoutRules),
+                x.Campaign.MaxCreators, x.ActiveSlots,
+                x.Campaign.StartDate, x.Campaign.EndDate,
+                x.Requirements, x.Campaign.CoverImageUrl,
+                x.Campaign.Perks, x.Campaign.ContentTags?.ToList() ?? []))
+        ).ToList();
     }
 
     private static string BuildPayoutSummary(List<PayoutRule> rules)

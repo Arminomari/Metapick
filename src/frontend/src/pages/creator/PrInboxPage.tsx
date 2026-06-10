@@ -3,6 +3,7 @@ import { StatusBadge } from '@/components/ui';
 import { useReceivedPrOffers, useRespondPrOffer, useMarkPrViewed } from '@/hooks/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { PrOffer } from '@/types';
+import { CardSkeleton } from '@/components/vyrle/Toast';
 
 const GRADS = ['linear-gradient(135deg,#FFD8C7,#F1A88F)', 'linear-gradient(135deg,#cdb8f2,#9c7de0)', 'linear-gradient(135deg,#F2C58A,#e0a04e)', 'linear-gradient(135deg,#a9dcc0,#5fb98a)'];
 const grad = (s: string) => GRADS[((s || '').charCodeAt(0) || 0) % GRADS.length];
@@ -152,7 +153,7 @@ export function CreatorPrInboxPage() {
         {tabs.map((t) => <button key={t.key} className={`tab${tab === t.key ? ' active' : ''}`} onClick={() => setTab(t.key)}>{t.label}{t.n ? ` (${t.n})` : ''}</button>)}
       </div>
 
-      {isLoading ? <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>Laddar…</div> : shown.length > 0 ? (
+      {isLoading ? <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16 }}><CardSkeleton rows={3} /><CardSkeleton rows={3} /><CardSkeleton rows={3} /></div> : shown.length > 0 ? (
         <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16 }}>
           {shown.map((offer) => <OfferCard key={offer.id} offer={offer} />)}
         </div>

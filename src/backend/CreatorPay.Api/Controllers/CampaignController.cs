@@ -91,4 +91,28 @@ public class CampaignController : BaseController
     [Authorize(Policy = "BrandOnly")]
     public async Task<IActionResult> MarketBenchmarks(CancellationToken ct)
         => ToActionResult(await _campaigns.GetMarketBenchmarksAsync(ct));
+
+    /// <summary>Spara kampanj (bokmärke, Creator)</summary>
+    [HttpPost("{id:guid}/save")]
+    [Authorize(Policy = "CreatorOnly")]
+    public async Task<IActionResult> Save(Guid id, CancellationToken ct)
+        => ToActionResult(await _campaigns.SaveCampaignAsync(GetUserId(), id, ct));
+
+    /// <summary>Ta bort sparad kampanj (Creator)</summary>
+    [HttpDelete("{id:guid}/save")]
+    [Authorize(Policy = "CreatorOnly")]
+    public async Task<IActionResult> Unsave(Guid id, CancellationToken ct)
+        => ToActionResult(await _campaigns.UnsaveCampaignAsync(GetUserId(), id, ct));
+
+    /// <summary>Mina sparade kampanjer (Creator)</summary>
+    [HttpGet("saved")]
+    [Authorize(Policy = "CreatorOnly")]
+    public async Task<IActionResult> Saved(CancellationToken ct)
+        => ToActionResult(await _campaigns.GetSavedCampaignsAsync(GetUserId(), ct));
+
+    /// <summary>Id:n för mina sparade kampanjer (Creator)</summary>
+    [HttpGet("saved/ids")]
+    [Authorize(Policy = "CreatorOnly")]
+    public async Task<IActionResult> SavedIds(CancellationToken ct)
+        => ToActionResult(await _campaigns.GetSavedCampaignIdsAsync(GetUserId(), ct));
 }

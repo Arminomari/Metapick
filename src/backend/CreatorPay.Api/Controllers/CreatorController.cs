@@ -56,4 +56,16 @@ public class CreatorController : BaseController
     [Authorize(Policy = "CreatorOnly")]
     public async Task<IActionResult> DisconnectTikTok()
         => ToActionResult(await _tiktok.DisconnectAsync(GetUserId()));
+
+    /// <summary>Min utbetalningsmetod (maskerade detaljer)</summary>
+    [HttpGet("payout-method")]
+    [Authorize(Policy = "CreatorOnly")]
+    public async Task<IActionResult> GetPayoutMethod()
+        => ToActionResult(await _creators.GetPayoutMethodAsync(GetUserId()));
+
+    /// <summary>Sätt utbetalningsmetod (detaljer krypteras)</summary>
+    [HttpPut("payout-method")]
+    [Authorize(Policy = "CreatorOnly")]
+    public async Task<IActionResult> SetPayoutMethod([FromBody] SetPayoutMethodRequest request)
+        => ToActionResult(await _creators.SetPayoutMethodAsync(GetUserId(), request));
 }

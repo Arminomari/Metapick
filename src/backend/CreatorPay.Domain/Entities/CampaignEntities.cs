@@ -131,3 +131,13 @@ public class TrackingTag : BaseEntity
 
     public CreatorCampaignAssignment Assignment { get; set; } = null!;
 }
+
+/// <summary>A creator's bookmarked campaign ("Saved" in the app).</summary>
+public class SavedCampaign : BaseEntity
+{
+    public Guid CreatorProfileId { get; set; }
+    public Guid CampaignId { get; set; }
+
+    public CreatorProfile CreatorProfile { get; set; } = null!;
+    public Campaign Campaign { get; set; } = null!;
+}

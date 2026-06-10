@@ -10,21 +10,81 @@ namespace CreatorPay.Application.Services;
 
 public class CreatorService : ICreatorService
 {
+    private static readonly string[] AllowedPayoutMethods = ["BankTransfer", "Swish", "PayPal"];
+
     private readonly IRepository<User> _users;
     private readonly IRepository<CreatorProfile> _creators;
     private readonly IRepository<TikTokAccount> _tiktokAccounts;
     private readonly IUnitOfWork _uow;
+    private readonly IEncryptionService _encryption;
 
     public CreatorService(
         IRepository<User> users,
         IRepository<CreatorProfile> creators,
         IRepository<TikTokAccount> tiktokAccounts,
-        IUnitOfWork uow)
+        IUnitOfWork uow,
+        IEncryptionService encryption)
     {
         _users = users;
         _creators = creators;
         _tiktokAccounts = tiktokAccounts;
         _uow = uow;
+        _encryption = encryption;
+    }
+
+    public async Task<Result<PayoutMethodDto>> GetPayoutMethodAsync(Guid userId)
+    {
+        var creator = await _creators.Query().FirstOrDefaultAsync(c => c.UserId == userId);
+        if (creator == null) return Errors.NotFound("Creator profile");
+        return BuildPayoutMethodDto(creator);
+    }
+
+    public async Task<Result<PayoutMethodDto>> SetPayoutMethodAsync(Guid userId, SetPayoutMethodRequest request)
+    {
+        var creator = await _creators.Query().FirstOrDefaultAsync(c => c.UserId == userId);
+        if (creator == null) return Errors.NotFound("Creator profile");
+
+        if (!AllowedPayoutMethods.Contains(request.Method))
+            return Errors.Validation($"Payout method must be one of: {string.Join(", ", AllowedPayoutMethods)}");
+
+        var details = (request.Details ?? "").Trim();
+        if (details.Length < 4 || details.Length > 200)
+            return Errors.Validation("Payout details must be between 4 and 200 characters");
+
+        var payload = System.Text.Json.JsonSerializer.Serialize(new PayoutDetailsPayload(details, request.AccountHolder?.Trim()));
+        creator.PayoutMethod = request.Method;
+        creator.PayoutDetailsEncrypted = _encryption.Encrypt(payload);
+        creator.UpdatedAt = DateTime.UtcNow;
+        await _uow.SaveChangesAsync();
+
+        return BuildPayoutMethodDto(creator);
+    }
+
+    private sealed record PayoutDetailsPayload(string Details, string? Holder);
+
+    private PayoutMethodDto BuildPayoutMethodDto(CreatorProfile creator)
+    {
+        if (string.IsNullOrEmpty(creator.PayoutMethod) || string.IsNullOrEmpty(creator.PayoutDetailsEncrypted))
+            return new PayoutMethodDto(creator.PayoutMethod, null, null, false);
+
+        string masked = "••••";
+        string? holder = null;
+        try
+        {
+            var json = _encryption.Decrypt(creator.PayoutDetailsEncrypted);
+            var payload = System.Text.Json.JsonSerializer.Deserialize<PayoutDetailsPayload>(json);
+            if (payload != null)
+            {
+                var d = payload.Details;
+                masked = d.Length <= 4 ? new string('•', d.Length) : new string('•', Math.Min(d.Length - 4, 8)) + d[^4..];
+                holder = payload.Holder;
+            }
+        }
+        catch
+        {
+            // Older/foreign cipher payloads: stay masked rather than erroring the profile page.
+        }
+        return new PayoutMethodDto(creator.PayoutMethod, masked, holder, true);
     }
 
     public async Task<Result<CreatorProfileDto>> GetProfileAsync(Guid userId)

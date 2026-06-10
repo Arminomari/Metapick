@@ -257,6 +257,13 @@ public record PayoutCalculationDto(
     string Status, DateTime CalculatedAt);
 public record PayoutOverrideRequest(decimal NewAmount, string Reason);
 
+// ──── Payout method (creator's payment destination) ────
+public record PayoutMethodDto(string? Method, string? MaskedDetails, string? AccountHolder, bool IsConfigured);
+public record SetPayoutMethodRequest(string Method, string Details, string? AccountHolder);
+
+// ──── Saved campaigns ────
+public record SavedCampaignDto(Guid CampaignId, DateTime SavedAt, CampaignBrowseDto Campaign);
+
 // ──── Fraud ────
 public record CreateFraudFlagRequest(
     string EntityType, Guid EntityId, string FlagType,

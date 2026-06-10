@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useBrandCampaigns, useBrandProfile, usePrStats } from '@/hooks/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { CampaignListItem } from '@/types';
+import { PageSkeleton } from '@/components/vyrle/Toast';
 
 const GRADS = [
   'linear-gradient(135deg,#FFD8C7,#F1A88F)',
@@ -26,7 +27,7 @@ export function BrandStudioDashboard() {
   const { data: profile } = useBrandProfile();
   const { data: prStats } = usePrStats();
 
-  if (isLoading) return <div style={{ padding: 80, textAlign: 'center', color: 'var(--muted)' }}>Loading…</div>;
+  if (isLoading) return <PageSkeleton />;
 
   const campaigns = campaignsRes?.data ?? [];
   const active = campaigns.filter((c) => c.status === 'Active');

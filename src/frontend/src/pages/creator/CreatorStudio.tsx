@@ -6,6 +6,7 @@ import {
 } from '@/hooks/api';
 import { formatCurrency, formatNumber, formatDate } from '@/lib/utils';
 import type { AssignmentListItem } from '@/types';
+import { PageSkeleton } from '@/components/vyrle/Toast';
 
 const GRADS = [
   'linear-gradient(135deg,#FFD8C7,#F1A88F)',
@@ -39,7 +40,7 @@ export function CreatorStudioDashboard() {
   const { data: reviews } = useUserReviews(user?.id ?? '');
   const { data: browseRes } = useBrowseCampaigns();
 
-  if (isLoading) return <div style={{ padding: 80, textAlign: 'center', color: 'var(--muted)' }}>Loading…</div>;
+  if (isLoading) return <PageSkeleton />;
 
   const assignments = assignmentsRes?.data ?? [];
   const payouts = payoutsRes?.data ?? [];
