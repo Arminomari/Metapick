@@ -82,7 +82,7 @@ public class PayoutService : IPayoutService
             .FirstOrDefaultAsync(c => c.Id == request.CalculationId, ct);
         if (calc == null) return Errors.NotFound("PayoutCalculation", request.CalculationId);
         // Ownership: a creator may only request payout for their own assignment's calculation.
-        if (calc.Assignment.CreatorProfileId != creator.Id)
+        if (calc.Assignment == null || calc.Assignment.CreatorProfileId != creator.Id)
             return Errors.Forbidden("Calculation does not belong to this creator");
         if (calc.Status != PayoutCalculationStatus.Verified && calc.Status != PayoutCalculationStatus.Locked)
             return Errors.Conflict("Calculation must be verified or locked before requesting payout");

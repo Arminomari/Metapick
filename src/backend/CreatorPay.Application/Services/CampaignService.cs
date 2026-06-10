@@ -646,7 +646,8 @@ public class CampaignService : ICampaignService
         var creator = await _creatorProfiles.Query().FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
         if (creator == null) return Errors.NotFound("Creator profile");
 
-        var exists = await _campaigns.Query().AnyAsync(c => c.Id == campaignId && !c.IsDeleted, ct);
+        // Only live, browsable campaigns can be bookmarked (not drafts another brand hasn't published).
+        var exists = await _campaigns.Query().AnyAsync(c => c.Id == campaignId && !c.IsDeleted && c.Status == CampaignStatus.Active, ct);
         if (!exists) return Errors.NotFound("Campaign", campaignId);
 
         var already = await _savedCampaigns.Query()
@@ -654,7 +655,15 @@ public class CampaignService : ICampaignService
         if (already) return true; // idempotent
 
         _savedCampaigns.Add(new SavedCampaign { CreatorProfileId = creator.Id, CampaignId = campaignId });
-        await _uow.SaveChangesAsync(ct);
+        try
+        {
+            await _uow.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            // Concurrent double-save hit the unique index — treat as already saved.
+            return true;
+        }
         return true;
     }
 

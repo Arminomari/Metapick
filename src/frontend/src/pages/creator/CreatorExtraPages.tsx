@@ -321,6 +321,7 @@ export function CreatorSavedPage() {
       ) : (
         <div className="saved-grid">
           {items.map(({ campaign: c, savedAt }) => {
+            if (!c?.id) return null;
             const full = c.spotsLeft <= 0;
             return (
               <div className="camp-card" key={c.id}>

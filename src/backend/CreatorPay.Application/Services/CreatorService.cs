@@ -51,7 +51,11 @@ public class CreatorService : ICreatorService
         if (details.Length < 4 || details.Length > 200)
             return Errors.Validation("Payout details must be between 4 and 200 characters");
 
-        var payload = System.Text.Json.JsonSerializer.Serialize(new PayoutDetailsPayload(details, request.AccountHolder?.Trim()));
+        var holder = request.AccountHolder?.Trim();
+        if (holder is { Length: > 120 })
+            return Errors.Validation("Account holder name is too long");
+
+        var payload = System.Text.Json.JsonSerializer.Serialize(new PayoutDetailsPayload(details, holder));
         creator.PayoutMethod = request.Method;
         creator.PayoutDetailsEncrypted = _encryption.Encrypt(payload);
         creator.UpdatedAt = DateTime.UtcNow;
