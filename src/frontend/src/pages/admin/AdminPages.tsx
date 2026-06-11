@@ -21,6 +21,12 @@ interface PendingUser {
   tikTokUsername?: string;
   dateOfBirth?: string;
   rejectionReason?: string;
+  authProvider?: string;
+  avatarUrl?: string;
+  followerCount?: number;
+  instagramUsername?: string;
+  website?: string;
+  industry?: string;
 }
 
 interface AdminCampaign {
@@ -575,10 +581,19 @@ export function AdminDashboardPage() {
 
                 {expandedId === user.id && (
                   <div style={{ borderTop: '1px solid #1e1e2e', paddingTop: '1rem', marginBottom: '1rem' }}>
+                    {(user.avatarUrl || user.authProvider) && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                        {user.avatarUrl && <img src={user.avatarUrl} alt="" style={{ width: 44, height: 44, borderRadius: user.role === 'Brand' ? 10 : '50%', objectFit: 'cover', border: '1px solid #1e1e2e' }} />}
+                        {user.authProvider && <span style={{ fontSize: '.75rem', color: '#4caf50', border: '1px solid rgba(76,175,80,.4)', borderRadius: 999, padding: '3px 10px' }}>E-post verifierad via {user.authProvider}</span>}
+                      </div>
+                    )}
                     {user.role === 'Creator' && (
                       <>
                         <div style={s.detailRow}><span style={s.detailLabel}>Visningsnamn:</span><span style={s.detailValue}>{user.displayName || '–'}</span></div>
                         <div style={s.detailRow}><span style={s.detailLabel}>TikTok:</span><span style={s.detailValue}>{user.tikTokUsername ? `@${user.tikTokUsername}` : '–'}</span></div>
+                        <div style={s.detailRow}><span style={s.detailLabel}>Följare:</span><span style={s.detailValue}>{user.followerCount ? user.followerCount.toLocaleString('sv-SE') : '–'}</span></div>
+                        <div style={s.detailRow}><span style={s.detailLabel}>Instagram:</span><span style={s.detailValue}>{user.instagramUsername ? `@${user.instagramUsername}` : '–'}</span></div>
+                        <div style={s.detailRow}><span style={s.detailLabel}>Webbplats:</span><span style={s.detailValue}>{user.website || '–'}</span></div>
                         <div style={s.detailRow}><span style={s.detailLabel}>Kategori:</span><span style={s.detailValue}>{user.category || '–'}</span></div>
                         <div style={s.detailRow}><span style={s.detailLabel}>Födelsedatum:</span><span style={s.detailValue}>{user.dateOfBirth || '–'}</span></div>
                         <div style={s.detailRow}><span style={s.detailLabel}>Bio:</span><span style={s.detailValue}>{user.bio || '–'}</span></div>
@@ -588,6 +603,8 @@ export function AdminDashboardPage() {
                       <>
                         <div style={s.detailRow}><span style={s.detailLabel}>Företagsnamn:</span><span style={s.detailValue}>{user.companyName || '–'}</span></div>
                         <div style={s.detailRow}><span style={s.detailLabel}>Org.nummer:</span><span style={s.detailValue}>{user.organizationNumber || '–'}</span></div>
+                        <div style={s.detailRow}><span style={s.detailLabel}>Bransch:</span><span style={s.detailValue}>{user.industry || '–'}</span></div>
+                        <div style={s.detailRow}><span style={s.detailLabel}>Webbplats:</span><span style={s.detailValue}>{user.website || '–'}</span></div>
                         <div style={s.detailRow}><span style={s.detailLabel}>Telefon:</span><span style={s.detailValue}>{user.contactPhone || '–'}</span></div>
                       </>
                     )}

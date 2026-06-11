@@ -36,6 +36,13 @@ public class BrandService : IBrandService
         brand.Industry = request.Industry;
         brand.Description = request.Description;
         brand.ContactPhone = request.ContactPhone;
+        if (request.LogoUrl != null)
+        {
+            if (!MediaValidation.IsValidImageRef(request.LogoUrl))
+                return Errors.Validation("Logotypen är ogiltig eller för stor");
+            // Empty string clears the logo; null means "leave unchanged".
+            brand.LogoUrl = MediaValidation.Normalize(request.LogoUrl);
+        }
 
         await _uow.SaveChangesAsync();
         return MapToDto(brand);

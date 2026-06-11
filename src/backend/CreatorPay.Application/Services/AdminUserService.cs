@@ -83,6 +83,8 @@ public class AdminUserService : IAdminUserService
             string? displayName = null, bio = null, category = null, tiktokUsername = null;
             DateOnly? dateOfBirth = null;
             string? rejectionReason = null;
+            string? avatarUrl = null, instagramUsername = null, website = null, industry = null;
+            int? followerCount = null;
 
             if (user.Role == UserRole.Brand && brandByUser.TryGetValue(user.Id, out var brand))
             {
@@ -90,6 +92,9 @@ public class AdminUserService : IAdminUserService
                 orgNumber        = brand.OrganizationNumber;
                 contactPhone     = brand.ContactPhone;
                 rejectionReason  = brand.RejectionReason;
+                avatarUrl        = brand.LogoUrl;
+                website          = brand.Website;
+                industry         = brand.Industry;
             }
             else if (user.Role == UserRole.Creator && creatorByUser.TryGetValue(user.Id, out var creator))
             {
@@ -98,6 +103,10 @@ public class AdminUserService : IAdminUserService
                 category         = creator.Category;
                 dateOfBirth      = creator.DateOfBirth;
                 rejectionReason  = creator.RejectionReason;
+                avatarUrl        = creator.AvatarUrl;
+                followerCount    = creator.FollowerCount;
+                instagramUsername = creator.InstagramUsername;
+                website          = creator.Website;
 
                 if (tiktokByCreator.TryGetValue(creator.Id, out var tiktok))
                     tiktokUsername = tiktok.TikTokUsername;
@@ -107,7 +116,8 @@ public class AdminUserService : IAdminUserService
                 user.Id, user.Email, user.Role.ToString(), user.Status.ToString(), user.CreatedAt,
                 companyName, orgNumber, contactPhone,
                 displayName, bio, category, tiktokUsername, dateOfBirth,
-                rejectionReason);
+                rejectionReason,
+                user.AuthProvider, avatarUrl, followerCount, instagramUsername, website, industry);
         }).ToList();
 
         return new PagedResult<PendingUserDto>

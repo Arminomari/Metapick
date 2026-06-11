@@ -15,6 +15,24 @@ public interface IAuthService
     Task<Result<bool>> ChangePasswordAsync(Guid userId, ChangePasswordRequest request);
 }
 
+public interface ISocialAuthService
+{
+    SocialProvidersDto GetProviders();
+    Task<Result<SocialLoginResponse>> LoginAsync(SocialLoginRequest request);
+    Task<Result<AuthResponse>> RegisterAsync(SocialRegisterRequest request);
+}
+
+/// <summary>Verified identity returned by a social provider after server-side token validation.</summary>
+public record SocialIdentity(string Provider, string ExternalId, string Email, bool EmailVerified,
+    string? FirstName, string? LastName, string? PictureUrl);
+
+/// <summary>Validates provider tokens server-side (Google ID token, Apple identity token, Facebook access token).</summary>
+public interface ISocialTokenVerifier
+{
+    SocialProvidersDto GetProviders();
+    Task<Result<SocialIdentity>> VerifyAsync(string provider, string token);
+}
+
 public interface IAdminUserService
 {
     Task<Result<PagedResult<PendingUserDto>>> GetUsersAsync(string? status, int page, int pageSize);

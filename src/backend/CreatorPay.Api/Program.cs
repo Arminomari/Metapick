@@ -209,6 +209,10 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// Largest legitimate request is a register/profile payload with inline base64 media
+// (~400k chars avatar + logo + JSON overhead). 2 MB leaves headroom; anything bigger is abuse.
+builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 2_097_152);
+
 var app = builder.Build();
 
 // ── Middleware pipeline ─────────────────────────────────

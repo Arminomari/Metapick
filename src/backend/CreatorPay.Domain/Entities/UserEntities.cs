@@ -12,6 +12,10 @@ public class User : SoftDeletableEntity
     public UserRole Role { get; set; }
     public UserStatus Status { get; set; } = UserStatus.PendingVerification;
     public bool EmailVerified { get; set; }
+    /// <summary>Social identity provider ("Google", "Apple", "Facebook") when the account uses social login.</summary>
+    public string? AuthProvider { get; set; }
+    /// <summary>Stable user id at the identity provider (Google sub, Apple sub, Facebook id).</summary>
+    public string? ExternalAuthId { get; set; }
     public string? RefreshTokenHash { get; set; }
     public DateTime? RefreshTokenExpiry { get; set; }
     public DateTime? LastLoginAt { get; set; }

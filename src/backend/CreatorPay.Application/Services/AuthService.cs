@@ -41,12 +41,20 @@ public class AuthService : IAuthService
 
     public async Task<Result<AuthResponse>> RegisterAsync(RegisterRequest request)
     {
-        var exists = await _users.Query().AnyAsync(u => u.Email == request.Email.ToLowerInvariant());
+        // IgnoreQueryFilters: soft-deleted rows still occupy the unique email index,
+        // so they must count as "exists" or the insert 500s on the constraint.
+        var exists = await _users.Query().IgnoreQueryFilters()
+            .AnyAsync(u => u.Email == request.Email.ToLowerInvariant());
         if (exists) return Errors.Conflict("Email already registered");
 
         if (!Enum.TryParse<UserRole>(request.Role, out var role) ||
             role == UserRole.Admin)
             return Errors.Validation("Invalid role");
+
+        if (!MediaValidation.IsValidImageRef(request.AvatarUrl))
+            return Errors.Validation("Profilbilden är ogiltig eller för stor");
+        if (!MediaValidation.IsValidImageRef(request.LogoUrl))
+            return Errors.Validation("Logotypen är ogiltig eller för stor");
 
         // For creators, the TikTok username has a unique index — check up front so a
         // collision returns a clean 409 instead of an unhandled DbUpdateException (500).
@@ -80,9 +88,12 @@ public class AuthService : IAuthService
                 UserId = user.Id,
                 CompanyName = request.CompanyName ?? request.Email,
                 OrganizationNumber = request.OrganizationNumber,
-                Industry = "Övrigt",
+                Industry = string.IsNullOrWhiteSpace(request.Industry) ? "Övrigt" : request.Industry.Trim(),
                 Country = request.Country ?? "SE",
                 ContactPhone = request.ContactPhone,
+                Website = TrimOrNull(request.Website, 300),
+                Description = TrimOrNull(request.Description, 2000),
+                LogoUrl = MediaValidation.Normalize(request.LogoUrl),
                 Status = BrandStatus.Pending
             };
             _brands.Add(brand);
@@ -101,6 +112,11 @@ public class AuthService : IAuthService
                 ProfileTags = request.ProfileTags?.ToArray() ?? [],
                 InstagramUsername = string.IsNullOrWhiteSpace(request.InstagramUsername)
                     ? null : request.InstagramUsername.TrimStart('@').Trim(),
+                AvatarUrl = MediaValidation.Normalize(request.AvatarUrl),
+                FollowerCount = Math.Max(0, request.FollowerCount ?? 0),
+                AverageViews = request.AverageViews is > 0 ? request.AverageViews : null,
+                InstagramFollowerCount = Math.Max(0, request.InstagramFollowerCount ?? 0),
+                Website = TrimOrNull(request.Website, 300),
                 Status = CreatorStatus.Pending
             };
             _creators.Add(creator);
@@ -133,6 +149,13 @@ public class AuthService : IAuthService
         // Don't issue tokens — account must be approved by admin first
         return new AuthResponse("", "", DateTime.UtcNow,
             user.Id, user.Email, user.Role.ToString());
+    }
+
+    private static string? TrimOrNull(string? value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var trimmed = value.Trim();
+        return trimmed.Length > maxLength ? trimmed[..maxLength] : trimmed;
     }
 
     public async Task<Result<AuthResponse>> LoginAsync(LoginRequest request)

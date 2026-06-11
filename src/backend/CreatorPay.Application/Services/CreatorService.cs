@@ -115,7 +115,11 @@ public class CreatorService : ICreatorService
             creator.ProfileTags = request.ProfileTags.ToArray();
         // Previously these fields were silently dropped on update.
         if (request.AvatarUrl != null)
+        {
+            if (!MediaValidation.IsValidImageRef(request.AvatarUrl))
+                return Errors.Validation("Profilbilden är ogiltig eller för stor");
             creator.AvatarUrl = string.IsNullOrWhiteSpace(request.AvatarUrl) ? null : request.AvatarUrl.Trim();
+        }
         if (request.FollowerCount.HasValue && request.FollowerCount.Value >= 0)
             creator.FollowerCount = request.FollowerCount.Value;
         if (request.AverageViews.HasValue && request.AverageViews.Value >= 0)

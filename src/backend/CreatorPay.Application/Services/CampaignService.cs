@@ -394,7 +394,8 @@ public class CampaignService : ICampaignService
             x.Campaign.StartDate, x.Campaign.EndDate,
             x.Requirements,
             x.Campaign.CoverImageUrl,
-            x.Campaign.Perks, x.Campaign.ContentTags?.ToList() ?? []
+            x.Campaign.Perks, x.Campaign.ContentTags?.ToList() ?? [],
+            MapPayoutRules(x.PayoutRules)
         )).ToList();
 
         return new PagedResult<CampaignBrowseDto>
@@ -478,7 +479,8 @@ public class CampaignService : ICampaignService
             c.StartDate, c.EndDate,
             c.Requirements.Select(r => new CampaignRequirementDto(r.RequirementType.ToString(), r.Value, r.IsRequired)).ToList(),
             c.CoverImageUrl,
-            c.Perks, c.ContentTags?.ToList() ?? []
+            c.Perks, c.ContentTags?.ToList() ?? [],
+            MapPayoutRules(c.PayoutRules)
         )).ToList();
 
         return new CursorPagedResult<CampaignBrowseDto>
@@ -720,9 +722,16 @@ public class CampaignService : ICampaignService
                 x.Campaign.MaxCreators, x.ActiveSlots,
                 x.Campaign.StartDate, x.Campaign.EndDate,
                 x.Requirements, x.Campaign.CoverImageUrl,
-                x.Campaign.Perks, x.Campaign.ContentTags?.ToList() ?? []))
+                x.Campaign.Perks, x.Campaign.ContentTags?.ToList() ?? [],
+                MapPayoutRules(x.PayoutRules)))
         ).ToList();
     }
+
+    private static List<PayoutRuleDto> MapPayoutRules(IEnumerable<PayoutRule>? rules) =>
+        rules?.OrderBy(r => r.SortOrder).Select(r => new PayoutRuleDto(
+            r.PayoutType.ToString(), r.MinViews, r.MaxViews, r.Amount,
+            r.MaxPayoutPerCreator, r.SortOrder, r.TriggerType.ToString(),
+            r.MinClicks, r.MaxClicks)).ToList() ?? [];
 
     private static string BuildPayoutSummary(List<PayoutRule> rules)
     {

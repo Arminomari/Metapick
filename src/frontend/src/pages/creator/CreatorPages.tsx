@@ -15,6 +15,8 @@ import {
   usePayoutMethod, useSetPayoutMethod,
 } from '@/hooks/api';
 import { useToast, CardSkeleton } from '@/components/vyrle/Toast';
+import { PayoutEstimator, PayoutTerms } from '@/components/vyrle/PayoutEstimator';
+import { ImagePicker } from '@/components/auth/ImagePicker';
 import api from '@/lib/api';
 import { Button, Card, DataTable, EmptyState, LoadingSpinner, Pagination, StatCard, StatusBadge, type Column } from '@/components/ui';
 import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
@@ -62,13 +64,13 @@ function TikTokAlertBanner({ compact = false }: { compact?: boolean }) {
 
   if (compact) {
     return (
-      <div className="flex items-center gap-3 rounded-[14px] border border-[hsl(var(--warning)/0.35)] bg-[hsl(var(--warning)/0.07)] px-4 py-3">
-        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[hsl(var(--warning)/0.18)] text-[hsl(var(--warning))]" aria-hidden>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+      <div className="vy-alert warn" style={{ marginBottom: 16 }}>
+        <span className="va-ic" aria-hidden>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12V3h4a4 4 0 0 0 4 4" /><path d="M9 12a4 4 0 1 0 4 4V3" /></svg>
         </span>
-        <p className="text-sm text-[hsl(var(--warning))] flex-1">
-          Anslut ditt TikTok-konto för automatisk tracking.{' '}
-          <Link to="/creator/profile" className="text-primary hover:underline font-medium">Gå till profilen →</Link>
+        <p style={{ flex: 1, margin: 0 }}>
+          <b>Anslut ditt TikTok-konto</b> för automatisk visningsverifiering — det krävs för att få betalt.{' '}
+          <Link to="/creator/profile" className="auth-link">Gå till profilen →</Link>
         </p>
       </div>
     );
@@ -165,6 +167,7 @@ export function BrowseCampaignsPage() {
   const toast = useToast();
   const apply = useApplyToCampaign();
   const [applyingId, setApplyingId] = useState<string | null>(null);
+  const [calcId, setCalcId] = useState<string | null>(null);
 
   // Build a map of campaignId -> application status from backend data
   const appStatusMap = new Map<string, string>();
@@ -262,6 +265,19 @@ export function BrowseCampaignsPage() {
                         <div className="mc"><div className="k">Platser</div><div className="v">{c.spotsLeft} / {c.maxCreators}</div></div>
                         <div className="mc"><div className="k">Period</div><div className="v">{formatDate(c.startDate)} – {formatDate(c.endDate)}</div></div>
                       </div>
+                      {(c.payoutRules?.length ?? 0) > 0 && (
+                        <div style={{ margin: '2px 0 10px' }}>
+                          <button type="button" className="view-all" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                            aria-expanded={calcId === c.id}
+                            onClick={() => setCalcId(calcId === c.id ? null : c.id)}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8M8 10h2m2 0h2m2 0h0M8 14h2m2 0h2m2 0h0M8 18h2m2 0h4" /></svg>
+                            {calcId === c.id ? 'Dölj kalkylen' : 'Räkna på din ersättning'}
+                          </button>
+                          {calcId === c.id && (
+                            <PayoutEstimator model={c.payoutModel} rules={c.payoutRules!} />
+                          )}
+                        </div>
+                      )}
                       <button className={status === 'Approved' || status === 'Rejected' || status === 'Pending' || full ? 'btn-outline' : 'btn-apply'} style={{ width: '100%', marginTop: 'auto' }}
                         onClick={() => handleApply(c.id)} disabled={isDisabled(c.id, c.spotsLeft)}>
                         {getButtonLabel(c.id, c.spotsLeft)}
@@ -513,6 +529,12 @@ export function AssignmentDetailPage() {
               <b style={{ color: '#9c4f31' }}>Förmåner:</b> {campaign.perks}
             </div>
           )}
+          {(campaign.payoutRules?.length ?? 0) > 0 && (
+            <div style={{ marginTop: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8 }}>Ersättningsvillkor</div>
+              <PayoutTerms rules={campaign.payoutRules} minViews={campaign.minViews} />
+            </div>
+          )}
         </div>
       )}
 
@@ -740,6 +762,24 @@ export function EarningsPage() {
       {/* payout method */}
       <div style={{ marginTop: 18 }}><PayoutMethodCard /></div>
 
+      {/* how payouts work */}
+      <div className="card" style={{ marginTop: 18 }}>
+        <div className="sec-head"><h3>Så får du betalt</h3><span style={{ fontSize: 12.5, color: 'var(--muted)' }}>Från visning till pengar på kontot</span></div>
+        <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 12 }}>
+          {[
+            ['1. Posta & verifiera', 'Du postar med kampanjens hashtag — dina visningar verifieras automatiskt via TikTok.'],
+            ['2. Ersättning räknas', 'Varje natt räknas din intjäning om enligt kampanjens villkor (t.ex. kr per 1 000 visningar).'],
+            ['3. Begär utbetalning', 'När beloppet är verifierat begär du utbetalning med ett klick härifrån.'],
+            ['4. Pengar på kontot', 'Utbetalningen går till din valda metod ovan — Swish, bank eller PayPal.'],
+          ].map(([t, d], i) => (
+            <div key={t} className="vy-alert info" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+              <div className="va-ic" aria-hidden="true" style={{ fontWeight: 800, fontSize: 14 }}>{i + 1}</div>
+              <div><b>{(t as string).slice(3)}</b><div style={{ marginTop: 3, fontSize: 12, lineHeight: 1.5 }}>{d}</div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* pending detail */}
       {pendingList.length > 0 && (
         <div className="card" style={{ marginTop: 18 }}>
@@ -937,7 +977,7 @@ export function CreatorProfilePage() {
         tikTokUsername: form.tikTokUsername || undefined,
         dateOfBirth: form.dateOfBirth || undefined,
         profileTags: form.profileTags,
-        avatarUrl: form.avatarUrl || undefined,
+        avatarUrl: form.avatarUrl,
         followerCount: form.followerCount === '' ? undefined : Number(form.followerCount),
         averageViews: form.averageViews === '' ? undefined : Number(form.averageViews),
         instagramUsername: form.instagramUsername || undefined,
@@ -999,8 +1039,21 @@ export function CreatorProfilePage() {
           <div className="field"><label>Instagram-följare</label><input type="text" inputMode="numeric" value={form.instagramFollowerCount} disabled={!editing} onChange={(e) => setForm({ ...form, instagramFollowerCount: e.target.value.replace(/\D/g, '') })} /></div>
           <div className="field"><label>Följare (TikTok/övrigt)</label><input type="text" inputMode="numeric" value={form.followerCount} disabled={!editing} onChange={(e) => setForm({ ...form, followerCount: e.target.value.replace(/\D/g, '') })} /></div>
           <div className="field"><label>Snittvisningar</label><input type="text" inputMode="numeric" value={form.averageViews} disabled={!editing} onChange={(e) => setForm({ ...form, averageViews: e.target.value.replace(/\D/g, '') })} /></div>
-          <div className="field"><label>Profilbild-URL</label><input type="url" value={form.avatarUrl} onChange={set('avatarUrl')} disabled={!editing} placeholder="https://…" /></div>
           <div className="field"><label>Webbplats / Linktree</label><input type="url" value={form.website} onChange={set('website')} disabled={!editing} placeholder="https://…" /></div>
+          <div className="field full">
+            {editing ? (
+              <ImagePicker label="Profilbild" value={form.avatarUrl || null}
+                onChange={(v) => setForm({ ...form, avatarUrl: v ?? '' })}
+                hint="Varumärken ser den i Discover och på din publika profil." />
+            ) : (
+              <>
+                <label>Profilbild</label>
+                {form.avatarUrl
+                  ? <img src={form.avatarUrl} alt="Profilbild" className="upload-prev circle" style={{ width: 64, height: 64 }} />
+                  : <span className="auth-hint">Ingen profilbild uppladdad ännu.</span>}
+              </>
+            )}
+          </div>
           <div className="field full checkrow" style={{ flexDirection: 'row', justifyContent: 'flex-start' }}>
             <input type="checkbox" checked={form.openToPrOffers} disabled={!editing} onChange={(e) => setForm({ ...form, openToPrOffers: e.target.checked })} /> Öppen för direkta PR-erbjudanden från företag
           </div>

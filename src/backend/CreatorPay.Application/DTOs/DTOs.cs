@@ -24,8 +24,33 @@ public record RegisterRequest(
     // Creator-specific
     string? DisplayName, string? Country, string? Bio, string? Category,
     string? TikTokUsername, DateOnly? DateOfBirth, List<string>? ProfileTags,
-    string? InstagramUsername = null);
+    string? InstagramUsername = null,
+    // Creator reach & presence (optional)
+    string? AvatarUrl = null, int? FollowerCount = null, int? AverageViews = null,
+    int? InstagramFollowerCount = null, string? Website = null,
+    // Brand presence (optional)
+    string? Industry = null, string? LogoUrl = null, string? Description = null);
 public record LoginRequest(string Email, string Password);
+
+// ──── Social auth ────
+public record SocialLoginRequest(string Provider, string Token);
+public record SocialRegisterRequest(
+    string Provider, string Token, string Role,
+    string? FirstName, string? LastName,
+    // Brand-specific
+    string? CompanyName, string? OrganizationNumber, string? ContactPhone,
+    // Creator-specific
+    string? DisplayName, string? Country, string? Bio, string? Category,
+    string? TikTokUsername, DateOnly? DateOfBirth, List<string>? ProfileTags,
+    string? InstagramUsername = null,
+    string? AvatarUrl = null, int? FollowerCount = null, int? AverageViews = null,
+    int? InstagramFollowerCount = null, string? Website = null,
+    string? Industry = null, string? LogoUrl = null, string? Description = null);
+public record SocialIdentityDto(string Provider, string Email, string? FirstName, string? LastName, string? PictureUrl);
+/// <summary>Status is "LoggedIn" (Auth set) or "NeedsRegistration" (Identity set, client continues to signup).</summary>
+public record SocialLoginResponse(string Status, AuthResponse? Auth, SocialIdentityDto? Identity);
+public record SocialProviderInfo(bool Enabled, string? ClientId);
+public record SocialProvidersDto(SocialProviderInfo Google, SocialProviderInfo Apple, SocialProviderInfo Facebook);
 public record RefreshTokenRequest(string RefreshToken);
 public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 public record AuthResponse(string AccessToken, string RefreshToken, DateTime ExpiresAt, Guid UserId, string Email, string Role);
@@ -39,7 +64,10 @@ public record PendingUserDto(
     // Creator fields
     string? DisplayName, string? Bio, string? Category, string? TikTokUsername,
     DateOnly? DateOfBirth,
-    string? RejectionReason);
+    string? RejectionReason,
+    // Vetting context for the admin review queue
+    string? AuthProvider = null, string? AvatarUrl = null, int? FollowerCount = null,
+    string? InstagramUsername = null, string? Website = null, string? Industry = null);
 
 // ──── Brand ────
 public record BrandProfileDto(
@@ -52,7 +80,8 @@ public record BrandListDto(
     string Status, DateTime CreatedAt, int CampaignCount);
 
 public record UpdateBrandProfileRequest(
-    string CompanyName, string? Website, string Industry, string? Description, string? ContactPhone);
+    string CompanyName, string? Website, string Industry, string? Description, string? ContactPhone,
+    string? LogoUrl = null);
 
 // ──── Creator ────
 public record CreatorProfileDto(
@@ -195,7 +224,8 @@ public record CampaignBrowseDto(
     string Description, int MinViews, string PayoutModel, string PayoutSummary,
     int MaxCreators, int SpotsLeft, DateTime StartDate, DateTime EndDate,
     List<CampaignRequirementDto> Requirements, string? CoverImageUrl,
-    string? Perks, List<string> ContentTags);
+    string? Perks, List<string> ContentTags,
+    List<PayoutRuleDto>? PayoutRules = null);
 
 // ──── Application ────
 public record ApplyToCampaignRequest(Guid CampaignId, string? Message);

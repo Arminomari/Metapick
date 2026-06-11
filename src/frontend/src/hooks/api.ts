@@ -518,7 +518,7 @@ export function useBrandProfile() {
   return useQuery({
     queryKey: ['brand-profile'],
     queryFn: async () => {
-      const res = await api.get<ApiResponse<{ id: string; companyName: string; website?: string; industry: string; description?: string; contactPhone?: string; status: string }>>('/brand/profile');
+      const res = await api.get<ApiResponse<{ id: string; companyName: string; website?: string; industry: string; description?: string; contactPhone?: string; status: string; logoUrl?: string | null }>>('/brand/profile');
       return res.data.data;
     },
   });
@@ -527,7 +527,7 @@ export function useBrandProfile() {
 export function useUpdateBrandProfile() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { companyName: string; website?: string; industry: string; description?: string; contactPhone?: string }) => {
+    mutationFn: async (data: { companyName: string; website?: string; industry: string; description?: string; contactPhone?: string; logoUrl?: string | null }) => {
       const res = await api.put('/brand/profile', data);
       return res.data.data;
     },

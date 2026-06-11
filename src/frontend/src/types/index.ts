@@ -226,6 +226,7 @@ export interface CampaignBrowseItem {
   coverImageUrl?: string;
   perks?: string;
   contentTags: string[];
+  payoutRules?: PayoutRule[];
 }
 
 export interface CampaignRequirement {

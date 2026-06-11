@@ -15,6 +15,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         b.Property(e => e.PasswordHash).HasMaxLength(512).IsRequired();
         b.Property(e => e.Role).HasMaxLength(20).IsRequired();
         b.Property(e => e.Status).HasMaxLength(20).IsRequired();
+        b.Property(e => e.AuthProvider).HasMaxLength(30);
+        b.Property(e => e.ExternalAuthId).HasMaxLength(200);
+        b.HasIndex(e => new { e.AuthProvider, e.ExternalAuthId });
         b.Property(e => e.IsDeleted).HasDefaultValue(false);
 
         b.HasOne(e => e.AdminProfile).WithOne(p => p.User)
@@ -47,7 +50,8 @@ public class BrandProfileConfiguration : IEntityTypeConfiguration<BrandProfile>
         b.Property(e => e.OrganizationNumber).HasMaxLength(50);
         b.Property(e => e.ContactPhone).HasMaxLength(30);
         b.Property(e => e.Website).HasMaxLength(500);
-        b.Property(e => e.LogoUrl).HasMaxLength(1000);
+        // Logo can be an inline base64 data URL from the client-side resizer (capped in MediaValidation).
+        b.Property(e => e.LogoUrl).HasMaxLength(400_000);
         b.Property(e => e.Status).HasMaxLength(30).IsRequired();
         b.Property(e => e.IsDeleted).HasDefaultValue(false);
         b.HasIndex(e => e.UserId).IsUnique();
@@ -69,7 +73,8 @@ public class CreatorProfileConfiguration : IEntityTypeConfiguration<CreatorProfi
         b.Property(e => e.Bio).HasMaxLength(2000);
         b.Property(e => e.Country).HasMaxLength(2).IsRequired();
         b.Property(e => e.Language).HasMaxLength(5);
-        b.Property(e => e.AvatarUrl).HasMaxLength(1000);
+        // Avatar can be an inline base64 data URL from the client-side resizer (capped in MediaValidation).
+        b.Property(e => e.AvatarUrl).HasMaxLength(400_000);
         b.Property(e => e.Status).HasMaxLength(20).IsRequired();
         b.Property(e => e.IsDeleted).HasDefaultValue(false);
         b.Property(e => e.InstagramUsername).HasMaxLength(100);

@@ -82,6 +82,16 @@ public static class ServiceCollectionExtensions
             });
         services.AddScoped<IPayoutProvider, PayoutProviderService>();
 
+        // Social login (Google/Apple/Facebook) — token verification calls external APIs.
+        services.AddScoped<ISocialAuthService, SocialAuthService>();
+        services.AddHttpClient<ISocialTokenVerifier, SocialTokenVerifier>()
+            .AddStandardResilienceHandler(options =>
+            {
+                options.Retry.MaxRetryAttempts = 2;
+                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(15);
+                options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(8);
+            });
+
         return services;
     }
 

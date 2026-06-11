@@ -10,6 +10,7 @@ import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
 import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
 import { PLATFORM_TAGS, NICHE_TAGS } from '@/lib/tags';
 import { CardSkeleton } from '@/components/vyrle/Toast';
+import { ImagePicker } from '@/components/auth/ImagePicker';
 import type { CampaignListItem, ApplicationItem, CreateCampaignRequest, CreatorPerformance, CreatorVideo } from '@/types';
 
 const GRADS = [
@@ -376,49 +377,39 @@ export function CreateCampaignPage() {
 
             {/* Fixed model */}
             {form.payoutModel === 'Fixed' && (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium mb-1">Belopp per creator (SEK)</label>
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 14 }}>
+                  <div className="field"><label>Belopp per creator (SEK)</label>
                     <input type="text" inputMode="numeric" value={form.payoutRules[0]?.amount || ''}
-                      onChange={(e) => updateRule(0, { amount: Number(e.target.value.replace(/\D/g,'')) || 0 })}
-                      placeholder="t.ex. 500"
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                      onChange={(e) => updateRule(0, { amount: Number(e.target.value.replace(/\D/g, '')) || 0 })}
+                      placeholder="t.ex. 500" />
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium mb-1">Minsta antal views</label>
+                  <div className="field"><label>Minsta antal views</label>
                     <input type="text" inputMode="numeric" value={form.payoutRules[0]?.minViews || ''}
-                      onChange={(e) => updateRule(0, { minViews: Number(e.target.value.replace(/\D/g,'')) || 0 })}
-                      placeholder="t.ex. 1000"
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                      onChange={(e) => updateRule(0, { minViews: Number(e.target.value.replace(/\D/g, '')) || 0 })}
+                      placeholder="t.ex. 1000" />
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Creatorn får {form.payoutRules[0]?.amount ?? 0} kr när videon når {formatNumber(form.payoutRules[0]?.minViews ?? 0)} views.
-                </p>
-              </div>
+                <p className="auth-hint">Creatorn får {form.payoutRules[0]?.amount ?? 0} kr när videon når {formatNumber(form.payoutRules[0]?.minViews ?? 0)} views.</p>
+              </>
             )}
 
             {/* CPM model */}
             {form.payoutModel === 'CPM' && (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium mb-1">Pris per 1 000 views (SEK)</label>
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 14 }}>
+                  <div className="field"><label>Pris per 1 000 views (SEK)</label>
                     <input type="text" inputMode="numeric" value={form.payoutRules[0]?.amount || ''}
-                      onChange={(e) => updateRule(0, { amount: Number(e.target.value.replace(/\D/g,'')) || 0 })}
-                      placeholder="t.ex. 50"
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                      onChange={(e) => updateRule(0, { amount: Number(e.target.value.replace(/\D/g, '')) || 0 })}
+                      placeholder="t.ex. 50" />
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium mb-1">Max per creator (SEK, valfritt)</label>
+                  <div className="field"><label>Max per creator (SEK, valfritt)</label>
                     <input type="text" inputMode="numeric" value={form.payoutRules[0]?.maxPayoutPerCreator ?? ''}
-                      onChange={(e) => { const v = e.target.value.replace(/\D/g,''); updateRule(0, { maxPayoutPerCreator: v ? Number(v) : undefined }); }}
-                      placeholder="Ingen gräns"
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                      onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); updateRule(0, { maxPayoutPerCreator: v ? Number(v) : undefined }); }}
+                      placeholder="Ingen gräns" />
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="auth-hint">
                   {(() => {
                     const amt = form.payoutRules[0]?.amount ?? 50;
                     const cap = form.payoutRules[0]?.maxPayoutPerCreator;
@@ -426,54 +417,50 @@ export function CreateCampaignPage() {
                     return `Exempel: 10 000 views = ${formatCurrency(ex10k)}${cap ? ` (max ${formatCurrency(cap)} per creator)` : ''}`;
                   })()}
                 </p>
-              </div>
+              </>
             )}
 
             {/* Tiered model */}
             {form.payoutModel === 'Tiered' && (
-              <div className="space-y-3">
+              <>
                 {form.payoutRules.map((rule, idx) => (
-                  <div key={idx} className="flex items-end gap-2">
-                    <div className="flex-1">
-                      <label className="block text-xs font-medium mb-1">{idx === 0 ? 'Från views' : ''}</label>
+                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 34px', gap: 10, alignItems: 'end' }}>
+                    <div className="field"><label>{idx === 0 ? 'Från views' : ''}</label>
                       <input type="text" inputMode="numeric" value={rule.minViews || ''}
-                        onChange={(e) => updateRule(idx, { minViews: Number(e.target.value.replace(/\D/g,'')) || 0 })}
-                        placeholder="t.ex. 1000"
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                        onChange={(e) => updateRule(idx, { minViews: Number(e.target.value.replace(/\D/g, '')) || 0 })}
+                        placeholder="t.ex. 1000" />
                     </div>
-                    <div className="flex-1">
-                      <label className="block text-xs font-medium mb-1">{idx === 0 ? 'Till views' : ''}</label>
+                    <div className="field"><label>{idx === 0 ? 'Till views' : ''}</label>
                       <input type="text" inputMode="numeric" value={rule.maxViews ?? ''}
-                        onChange={(e) => { const v = e.target.value.replace(/\D/g,''); updateRule(idx, { maxViews: v ? Number(v) : undefined }); }}
-                        placeholder="∞"
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                        onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); updateRule(idx, { maxViews: v ? Number(v) : undefined }); }}
+                        placeholder="∞" />
                     </div>
-                    <div className="flex-1">
-                      <label className="block text-xs font-medium mb-1">{idx === 0 ? 'Belopp (SEK)' : ''}</label>
+                    <div className="field"><label>{idx === 0 ? 'Belopp (SEK)' : ''}</label>
                       <input type="text" inputMode="numeric" value={rule.amount || ''}
-                        onChange={(e) => updateRule(idx, { amount: Number(e.target.value.replace(/\D/g,'')) || 0 })}
-                        placeholder="t.ex. 500"
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                        onChange={(e) => updateRule(idx, { amount: Number(e.target.value.replace(/\D/g, '')) || 0 })}
+                        placeholder="t.ex. 500" />
                     </div>
-                    <button type="button" onClick={() => removeTier(idx)}
-                      className="text-muted-foreground hover:text-destructive p-2 text-sm"
-                      title="Ta bort steg">✕</button>
+                    <button type="button" onClick={() => removeTier(idx)} className="lt-icbtn" aria-label="Ta bort steg" title="Ta bort steg" style={{ marginBottom: 4 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                    </button>
                   </div>
                 ))}
-                <button type="button" onClick={addTier}
-                  className="text-sm text-primary hover:underline">+ Lägg till steg</button>
-              </div>
+                <button type="button" onClick={addTier} className="view-all" style={{ alignSelf: 'flex-start' }}>+ Lägg till steg</button>
+              </>
             )}
 
             {/* Summary */}
             {payoutSummary() && (
-              <div className="bg-primary/5 border border-primary/20 rounded-md px-3 py-2">
-                <p className="text-xs font-medium text-primary">Sammanfattning: {payoutSummary()}</p>
-                {estimatedMaxCost() > 0 && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Uppskattad maxkostnad ({form.maxCreators} creators): {formatCurrency(estimatedMaxCost())}
-                  </p>
-                )}
+              <div className="vy-alert info" style={{ padding: '12px 15px' }}>
+                <span className="va-ic" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8M8 10h2m2 0h2m2 0h0M8 14h2m2 0h2m2 0h0M8 18h2m2 0h4" /></svg>
+                </span>
+                <div>
+                  <b>Sammanfattning:</b> {payoutSummary()}
+                  {estimatedMaxCost() > 0 && (
+                    <div style={{ marginTop: 3, fontSize: 12, color: 'var(--muted)' }}>Uppskattad maxkostnad ({form.maxCreators} creators): {formatCurrency(estimatedMaxCost())}</div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -861,7 +848,7 @@ export function BrandSettingsPage() {
   const updateProfile = useUpdateBrandProfile();
   const changePassword = useChangePassword();
   const [activeTab, setActiveTab] = useState<'profile' | 'security'>('profile');
-  const [profileForm, setProfileForm] = useState({ companyName: '', website: '', industry: '', description: '', contactPhone: '' });
+  const [profileForm, setProfileForm] = useState({ companyName: '', website: '', industry: '', description: '', contactPhone: '', logoUrl: null as string | null });
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [profileMsg, setProfileMsg] = useState('');
   const [profileError, setProfileError] = useState('');
@@ -877,6 +864,7 @@ export function BrandSettingsPage() {
       industry: profile.industry ?? '',
       description: profile.description ?? '',
       contactPhone: profile.contactPhone ?? '',
+      logoUrl: profile.logoUrl ?? null,
     });
     setProfileLoaded(true);
   }
@@ -886,7 +874,8 @@ export function BrandSettingsPage() {
     setProfileError('');
     setProfileMsg('');
     try {
-      await updateProfile.mutateAsync(profileForm);
+      // null logo means "removed" — send empty string so the backend clears it.
+      await updateProfile.mutateAsync({ ...profileForm, logoUrl: profileForm.logoUrl ?? '' });
       setProfileMsg('Profilen sparades!');
     } catch {
       setProfileError('Kunde inte spara profilen.');
@@ -936,6 +925,11 @@ export function BrandSettingsPage() {
         <div className="card" style={{ maxWidth: 720 }}>
           <div className="sec-head"><h3>Företagsprofil</h3></div>
           <form onSubmit={handleProfileSave} className="form-grid">
+            <div className="field full">
+              <ImagePicker label="Logotyp" shape="rounded" value={profileForm.logoUrl}
+                onChange={(v) => setProfileForm({ ...profileForm, logoUrl: v })}
+                hint="Visas för kreatörer på era kampanjer och PR-erbjudanden." />
+            </div>
             <div className="field full"><label>Företagsnamn *</label><input type="text" value={profileForm.companyName} required onChange={e => setProfileForm({ ...profileForm, companyName: e.target.value })} /></div>
             <div className="field"><label>Bransch</label>
               <select value={profileForm.industry} onChange={e => setProfileForm({ ...profileForm, industry: e.target.value })}>
