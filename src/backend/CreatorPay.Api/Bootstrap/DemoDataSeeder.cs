@@ -152,20 +152,31 @@ public static class DemoDataSeeder
         Log.Information("Seeded {Count} demo brands + campaigns", Campaigns.Length);
     }
 
-    // ── Assignments, payout + portfolio for the demo creator ───────────
+    // ── Assignments, payout + portfolio for demo creators ──────────────
+    // With Bootstrap:DemoCreatorEmail set, only that account is filled;
+    // without it (pre-launch demo mode) every creator without data gets it.
     private static async Task SeedCreatorDataAsync(AppDbContext db, IEncryptionService encryption, string? demoCreatorEmail)
     {
-        if (string.IsNullOrWhiteSpace(demoCreatorEmail))
-            return;
+        var creatorQuery = db.Set<CreatorProfile>().Where(c => !c.IsDeleted);
+        if (!string.IsNullOrWhiteSpace(demoCreatorEmail))
+            creatorQuery = creatorQuery.Where(c => c.User.Email == demoCreatorEmail);
 
-        var creator = await db.Set<CreatorProfile>()
-            .FirstOrDefaultAsync(c => c.User.Email == demoCreatorEmail && !c.IsDeleted);
-        if (creator == null)
+        var creators = await creatorQuery.ToListAsync();
+        if (creators.Count == 0)
         {
-            Log.Information("Demo data: creator {Email} not found yet — skipping creator seed", demoCreatorEmail);
+            Log.Information("Demo data: no matching creator accounts yet — creator seed runs on next boot");
             return;
         }
 
+        foreach (var creator in creators)
+            await SeedForCreatorAsync(db, encryption, creator);
+
+        await db.SaveChangesAsync();
+        Log.Information("Seeded demo assignments/portfolio for {Count} creator(s)", creators.Count);
+    }
+
+    private static async Task SeedForCreatorAsync(AppDbContext db, IEncryptionService encryption, CreatorProfile creator)
+    {
         var now = DateTime.UtcNow;
 
         // (campaign name, status, verified views, earned SEK)
@@ -284,8 +295,5 @@ public static class DemoDataSeeder
                 });
             }
         }
-
-        await db.SaveChangesAsync();
-        Log.Information("Seeded demo assignments, payout and portfolio for {Email}", demoCreatorEmail);
     }
 }
