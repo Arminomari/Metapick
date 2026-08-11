@@ -419,6 +419,14 @@
   background:linear-gradient(140deg,#1A2230,#0B0F17);
   box-shadow:0 6px 16px rgba(11,15,23,.3);border-radius:13px;
 }
+/* ---- TikTok connect button + connected state (Discover connect bar) ---- */
+.vy-app .tt-connect-btn{display:inline-flex;align-items:center;gap:9px;border:none;cursor:pointer;font-family:inherit;background:#161823;color:#fff;border-radius:980px;padding:11px 20px;font-weight:600;font-size:13px;letter-spacing:-.01em;transition:background .15s,transform .12s;white-space:nowrap}
+.vy-app .tt-connect-btn:hover{background:#000}
+.vy-app .tt-connect-btn:active{transform:scale(.97)}
+.vy-app .tt-connect-btn:disabled{opacity:.65;cursor:default}
+.vy-app .tt-connect-btn svg{width:15px;height:15px;flex:0 0 15px}
+.vy-app .tt-live{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);font-weight:600;white-space:nowrap}
+.vy-app .tt-handle{font-weight:600;color:var(--muted)}
 .vy-app .check-circle{
   background:linear-gradient(135deg,#FFD8C7,#F1A88F);
   box-shadow:0 4px 12px rgba(241,168,143,.4);color:#3a1d12;

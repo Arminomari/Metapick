@@ -98,6 +98,62 @@ function TikTokAlertBanner({ compact = false }: { compact?: boolean }) {
   );
 }
 
+// ── TikTok Connect Bar (Discover) ──────────────────────
+const TIKTOK_GLYPH = 'M16.5 5.5c.9 1 2.1 1.6 3.5 1.7v2.6c-1.3 0-2.6-.4-3.6-1.1v6c0 3-2.4 5.4-5.4 5.4S5.6 17.7 5.6 14.7s2.4-5.4 5.4-5.4c.3 0 .6 0 .9.1v2.8c-.3-.1-.6-.2-.9-.2-1.5 0-2.7 1.2-2.7 2.7s1.2 2.7 2.7 2.7 2.7-1.2 2.7-2.7V2.5h2.8c0 1.1.2 2.1.5 3z';
+
+function TikTokConnectBar() {
+  const { data: status, isLoading } = useTikTokStatus();
+  const [connecting, setConnecting] = useState(false);
+  const toast = useToast();
+
+  const handleConnect = async () => {
+    setConnecting(true);
+    try {
+      const res = await api.get<{ url: string }>('/creator/tiktok/auth-url');
+      window.location.href = res.data.url;
+    } catch {
+      setConnecting(false);
+      toast.push('Kunde inte starta TikTok-anslutning.', 'error');
+    }
+  };
+
+  if (isLoading) return null;
+  const connected = status?.connected && status?.isOAuth;
+
+  return (
+    <div className="connect-bar">
+      <div className="logo" aria-hidden>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d={TIKTOK_GLYPH} /></svg>
+      </div>
+      {connected ? (
+        <>
+          <div>
+            <h4>TikTok ansluten <span className="tt-handle">@{status?.username}</span> <span className="badge green">Verifierad</span></h4>
+            <p>Profil, statistik och videor synkas automatiskt.</p>
+          </div>
+          <div className="manage">
+            <span className="tt-live"><span className="live-dot" />Ansluten via OAuth</span>
+            <Link to="/creator/profile" className="btn-outline" style={{ textDecoration: 'none' }}>Hantera</Link>
+          </div>
+        </>
+      ) : (
+        <>
+          <div>
+            <h4>Anslut ditt TikTok-konto för automatisk tracking och verifierade resultat.</h4>
+            <p>Säker inloggning med TikTok. VYRLE läser endast din profil, statistik och videor.</p>
+          </div>
+          <div className="manage">
+            <button type="button" className="tt-connect-btn" onClick={handleConnect} disabled={connecting}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d={TIKTOK_GLYPH} /></svg>
+              {connecting ? 'Ansluter…' : 'Continue with TikTok'}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Creator Dashboard ──────────────────────────────────
 export function CreatorDashboard() {
   const { data: assignments, isLoading } = useCreatorAssignments();
@@ -219,7 +275,7 @@ export function BrowseCampaignsPage() {
           <p className="page-sub">Kuraterade kampanjer som matchar din röst, ditt språk och din publik.</p>
         </div>
       </div>
-      <TikTokAlertBanner compact />
+      <TikTokConnectBar />
       {isError && (
         <div className="card" style={{ textAlign: 'center', padding: '40px 24px' }}>
           <div style={{ fontWeight: 700 }}>Kunde inte hämta kampanjer</div>
