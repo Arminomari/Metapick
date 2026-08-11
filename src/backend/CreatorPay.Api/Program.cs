@@ -323,6 +323,15 @@ app.MapHealthChecks("/health/ready",
             Log.Warning("Bootstrap auto-approved {Count} pending brand accounts", pendingBrandUsers.Count);
         }
     }
+
+    // ── Seed demo content (Discover/Dashboard/Portfolio) ──
+    var seedDemoData = builder.Configuration.GetValue<bool?>("Bootstrap:SeedDemoDataEnabled") ?? false;
+    if (seedDemoData)
+    {
+        var demoEncryption = scope.ServiceProvider.GetRequiredService<CreatorPay.Application.Interfaces.IEncryptionService>();
+        await CreatorPay.Api.Bootstrap.DemoDataSeeder.SeedAsync(
+            db, demoEncryption, builder.Configuration["Bootstrap:DemoCreatorEmail"]);
+    }
 }
 
 Log.Information("CreatorPay API starting on {Env}", app.Environment.EnvironmentName);
