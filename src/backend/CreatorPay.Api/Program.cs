@@ -353,6 +353,38 @@ app.MapHealthChecks("/health/ready",
             Log.Error(ex, "Demo data cleanup failed — continuing startup");
         }
     }
+
+    // ── Seed launch brand account (only the bcrypt hash lives in the repo;
+    //    the password is held by the owner) ─────────────────────────────
+    var seedBrandAccount = builder.Configuration.GetValue<bool?>("Bootstrap:SeedBrandAccountEnabled") ?? false;
+    if (seedBrandAccount && !await db.Users.AnyAsync(u => u.Email == "nellie@vyrle.co"))
+    {
+        var brandUser = new CreatorPay.Domain.Entities.User
+        {
+            Email = "nellie@vyrle.co",
+            PasswordHash = "$2b$12$n1yfyDCZ6WmG9mQyElb/Y.9b6hK2Mq1i.OdkZ/.AOVZGN/SCLGhAa",
+            FirstName = "Nellie",
+            LastName = "Vyrle",
+            Role = CreatorPay.Domain.Enums.UserRole.Brand,
+            Status = CreatorPay.Domain.Enums.UserStatus.Active,
+            EmailVerified = true
+        };
+        db.Users.Add(brandUser);
+
+        db.Set<CreatorPay.Domain.Entities.BrandProfile>().Add(new CreatorPay.Domain.Entities.BrandProfile
+        {
+            UserId = brandUser.Id,
+            CompanyName = "Nellie",
+            Industry = "Fashion",
+            Country = "SE",
+            Description = "Nellie – mode och livsstil.",
+            Status = CreatorPay.Domain.Enums.BrandStatus.Approved,
+            ReviewedAt = DateTime.UtcNow
+        });
+
+        await db.SaveChangesAsync();
+        Log.Information("Seeded brand account nellie@vyrle.co");
+    }
 }
 
 Log.Information("CreatorPay API starting on {Env}", app.Environment.EnvironmentName);
