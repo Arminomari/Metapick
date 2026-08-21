@@ -124,6 +124,12 @@ public class TikTokConnectService : ITikTokConnectService
             var authResult = await _tikTok.ExchangeCodeForTokenAsync(code, _settings.RedirectUri, codeVerifier);
             var userInfo = await _tikTok.GetUserInfoAsync(authResult.AccessToken);
 
+            // One TikTok account may only ever be connected to one creator profile.
+            var openIdTaken = await _tiktokAccounts.Query().AnyAsync(t =>
+                t.TikTokUserId == userInfo.OpenId && t.CreatorProfileId != profile.Id && t.IsActive);
+            if (openIdTaken)
+                return Errors.Conflict("Det här TikTok-kontot är redan kopplat till en annan VYRLE-profil.");
+
             // Update or create TikTok account
             var existing = profile.TikTokAccount;
             if (existing != null)

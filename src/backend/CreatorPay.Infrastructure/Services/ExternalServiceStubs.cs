@@ -217,17 +217,20 @@ public class PayoutProviderService : IPayoutProvider
 
     public PayoutProviderService(ILogger<PayoutProviderService> logger) => _logger = logger;
 
-    public string ProviderName => "MockProvider";
+    public string ProviderName => "None";
 
     public Task<PayoutProviderResult> InitiatePayoutAsync(decimal amount, string currency, string recipientDetails)
     {
-        _logger.LogWarning("Payout: InitiatePayout called for {Amount} {Currency} — returning mock success", amount, currency);
+        // Safety: without a real PSP integration (e.g. GigaPay) no transaction
+        // may ever be reported as paid. Fail loudly so admins see it and the
+        // payout stays unsettled instead of silently "Completed".
+        _logger.LogError("Payout of {Amount} {Currency} requested but no payout provider is configured", amount, currency);
         return Task.FromResult(new PayoutProviderResult(
-            true, $"mock_tx_{Guid.NewGuid():N}", null));
+            false, null, "No payout provider configured — connect a PSP (e.g. GigaPay) before settling payouts"));
     }
 
     public Task<PayoutProviderStatus> CheckStatusAsync(string externalTransactionId)
     {
-        return Task.FromResult(new PayoutProviderStatus("completed", DateTime.UtcNow, null));
+        return Task.FromResult(new PayoutProviderStatus("unknown", null, "No payout provider configured"));
     }
 }

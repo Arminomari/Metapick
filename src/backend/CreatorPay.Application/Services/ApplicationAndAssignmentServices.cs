@@ -53,6 +53,8 @@ public class ApplicationService : IApplicationService
             .Include(c => c.TikTokAccount)
             .FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
         if (creator == null) return Errors.Forbidden("Creator profile not found");
+        if (creator.Status != CreatorStatus.Approved)
+            return Errors.Forbidden("Ditt konto är inte godkänt för kampanjer ännu.");
 
         var campaign = await _campaigns.Query()
             .Include(c => c.BrandProfile)
@@ -143,6 +145,12 @@ public class ApplicationService : IApplicationService
 
         if (app.Status != ApplicationStatus.Pending)
             return Errors.Conflict("Can only approve pending applications");
+
+        // Capacity re-check: the apply-time check can be stale by approval time.
+        var activeCount = await _assignments.Query()
+            .CountAsync(a => a.CampaignId == app.CampaignId && a.Status == AssignmentStatus.Active, ct);
+        if (activeCount >= app.Campaign.MaxCreators)
+            return Errors.CampaignFull;
 
         await _uow.BeginTransactionAsync(ct);
         try

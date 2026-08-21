@@ -89,23 +89,31 @@ builder.Services.AddAuthorizationBuilder()
 // ── Rate limiting ──────────────────────────────────────
 builder.Services.AddRateLimiter(options =>
 {
-    // Auth endpoints: max 10 requests/minute per IP (brute-force protection)
-    options.AddFixedWindowLimiter("auth", limiterOptions =>
-    {
-        limiterOptions.PermitLimit = 10;
-        limiterOptions.Window = TimeSpan.FromMinutes(1);
-        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        limiterOptions.QueueLimit = 0;
-    });
+    // Auth endpoints: max 10 requests/minute per IP (brute-force protection).
+    // Must be partitioned by IP — a single shared window would let anyone
+    // lock the whole internet out of login with 10 requests.
+    options.AddPolicy("auth", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
 
     // Public tracking redirect endpoint: allow bursts but protect from abuse.
-    options.AddFixedWindowLimiter("tracking", limiterOptions =>
-    {
-        limiterOptions.PermitLimit = 300;
-        limiterOptions.Window = TimeSpan.FromMinutes(1);
-        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        limiterOptions.QueueLimit = 0;
-    });
+    options.AddPolicy("tracking", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 300,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
 
     // Global: max 120 requests/minute per IP (general throttle)
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
@@ -331,6 +339,19 @@ app.MapHealthChecks("/health/ready",
         var demoEncryption = scope.ServiceProvider.GetRequiredService<CreatorPay.Application.Interfaces.IEncryptionService>();
         await CreatorPay.Api.Bootstrap.DemoDataSeeder.SeedAsync(
             db, demoEncryption, builder.Configuration["Bootstrap:DemoCreatorEmail"]);
+    }
+    else if (builder.Configuration.GetValue<bool?>("Bootstrap:CleanupDemoDataEnabled") ?? false)
+    {
+        // Pre-launch cleanup: purge everything the demo seeder created.
+        // Never allowed to block startup.
+        try
+        {
+            await CreatorPay.Api.Bootstrap.DemoDataSeeder.CleanupAsync(db);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Demo data cleanup failed — continuing startup");
+        }
     }
 }
 

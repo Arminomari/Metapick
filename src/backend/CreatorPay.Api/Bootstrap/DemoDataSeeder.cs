@@ -296,4 +296,63 @@ public static class DemoDataSeeder
             }
         }
     }
+
+    // ── Removes everything the seeder created (pre-launch cleanup) ─────
+    // Deletes the demo brands (identified by the @demo.vyrle.co marker
+    // emails) with all rows hanging off their campaigns, plus the seeded
+    // portfolio tiles. No-op once the demo rows are gone.
+    public static async Task CleanupAsync(AppDbContext db)
+    {
+        var demoUserIds = await db.Users.IgnoreQueryFilters()
+            .Where(u => u.Email.EndsWith("@" + DemoEmailDomain))
+            .Select(u => u.Id).ToListAsync();
+
+        var removed = 0;
+        if (demoUserIds.Count > 0)
+        {
+            var brandIds = await db.Set<BrandProfile>().IgnoreQueryFilters()
+                .Where(b => demoUserIds.Contains(b.UserId)).Select(b => b.Id).ToListAsync();
+            var campaignIds = await db.Set<Campaign>().IgnoreQueryFilters()
+                .Where(c => brandIds.Contains(c.BrandProfileId)).Select(c => c.Id).ToListAsync();
+            var assignmentIds = await db.Set<CreatorCampaignAssignment>()
+                .Where(a => campaignIds.Contains(a.CampaignId)).Select(a => a.Id).ToListAsync();
+            var calcIds = await db.Set<PayoutCalculation>()
+                .Where(pc => assignmentIds.Contains(pc.AssignmentId)).Select(pc => pc.Id).ToListAsync();
+            var requestIds = await db.Set<PayoutRequest>()
+                .Where(pr => calcIds.Contains(pr.PayoutCalculationId)).Select(pr => pr.Id).ToListAsync();
+            var postIds = await db.Set<SocialPost>()
+                .Where(sp => assignmentIds.Contains(sp.AssignmentId)).Select(sp => sp.Id).ToListAsync();
+
+            removed += await db.Set<PayoutTransaction>().Where(t => requestIds.Contains(t.PayoutRequestId)).ExecuteDeleteAsync();
+            removed += await db.Set<PayoutRequest>().Where(pr => requestIds.Contains(pr.Id)).ExecuteDeleteAsync();
+            removed += await db.Set<PayoutCalculation>().Where(pc => calcIds.Contains(pc.Id)).ExecuteDeleteAsync();
+            removed += await db.Set<SocialPostMetricSnapshot>().Where(s => postIds.Contains(s.SocialPostId)).ExecuteDeleteAsync();
+            removed += await db.Set<ViewVerificationRecord>().Where(v => postIds.Contains(v.SocialPostId)).ExecuteDeleteAsync();
+            removed += await db.Set<SocialPost>().Where(sp => postIds.Contains(sp.Id)).ExecuteDeleteAsync();
+            removed += await db.Set<CreatorSubmission>().Where(s => assignmentIds.Contains(s.AssignmentId)).ExecuteDeleteAsync();
+            removed += await db.Set<Review>().Where(r => assignmentIds.Contains(r.AssignmentId)).ExecuteDeleteAsync();
+            removed += await db.Set<ChatMessage>().Where(m => assignmentIds.Contains(m.AssignmentId)).ExecuteDeleteAsync();
+            removed += await db.Set<TrackingLink>().Where(t => assignmentIds.Contains(t.AssignmentId)).ExecuteDeleteAsync();
+            removed += await db.Set<TrackingTag>().Where(t => assignmentIds.Contains(t.AssignmentId)).ExecuteDeleteAsync();
+            removed += await db.Set<CreatorCampaignAssignment>().Where(a => assignmentIds.Contains(a.Id)).ExecuteDeleteAsync();
+            removed += await db.Set<CampaignApplication>().Where(a => campaignIds.Contains(a.CampaignId)).ExecuteDeleteAsync();
+            removed += await db.Set<SavedCampaign>().Where(s => campaignIds.Contains(s.CampaignId)).ExecuteDeleteAsync();
+            removed += await db.Set<PayoutRule>().Where(r => campaignIds.Contains(r.CampaignId)).ExecuteDeleteAsync();
+            removed += await db.Set<CampaignRequirement>().Where(r => campaignIds.Contains(r.CampaignId)).ExecuteDeleteAsync();
+            removed += await db.Set<CampaignRule>().Where(r => campaignIds.Contains(r.CampaignId)).ExecuteDeleteAsync();
+            removed += await db.Set<Campaign>().IgnoreQueryFilters().Where(c => campaignIds.Contains(c.Id)).ExecuteDeleteAsync();
+            removed += await db.Set<BrandProfile>().IgnoreQueryFilters().Where(b => brandIds.Contains(b.Id)).ExecuteDeleteAsync();
+            removed += await db.Users.IgnoreQueryFilters().Where(u => demoUserIds.Contains(u.Id)).ExecuteDeleteAsync();
+        }
+
+        // Seeded portfolio tiles, identified by the exact shape the seeder wrote
+        removed += await db.Set<PortfolioItem>()
+            .Where(p => p.MediaUrl == "https://www.vyrle.co"
+                     && p.MediaType == PortfolioMediaType.Link
+                     && p.Description != null && p.Description.StartsWith("Samarbete med "))
+            .ExecuteDeleteAsync();
+
+        if (removed > 0)
+            Log.Information("Demo data cleanup removed {Count} rows", removed);
+    }
 }

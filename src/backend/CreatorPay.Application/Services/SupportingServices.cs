@@ -74,8 +74,18 @@ public class PayoutService : IPayoutService
 
     public async Task<Result<PayoutRequestDto>> RequestPayoutAsync(Guid creatorUserId, RequestPayoutRequest request, CancellationToken ct = default)
     {
-        var creator = await _creators.Query().FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
+        var creator = await _creators.Query()
+            .Include(c => c.TikTokAccount)
+            .FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
         if (creator == null) return Errors.NotFound("Creator");
+
+        // Payouts require a TikTok account connected via OAuth (proves channel
+        // ownership) and a configured payout method.
+        var tikTok = creator.TikTokAccount;
+        if (tikTok == null || !tikTok.IsActive || tikTok.Scopes == "manual" || string.IsNullOrEmpty(tikTok.AccessTokenEncrypted))
+            return Errors.Validation("Anslut ditt TikTok-konto via TikTok-inloggning innan du begär utbetalning.");
+        if (string.IsNullOrWhiteSpace(creator.PayoutMethod) || string.IsNullOrWhiteSpace(creator.PayoutDetailsEncrypted))
+            return Errors.Validation("Lägg till en utbetalningsmetod i din profil innan du begär utbetalning.");
 
         var calc = await _calculations.Query()
             .Include(c => c.Assignment)
@@ -84,8 +94,12 @@ public class PayoutService : IPayoutService
         // Ownership: a creator may only request payout for their own assignment's calculation.
         if (calc.Assignment == null || calc.Assignment.CreatorProfileId != creator.Id)
             return Errors.Forbidden("Calculation does not belong to this creator");
-        if (calc.Status != PayoutCalculationStatus.Verified && calc.Status != PayoutCalculationStatus.Locked)
-            return Errors.Conflict("Calculation must be verified or locked before requesting payout");
+        // The automatic pipeline only ever produces Preliminary calculations;
+        // the human gate is the admin approval of the payout request itself.
+        if (!calc.IsLatest)
+            return Errors.Conflict("Calculation has been superseded by a newer one");
+        if (calc.Status is PayoutCalculationStatus.Disputed or PayoutCalculationStatus.Overridden)
+            return Errors.Conflict("Calculation is disputed or overridden and must be resolved by an admin");
 
         // Check no existing pending/approved request for same calculation
         var duplicate = await _requests.Query()
