@@ -99,13 +99,20 @@ export function ImagePicker({
 }
 
 async function resizeToSquareJpeg(file: File, size: number): Promise<string> {
-  const url = URL.createObjectURL(file);
-  try {
+  // FileReader → data URL instead of URL.createObjectURL: the production CSP
+  // allows img-src data: but not blob:, so a blob URL never decodes there.
+  const sourceUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('read failed'));
+    reader.readAsDataURL(file);
+  });
+  {
     const img = await new Promise<HTMLImageElement>((resolve, reject) => {
       const el = new Image();
       el.onload = () => resolve(el);
       el.onerror = () => reject(new Error('decode failed'));
-      el.src = url;
+      el.src = sourceUrl;
     });
     const side = Math.min(img.naturalWidth, img.naturalHeight);
     const sx = (img.naturalWidth - side) / 2;
@@ -121,7 +128,5 @@ async function resizeToSquareJpeg(file: File, size: number): Promise<string> {
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
     return canvas.toDataURL('image/jpeg', 0.85);
-  } finally {
-    URL.revokeObjectURL(url);
   }
 }
