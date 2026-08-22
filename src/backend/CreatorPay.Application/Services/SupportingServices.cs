@@ -549,11 +549,13 @@ public class NotificationService : INotificationService
 public class AuditService : IAuditService
 {
     private readonly IRepository<AuditLog> _logs;
+    private readonly IRepository<User> _users;
     private readonly IUnitOfWork _uow;
 
-    public AuditService(IRepository<AuditLog> logs, IUnitOfWork uow)
+    public AuditService(IRepository<AuditLog> logs, IRepository<User> users, IUnitOfWork uow)
     {
         _logs = logs;
+        _users = users;
         _uow = uow;
     }
 
@@ -587,10 +589,21 @@ public class AuditService : IAuditService
             .Take(pageSize)
             .ToListAsync();
 
+        // Resolve who performed each action (IgnoreQueryFilters: soft-deleted
+        // accounts must still be identifiable in the audit trail).
+        var actorIds = items.Select(l => l.UserId).Distinct().ToList();
+        var actors = (await _users.Query().IgnoreQueryFilters()
+                .Where(u => actorIds.Contains(u.Id))
+                .Select(u => new { u.Id, u.Email, u.Role })
+                .ToListAsync())
+            .ToDictionary(u => u.Id);
+
         return new PagedResult<AuditLogDto>
         {
             Data = items.Select(l => new AuditLogDto(
-                l.Id, l.UserId, l.Action, l.EntityType, l.EntityId, l.IpAddress, l.CreatedAt)).ToList(),
+                l.Id, l.UserId, l.Action, l.EntityType, l.EntityId, l.IpAddress, l.CreatedAt,
+                actors.TryGetValue(l.UserId, out var actor) ? actor.Email : null,
+                actors.TryGetValue(l.UserId, out var actorRole) ? actorRole.Role.ToString() : null)).ToList(),
             Page = page, PageSize = pageSize, TotalCount = totalCount
         };
     }

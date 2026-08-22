@@ -13,7 +13,7 @@ interface AdminStats {
 }
 interface PayoutRow { id: string; campaignName: string; amount: number; currency: string; status: string; payoutMethod: string; rejectionReason?: string; reviewedAt?: string; createdAt: string }
 interface FraudRow { id: string; entityType: string; entityId: string; flagType: string; severity: string; description: string; status: string; resolution?: string; createdAt: string }
-interface AuditRow { id: string; userId?: string; action: string; entityType?: string; entityId?: string; ipAddress?: string; createdAt: string }
+interface AuditRow { id: string; userId?: string; action: string; entityType?: string; entityId?: string; ipAddress?: string; createdAt: string; userEmail?: string | null; userRole?: string | null }
 interface Paged<T> { data: T[]; totalCount: number }
 
 const card: React.CSSProperties = { background: 'rgba(255,255,255,.82)', border: '1px solid rgba(255,255,255,.7)', borderRadius: 24, padding: '1.4rem', marginBottom: '1rem', boxShadow: '0 10px 34px rgba(180,120,90,.08), 0 2px 8px rgba(11,15,23,.04)' };
@@ -33,6 +33,64 @@ function statusPill(status: string) {
 }
 
 const actionBtn = (bg: string): React.CSSProperties => ({ padding: '.5rem 1.1rem', borderRadius: 980, background: bg, color: '#fff', border: 'none', fontWeight: 600, fontSize: '.78rem', cursor: 'pointer' });
+
+/* ── Audit rendering ───────────────────────────────────── */
+const ACTION_LABELS: Record<string, string> = {
+  'Auth.Login': 'Inloggning',
+  'Auth.SocialLogin.TikTok': 'Inloggning via TikTok',
+  'Auth.SocialRegister.TikTok': 'Konto skapat via TikTok',
+  'Auth.PasswordChanged': 'Lösenord bytt',
+  'Auth.PasswordReset': 'Lösenord återställt',
+  'Auth.PasswordResetRequested': 'Lösenordsåterställning begärd',
+  'Campaign.Created': 'Kampanj skapad',
+  'Campaign.SubmittedForReview': 'Kampanj inskickad för granskning',
+  'Campaign.Approved': 'Kampanj godkänd',
+  'Campaign.Rejected': 'Kampanj nekad',
+  'Application.Created': 'Kampanjansökan skickad',
+  'Application.Approved': 'Kampanjansökan godkänd',
+  'Application.Rejected': 'Kampanjansökan nekad',
+  'Submission.Created': 'Video inskickad',
+  'Submission.Approved': 'Video godkänd',
+  'Submission.Rejected': 'Video nekad',
+  'TikTok.Connected': 'TikTok-konto kopplat',
+  'TikTok.Disconnected': 'TikTok-konto bortkopplat',
+  'Assignment.ViewRefreshRequested': 'Viewsynk begärd',
+  'Payout.Requested': 'Utbetalning begärd',
+  'Payout.Approved': 'Utbetalning godkänd',
+  'Payout.Rejected': 'Utbetalning nekad',
+  'Admin.ApproveUser': 'Konto godkänt av admin',
+  'Admin.RejectUser': 'Konto nekat av admin',
+  'Admin.CreateAdmin': 'Ny admin skapad',
+};
+const actionLabel = (a: string) => ACTION_LABELS[a] ?? a.replace('.', ' · ');
+function actionDot(a: string): string {
+  if (a.startsWith('Payout')) return '#2f9d5b';
+  if (a.startsWith('Campaign') || a.startsWith('Application')) return '#6a4ea8';
+  if (a.startsWith('Submission') || a.startsWith('TikTok') || a.startsWith('Assignment')) return '#F1A88F';
+  if (a.startsWith('Admin') || a.startsWith('Fraud')) return '#0B0F17';
+  return '#B7BCC8';
+}
+const ROLE_LABEL: Record<string, string> = { Creator: 'Creator', Brand: 'Varumärke', Admin: 'Admin' };
+
+function AuditRows({ rows }: { rows: AuditRow[] }) {
+  return (
+    <>
+      {rows.map((a) => (
+        <div key={a.id} style={rowLine}>
+          <span style={{ width: 9, height: 9, borderRadius: '50%', background: actionDot(a.action), flex: '0 0 9px' }} />
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <div style={{ fontWeight: 600, fontSize: '.88rem', color: '#0B0F17' }}>{actionLabel(a.action)}</div>
+            <div style={mutedTx}>
+              {a.userEmail ?? 'Okänd användare'}
+              {a.userRole && <span style={{ ...pill('rgba(183,188,200,.2)', '#5c6270'), marginLeft: 8, fontSize: '.66rem', padding: '.1rem .5rem' }}>{ROLE_LABEL[a.userRole] ?? a.userRole}</span>}
+            </div>
+          </div>
+          <span style={{ ...mutedTx, marginLeft: 'auto', whiteSpace: 'nowrap' }}>{dt(a.createdAt)}</span>
+        </div>
+      ))}
+    </>
+  );
+}
 
 /* ── Hooks ─────────────────────────────────────────────── */
 function useAdminStats() {
@@ -109,13 +167,7 @@ export function AdminOverviewSection() {
       </div>
       <div style={card}>
         <h3 style={{ fontWeight: 700, marginBottom: '.4rem' }}>Senaste händelser</h3>
-        {(audit?.data ?? []).slice(0, 8).map((a) => (
-          <div key={a.id} style={rowLine}>
-            <span style={{ fontWeight: 600, fontSize: '.85rem' }}>{a.action}</span>
-            <span style={mutedTx}>{a.entityType ?? ''}</span>
-            <span style={{ ...mutedTx, marginLeft: 'auto' }}>{dt(a.createdAt)}</span>
-          </div>
-        ))}
+        <AuditRows rows={(audit?.data ?? []).slice(0, 8)} />
         {!audit?.data?.length && <div style={{ ...mutedTx, padding: '1rem 0' }}>Inga händelser än.</div>}
       </div>
     </>
@@ -212,14 +264,7 @@ export function AdminAuditSection() {
       <h3 style={{ fontWeight: 700, marginBottom: '.4rem' }}>Händelselogg</h3>
       {isLoading && <div style={{ ...mutedTx, padding: '1rem 0' }}>Laddar…</div>}
       {!isLoading && rows.length === 0 && <div style={{ ...mutedTx, padding: '1rem 0' }}>Loggen är tom.</div>}
-      {rows.map((a) => (
-        <div key={a.id} style={rowLine}>
-          <span style={{ fontWeight: 600, fontSize: '.85rem', minWidth: 200 }}>{a.action}</span>
-          <span style={mutedTx}>{a.entityType ?? ''}</span>
-          <span style={mutedTx}>{a.ipAddress ?? ''}</span>
-          <span style={{ ...mutedTx, marginLeft: 'auto' }}>{dt(a.createdAt)}</span>
-        </div>
-      ))}
+      <AuditRows rows={rows} />
     </div>
   );
 }

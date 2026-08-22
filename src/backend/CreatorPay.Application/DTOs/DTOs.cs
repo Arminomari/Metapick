@@ -366,7 +366,8 @@ public record ResolveDisputeRequest(string Resolution, string Status);
 // ──── Audit ────
 public record AuditLogDto(
     Guid Id, Guid? UserId, string Action, string? EntityType,
-    Guid? EntityId, string? IpAddress, DateTime CreatedAt);
+    Guid? EntityId, string? IpAddress, DateTime CreatedAt,
+    string? UserEmail = null, string? UserRole = null);
 
 // ──── Reviews ────
 public record SubmitReviewRequest(int Stars, string? Comment);
