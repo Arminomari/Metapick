@@ -13,6 +13,8 @@ public interface IAuthService
     Task<Result<bool>> LogoutAsync(Guid userId);
     Task<Result<UserProfileDto>> GetProfileAsync(Guid userId);
     Task<Result<bool>> ChangePasswordAsync(Guid userId, ChangePasswordRequest request);
+    Task<Result<bool>> RequestPasswordResetAsync(string email);
+    Task<Result<bool>> ResetPasswordAsync(ResetPasswordRequest request);
 }
 
 public interface ISocialAuthService
@@ -203,6 +205,7 @@ public interface IChatService
     Task<Result<List<ChatMessageDto>>> GetMessagesAsync(Guid assignmentId, Guid userId, CancellationToken ct = default);
     Task<Result<bool>> MarkReadAsync(Guid assignmentId, Guid userId, CancellationToken ct = default);
     Task<Result<int>> GetUnreadCountAsync(Guid userId, CancellationToken ct = default);
+    Task<Result<List<ChatConversationDto>>> GetConversationsAsync(Guid userId, CancellationToken ct = default);
 }
 
 public interface ITokenService

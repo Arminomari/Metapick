@@ -16,6 +16,8 @@ public class AdminUserService : IAdminUserService
     private readonly IRepository<TikTokAccount> _tiktokAccounts;
     private readonly IUnitOfWork _uow;
     private readonly IAuditService _audit;
+    private readonly INotificationService _notify;
+    private readonly IEmailService _email;
 
     public AdminUserService(
         IRepository<User> users,
@@ -23,7 +25,9 @@ public class AdminUserService : IAdminUserService
         IRepository<CreatorProfile> creators,
         IRepository<TikTokAccount> tiktokAccounts,
         IUnitOfWork uow,
-        IAuditService audit)
+        IAuditService audit,
+        INotificationService notify,
+        IEmailService email)
     {
         _users = users;
         _brands = brands;
@@ -31,6 +35,8 @@ public class AdminUserService : IAdminUserService
         _tiktokAccounts = tiktokAccounts;
         _uow = uow;
         _audit = audit;
+        _notify = notify;
+        _email = email;
     }
 
     public async Task<Result<PagedResult<PendingUserDto>>> GetUsersAsync(string? status, int page, int pageSize)
@@ -163,6 +169,18 @@ public class AdminUserService : IAdminUserService
         await _uow.SaveChangesAsync();
         await _audit.LogAsync(adminId, "Admin.ApproveUser", "User", userId);
 
+        var approvedType = user.Role == UserRole.Brand
+            ? NotificationType.BrandApproved
+            : NotificationType.CreatorApproved;
+        await _notify.SendAsync(user.Id, approvedType,
+            "Ditt konto är godkänt — välkommen till VYRLE! 🎉", user.Id);
+        await _email.SendAsync(user.Email, "Ditt VYRLE-konto är godkänt 🎉",
+            EmailTemplates.Branded(
+                "Välkommen till VYRLE!",
+                $"<p>Hej {System.Net.WebUtility.HtmlEncode(user.FirstName)}!</p>" +
+                "<p>Ditt konto är nu godkänt och du kan logga in och komma igång direkt.</p>",
+                "Logga in", "https://www.vyrle.co/login"));
+
         return (await GetPendingUserDto(user))!;
     }
 
@@ -201,6 +219,16 @@ public class AdminUserService : IAdminUserService
 
         await _uow.SaveChangesAsync();
         await _audit.LogAsync(adminId, "Admin.RejectUser", "User", userId);
+
+        await _notify.SendAsync(user.Id, NotificationType.SystemMessage,
+            $"Din ansökan godkändes tyvärr inte: {reason}", user.Id);
+        await _email.SendAsync(user.Email, "Angående din VYRLE-ansökan",
+            EmailTemplates.Branded(
+                "Angående din ansökan",
+                $"<p>Hej {System.Net.WebUtility.HtmlEncode(user.FirstName)},</p>" +
+                "<p>Tyvärr kunde vi inte godkänna ditt konto den här gången.</p>" +
+                $"<p><b>Motivering:</b> {System.Net.WebUtility.HtmlEncode(reason)}</p>" +
+                "<p>Hör gärna av dig om du tror att det är ett misstag.</p>"));
 
         return (await GetPendingUserDto(user))!;
     }

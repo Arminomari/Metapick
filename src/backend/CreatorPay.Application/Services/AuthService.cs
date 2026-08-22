@@ -1,3 +1,7 @@
+using System.Net;
+using System.Security.Cryptography;
+using System.Text;
+using Microsoft.Extensions.Configuration;
 using CreatorPay.Application.Common;
 using CreatorPay.Application.DTOs;
 using CreatorPay.Application.Interfaces;
@@ -18,6 +22,8 @@ public class AuthService : IAuthService
     private readonly ITokenService _tokenService;
     private readonly IEncryptionService _encryption;
     private readonly IAuditService _audit;
+    private readonly IEmailService _email;
+    private readonly IConfiguration _config;
 
     public AuthService(
         IRepository<User> users,
@@ -27,7 +33,9 @@ public class AuthService : IAuthService
         IUnitOfWork uow,
         ITokenService tokenService,
         IEncryptionService encryption,
-        IAuditService audit)
+        IAuditService audit,
+        IEmailService email,
+        IConfiguration config)
     {
         _users = users;
         _brands = brands;
@@ -37,6 +45,8 @@ public class AuthService : IAuthService
         _tokenService = tokenService;
         _encryption = encryption;
         _audit = audit;
+        _email = email;
+        _config = config;
     }
 
     public async Task<Result<AuthResponse>> RegisterAsync(RegisterRequest request)
@@ -239,5 +249,70 @@ public class AuthService : IAuthService
         await _audit.LogAsync(userId, "Auth.PasswordChanged", "User", userId);
 
         return true;
+    }
+
+    // ── Password reset: stateless HMAC token bound to the current password
+    //    hash, so every link expires in 1h and works exactly once ──────────
+    public async Task<Result<bool>> RequestPasswordResetAsync(string email)
+    {
+        var user = await _users.Query()
+            .FirstOrDefaultAsync(u => u.Email == email.ToLowerInvariant());
+
+        // Always report success so the endpoint can't be used to probe emails.
+        if (user == null || user.Status == UserStatus.Deactivated)
+            return true;
+
+        var expiry = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds();
+        var token = $"{user.Id:N}.{expiry}.{ComputeResetSignature(user, expiry)}";
+        var baseUrl = _config["Frontend:BaseUrl"] ?? "https://www.vyrle.co";
+        var link = $"{baseUrl}/reset-password?token={Uri.EscapeDataString(token)}";
+
+        await _email.SendAsync(user.Email, "Återställ ditt lösenord",
+            EmailTemplates.Branded(
+                "Återställ ditt lösenord",
+                $"<p>Hej {WebUtility.HtmlEncode(user.FirstName)}!</p>" +
+                "<p>Klicka på knappen nedan för att välja ett nytt lösenord. " +
+                "Länken gäller i en timme och kan bara användas en gång.</p>" +
+                "<p>Har du inte begärt det här kan du ignorera mejlet.</p>",
+                "Välj nytt lösenord", link));
+
+        await _audit.LogAsync(user.Id, "Auth.PasswordResetRequested", "User", user.Id);
+        return true;
+    }
+
+    public async Task<Result<bool>> ResetPasswordAsync(ResetPasswordRequest request)
+    {
+        var parts = request.Token.Split('.');
+        if (parts.Length != 3
+            || !Guid.TryParseExact(parts[0], "N", out var userId)
+            || !long.TryParse(parts[1], out var expiry))
+            return Errors.Validation("Ogiltig eller utgången återställningslänk");
+
+        if (DateTimeOffset.FromUnixTimeSeconds(expiry) < DateTimeOffset.UtcNow)
+            return Errors.Validation("Återställningslänken har gått ut. Begär en ny.");
+
+        var user = await _users.GetByIdAsync(userId);
+        if (user == null)
+            return Errors.Validation("Ogiltig eller utgången återställningslänk");
+
+        var expected = ComputeResetSignature(user, expiry);
+        if (!CryptographicOperations.FixedTimeEquals(
+                Encoding.UTF8.GetBytes(expected), Encoding.UTF8.GetBytes(parts[2])))
+            return Errors.Validation("Ogiltig eller utgången återställningslänk");
+
+        user.PasswordHash = _encryption.HashPassword(request.NewPassword);
+        await _uow.SaveChangesAsync();
+        await _tokenService.RevokeAllTokensAsync(user.Id);
+        await _audit.LogAsync(user.Id, "Auth.PasswordReset", "User", user.Id);
+        return true;
+    }
+
+    private string ComputeResetSignature(User user, long expiry)
+    {
+        var secret = _config["Jwt:Secret"]
+            ?? throw new InvalidOperationException("Jwt:Secret missing");
+        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
+        var payload = $"{user.Id:N}|{expiry}|{user.PasswordHash}";
+        return Convert.ToHexString(hmac.ComputeHash(Encoding.UTF8.GetBytes(payload))).ToLowerInvariant();
     }
 }

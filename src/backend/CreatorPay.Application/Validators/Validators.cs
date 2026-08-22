@@ -52,6 +52,26 @@ public class ChangePasswordRequestValidator : AbstractValidator<ChangePasswordRe
     }
 }
 
+public class ForgotPasswordRequestValidator : AbstractValidator<ForgotPasswordRequest>
+{
+    public ForgotPasswordRequestValidator()
+    {
+        RuleFor(x => x.Email).NotEmpty().EmailAddress();
+    }
+}
+
+public class ResetPasswordRequestValidator : AbstractValidator<ResetPasswordRequest>
+{
+    public ResetPasswordRequestValidator()
+    {
+        RuleFor(x => x.Token).NotEmpty();
+        RuleFor(x => x.NewPassword).NotEmpty().MinimumLength(8).MaximumLength(128)
+            .Matches(@"[A-Z]").WithMessage("Lösenord måste innehålla minst en versal")
+            .Matches(@"[a-z]").WithMessage("Lösenord måste innehålla minst en gemen")
+            .Matches(@"[0-9]").WithMessage("Lösenord måste innehålla minst en siffra");
+    }
+}
+
 public class CreateCampaignRequestValidator : AbstractValidator<CreateCampaignRequest>
 {
     private static readonly string[] ValidPayoutModels = ["Fixed", "Tiered", "CPM", "Hybrid"];

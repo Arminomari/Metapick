@@ -80,6 +80,13 @@ public static class ServiceCollectionExtensions
                 options.CircuitBreaker.FailureRatio = 0.6;
                 options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(15);
             });
+        // Transactional email via Resend as soon as the API key is configured;
+        // otherwise emails are logged and skipped.
+        if (!string.IsNullOrWhiteSpace(config["Email:ResendApiKey"]))
+            services.AddHttpClient<IEmailService, ResendEmailService>();
+        else
+            services.AddSingleton<IEmailService, NullEmailService>();
+
         // GigaPay becomes the live payout provider as soon as credentials are
         // configured; until then the null provider refuses to settle anything.
         if (!string.IsNullOrWhiteSpace(config["GigaPay:ApiKey"]))

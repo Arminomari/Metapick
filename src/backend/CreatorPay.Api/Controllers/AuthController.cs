@@ -68,4 +68,14 @@ public class AuthController : BaseController
     [EnableRateLimiting("auth")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         => ToActionResult(await _auth.ChangePasswordAsync(GetUserId(), request));
+
+    [HttpPost("forgot-password")]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        => ToActionResult(await _auth.RequestPasswordResetAsync(request.Email));
+
+    [HttpPost("reset-password")]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        => ToActionResult(await _auth.ResetPasswordAsync(request));
 }

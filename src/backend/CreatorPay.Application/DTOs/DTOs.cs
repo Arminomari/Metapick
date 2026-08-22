@@ -53,6 +53,8 @@ public record SocialProviderInfo(bool Enabled, string? ClientId);
 public record SocialProvidersDto(SocialProviderInfo Google, SocialProviderInfo Apple, SocialProviderInfo Facebook);
 public record RefreshTokenRequest(string RefreshToken);
 public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
+public record ForgotPasswordRequest(string Email);
+public record ResetPasswordRequest(string Token, string NewPassword);
 public record AuthResponse(string AccessToken, string RefreshToken, DateTime ExpiresAt, Guid UserId, string Email, string Role);
 public record UserProfileDto(Guid Id, string Email, string Role, string Status, string? ProfileName, string? ProfileStatus, DateTime? LastLoginAt, DateTime CreatedAt);
 
@@ -368,3 +370,6 @@ public record SendMessageRequest(string Body);
 public record ChatMessageDto(
     Guid Id, Guid AssignmentId, Guid SenderId, string SenderRole,
     string SenderName, string Body, bool IsRead, DateTime CreatedAt);
+public record ChatConversationDto(
+    Guid AssignmentId, string CounterpartName, string? CounterpartImageUrl,
+    string CampaignName, string? LastMessage, DateTime? LastMessageAt, int UnreadCount);

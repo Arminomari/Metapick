@@ -1,104 +1,90 @@
 import { useEffect, useRef, useState } from 'react';
-import { useChatMessages, useSendMessage, useMarkChatRead } from '@/hooks/api';
+import { useChatMessages, useSendMessage, useMarkChatRead, useChatConversations } from '@/hooks/api';
 import { useAuthStore } from '@/stores/authStore';
 import type { ChatMessageDto } from '@/types';
-import { Button } from './index';
+
+const GRADS = ['linear-gradient(135deg,#FFD8C7,#F1A88F)', 'linear-gradient(135deg,#cdb8f2,#9c7de0)', 'linear-gradient(135deg,#F2C58A,#e0a04e)', 'linear-gradient(135deg,#a9dcc0,#5fb98a)'];
+const grad = (s: string) => GRADS[((s || '').charCodeAt(0) || 0) % GRADS.length];
+const initial = (s: string) => (s?.[0] || '?').toUpperCase();
 
 interface ChatPanelProps {
   assignmentId: string;
 }
 
+/**
+ * Inline chat in the VYRLE design language. The counterpart identity (creator
+ * name+avatar for brands, company name+logo for creators) comes from the
+ * conversations endpoint so it always matches the messages drawer.
+ */
 export function ChatPanel({ assignmentId }: ChatPanelProps) {
   const { userId } = useAuthStore();
   const { data: messages = [], isLoading } = useChatMessages(assignmentId);
+  const { data: convos = [] } = useChatConversations();
+  const convo = convos.find((c) => c.assignmentId === assignmentId);
   const send = useSendMessage();
   const markRead = useMarkChatRead();
   const [body, setBody] = useState('');
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom on new messages
+  useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }); }, [messages]);
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  // Mark read when panel opens
-  useEffect(() => {
-    if (assignmentId) {
-      markRead.mutate(assignmentId);
-    }
+    if (assignmentId) markRead.mutate(assignmentId);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [assignmentId]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = body.trim();
-    if (!trimmed) return;
-    try {
-      await send.mutateAsync({ assignmentId, body: trimmed });
-      setBody('');
-    } catch {
-      alert('Kunde inte skicka meddelandet');
-    }
+    const t = body.trim();
+    if (!t) return;
+    setBody('');
+    try { await send.mutateAsync({ assignmentId, body: t }); } catch { setBody(t); }
   };
 
-  const isOwn = (msg: ChatMessageDto) => msg.senderId === userId;
+  const name = convo?.counterpartName ?? 'Direktchatt';
 
   return (
-    <div className="flex flex-col h-[420px] border border-border rounded-lg overflow-hidden">
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-border bg-muted/30">
-        <h3 className="font-semibold text-sm">Meddelanden</h3>
+    <div style={{
+      display: 'flex', flexDirection: 'column', height: 460, overflow: 'hidden',
+      background: 'rgba(255,255,255,.75)', border: '1px solid rgba(241,168,143,.2)',
+      borderRadius: 20, boxShadow: '0 10px 30px rgba(180,120,90,.08)',
+    }}>
+      <div className="mc-thread-head">
+        {convo?.counterpartImageUrl
+          ? <img src={convo.counterpartImageUrl} alt="" style={{ width: 42, height: 42, borderRadius: 12, objectFit: 'cover', flex: '0 0 42px', boxShadow: '0 4px 12px rgba(180,120,90,.16)' }} />
+          : <span className="mc-thread-av" style={{ background: grad(name) }}><span className="brand-mono">{initial(name)}</span></span>}
+        <div className="mc-thread-meta">
+          <div className="mc-thread-name">{name}</div>
+          {convo?.campaignName && <div className="mc-thread-status">{convo.campaignName}</div>}
+        </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {isLoading && (
-          <p className="text-sm text-muted-foreground text-center">Laddar...</p>
-        )}
-        {!isLoading && messages.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center">Inga meddelanden än. Starta konversationen!</p>
-        )}
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${isOwn(msg) ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[75%] rounded-2xl px-3 py-2 ${
-              isOwn(msg)
-                ? 'bg-primary text-primary-foreground rounded-br-sm'
-                : 'bg-muted rounded-bl-sm'
-            }`}>
-              {!isOwn(msg) && (
-                <p className="text-xs font-medium mb-0.5 opacity-70">{msg.senderName}</p>
-              )}
-              <p className="text-sm whitespace-pre-wrap break-words">{msg.body}</p>
-              <p className={`text-xs mt-1 opacity-60 ${isOwn(msg) ? 'text-right' : ''}`}>
-                {new Date(msg.createdAt).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
-                {isOwn(msg) && (
-                  <span className="ml-1">{msg.isRead ? '✓✓' : '✓'}</span>
-                )}
-              </p>
-            </div>
-          </div>
-        ))}
-        <div ref={bottomRef} />
+      <div className="mc-thread-scroll" ref={scrollRef}>
+        {isLoading ? <div className="mc-day">Laddar…</div>
+          : messages.length === 0 ? <div className="mc-day">Inga meddelanden än — starta konversationen!</div>
+          : messages.map((m: ChatMessageDto) => {
+            const me = m.senderId === userId;
+            return (
+              <div key={m.id} className={`mc-bub ${me ? 'me' : 'them'}`}>
+                {m.body}
+                <div className="mc-bt">{new Date(m.createdAt).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}{me && (m.isRead ? ' ✓✓' : ' ✓')}</div>
+              </div>
+            );
+          })}
       </div>
 
-      {/* Input */}
-      <form onSubmit={handleSend} className="border-t border-border p-3 flex gap-2">
-        <input
-          type="text"
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder="Skriv ett meddelande..."
-          className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSend(e as unknown as React.FormEvent);
-            }
-          }}
-        />
-        <Button type="submit" size="sm" disabled={send.isPending || !body.trim()}>
-          Skicka
-        </Button>
+      <form className="mc-composer" onSubmit={handleSend}>
+        <div className="mc-input-wrap">
+          <input
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Skriv ett meddelande…"
+            autoComplete="off"
+            aria-label="Meddelande"
+          />
+          <button className={`mc-send${body.trim() ? ' has-text' : ''}`} type="submit" disabled={send.isPending || !body.trim()} aria-label="Skicka">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </button>
+        </div>
       </form>
     </div>
   );

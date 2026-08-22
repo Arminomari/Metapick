@@ -54,4 +54,9 @@ public class ChatController : BaseController
     [HttpGet("unread")]
     public async Task<IActionResult> GetUnreadCount(CancellationToken ct)
         => ToActionResult(await _chat.GetUnreadCountAsync(GetUserId(), ct));
+
+    /// <summary>Konversationslista med motpart, förhandsvisning och olästa</summary>
+    [HttpGet("conversations")]
+    public async Task<IActionResult> GetConversations(CancellationToken ct)
+        => ToActionResult(await _chat.GetConversationsAsync(GetUserId(), ct));
 }

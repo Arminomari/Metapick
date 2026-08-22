@@ -246,6 +246,67 @@ public class ChatService : IChatService
         return Result<int>.Success(count);
     }
 
+    /// <summary>
+    /// One row per assignment the user chats in, with the counterpart shown as
+    /// a person/company (creator name+avatar for brands, company name+logo for
+    /// creators — never the campaign name), plus preview and unread count.
+    /// </summary>
+    public async Task<Result<List<ChatConversationDto>>> GetConversationsAsync(Guid userId, CancellationToken ct = default)
+    {
+        var assignments = await _assignments.Query()
+            .Include(a => a.Campaign).ThenInclude(c => c.BrandProfile)
+            .Include(a => a.CreatorProfile)
+            .Where(a => a.Campaign.BrandProfile.UserId == userId || a.CreatorProfile.UserId == userId)
+            .ToListAsync(ct);
+
+        if (assignments.Count == 0)
+            return new List<ChatConversationDto>();
+
+        var ids = assignments.Select(a => a.Id).ToList();
+        var aggregates = await _messages.Query()
+            .Where(m => ids.Contains(m.AssignmentId))
+            .GroupBy(m => m.AssignmentId)
+            .Select(g => new
+            {
+                AssignmentId = g.Key,
+                LastAt = g.Max(m => m.CreatedAt),
+                Unread = g.Count(m => m.SenderId != userId && !m.IsRead)
+            })
+            .ToListAsync(ct);
+
+        // Bodies of exactly the latest message per thread (CreatedAt ties are
+        // practically impossible and harmless — same thread, same instant).
+        var lastAts = aggregates.Select(x => x.LastAt).ToList();
+        var lastBodies = await _messages.Query()
+            .Where(m => ids.Contains(m.AssignmentId) && lastAts.Contains(m.CreatedAt))
+            .Select(m => new { m.AssignmentId, m.CreatedAt, m.Body })
+            .ToListAsync(ct);
+
+        var aggByAssignment = aggregates.ToDictionary(x => x.AssignmentId);
+        var conversations = assignments.Select(a =>
+        {
+            var isBrandSide = a.Campaign.BrandProfile.UserId == userId;
+            aggByAssignment.TryGetValue(a.Id, out var agg);
+            var lastBody = agg == null ? null
+                : lastBodies.FirstOrDefault(b => b.AssignmentId == a.Id && b.CreatedAt == agg.LastAt)?.Body;
+            return new ChatConversationDto(
+                a.Id,
+                isBrandSide
+                    ? (a.CreatorProfile?.DisplayName ?? "Creator")
+                    : (a.Campaign.BrandProfile?.CompanyName ?? "Varumärke"),
+                isBrandSide ? a.CreatorProfile?.AvatarUrl : a.Campaign.BrandProfile?.LogoUrl,
+                a.Campaign.Name,
+                lastBody,
+                agg?.LastAt,
+                agg?.Unread ?? 0);
+        })
+        .OrderByDescending(c => c.LastMessageAt ?? DateTime.MinValue)
+        .ThenBy(c => c.CounterpartName)
+        .ToList();
+
+        return conversations;
+    }
+
     private static ChatMessageDto MapToDto(ChatMessage m, string senderName) => new(
         m.Id, m.AssignmentId, m.SenderId, m.SenderRole,
         senderName, m.Body, m.IsRead, m.CreatedAt);

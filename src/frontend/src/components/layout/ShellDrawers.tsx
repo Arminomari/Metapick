@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import {
-  useNotifications, useMarkNotificationRead,
-  useChatMessages, useSendMessage, useMarkChatRead,
-  useCreatorAssignments, useBrandAnalytics,
+  useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead,
+  useChatMessages, useSendMessage, useMarkChatRead, useChatConversations,
 } from '@/hooks/api';
-import type { ChatMessageDto } from '@/types';
+import type { ChatConversationDto, ChatMessageDto } from '@/types';
 
 const GRADS = ['linear-gradient(135deg,#FFD8C7,#F1A88F)', 'linear-gradient(135deg,#cdb8f2,#9c7de0)', 'linear-gradient(135deg,#F2C58A,#e0a04e)', 'linear-gradient(135deg,#a9dcc0,#5fb98a)'];
 const grad = (s: string) => GRADS[((s || '').charCodeAt(0) || 0) % GRADS.length];
@@ -34,6 +33,18 @@ function useEsc(open: boolean, fn: () => void) {
 
 const XIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6 6 18" /></svg>;
 
+/** Real image when the counterpart has one, branded gradient initial otherwise. */
+function ChatAvatar({ name, imageUrl, size = 44, radius = 13 }: { name: string; imageUrl?: string | null; size?: number; radius?: number }) {
+  if (imageUrl) {
+    return <img src={imageUrl} alt="" style={{ width: size, height: size, borderRadius: radius, objectFit: 'cover', flex: `0 0 ${size}px`, boxShadow: '0 4px 12px rgba(180,120,90,.16)' }} />;
+  }
+  return (
+    <span className="mc-avatar" style={{ background: grad(name), width: size, height: size, borderRadius: radius }}>
+      <span className="brand-mono">{initial(name)}</span>
+    </span>
+  );
+}
+
 /* ───────────────────────── Notifications ───────────────────────── */
 function notifStyle(type: string): { bg: string; color: string } {
   const t = (type || '').toLowerCase();
@@ -53,6 +64,7 @@ function notifIcon(type: string) {
 export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { data } = useNotifications(false);
   const markRead = useMarkNotificationRead();
+  const markAll = useMarkAllNotificationsRead();
   useEsc(open, onClose);
   const items = data?.data ?? [];
   const unread = items.filter((n) => !n.isRead);
@@ -64,7 +76,7 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
         <div className="nd-head">
           <div className="nd-head-l"><h3>Notiser</h3>{unread.length > 0 && <span className="nd-count">{unread.length} nya</span>}</div>
           <div className="nd-head-r">
-            {unread.length > 0 && <button className="nd-readall" onClick={() => unread.forEach((n) => markRead.mutate(n.id))}>Markera alla lästa</button>}
+            {unread.length > 0 && <button className="nd-readall" onClick={() => markAll.mutate()} disabled={markAll.isPending}>Markera alla lästa</button>}
             <button className="nd-close" onClick={onClose} aria-label="Stäng"><XIcon /></button>
           </div>
         </div>
@@ -91,10 +103,8 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
 }
 
 /* ───────────────────────── Messages ───────────────────────── */
-type Thread = { id: string; name: string; sub: string };
-
-export function MessagesDrawer({ open, onClose, role }: { open: boolean; onClose: () => void; role?: string }) {
-  const [sel, setSel] = useState<Thread | null>(null);
+export function MessagesDrawer({ open, onClose }: { open: boolean; onClose: () => void; role?: string }) {
+  const [sel, setSel] = useState<ChatConversationDto | null>(null);
   useEsc(open, () => { if (sel) setSel(null); else onClose(); });
   useEffect(() => { if (!open) setSel(null); }, [open]);
 
@@ -106,71 +116,54 @@ export function MessagesDrawer({ open, onClose, role }: { open: boolean; onClose
           <div className="nd-head-l"><h3>Meddelanden</h3></div>
           <div className="nd-head-r"><button className="nd-close" onClick={onClose} aria-label="Stäng"><XIcon /></button></div>
         </div>
-        {open && (role === 'Brand' ? <BrandThreadList onOpen={setSel} /> : <CreatorThreadList onOpen={setSel} />)}
+        {open && <ConversationList onOpen={setSel} />}
         <ChatThread sel={sel} onBack={() => setSel(null)} />
       </aside>
     </>
   );
 }
 
-function CreatorThreadList({ onOpen }: { onOpen: (t: Thread) => void }) {
-  const { data, isLoading } = useCreatorAssignments(undefined, 1);
-  const items = data?.data ?? [];
+function ConversationList({ onOpen }: { onOpen: (c: ChatConversationDto) => void }) {
+  const { data: convos = [], isLoading } = useChatConversations();
   if (isLoading) return <DrawerLoading />;
-  if (!items.length) return <DrawerEmpty>Inga konversationer än. När du blir godkänd till en kampanj kan du chatta med varumärket här.</DrawerEmpty>;
+  if (!convos.length) return <DrawerEmpty>Inga konversationer än. När ett samarbete startar kan ni chatta här.</DrawerEmpty>;
   return (
     <div className="nd-scroll">
-      <div className="mc-group"><span className="mc-group-dot active" />Dina samarbeten <span className="mc-group-n">{items.length}</span></div>
-      {items.map((a) => (
-        <ThreadRow key={a.id} name={a.campaignName} sub={a.status} onClick={() => onOpen({ id: a.id, name: a.campaignName, sub: a.status })} />
+      <div className="mc-group"><span className="mc-group-dot active" />Konversationer <span className="mc-group-n">{convos.length}</span></div>
+      {convos.map((c) => (
+        <div key={c.assignmentId} className="mc-item" onClick={() => onOpen(c)}>
+          <ChatAvatar name={c.counterpartName} imageUrl={c.counterpartImageUrl} />
+          <div className="mc-body">
+            <div className="mc-row1">
+              <span className="mc-name">{c.counterpartName}</span>
+              {c.lastMessageAt && <span className="mc-time">{ago(c.lastMessageAt)}</span>}
+            </div>
+            <div className="mc-prev">{c.lastMessage ?? c.campaignName}</div>
+          </div>
+          {c.unreadCount > 0 && <span className="mc-unread">{c.unreadCount > 9 ? '9+' : c.unreadCount}</span>}
+        </div>
       ))}
     </div>
   );
 }
 
-function BrandThreadList({ onOpen }: { onOpen: (t: Thread) => void }) {
-  const { campaigns, analytics, isLoading } = useBrandAnalytics();
-  const byId = new Map(campaigns.map((c) => [c.id, c]));
-  const threads: Thread[] = analytics.flatMap((a) => a.creatorPerformance.map((cp) => ({ id: cp.assignmentId, name: cp.displayName, sub: byId.get(a.campaignId)?.name ?? '' })));
-  if (isLoading) return <DrawerLoading />;
-  if (!threads.length) return <DrawerEmpty>Inga konversationer än. När du godkänner kreatörer till en kampanj kan du chatta med dem här.</DrawerEmpty>;
-  return (
-    <div className="nd-scroll">
-      <div className="mc-group"><span className="mc-group-dot active" />Kreatörer <span className="mc-group-n">{threads.length}</span></div>
-      {threads.map((t) => <ThreadRow key={t.id} name={t.name} sub={t.sub} onClick={() => onOpen(t)} />)}
-    </div>
-  );
-}
-
-function ThreadRow({ name, sub, onClick }: { name: string; sub: string; onClick: () => void }) {
-  return (
-    <div className="mc-item" onClick={onClick}>
-      <span className="mc-avatar" style={{ background: grad(name) }}><span className="brand-mono">{initial(name)}</span></span>
-      <div className="mc-body">
-        <div className="mc-row1"><span className="mc-name">{name}</span></div>
-        <div className="mc-prev">{sub || 'Öppna konversation'}</div>
-      </div>
-    </div>
-  );
-}
-
-function ChatThread({ sel, onBack }: { sel: Thread | null; onBack: () => void }) {
+function ChatThread({ sel, onBack }: { sel: ChatConversationDto | null; onBack: () => void }) {
   const { userId } = useAuthStore();
-  const { data: messages = [], isLoading } = useChatMessages(sel?.id ?? '');
+  const { data: messages = [], isLoading } = useChatMessages(sel?.assignmentId ?? '');
   const send = useSendMessage();
   const markRead = useMarkChatRead();
   const [body, setBody] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { if (sel?.id) markRead.mutate(sel.id); /* eslint-disable-next-line */ }, [sel?.id]);
-  useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }); }, [messages, sel?.id]);
+  useEffect(() => { if (sel?.assignmentId) markRead.mutate(sel.assignmentId); /* eslint-disable-next-line */ }, [sel?.assignmentId]);
+  useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }); }, [messages, sel?.assignmentId]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     const t = body.trim();
     if (!t || !sel) return;
     setBody('');
-    try { await send.mutateAsync({ assignmentId: sel.id, body: t }); } catch { setBody(t); }
+    try { await send.mutateAsync({ assignmentId: sel.assignmentId, body: t }); } catch { setBody(t); }
   };
 
   return (
@@ -179,8 +172,8 @@ function ChatThread({ sel, onBack }: { sel: Thread | null; onBack: () => void })
         <>
           <div className="mc-thread-head">
             <button className="mc-back" onClick={onBack} aria-label="Tillbaka"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg></button>
-            <span className="mc-thread-av" style={{ background: grad(sel.name) }}><span className="brand-mono">{initial(sel.name)}</span></span>
-            <div className="mc-thread-meta"><div className="mc-thread-name">{sel.name}</div><div className="mc-thread-status">{sel.sub}</div></div>
+            <ChatAvatar name={sel.counterpartName} imageUrl={sel.counterpartImageUrl} size={42} radius={12} />
+            <div className="mc-thread-meta"><div className="mc-thread-name">{sel.counterpartName}</div><div className="mc-thread-status">{sel.campaignName}</div></div>
           </div>
           <div className="mc-thread-scroll" ref={scrollRef}>
             {isLoading ? <div className="mc-day">Laddar…</div>
@@ -189,7 +182,6 @@ function ChatThread({ sel, onBack }: { sel: Thread | null; onBack: () => void })
                 const me = m.senderId === userId;
                 return (
                   <div key={m.id} className={`mc-bub ${me ? 'me' : 'them'}`}>
-                    {!me && <div style={{ fontSize: 10.5, fontWeight: 600, opacity: .65, marginBottom: 3 }}>{m.senderName}</div>}
                     {m.body}
                     <div className="mc-bt">{new Date(m.createdAt).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}{me && (m.isRead ? ' ✓✓' : ' ✓')}</div>
                   </div>

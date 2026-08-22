@@ -397,6 +397,17 @@ export interface Notification {
   createdAt: string;
 }
 
+// ── Chat ───────────────────────────────────────────────
+export interface ChatConversationDto {
+  assignmentId: string;
+  counterpartName: string;
+  counterpartImageUrl?: string | null;
+  campaignName: string;
+  lastMessage?: string | null;
+  lastMessageAt?: string | null;
+  unreadCount: number;
+}
+
 // ── Analytics ──────────────────────────────────────────
 export interface CampaignAnalytics {
   campaignId: string;

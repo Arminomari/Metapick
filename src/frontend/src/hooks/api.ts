@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueries, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import type { ChatConversationDto } from '@/types';
 import api from '@/lib/api';
 import type {
   ApiResponse,
@@ -490,6 +491,17 @@ export function useNotifications(unreadOnly?: boolean, page = 1) {
       });
       return res.data.data;
     },
+    refetchInterval: 30000, // keep the bell badge fresh
+  });
+}
+
+export function useMarkAllNotificationsRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      await api.post('/notifications/read-all');
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
   });
 }
 
@@ -500,6 +512,17 @@ export function useMarkNotificationRead() {
       await api.post(`/notifications/${id}/read`);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
+  });
+}
+
+export function useChatConversations() {
+  return useQuery({
+    queryKey: ['chat-conversations'],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<ChatConversationDto[]>>('/chat/conversations');
+      return res.data.data;
+    },
+    refetchInterval: 10000,
   });
 }
 

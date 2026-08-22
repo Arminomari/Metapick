@@ -457,13 +457,35 @@ public class NotificationService : INotificationService
         _uow = uow;
     }
 
+    private static string TitleFor(NotificationType type) => type switch
+    {
+        NotificationType.ApplicationApproved => "Ansökan godkänd 🎉",
+        NotificationType.ApplicationRejected => "Ansökan nekad",
+        NotificationType.CampaignStarted => "Kampanj startad",
+        NotificationType.CampaignCompleted => "Kampanj avslutad",
+        NotificationType.PayoutReady => "Utbetalning redo",
+        NotificationType.PayoutCompleted => "Utbetalning genomförd 💸",
+        NotificationType.FraudAlert => "Säkerhetsvarning",
+        NotificationType.SystemMessage => "Meddelande från VYRLE",
+        NotificationType.BrandApproved => "Konto godkänt 🎉",
+        NotificationType.CreatorApproved => "Konto godkänt 🎉",
+        NotificationType.NewApplication => "Ny ansökan",
+        NotificationType.VideoVerified => "Video verifierad",
+        NotificationType.SubmissionApproved => "Innehåll godkänt",
+        NotificationType.SubmissionRejected => "Innehåll nekat",
+        NotificationType.PrOfferReceived => "Nytt PR-erbjudande ✨",
+        NotificationType.PrOfferAccepted => "PR-erbjudande accepterat",
+        NotificationType.PrOfferDeclined => "PR-erbjudande avböjt",
+        _ => "Notis"
+    };
+
     public async Task SendAsync(Guid recipientId, NotificationType type, string message, Guid? referenceId = null)
     {
         _notifications.Add(new Notification
         {
             UserId = recipientId,
             Type = type,
-            Title = type.ToString(),
+            Title = TitleFor(type),
             Message = message,
             ReferenceId = referenceId
         });
