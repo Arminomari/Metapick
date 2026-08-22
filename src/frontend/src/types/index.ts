@@ -307,6 +307,7 @@ export interface AssignmentListItem {
   totalTrackedClicks: number;
   currentPayoutAmount: number;
   assignedAt: string;
+  goalReached?: boolean;
 }
 
 export interface AssignmentDetail {
@@ -324,6 +325,7 @@ export interface AssignmentDetail {
   socialPosts: SocialPostInfo[];
   assignedAt: string;
   completedAt?: string;
+  goalReached?: boolean;
   brandUserId: string;
   creatorUserId: string;
 }

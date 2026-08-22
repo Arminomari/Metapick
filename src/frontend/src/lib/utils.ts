@@ -26,6 +26,7 @@ export function getStatusColor(status: string): string {
   const colors: Record<string, string> = {
     Active:               'bg-[hsl(90_22%_32%_/_0.12)]  text-[hsl(90_22%_24%)]   ring-1 ring-[hsl(90_22%_32%_/_0.25)]',
     Approved:             'bg-[hsl(90_22%_32%_/_0.12)]  text-[hsl(90_22%_24%)]   ring-1 ring-[hsl(90_22%_32%_/_0.25)]',
+    GoalReached:          'bg-[hsl(145_45%_45%_/_0.15)] text-[hsl(145_50%_24%)]  ring-1 ring-[hsl(145_45%_40%_/_0.35)]',
     Verified:             'bg-[hsl(90_22%_32%_/_0.12)]  text-[hsl(90_22%_24%)]   ring-1 ring-[hsl(90_22%_32%_/_0.25)]',
     Completed:            'bg-[hsl(28_14%_13%_/_0.06)]  text-[hsl(28_14%_18%)]   ring-1 ring-[hsl(28_14%_13%_/_0.18)]',
     Pending:              'bg-[hsl(36_55%_88%)]         text-[hsl(28_65%_28%)]   ring-1 ring-[hsl(28_65%_38%_/_0.30)]',

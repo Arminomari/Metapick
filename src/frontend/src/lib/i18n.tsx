@@ -53,6 +53,7 @@ const STATUS_SV: Record<string, string> = {
   Expired: 'Utgången',
   Paid: 'Utbetald',
   InProgress: 'Pågår',
+  GoalReached: 'Mål uppnått',
   Submitted: 'Inskickad',
   Preliminary: 'Preliminär',
   Locked: 'Låst',

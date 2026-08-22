@@ -395,4 +395,8 @@ export const creator: Record<string, string> = {
   'Den här sidan visar PR-erbjudanden (produkter och gåvor). Dina betalda kampanjsamarbeten hittar du under': 'This page shows PR offers (products and gifts). Your paid campaign collaborations live under',
   'Lägg till video': 'Add video',
   'Videos med din tracking-tag hittas automatiskt — klistra in länken här om du vill lägga till din video direkt.': 'Videos with your tracking tag are found automatically — paste the link here to add your video right away.',
+  'Mål uppnått — maxersättningen är säkrad!': 'Goal reached — the maximum payout is secured!',
+  'Du har tjänat': 'You have earned',
+  'Du behöver inte göra något mer — ersättningen kan begäras ut under Intäkter när kampanjen avslutas.': 'Nothing more is needed — the payout can be requested under Earnings once the campaign ends.',
+  'MÅL UPPNÅTT': 'GOAL REACHED',
 };

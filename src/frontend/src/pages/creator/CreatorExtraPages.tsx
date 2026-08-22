@@ -198,7 +198,7 @@ export function CreatorLinksPage() {
             <Link key={a.id} to={`/creator/assignments/${a.id}`} className="lt-link" style={{ textDecoration: 'none' }}>
               <span className="lt-grip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="9" cy="6" r="1" /><circle cx="9" cy="12" r="1" /><circle cx="9" cy="18" r="1" /><circle cx="15" cy="6" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="18" r="1" /></svg></span>
               <span className="lt-ic" style={{ background: grad(a.campaignName) }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 17H7a5 5 0 0 1 0-10h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8" /></svg></span>
-              <div className="lt-main"><div className="lt-t">{a.campaignName}</div><div className="lt-u">{statusLabel(a.status)} · {t('spårad länk')}</div></div>
+              <div className="lt-main"><div className="lt-t">{a.campaignName}</div><div className="lt-u">{statusLabel(a.goalReached ? 'GoalReached' : a.status)} · {t('spårad länk')}</div></div>
               <div className="lt-clicks"><div className="n">{formatNumber(a.totalTrackedClicks || 0)}</div><div className="l">{t('klick')}</div></div>
             </Link>
           ))}

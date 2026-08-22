@@ -248,7 +248,8 @@ public record ApplicationDto(
 // ──── Assignment ────
 public record AssignmentListDto(
     Guid Id, Guid CampaignId, string CampaignName,
-    string Status, long TotalVerifiedViews, long TotalTrackedClicks, decimal CurrentPayoutAmount, DateTime AssignedAt);
+    string Status, long TotalVerifiedViews, long TotalTrackedClicks, decimal CurrentPayoutAmount, DateTime AssignedAt,
+    bool GoalReached = false);
 
 public record AssignmentDetailDto(
     Guid Id, Guid CampaignId, string CampaignName, Guid CreatorProfileId,
@@ -257,7 +258,7 @@ public record AssignmentDetailDto(
     decimal CurrentPayoutAmount, TrackingTagDto? TrackingTag,
     List<SubmissionDto> Submissions, List<SocialPostInfoDto> SocialPosts,
     DateTime AssignedAt, DateTime? CompletedAt,
-    Guid BrandUserId, Guid CreatorUserId);
+    Guid BrandUserId, Guid CreatorUserId, bool GoalReached = false);
 
 public record SocialPostInfoDto(
     Guid Id, string TikTokUrl, string TikTokVideoId, long Views,

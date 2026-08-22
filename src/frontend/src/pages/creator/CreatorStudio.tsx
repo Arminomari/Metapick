@@ -19,7 +19,8 @@ const GRADS = [
 const grad = (s: string) => GRADS[((s || '').charCodeAt(0) || 0) % GRADS.length];
 const initial = (s: string) => (s?.[0] || '?').toUpperCase();
 
-function campTag(status: string) {
+function campTag(status: string, goalReached?: boolean) {
+  if (goalReached) return <span className="vcamp-tag" style={{ background: 'rgba(169,220,192,.45)', color: '#2f7d52' }}>{t('MÅL UPPNÅTT')} ✓</span>;
   const s = (status || '').toLowerCase();
   if (s.includes('review')) return <span className="vcamp-tag rev">{t('UNDER GRANSKNING')}</span>;
   if (s === 'active') return <span className="vcamp-tag prog">{t('PÅGÅR')}</span>;
@@ -179,7 +180,7 @@ export function CreatorStudioDashboard() {
           {active.length ? active.slice(0, 5).map((a) => (
             <div key={a.id} className="vcamp" onClick={() => navigate(`/creator/assignments/${a.id}`)}>
               <span className="vcamp-thumb" style={{ background: grad(a.campaignName) }}><span className="brand-mono">{initial(a.campaignName)}</span></span>
-              <div className="vcamp-main"><div className="vcamp-b">{a.campaignName}</div><div className="vcamp-m">{t('Tilldelad')} {formatDate(a.assignedAt)}</div>{campTag(a.status)}</div>
+              <div className="vcamp-main"><div className="vcamp-b">{a.campaignName}</div><div className="vcamp-m">{t('Tilldelad')} {formatDate(a.assignedAt)}</div>{campTag(a.status, a.goalReached)}</div>
               <div className="vcamp-end"><div className="vcamp-k">Views</div><div className="vcamp-v">{formatNumber(a.totalVerifiedViews)}</div></div>
               <div className="vcamp-end"><div className="vcamp-k">{t('Intjänat')}</div><div className="vcamp-v">{formatCurrency(a.currentPayoutAmount)}</div></div>
             </div>

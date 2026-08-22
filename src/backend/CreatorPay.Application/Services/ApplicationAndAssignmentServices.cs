@@ -406,7 +406,7 @@ public class AssignmentService : IAssignmentService
         if (!isCreatorOwner && !isBrandOwner)
             return Errors.Forbidden("You do not have access to this assignment");
 
-        return MapToDetail(assignment);
+        return MapToDetail(assignment, IsGoalReached(assignment.Campaign, assignment.CurrentPayoutAmount));
     }
 
     public async Task<Result<PagedResult<AssignmentListDto>>> GetCreatorAssignmentsAsync(
@@ -416,7 +416,7 @@ public class AssignmentService : IAssignmentService
         if (creator == null) return Errors.NotFound("Creator");
 
         var query = _assignments.Query()
-            .Include(a => a.Campaign)
+            .Include(a => a.Campaign).ThenInclude(c => c.PayoutRules)
             .Include(a => a.TrackingLinks)
             .Where(a => a.CreatorProfileId == creator.Id);
 
@@ -433,7 +433,8 @@ public class AssignmentService : IAssignmentService
         var dtos = items.Select(a => new AssignmentListDto(
             a.Id, a.CampaignId, a.Campaign.Name, a.Status.ToString(),
             a.TotalVerifiedViews, a.TrackingLinks.Where(tl => tl.IsActive).Sum(tl => tl.TotalClicks),
-            a.CurrentPayoutAmount, a.AssignedAt)).ToList();
+            a.CurrentPayoutAmount, a.AssignedAt,
+            IsGoalReached(a.Campaign, a.CurrentPayoutAmount))).ToList();
 
         return new PagedResult<AssignmentListDto>
         {
@@ -525,7 +526,28 @@ public class AssignmentService : IAssignmentService
         return null;
     }
 
-    private static AssignmentDetailDto MapToDetail(CreatorCampaignAssignment a) =>
+    /// <summary>
+    /// True when this creator cannot earn more here: the payout at an
+    /// effectively infinite view count equals what they already have.
+    /// Uncapped CPM never maxes out; Fixed/Tiered (and capped rules) do.
+    /// </summary>
+    private bool IsGoalReached(Campaign campaign, decimal currentPayout)
+    {
+        if (currentPayout <= 0) return false;
+        var rules = campaign.PayoutRules?.OrderBy(r => r.SortOrder).ToList();
+        if (rules is not { Count: > 0 }) return false;
+        try
+        {
+            var max = _payoutFactory.Create(campaign.PayoutModel).Calculate(1_000_000_000L, rules).Amount;
+            return max > 0 && currentPayout >= max;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static AssignmentDetailDto MapToDetail(CreatorCampaignAssignment a, bool goalReached) =>
         new(a.Id, a.CampaignId, a.Campaign.Name, a.CreatorProfileId,
             a.CreatorProfile.DisplayName, a.Status.ToString(),
             a.TotalVerifiedViews, a.TrackingLinks.Where(tl => tl.IsActive).Sum(tl => tl.TotalClicks), a.CurrentPayoutAmount,
@@ -539,7 +561,7 @@ public class AssignmentService : IAssignmentService
                 sp.LatestLikeCount, sp.LatestCommentCount, sp.LatestShareCount,
                 sp.VerificationStatus.ToString(), sp.DiscoveredAt)).ToList() ?? [],
             a.AssignedAt, a.CompletedAt,
-            a.Campaign.BrandProfile.UserId, a.CreatorProfile.UserId);
+            a.Campaign.BrandProfile.UserId, a.CreatorProfile.UserId, goalReached);
 
     private static SubmissionDto MapSubmission(CreatorSubmission s) =>
         new(s.Id, s.AssignmentId, s.TikTokVideoUrl, s.TikTokVideoId,

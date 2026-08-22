@@ -424,7 +424,7 @@ export function CreatorAssignmentsPage() {
                   <div className="vcamp-main">
                     <div className="vcamp-b">{a.campaignName}</div>
                     <div className="vcamp-m">{t('Tilldelad')} {formatDate(a.assignedAt)}</div>
-                    <StatusBadge status={a.status} />
+                    <StatusBadge status={a.goalReached ? 'GoalReached' : a.status} />
                   </div>
                   <div className="vcamp-end"><div className="vcamp-k">Views</div><div className="vcamp-v">{formatNumber(a.totalVerifiedViews)}</div></div>
                   <div className="vcamp-end"><div className="vcamp-k">{t('Klick')}</div><div className="vcamp-v">{formatNumber(a.totalTrackedClicks)}</div></div>
@@ -543,7 +543,7 @@ function TikTokConnectionCard() {
 function AssignmentTable({ assignments, onRowClick }: { assignments: AssignmentListItem[]; onRowClick?: (a: AssignmentListItem) => void }) {
   const columns: Column<AssignmentListItem>[] = [
     { header: t('Kampanj'), accessor: 'campaignName' },
-    { header: 'Status', accessor: (a) => <StatusBadge status={a.status} /> },
+    { header: 'Status', accessor: (a) => <StatusBadge status={a.goalReached ? 'GoalReached' : a.status} /> },
     { header: 'Views', accessor: (a) => formatNumber(a.totalVerifiedViews) },
     { header: t('Klick'), accessor: (a) => formatNumber(a.totalTrackedClicks) },
     { header: t('Intjänat'), accessor: (a) => formatCurrency(a.currentPayoutAmount) },
@@ -621,6 +621,19 @@ export function AssignmentDetailPage() {
               <PayoutTerms rules={campaign.payoutRules} minViews={campaign.minViews} />
             </div>
           )}
+        </div>
+      )}
+
+      {assignment.goalReached && (
+        <div className="card" style={{ marginBottom: 16, background: 'linear-gradient(160deg,#f2fbf5,#e2f5e9)', border: '1px solid rgba(95,185,138,.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 22 }} aria-hidden>🎉</span>
+            <div style={{ flex: 1, minWidth: 220 }}>
+              <div style={{ fontWeight: 800, fontSize: 15, color: '#2f7d52' }}>{t('Mål uppnått — maxersättningen är säkrad!')}</div>
+              <div style={{ fontSize: 13, color: '#3d6b52', marginTop: 3 }}>{t('Du har tjänat')} {formatCurrency(assignment.currentPayoutAmount)} · {t('Du behöver inte göra något mer — ersättningen kan begäras ut under Intäkter när kampanjen avslutas.')}</div>
+            </div>
+            <StatusBadge status="GoalReached" />
+          </div>
         </div>
       )}
 
