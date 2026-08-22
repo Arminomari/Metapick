@@ -5,6 +5,8 @@ using CreatorPay.Domain.Entities;
 using CreatorPay.Domain.Enums;
 using CreatorPay.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace CreatorPay.Application.Services;
@@ -452,13 +454,57 @@ public class FraudService : IFraudService
 public class NotificationService : INotificationService
 {
     private readonly IRepository<Notification> _notifications;
+    private readonly IRepository<User> _users;
     private readonly IUnitOfWork _uow;
+    private readonly IEmailService _email;
+    private readonly IConfiguration _config;
+    private readonly ILogger<NotificationService> _logger;
 
-    public NotificationService(IRepository<Notification> notifications, IUnitOfWork uow)
+    public NotificationService(
+        IRepository<Notification> notifications,
+        IRepository<User> users,
+        IUnitOfWork uow,
+        IEmailService email,
+        IConfiguration config,
+        ILogger<NotificationService> logger)
     {
         _notifications = notifications;
+        _users = users;
         _uow = uow;
+        _email = email;
+        _config = config;
+        _logger = logger;
     }
+
+    /// <summary>
+    /// Events important enough to also reach the recipient's inbox.
+    /// Account approval/rejection is excluded — AdminUserService already
+    /// sends those emails itself.
+    /// </summary>
+    private static readonly HashSet<NotificationType> EmailedTypes = new()
+    {
+        NotificationType.ApplicationApproved,
+        NotificationType.ApplicationRejected,
+        NotificationType.NewApplication,
+        NotificationType.SubmissionApproved,
+        NotificationType.SubmissionRejected,
+        NotificationType.PayoutReady,
+        NotificationType.PayoutCompleted,
+        NotificationType.PrOfferReceived
+    };
+
+    private static (string Text, string Path) CtaFor(NotificationType type) => type switch
+    {
+        NotificationType.ApplicationApproved => ("Öppna Mina kampanjer", "/creator/assignments"),
+        NotificationType.ApplicationRejected => ("Hitta fler kampanjer", "/creator/browse"),
+        NotificationType.NewApplication => ("Granska ansökningar", "/brand/applications"),
+        NotificationType.SubmissionApproved => ("Öppna Mina kampanjer", "/creator/assignments"),
+        NotificationType.SubmissionRejected => ("Öppna Mina kampanjer", "/creator/assignments"),
+        NotificationType.PayoutReady => ("Öppna Intäkter", "/creator/earnings"),
+        NotificationType.PayoutCompleted => ("Öppna Intäkter", "/creator/earnings"),
+        NotificationType.PrOfferReceived => ("Öppna PR-hubben", "/creator/pr"),
+        _ => ("Öppna VYRLE", "/")
+    };
 
     private static string TitleFor(NotificationType type) => type switch
     {
@@ -493,6 +539,31 @@ public class NotificationService : INotificationService
             ReferenceId = referenceId
         });
         await _uow.SaveChangesAsync();
+
+        // Important events also go out as a branded email. Best-effort:
+        // the in-app notification above is the source of truth, so an email
+        // failure must never bubble up to the calling flow.
+        if (!EmailedTypes.Contains(type)) return;
+        try
+        {
+            var recipientEmail = await _users.Query()
+                .Where(u => u.Id == recipientId)
+                .Select(u => u.Email)
+                .FirstOrDefaultAsync();
+            if (string.IsNullOrWhiteSpace(recipientEmail)) return;
+
+            var baseUrl = (_config["Frontend:BaseUrl"] ?? "https://www.vyrle.co").TrimEnd('/');
+            var (ctaText, ctaPath) = CtaFor(type);
+            await _email.SendAsync(recipientEmail, TitleFor(type),
+                EmailTemplates.Branded(
+                    TitleFor(type),
+                    $"<p>{System.Net.WebUtility.HtmlEncode(message)}</p>",
+                    ctaText, baseUrl + ctaPath));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Non-critical: notification email failed for {Type} to {UserId}", type, recipientId);
+        }
     }
 
     public async Task<Result<PagedResult<NotificationDto>>> GetNotificationsAsync(
