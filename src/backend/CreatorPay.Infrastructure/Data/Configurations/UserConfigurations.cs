@@ -111,3 +111,23 @@ public class TikTokAccountConfiguration : IEntityTypeConfiguration<TikTokAccount
         b.HasIndex(e => e.TikTokUsername).IsUnique();
     }
 }
+
+public class BrandFollowerConfiguration : IEntityTypeConfiguration<BrandFollower>
+{
+    public void Configure(EntityTypeBuilder<BrandFollower> b)
+    {
+        b.ToTable("brand_followers");
+        b.HasKey(e => e.Id);
+        b.HasIndex(e => new { e.BrandProfileId, e.CreatorProfileId }).IsUnique();
+
+        b.HasOne(e => e.BrandProfile)
+            .WithMany()
+            .HasForeignKey(e => e.BrandProfileId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        b.HasOne(e => e.CreatorProfile)
+            .WithMany()
+            .HasForeignKey(e => e.CreatorProfileId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}

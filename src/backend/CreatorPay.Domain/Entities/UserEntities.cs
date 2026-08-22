@@ -116,3 +116,13 @@ public class TikTokAccount : BaseEntity
     // Navigation
     public CreatorProfile CreatorProfile { get; set; } = null!;
 }
+
+/// <summary>A creator following a brand — social-profile style.</summary>
+public class BrandFollower : BaseEntity
+{
+    public Guid BrandProfileId { get; set; }
+    public Guid CreatorProfileId { get; set; }
+
+    public BrandProfile BrandProfile { get; set; } = null!;
+    public CreatorProfile CreatorProfile { get; set; } = null!;
+}

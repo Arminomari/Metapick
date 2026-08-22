@@ -1,5 +1,6 @@
 import React from 'react';
 import { FEATURES } from '@/lib/features';
+import { BrandProfilePage } from '@/pages/creator/BrandProfilePage';
 import { Navigate, Route, BrowserRouter as Router, Routes, useParams } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
@@ -102,6 +103,7 @@ export default function App() {
             <Route path="/creator/analytics" element={<CreatorAnalyticsPage />} />
             <Route path="/creator/pr" element={<CreatorPrInboxPage />} />
             {FEATURES.linkTree && <Route path="/creator/links" element={<CreatorLinksPage />} />}
+            <Route path="/creator/brands/:id" element={<BrandProfilePage />} />
             <Route path="/creator/earnings" element={<EarningsPage />} />
             <Route path="/creator/levels" element={<CreatorLevelsPage />} />
             <Route path="/creator/saved" element={<CreatorSavedPage />} />

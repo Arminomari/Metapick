@@ -23,3 +23,28 @@ public class BrandController : BaseController
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateBrandProfileRequest request)
         => ToActionResult(await _brands.UpdateProfileAsync(GetUserId(), request));
 }
+
+/// <summary>Offentliga företagsprofiler — nås av alla inloggade.</summary>
+[Route("api/brands")]
+[Authorize]
+public class BrandPublicController : BaseController
+{
+    private readonly ICampaignService _campaigns;
+
+    public BrandPublicController(ICampaignService campaigns) => _campaigns = campaigns;
+
+    /// <summary>Företagets publika profil: följare, kampanjer, omdömen</summary>
+    [HttpGet("{brandProfileId:guid}/public")]
+    public async Task<IActionResult> GetPublicProfile(Guid brandProfileId, CancellationToken ct)
+        => ToActionResult(await _campaigns.GetBrandPublicProfileAsync(brandProfileId, GetUserId(), ct));
+
+    /// <summary>Följ företaget</summary>
+    [HttpPost("{brandProfileId:guid}/follow")]
+    public async Task<IActionResult> Follow(Guid brandProfileId, CancellationToken ct)
+        => ToActionResult(await _campaigns.SetBrandFollowAsync(GetUserId(), brandProfileId, true, ct));
+
+    /// <summary>Sluta följa företaget</summary>
+    [HttpDelete("{brandProfileId:guid}/follow")]
+    public async Task<IActionResult> Unfollow(Guid brandProfileId, CancellationToken ct)
+        => ToActionResult(await _campaigns.SetBrandFollowAsync(GetUserId(), brandProfileId, false, ct));
+}

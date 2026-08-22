@@ -156,6 +156,7 @@ function ChatThread({ sel, onBack, onCloseAll }: { sel: ChatConversationDto | nu
     if (!sel) return;
     onCloseAll?.();
     if (sel.counterpartRole === 'Creator' && sel.counterpartProfileId) navigate(`/brand/creators/${sel.counterpartProfileId}`);
+    else if (sel.counterpartRole === 'Brand' && sel.counterpartProfileId) navigate(`/creator/brands/${sel.counterpartProfileId}`);
     else navigate(`/creator/assignments/${sel.assignmentId}`);
   };
   const { data: messages = [], isLoading } = useChatMessages(sel?.assignmentId ?? '');

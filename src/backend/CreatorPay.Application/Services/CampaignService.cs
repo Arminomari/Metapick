@@ -18,6 +18,8 @@ public class CampaignService : ICampaignService
     private readonly IAuditService _audit;
     private readonly INotificationService _notifications;
     private readonly IRepository<User> _userAccounts;
+    private readonly IRepository<BrandFollower> _brandFollowers;
+    private readonly IRepository<Review> _reviewRows;
 
     public CampaignService(
         IUnitOfWork uow,
@@ -27,7 +29,9 @@ public class CampaignService : ICampaignService
         IRepository<SavedCampaign> savedCampaigns,
         IAuditService audit,
         INotificationService notifications,
-        IRepository<User> userAccounts)
+        IRepository<User> userAccounts,
+        IRepository<BrandFollower> brandFollowers,
+        IRepository<Review> reviewRows)
     {
         _uow = uow;
         _campaigns = campaigns;
@@ -37,6 +41,8 @@ public class CampaignService : ICampaignService
         _audit = audit;
         _notifications = notifications;
         _userAccounts = userAccounts;
+        _brandFollowers = brandFollowers;
+        _reviewRows = reviewRows;
     }
 
     public async Task<Result<CampaignDetailDto>> CreateCampaignAsync(Guid brandUserId, CreateCampaignRequest request, CancellationToken ct = default)
@@ -796,4 +802,81 @@ public class CampaignService : ICampaignService
                 r.MaxClicks)).ToList() ?? [],
             c.CreatedAt, c.PublishedAt,
             c.Perks, c.ContentTags?.ToList() ?? []);
+
+    /// <summary>
+    /// Social-style public brand profile: real follower count, verified stats
+    /// aggregated from campaigns, and both open and past campaigns.
+    /// </summary>
+    public async Task<Result<BrandPublicProfileDto>> GetBrandPublicProfileAsync(Guid brandProfileId, Guid viewerUserId, CancellationToken ct = default)
+    {
+        var brand = await _brands.Query()
+            .FirstOrDefaultAsync(b => b.Id == brandProfileId && b.Status == BrandStatus.Approved, ct);
+        if (brand == null) return Errors.NotFound("Brand", brandProfileId);
+
+        var campaigns = await _campaigns.Query()
+            .Include(c => c.PayoutRules)
+            .Include(c => c.Assignments)
+            .Where(c => c.BrandProfileId == brandProfileId && !c.IsDeleted
+                && (c.Status == CampaignStatus.Active || c.Status == CampaignStatus.Completed))
+            .ToListAsync(ct);
+
+        var followerCount = await _brandFollowers.Query()
+            .CountAsync(f => f.BrandProfileId == brandProfileId, ct);
+        var viewerCreator = await _creatorProfiles.Query()
+            .FirstOrDefaultAsync(c => c.UserId == viewerUserId, ct);
+        var isFollowing = viewerCreator != null && await _brandFollowers.Query()
+            .AnyAsync(f => f.BrandProfileId == brandProfileId && f.CreatorProfileId == viewerCreator.Id, ct);
+
+        var reviews = await _reviewRows.Query()
+            .Include(r => r.Reviewer)
+            .Where(r => r.RevieweeId == brand.UserId)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync(ct);
+        var avgRating = reviews.Count > 0 ? Math.Round(reviews.Average(r => r.Stars), 1) : 0;
+        var recentReviews = reviews.Take(6).Select(r => new ReviewDto(
+            r.Id, r.AssignmentId, r.ReviewerId, r.ReviewerRole,
+            $"{r.Reviewer.FirstName} {r.Reviewer.LastName}".Trim(), r.Stars, r.Comment, r.CreatedAt)).ToList();
+
+        List<BrandPublicCampaignDto> Map(IEnumerable<Campaign> cs) => cs.Select(c => new BrandPublicCampaignDto(
+            c.Id, c.Name, c.Category, c.Status.ToString(),
+            BuildPayoutSummary(c.PayoutRules.ToList()),
+            c.StartDate, c.EndDate,
+            Math.Max(0, c.MaxCreators - c.Assignments.Count(a => a.Status == AssignmentStatus.Active)),
+            c.Assignments.Sum(a => a.TotalVerifiedViews))).ToList();
+
+        var active = campaigns.Where(c => c.Status == CampaignStatus.Active)
+            .OrderByDescending(c => c.CreatedAt).ToList();
+        var past = campaigns.Where(c => c.Status == CampaignStatus.Completed)
+            .OrderByDescending(c => c.EndDate).Take(12).ToList();
+
+        return new BrandPublicProfileDto(
+            brand.Id, brand.CompanyName, brand.LogoUrl, brand.Industry, brand.Country,
+            brand.Description, brand.Website, brand.CreatedAt,
+            followerCount, isFollowing,
+            active.Count, campaigns.Count(c => c.Status == CampaignStatus.Completed),
+            campaigns.SelectMany(c => c.Assignments).Sum(a => a.TotalVerifiedViews),
+            campaigns.SelectMany(c => c.Assignments).Select(a => a.CreatorProfileId).Distinct().Count(),
+            avgRating, reviews.Count, recentReviews,
+            Map(active), Map(past));
+    }
+
+    public async Task<Result<bool>> SetBrandFollowAsync(Guid viewerUserId, Guid brandProfileId, bool follow, CancellationToken ct = default)
+    {
+        var creator = await _creatorProfiles.Query().FirstOrDefaultAsync(c => c.UserId == viewerUserId, ct);
+        if (creator == null) return Errors.Forbidden("Endast creators kan följa företag");
+
+        var existing = await _brandFollowers.Query()
+            .FirstOrDefaultAsync(f => f.BrandProfileId == brandProfileId && f.CreatorProfileId == creator.Id, ct);
+        if (follow && existing == null)
+        {
+            _brandFollowers.Add(new BrandFollower { BrandProfileId = brandProfileId, CreatorProfileId = creator.Id });
+            await _uow.SaveChangesAsync(ct);
+        }
+        else if (!follow && existing != null)
+        {
+            _brandFollowers.Remove(existing);
+            await _uow.SaveChangesAsync(ct);
+        }
+        return follow;
+    }
 }
