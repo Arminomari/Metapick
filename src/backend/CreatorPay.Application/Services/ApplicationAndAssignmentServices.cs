@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using CreatorPay.Application.PayoutEngine;
 using CreatorPay.Application.Common;
 using CreatorPay.Application.DTOs;
@@ -67,6 +68,11 @@ public class ApplicationService : IApplicationService
             .FirstOrDefaultAsync(ct);
         if (!applicantEmailVerified)
             return Errors.Forbidden("Bekräfta din e-postadress först — kolla mejlet vi skickat, eller begär en ny länk i bannern högst upp.");
+
+        // Applying requires a REAL TikTok login (OAuth) — a typed-in username
+        // proves nothing and is exactly how fake accounts would slip in.
+        if (creator.TikTokAccount is not { IsActive: true } || creator.TikTokAccount.Scopes == "manual")
+            return Errors.Forbidden("Logga in med TikTok först — koppla ditt konto via TikTok-knappen på Upptäck-sidan innan du ansöker.");
 
         var campaign = await _campaigns.Query()
             .Include(c => c.BrandProfile)
@@ -444,7 +450,9 @@ public class AssignmentService : IAssignmentService
 
     public async Task<Result<SubmissionDto>> SubmitVideoAsync(Guid assignmentId, Guid creatorUserId, SubmitVideoRequest request, CancellationToken ct = default)
     {
-        var creator = await _creators.Query().FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
+        var creator = await _creators.Query()
+            .Include(c => c.TikTokAccount)
+            .FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
         if (creator == null) return Errors.NotFound("Creator");
 
         var assignment = await _assignments.Query()
@@ -455,16 +463,44 @@ public class AssignmentService : IAssignmentService
         if (assignment.Status != AssignmentStatus.Active)
             return Errors.Conflict("Assignment is not active");
 
-        // Check for duplicate URL
+        // ── Ownership gate: the video must belong to the creator's own
+        //    connected TikTok account — otherwise anyone could submit someone
+        //    else's viral video and collect the payout for its views. ────────
+        var tiktok = creator.TikTokAccount;
+        if (tiktok == null || !tiktok.IsActive)
+            return Errors.Forbidden("Koppla ditt TikTok-konto innan du lägger till videos.");
+
+        var canonicalUrl = request.VideoUrl.Trim();
+        var urlMatch = Regex.Match(canonicalUrl, @"tiktok\.com/@([^/]+)/video/(\d+)");
+        if (!urlMatch.Success && Regex.IsMatch(canonicalUrl, @"^https://(vm|vt)\.tiktok\.com/", RegexOptions.IgnoreCase))
+        {
+            var resolved = await ResolveShortLinkAsync(canonicalUrl, ct);
+            if (resolved != null)
+            {
+                canonicalUrl = resolved;
+                urlMatch = Regex.Match(canonicalUrl, @"tiktok\.com/@([^/]+)/video/(\d+)");
+            }
+        }
+        if (!urlMatch.Success)
+            return Errors.Validation("Länken kunde inte tolkas. Klistra in videons fullständiga länk: tiktok.com/@dittnamn/video/…");
+
+        var urlUsername = urlMatch.Groups[1].Value.Trim().TrimStart('@');
+        var ownUsername = (tiktok.TikTokUsername ?? "").Trim().TrimStart('@');
+        if (!urlUsername.Equals(ownUsername, StringComparison.OrdinalIgnoreCase))
+            return Errors.Forbidden($"Videon tillhör @{urlUsername}, men ditt kopplade konto är @{ownUsername}. Du kan bara lägga till videos från ditt eget konto.");
+
+        // Duplicate check against the canonical URL and the video id, so the
+        // same video can't be submitted twice via different link formats.
+        var videoId = urlMatch.Groups[2].Value;
         var duplicate = await _submissions.Query()
-            .AnyAsync(s => s.TikTokVideoUrl == request.VideoUrl, ct);
-        if (duplicate) return Errors.Conflict("This video URL has already been submitted");
+            .AnyAsync(s => s.TikTokVideoUrl == canonicalUrl || s.TikTokVideoId == videoId, ct);
+        if (duplicate) return Errors.Conflict("Den här videon är redan inskickad");
 
         var submission = new CreatorSubmission
         {
             AssignmentId = assignmentId,
-            TikTokVideoUrl = request.VideoUrl,
-            TikTokVideoId = ExtractTikTokVideoId(request.VideoUrl),
+            TikTokVideoUrl = canonicalUrl,
+            TikTokVideoId = videoId,
             Notes = request.Notes,
             Status = SubmissionStatus.Pending
         };
@@ -491,6 +527,24 @@ public class AssignmentService : IAssignmentService
         return new SubmissionDto(submission.Id, submission.AssignmentId, submission.TikTokVideoUrl,
             submission.TikTokVideoId, submission.Notes, submission.Status.ToString(),
             submission.RejectionReason, submission.CreatedAt);
+    }
+
+    // Shared handler: short links (vm.tiktok.com) only reveal the canonical
+    // @user/video URL via their redirect — one hop, no follow, short timeout.
+    private static readonly HttpClient ShortLinkClient =
+        new(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(6) };
+
+    private static async Task<string?> ResolveShortLinkAsync(string url, CancellationToken ct)
+    {
+        try
+        {
+            using var resp = await ShortLinkClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
+            return resp.Headers.Location?.ToString();
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     public async Task<Result<TrackingTagDto>> GetTrackingTagAsync(Guid assignmentId, Guid creatorUserId, CancellationToken ct = default)

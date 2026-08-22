@@ -43,7 +43,7 @@ export function LandingPage() {
       {/* NAV ──────────────────────────────────────────── */}
       <nav className="fixed inset-x-0 top-0 z-50 backdrop-blur-md bg-[hsl(var(--background)/0.7)]">
         <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-5 md:px-10">
-          <a href="/" className="group flex items-center gap-1.5 leading-none" aria-label="MetaPick">
+          <a href="/" className="group flex items-center gap-1.5 leading-none" aria-label="VYRLE">
             <span className="text-display text-[1.55rem]">meta<span className="text-sunset">pick</span></span>
             <span className="ml-0.5 inline-block h-1.5 w-1.5 rounded-full bg-sunset" aria-hidden />
           </a>
@@ -103,7 +103,7 @@ export function LandingPage() {
           </h1>
 
           <p className="mt-8 text-center mx-auto col-prose text-[1.1rem] md:text-[1.2rem] text-muted-foreground">
-            {t('MetaPick är creator marketplace där brands och creators möts direkt. Inga cold DMs, inga spreadsheets, ingen agency-mellanhand — bara content och payouts på ett ställe.')}
+            {t('VYRLE är creator marketplace där brands och creators möts direkt. Inga cold DMs, inga spreadsheets, ingen agency-mellanhand — bara content och payouts på ett ställe.')}
           </p>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
@@ -400,7 +400,7 @@ export function LandingPage() {
           </div>
           <div className="md:col-span-12 hairline" />
           <p className="md:col-span-12 text-center text-[0.72rem] tracking-wider uppercase text-muted-foreground">
-            © 2026 MetaPick
+            © 2026 VYRLE
           </p>
         </div>
       </footer>

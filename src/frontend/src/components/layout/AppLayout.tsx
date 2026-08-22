@@ -29,7 +29,7 @@ export function AppLayout() {
       {/* Top nav */}
       <header className="sticky top-0 z-40 backdrop-blur-md bg-[hsl(var(--background)/0.78)]">
         <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between px-6 md:px-10">
-          <Link to="/" className="group flex items-center gap-1.5 leading-none" aria-label="MetaPick">
+          <Link to="/" className="group flex items-center gap-1.5 leading-none" aria-label="VYRLE">
             <span className="text-display text-[1.5rem]">meta<span className="text-sunset">pick</span></span>
             <span className="ml-0.5 h-1.5 w-1.5 rounded-full bg-sunset" aria-hidden />
           </Link>
@@ -98,7 +98,7 @@ export function AppLayout() {
       <footer className="mt-24 border-t border-[hsl(var(--border))]">
         <div className="mx-auto max-w-[1240px] px-6 md:px-10 py-10 flex flex-wrap items-center justify-between gap-3">
           <div className="text-display text-lg">meta<span className="text-sunset">pick</span></div>
-          <p className="text-xs text-muted-foreground">© 2026 MetaPick · {t('Skapad med ☀ i Stockholm')}</p>
+          <p className="text-xs text-muted-foreground">© 2026 VYRLE · {t('Skapad med ☀ i Stockholm')}</p>
         </div>
       </footer>
     </div>

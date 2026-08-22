@@ -16,8 +16,8 @@ export const landing: Record<string, string> = {
   'Få betalt': 'Get paid',
   'för din': 'for your',
   'vibe': 'vibe',
-  'MetaPick är creator marketplace där brands och creators möts direkt. Inga cold DMs, inga spreadsheets, ingen agency-mellanhand — bara content och payouts på ett ställe.':
-    'MetaPick is the creator marketplace where brands and creators meet directly. No cold DMs, no spreadsheets, no agency middleman — just content and payouts in one place.',
+  'VYRLE är creator marketplace där brands och creators möts direkt. Inga cold DMs, inga spreadsheets, ingen agency-mellanhand — bara content och payouts på ett ställe.':
+    'VYRLE is the creator marketplace where brands and creators meet directly. No cold DMs, no spreadsheets, no agency middleman — just content and payouts in one place.',
   'Bli creator': 'Become a creator',
   'Jag är ett brand': 'I am a brand',
   'Gratis att registrera · Kom igång på minuter': 'Free to sign up · Get started in minutes',
