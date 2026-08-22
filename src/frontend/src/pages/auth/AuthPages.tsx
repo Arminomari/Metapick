@@ -469,10 +469,6 @@ export function RegisterPage() {
               <div className="auth-at"><span>@</span><input id="rg-tt" type="text" value={form.tikTokUsername} onChange={set('tikTokUsername')} required placeholder={t('dittanvändarnamn')} /></div>
               <div className="auth-hint">{t('Efter godkännande kopplar du kontot via TikTok för automatisk visningsverifiering.')}</div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }}>
-              <div className="field"><label htmlFor="rg-fc">{t('Följare på TikTok')}</label><input id="rg-fc" type="text" inputMode="numeric" value={form.followerCount} onChange={set('followerCount')} placeholder={t('t.ex. 12000')} /></div>
-              <div className="field"><label htmlFor="rg-av">{t('Snittvisningar per video')}</label><input id="rg-av" type="text" inputMode="numeric" value={form.averageViews} onChange={set('averageViews')} placeholder={t('t.ex. 8500')} /></div>
-            </div>
             <div className="field"><label htmlFor="rg-ig">{t('Instagram-användarnamn')}</label>
               <div className="auth-at"><span>@</span><input id="rg-ig" type="text" value={form.instagramUsername} onChange={set('instagramUsername')} placeholder={t('dittinstagram')} /></div>
             </div>

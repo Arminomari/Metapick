@@ -561,6 +561,7 @@ export function AssignmentDetailPage() {
   const { data: campaign } = useCampaignDetail(assignment?.campaignId ?? '');
   const submitVideo = useSubmitVideo();
   const [videoUrl, setVideoUrl] = useState('');
+  const [submitError, setSubmitError] = useState('');
 
   if (isLoading || !assignment) return <LoadingSpinner />;
 
@@ -574,8 +575,13 @@ export function AssignmentDetailPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await submitVideo.mutateAsync({ assignmentId: assignment.id, videoUrl });
-    setVideoUrl('');
+    setSubmitError('');
+    try {
+      await submitVideo.mutateAsync({ assignmentId: assignment.id, videoUrl });
+      setVideoUrl('');
+    } catch (err: any) {
+      setSubmitError(err?.response?.data?.error?.message ?? t('Videon kunde inte läggas till — kontrollera länken och försök igen.'));
+    }
   };
 
   return (
@@ -676,6 +682,9 @@ export function AssignmentDetailPage() {
               style={{ flex: 1, border: '1px solid rgba(241,168,143,.22)', borderRadius: 13, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', background: 'rgba(255,255,255,.7)' }} />
             <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={submitVideo.isPending}>{submitVideo.isPending ? t('Skickar…') : t('Lägg till')}</button>
           </form>
+          {submitError && (
+            <p style={{ margin: '10px 0 0', fontSize: 13, fontWeight: 600, color: '#cf4b4b', lineHeight: 1.5 }}>⚠ {submitError}</p>
+          )}
         </div>
       )}
 

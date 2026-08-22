@@ -400,4 +400,5 @@ export const creator: Record<string, string> = {
   'Du behöver inte göra något mer — ersättningen kan begäras ut under Intäkter när kampanjen avslutas.': 'Nothing more is needed — the payout can be requested under Earnings once the campaign ends.',
   'MÅL UPPNÅTT': 'GOAL REACHED',
   'Lägger du till videon via länk behöver du inte skriva koderna i beskrivningen — videon kopplas direkt till kampanjen och verifieras när företaget godkänner den.': 'If you add the video via link you do not need to put the codes in the description — the video is linked straight to the campaign and verified once the brand approves it.',
+  'Videon kunde inte läggas till — kontrollera länken och försök igen.': 'The video could not be added — check the link and try again.',
 };
