@@ -135,6 +135,7 @@ public interface IAssignmentService
     Task<Result<TrackingTagDto>> GetTrackingTagAsync(Guid assignmentId, Guid creatorUserId, CancellationToken ct = default);
     Task<Result<SubmissionDto>> ApproveSubmissionAsync(Guid submissionId, Guid brandUserId, CancellationToken ct = default);
     Task<Result<SubmissionDto>> RejectSubmissionAsync(Guid submissionId, Guid brandUserId, string? reason, CancellationToken ct = default);
+    Task<Result<bool>> RequestViewRefreshAsync(Guid assignmentId, Guid userId, CancellationToken ct = default);
 }
 
 public record LinkClickContext(string? Referrer, string? UserAgent, string? IpHash);

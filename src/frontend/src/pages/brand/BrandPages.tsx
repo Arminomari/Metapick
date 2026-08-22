@@ -1,4 +1,5 @@
 import { useState, type FormEvent as ReactFormEvent } from 'react';
+import { RefreshViewsButton } from '@/components/ui/RefreshViewsButton';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBrandCampaigns, useCampaignDetail, useCampaignAnalytics, useCampaignApplications, usePublishCampaign, useCreateCampaign, useApproveApplication, useRejectApplication, useApproveSubmission, useRejectSubmission, useMarkManualPayoutSent, useBrandProfile, useUpdateBrandProfile, useChangePassword, useAssignmentDetail, useChatMessages } from '@/hooks/api';
 import { Button, Card, DataTable, LoadingSpinner, Pagination, StatCard, StatusBadge, type Column } from '@/components/ui';
@@ -618,11 +619,17 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
                 </div>
                 {cp.payoutStatus === 'AwaitingThreshold' && (
                   <p className="text-xs text-muted-foreground">
-                    Creatorn har godkända videos men har inte nått betalningsnivån ännu.
+                    {cp.videos?.some((v: CreatorVideo) => v.status === 'Approved')
+                      ? 'Creatorn har godkända videos men har inte nått betalningsnivån ännu.'
+                      : 'Väntar på att creatorn skickar in en video — godkänn den sedan här.'}
                   </p>
                 )}
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
                   <div className="xl:col-span-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-semibold">Videos</span>
+                      <RefreshViewsButton assignmentId={cp.assignmentId} />
+                    </div>
                     {cp.videos && cp.videos.length > 0 ? (
                       <div className="space-y-4">
                         {cp.videos.map((v: CreatorVideo, i: number) => (

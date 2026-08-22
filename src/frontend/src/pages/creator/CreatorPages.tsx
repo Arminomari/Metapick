@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { RefreshViewsButton } from '@/components/ui/RefreshViewsButton';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { DateInput } from '@/components/ui/DateInput';
 import { TagSelector } from '@/components/ui/TagSelector';
@@ -656,7 +657,7 @@ export function AssignmentDetailPage() {
       )}
 
       <div className="card" style={{ marginBottom: 16 }}>
-        <div className="sec-head"><h3>Spårade videos</h3></div>
+        <div className="sec-head"><h3>Spårade videos</h3><RefreshViewsButton assignmentId={assignment.id} /></div>
         {(assignment.socialPosts?.length > 0) ? (
           <div className="space-y-6">
             {assignment.socialPosts.map((sp) => (

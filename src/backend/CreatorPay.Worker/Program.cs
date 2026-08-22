@@ -55,12 +55,14 @@ var host = Host.CreateDefaultBuilder(args)
 using (var scope = host.Services.CreateScope())
 {
     var manager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+    var jobConfig = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
 
-    // Daglig kampanjsynk – var 15:e minut (dev) / kl 03:00 UTC (prod)
+    // Kampanjsynk (views från TikTok). Testperiod: var 10:e minut.
+    // Override via Jobs__CampaignSyncCron när volymen växer.
     manager.AddOrUpdate<DailyCampaignSyncJob>(
         "daily-campaign-sync",
         job => job.ExecuteAsync(),
-        "*/15 * * * *");
+        jobConfig["Jobs:CampaignSyncCron"] ?? "*/10 * * * *");
 
     // Kampanj-expiration – kl 01:00 UTC
     manager.AddOrUpdate<CampaignExpirationJob>(
@@ -86,11 +88,12 @@ using (var scope = host.Services.CreateScope())
         job => job.ExecuteAsync(),
         "0 */4 * * *");
 
-    // Utbetalningsberäkning – kl 04:00 UTC (efter sync)
+    // Utbetalningsberäkning. Testperiod: var 15:e minut så intjänat följer
+    // views direkt. Override via Jobs__PayoutRecalcCron.
     manager.AddOrUpdate<PayoutRecalculationJob>(
         "payout-recalculation",
         job => job.ExecuteAsync(CancellationToken.None),
-        "0 4 * * *");
+        jobConfig["Jobs:PayoutRecalcCron"] ?? "*/15 * * * *");
 }
 
 Log.Information("CreatorPay Worker started with {Count} recurring jobs", 6);

@@ -527,6 +527,27 @@ public class AssignmentService : IAssignmentService
         new(s.Id, s.AssignmentId, s.TikTokVideoUrl, s.TikTokVideoId,
             s.Notes, s.Status.ToString(), s.RejectionReason, s.CreatedAt);
 
+    /// <summary>
+    /// Authorizes an on-demand view sync: only the assignment's creator or the
+    /// campaign's brand may trigger it (the controller enqueues the job).
+    /// </summary>
+    public async Task<Result<bool>> RequestViewRefreshAsync(Guid assignmentId, Guid userId, CancellationToken ct = default)
+    {
+        var assignment = await _assignments.Query()
+            .Include(a => a.Campaign).ThenInclude(c => c.BrandProfile)
+            .Include(a => a.CreatorProfile)
+            .FirstOrDefaultAsync(a => a.Id == assignmentId, ct);
+        if (assignment == null) return Errors.NotFound("Assignment", assignmentId);
+
+        var isMember = assignment.CreatorProfile?.UserId == userId
+                       || assignment.Campaign?.BrandProfile?.UserId == userId;
+        if (!isMember)
+            return Errors.Forbidden("You do not have access to this assignment");
+
+        await _audit.LogAsync(userId, "Assignment.ViewRefreshRequested", "Assignment", assignmentId);
+        return true;
+    }
+
     public async Task<Result<SubmissionDto>> ApproveSubmissionAsync(Guid submissionId, Guid brandUserId, CancellationToken ct = default)
     {
         var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);

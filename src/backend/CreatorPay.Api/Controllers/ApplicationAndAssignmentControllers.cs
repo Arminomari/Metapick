@@ -92,6 +92,16 @@ public class AssignmentController : BaseController
     public async Task<IActionResult> GetTrackingTag(Guid id, CancellationToken ct)
         => ToActionResult(await _assignments.GetTrackingTagAsync(id, GetUserId(), ct));
 
+    /// <summary>Trigga viewsynk direkt (creator eller brand på uppdraget)</summary>
+    [HttpPost("{id:guid}/refresh-views")]
+    public async Task<IActionResult> RefreshViews(Guid id, CancellationToken ct)
+    {
+        var allowed = await _assignments.RequestViewRefreshAsync(id, GetUserId(), ct);
+        if (allowed.IsSuccess)
+            Hangfire.BackgroundJob.Enqueue<CreatorPay.Application.Interfaces.ICampaignSyncTrigger>(x => x.ExecuteAsync());
+        return ToActionResult(allowed);
+    }
+
     /// <summary>Godkänn submission (Brand)</summary>
     [HttpPost("submissions/{id:guid}/approve")]
     [Authorize(Policy = "BrandOnly")]

@@ -519,7 +519,12 @@ public class CampaignService : ICampaignService
                     .Where(sp => sp.IsActive)
                     .Select(sp => new CreatorVideoDto(
                         sp.SubmissionId, sp.TikTokUrl, sp.TikTokVideoId, sp.LatestViewCount, 0,
-                        sp.VerificationStatus.ToString(),
+                        // The brand's approval decision is the primary status; the
+                        // TikTok verification status only shows until a decision.
+                        sp.SubmissionId.HasValue && submissionDict.TryGetValue(sp.SubmissionId.Value, out var subStatus)
+                            && (subStatus.Status == SubmissionStatus.Approved || subStatus.Status == SubmissionStatus.Rejected)
+                            ? subStatus.Status.ToString()
+                            : sp.VerificationStatus.ToString(),
                         sp.SubmissionId.HasValue && submissionDict.TryGetValue(sp.SubmissionId.Value, out var sub)
                             ? sub.RejectionReason
                             : null,
