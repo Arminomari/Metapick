@@ -29,6 +29,7 @@ public class DailyCampaignSyncJob : ICampaignSyncTrigger
     private readonly IFraudService _fraud;
     private readonly INotificationService _notifications;
     private readonly IAuditService _audit;
+    private readonly IRepository<CreatorSubmission> _submissions;
 
     public DailyCampaignSyncJob(
         ILogger<DailyCampaignSyncJob> logger,
@@ -42,7 +43,8 @@ public class DailyCampaignSyncJob : ICampaignSyncTrigger
         IEncryptionService encryption,
         IFraudService fraud,
         INotificationService notifications,
-        IAuditService audit)
+        IAuditService audit,
+        IRepository<CreatorSubmission> submissions)
     {
         _logger = logger;
         _campaigns = campaigns;
@@ -56,6 +58,7 @@ public class DailyCampaignSyncJob : ICampaignSyncTrigger
         _fraud = fraud;
         _notifications = notifications;
         _audit = audit;
+        _submissions = submissions;
     }
 
     public async Task ExecuteAsync()
@@ -108,6 +111,10 @@ public class DailyCampaignSyncJob : ICampaignSyncTrigger
         }
 
         _logger.LogInformation("DailyCampaignSync completed at {Time} — {Total} campaigns processed", DateTime.UtcNow, totalProcessed);
+
+        // Money follows views immediately: recalculate payouts as soon as the
+        // sync finishes instead of waiting for the next scheduled run.
+        Hangfire.BackgroundJob.Enqueue<PayoutRecalculationJob>(j => j.ExecuteAsync(CancellationToken.None));
     }
 
     private async Task ProcessCampaignAsync(Campaign campaign)
@@ -191,6 +198,11 @@ public class DailyCampaignSyncJob : ICampaignSyncTrigger
             .ToListAsync();
 
         var existingVideoIds = existingPosts.Select(p => p.TikTokVideoId).ToHashSet();
+
+        // Brand review decisions override the confidence heuristic below.
+        var reviewBySubmission = await _submissions.Query()
+            .Where(s => s.AssignmentId == assignment.Id)
+            .ToDictionaryAsync(s => s.Id, s => s.Status);
         var trackingTag = assignment.TrackingTag;
 
         // Step 3: Discover new videos that match the campaign
@@ -246,6 +258,10 @@ public class DailyCampaignSyncJob : ICampaignSyncTrigger
             if (video == null)
             {
                 _logger.LogWarning("Could not find video for post {PostId}", post.TikTokVideoId);
+                // Keep counting already-verified posts at their last known views
+                // so a lookup miss can never zero out earned money.
+                if (post.VerificationStatus == VerificationStatus.Verified)
+                    totalVerifiedViews += post.LatestViewCount;
                 continue;
             }
 
@@ -305,8 +321,19 @@ public class DailyCampaignSyncJob : ICampaignSyncTrigger
             };
             _verifications.Add(verification);
 
-            if (confidence >= 0.7m)
+            var brandDecision = post.SubmissionId.HasValue
+                && reviewBySubmission.TryGetValue(post.SubmissionId.Value, out var reviewStatus)
+                ? reviewStatus
+                : (SubmissionStatus?)null;
+
+            if (brandDecision == SubmissionStatus.Rejected)
             {
+                post.VerificationStatus = VerificationStatus.Rejected;
+            }
+            else if (brandDecision == SubmissionStatus.Approved || confidence >= 0.7m)
+            {
+                // A brand-approved submission is human-verified — its views count
+                // regardless of the heuristic score.
                 post.VerificationStatus = VerificationStatus.Verified;
                 totalVerifiedViews += video.ViewCount;
             }

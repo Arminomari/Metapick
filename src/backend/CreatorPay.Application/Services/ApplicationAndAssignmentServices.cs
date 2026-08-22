@@ -1,3 +1,4 @@
+using CreatorPay.Application.PayoutEngine;
 using CreatorPay.Application.Common;
 using CreatorPay.Application.DTOs;
 using CreatorPay.Application.Interfaces;
@@ -345,6 +346,8 @@ public class AssignmentService : IAssignmentService
     private readonly IRepository<SocialPost> _socialPosts;
     private readonly IAuditService _audit;
     private readonly INotificationService _notifications;
+    private readonly IRepository<PayoutCalculation> _calculations;
+    private readonly PayoutCalculatorFactory _payoutFactory;
 
     public AssignmentService(
         IUnitOfWork uow,
@@ -355,7 +358,9 @@ public class AssignmentService : IAssignmentService
         IRepository<CreatorSubmission> submissions,
         IRepository<SocialPost> socialPosts,
         IAuditService audit,
-        INotificationService notifications)
+        INotificationService notifications,
+        IRepository<PayoutCalculation> calculations,
+        PayoutCalculatorFactory payoutFactory)
     {
         _uow = uow;
         _assignments = assignments;
@@ -366,6 +371,8 @@ public class AssignmentService : IAssignmentService
         _socialPosts = socialPosts;
         _audit = audit;
         _notifications = notifications;
+        _calculations = calculations;
+        _payoutFactory = payoutFactory;
     }
 
     public async Task<Result<AssignmentDetailDto>> GetAssignmentAsync(Guid assignmentId, Guid userId, CancellationToken ct = default)
@@ -554,7 +561,7 @@ public class AssignmentService : IAssignmentService
         if (brand == null) return Errors.NotFound("Brand");
 
         var submission = await _submissions.Query()
-            .Include(s => s.Assignment).ThenInclude(a => a.Campaign)
+            .Include(s => s.Assignment).ThenInclude(a => a.Campaign).ThenInclude(c => c.PayoutRules)
             .Include(s => s.Assignment).ThenInclude(a => a.CreatorProfile)
             .FirstOrDefaultAsync(s => s.Id == submissionId, ct);
         if (submission == null) return Errors.NotFound("Submission", submissionId);
@@ -569,6 +576,7 @@ public class AssignmentService : IAssignmentService
         submission.ReviewedBy = brandUserId;
         submission.ReviewedAt = DateTime.UtcNow;
         submission.RejectionReason = null;
+        await ApplyReviewToVerificationAsync(submission, VerificationStatus.Verified, ct);
         await _uow.SaveChangesAsync(ct);
 
         await _audit.LogAsync(brandUserId, "Submission.Approved", "CreatorSubmission", submission.Id);
@@ -586,13 +594,54 @@ public class AssignmentService : IAssignmentService
         return MapSubmission(submission);
     }
 
+    /// <summary>
+    /// A brand review decision is a human verification and overrides the
+    /// confidence heuristic: recompute the assignment's verified views and the
+    /// earned amount immediately instead of waiting for the next sync.
+    /// </summary>
+    private async Task ApplyReviewToVerificationAsync(CreatorSubmission submission, VerificationStatus newStatus, CancellationToken ct)
+    {
+        var posts = await _socialPosts.Query()
+            .Where(p => p.AssignmentId == submission.AssignmentId && p.IsActive)
+            .ToListAsync(ct);
+
+        foreach (var post in posts.Where(p => p.SubmissionId == submission.Id))
+            post.VerificationStatus = newStatus;
+
+        var assignment = submission.Assignment;
+        assignment.TotalVerifiedViews = posts
+            .Where(p => p.VerificationStatus == VerificationStatus.Verified)
+            .Sum(p => p.LatestViewCount);
+
+        var rules = assignment.Campaign?.PayoutRules?.OrderBy(r => r.SortOrder).ToList();
+        if (rules is { Count: > 0 })
+        {
+            var result = _payoutFactory.Create(assignment.Campaign!.PayoutModel)
+                .Calculate(assignment.TotalVerifiedViews, rules);
+            if (result.Amount != assignment.CurrentPayoutAmount)
+            {
+                assignment.CurrentPayoutAmount = result.Amount;
+                _calculations.Add(new PayoutCalculation
+                {
+                    AssignmentId = assignment.Id,
+                    VerifiedViews = assignment.TotalVerifiedViews,
+                    CalculatedAmount = result.Amount,
+                    PayoutRuleId = result.AppliedRuleId,
+                    CalculationDetails = result.Details,
+                    Status = PayoutCalculationStatus.Preliminary,
+                    CalculatedAt = DateTime.UtcNow
+                });
+            }
+        }
+    }
+
     public async Task<Result<SubmissionDto>> RejectSubmissionAsync(Guid submissionId, Guid brandUserId, string? reason, CancellationToken ct = default)
     {
         var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);
         if (brand == null) return Errors.NotFound("Brand");
 
         var submission = await _submissions.Query()
-            .Include(s => s.Assignment).ThenInclude(a => a.Campaign)
+            .Include(s => s.Assignment).ThenInclude(a => a.Campaign).ThenInclude(c => c.PayoutRules)
             .Include(s => s.Assignment).ThenInclude(a => a.CreatorProfile)
             .FirstOrDefaultAsync(s => s.Id == submissionId, ct);
         if (submission == null) return Errors.NotFound("Submission", submissionId);
@@ -604,6 +653,7 @@ public class AssignmentService : IAssignmentService
         submission.ReviewedBy = brandUserId;
         submission.ReviewedAt = DateTime.UtcNow;
         submission.RejectionReason = reason;
+        await ApplyReviewToVerificationAsync(submission, VerificationStatus.Rejected, ct);
         await _uow.SaveChangesAsync(ct);
 
         await _audit.LogAsync(brandUserId, "Submission.Rejected", "CreatorSubmission", submission.Id);

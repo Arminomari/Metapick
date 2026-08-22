@@ -28,6 +28,7 @@ builder.Host.UseSerilog();
 
 // ── Services ───────────────────────────────────────────
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddPayoutEngine();
 
 // ── FluentValidation ───────────────────────────────────
 builder.Services.AddFluentValidationAutoValidation();
@@ -175,7 +176,6 @@ var runHangfireServerInApi = builder.Configuration.GetValue<bool?>("Hangfire:Run
 if (runHangfireServerInApi)
 {
     builder.Services.AddHangfireServer(options => options.WorkerCount = 2);
-    builder.Services.AddPayoutEngine();
     builder.Services.AddScoped<CreatorPay.Worker.Jobs.DailyCampaignSyncJob>();
     builder.Services.AddScoped<CreatorPay.Application.Interfaces.ICampaignSyncTrigger, CreatorPay.Worker.Jobs.DailyCampaignSyncJob>();
     builder.Services.AddScoped<CreatorPay.Worker.Jobs.CampaignExpirationJob>();
