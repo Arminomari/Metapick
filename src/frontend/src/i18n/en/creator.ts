@@ -440,4 +440,7 @@ export const creator: Record<string, string> = {
   'Publicerar…': 'Publishing…',
   'Publicera': 'Publish',
   'Säker?': 'Sure?',
+  'nyss': 'just now',
+  'tim': 'h',
+  'Vad händer hos er? Dela nyheter, kampanjsläpp eller reklam — dina följare ser det direkt…': 'What is happening? Share news, campaign drops or promo — your followers see it instantly…',
 };

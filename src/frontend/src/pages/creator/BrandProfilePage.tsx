@@ -29,6 +29,18 @@ interface BrandPublicProfile {
   posts?: BrandPost[] | null;
 }
 
+const ago = (iso: string): string => {
+  const s = Math.floor((Date.now() - +new Date(iso)) / 1000);
+  if (s < 60) return t('nyss');
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} ${t('tim')}`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d} ${t('dgr')}`;
+  return formatDate(iso);
+};
+
 const statBox: CSSProperties = { textAlign: 'center', padding: '14px 10px', borderRadius: 15, background: 'rgba(255,255,255,.7)', border: '1px solid rgba(241,168,143,.22)' };
 
 export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: string; ownView?: boolean; onEdit?: () => void } = {}) {
@@ -140,23 +152,26 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
       {(ownView || (p.posts?.length ?? 0) > 0) && (
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="sec-head"><h3>{t('Uppdateringar')}</h3>{!ownView && <span style={{ fontSize: 13, color: 'var(--muted)' }}>{t('Nytt från')} {p.companyName}</span>}</div>
-          {ownView && <PostComposer onPosted={() => qc.invalidateQueries({ queryKey: ['brand-public', id] })} />}
-          {(p.posts ?? []).map((post) => (
-            <div key={post.id} style={{ display: 'flex', gap: 12, padding: '14px 0', borderTop: '1px solid rgba(241,168,143,.16)' }}>
-              {p.logoUrl
-                ? <img src={p.logoUrl} style={{ width: 40, height: 40, borderRadius: 12, objectFit: 'cover', flex: '0 0 40px' }} alt="" />
-                : <div style={{ width: 40, height: 40, borderRadius: 12, flex: '0 0 40px', background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800 }}>{initial}</div>}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <span style={{ fontWeight: 700, fontSize: 13.5 }}>{p.companyName}</span>
-                  <span style={{ fontSize: 12, color: 'var(--muted)' }}>{formatDate(post.createdAt)}</span>
-                  {ownView && <DeletePostButton postId={post.id} onDeleted={() => qc.invalidateQueries({ queryKey: ['brand-public', id] })} />}
+          {ownView && <PostComposer logoUrl={p.logoUrl} initial={initial} onPosted={() => qc.invalidateQueries({ queryKey: ['brand-public', id] })} />}
+          <div style={{ display: 'grid', gap: 12 }}>
+            {(p.posts ?? []).map((post) => (
+              <div key={post.id} style={{ display: 'flex', gap: 12, padding: '16px 16px 14px', border: '1px solid rgba(241,168,143,.24)', borderRadius: 18, background: 'linear-gradient(160deg,#fff,#FFF9F5)', boxShadow: '0 6px 20px rgba(180,120,90,.06)' }}>
+                {p.logoUrl
+                  ? <img src={p.logoUrl} style={{ width: 46, height: 46, borderRadius: '50%', objectFit: 'cover', flex: '0 0 46px', boxShadow: '0 4px 12px rgba(180,120,90,.18)' }} alt="" />
+                  : <div style={{ width: 46, height: 46, borderRadius: '50%', flex: '0 0 46px', background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontFamily: '"Fraunces",serif', fontSize: 19 }}>{initial}</div>}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+                    <span style={{ fontWeight: 800, fontSize: 14.5, color: '#0B0F17' }}>{p.companyName}</span>
+                    <span style={{ width: 15, height: 15, borderRadius: '50%', background: 'linear-gradient(135deg,#3dbb77,#2f9d5b)', color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800 }} title={t('Verifierat företag')}>✓</span>
+                    <span style={{ fontSize: 12.5, color: 'var(--muted)' }}>· {ago(post.createdAt)}</span>
+                    {ownView && <DeletePostButton postId={post.id} onDeleted={() => qc.invalidateQueries({ queryKey: ['brand-public', id] })} />}
+                  </div>
+                  <p style={{ margin: '5px 0 0', fontSize: 14.5, lineHeight: 1.6, color: 'var(--ink)', whiteSpace: 'pre-line', wordBreak: 'break-word' }}>{post.body}</p>
+                  {post.imageUrl && <img src={post.imageUrl} alt="" style={{ marginTop: 10, maxWidth: '100%', maxHeight: 380, borderRadius: 16, objectFit: 'cover', border: '1px solid rgba(241,168,143,.2)' }} />}
                 </div>
-                <p style={{ margin: '6px 0 0', fontSize: 14, lineHeight: 1.55, color: 'var(--ink-2)', whiteSpace: 'pre-line' }}>{post.body}</p>
-                {post.imageUrl && <img src={post.imageUrl} alt="" style={{ marginTop: 10, maxWidth: '100%', maxHeight: 340, borderRadius: 14, objectFit: 'cover' }} />}
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
           {(p.posts?.length ?? 0) === 0 && ownView && (
             <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>{t('Inga inlägg ännu — skriv ditt första och nå alla dina följare direkt.')}</p>
           )}
@@ -303,7 +318,7 @@ export function BrandOwnPublicProfilePage() {
 }
 
 // ── Community composer (own view) ──────────────────────
-function PostComposer({ onPosted }: { onPosted: () => void }) {
+function PostComposer({ onPosted, logoUrl, initial: brandInitial }: { onPosted: () => void; logoUrl?: string | null; initial?: string }) {
   const toast = useToast();
   const [body, setBody] = useState('');
   const [image, setImage] = useState<string | null>(null);
@@ -325,15 +340,20 @@ function PostComposer({ onPosted }: { onPosted: () => void }) {
   };
 
   return (
-    <div style={{ border: '1px solid rgba(241,168,143,.3)', borderRadius: 16, padding: 14, background: 'linear-gradient(160deg,#fff,#FFF9F5)', marginBottom: 4 }}>
-      <textarea
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        rows={3}
-        maxLength={2000}
-        placeholder={t('Dela en nyhet, en kommande kampanj eller lite reklam — dina följare ser det direkt…')}
-        style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: 14, fontFamily: 'inherit', color: '#0B0F17', resize: 'vertical', lineHeight: 1.55 }}
-      />
+    <div style={{ border: '1px solid rgba(241,168,143,.3)', borderRadius: 18, padding: 14, background: 'linear-gradient(160deg,#fff,#FFF9F5)', marginBottom: 12 }}>
+      <div style={{ display: 'flex', gap: 12 }}>
+        {logoUrl
+          ? <img src={logoUrl} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flex: '0 0 44px' }} alt="" />
+          : <div style={{ width: 44, height: 44, borderRadius: '50%', flex: '0 0 44px', background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontFamily: '"Fraunces",serif', fontSize: 18 }}>{brandInitial ?? '?'}</div>}
+        <textarea
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          rows={3}
+          maxLength={2000}
+          placeholder={t('Vad händer hos er? Dela nyheter, kampanjsläpp eller reklam — dina följare ser det direkt…')}
+          style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 15, fontFamily: 'inherit', color: '#0B0F17', resize: 'vertical', lineHeight: 1.55, paddingTop: 8 }}
+        />
+      </div>
       {showImage && (
         <div style={{ marginTop: 10 }}>
           <ImagePicker value={image} onChange={setImage} label={t('Bild till inlägget')} shape="rounded" />
