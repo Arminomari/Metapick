@@ -78,9 +78,9 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
     <section className="view active reveal">
       {/* ── Cover + identity ── */}
       <div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: 16 }}>
-        <div style={{ height: 150, position: 'relative', overflow: 'hidden', background: 'radial-gradient(700px 260px at 85% -20%, rgba(241,168,143,.65), transparent 60%), radial-gradient(500px 220px at 10% 120%, rgba(237,225,255,.35), transparent 60%), linear-gradient(120deg, #141b28 0%, #0B0F17 60%, #2a1d16 100%)' }}>
-          <svg viewBox="0 0 220 220" style={{ position: 'absolute', right: 26, top: -30, width: 200, height: 200, opacity: .25 }} aria-hidden>
-            <path d="M110 20 C118 78 142 102 200 110 C142 118 118 142 110 200 C102 142 78 118 20 110 C78 102 102 78 110 20Z" fill="#FFD8C7" />
+        <div style={{ height: 150, position: 'relative', overflow: 'hidden', background: 'radial-gradient(640px 260px at 88% -30%, rgba(255,255,255,.55), transparent 55%), radial-gradient(520px 240px at 8% 130%, rgba(237,225,255,.5), transparent 60%), linear-gradient(120deg, #FFD8C7 0%, #F1A88F 55%, #d98d6e 100%)' }}>
+          <svg viewBox="0 0 220 220" style={{ position: 'absolute', right: 34, top: -12, width: 130, height: 130, opacity: .4 }} aria-hidden>
+            <path d="M110 20 C118 78 142 102 200 110 C142 118 118 142 110 200 C102 142 78 118 20 110 C78 102 102 78 110 20Z" fill="#ffffff" />
           </svg>
           {ownView && (
             <button type="button" onClick={() => onEdit?.()} className="btn-outline"

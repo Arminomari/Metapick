@@ -1,7 +1,9 @@
+using CreatorPay.Application.Interfaces;
 using CreatorPay.Domain.Entities;
 using CreatorPay.Domain.Enums;
 using CreatorPay.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace CreatorPay.Worker.Jobs;
@@ -271,5 +273,31 @@ public class PayoutSettlementJob
 
             await _uow.SaveChangesAsync();
         }
+    }
+}
+
+/// <summary>
+/// AutoApproveSubmissionsJob – godkänner videos som företaget inte granskat
+/// inom tidsfönstret (Jobs:AutoApproveHours, standard 48h). Körs varje timme.
+/// </summary>
+public class AutoApproveSubmissionsJob
+{
+    private readonly IAssignmentService _assignments;
+    private readonly IConfiguration _config;
+    private readonly ILogger<AutoApproveSubmissionsJob> _logger;
+
+    public AutoApproveSubmissionsJob(IAssignmentService assignments, IConfiguration config, ILogger<AutoApproveSubmissionsJob> logger)
+    {
+        _assignments = assignments;
+        _config = config;
+        _logger = logger;
+    }
+
+    public async Task ExecuteAsync()
+    {
+        var hours = _config.GetValue<int?>("Jobs:AutoApproveHours") ?? 48;
+        var count = await _assignments.AutoApprovePendingSubmissionsAsync(hours);
+        if (count > 0)
+            _logger.LogInformation("Auto-approved {Count} submissions unreviewed for {Hours}h", count, hours);
     }
 }

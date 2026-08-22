@@ -421,4 +421,5 @@ export const brand: Record<string, string> = {
   'Vägt index av engagemang, delningar och klickfrekvens. Allt från verifierad data.': 'Weighted index of engagement, shares and click-through. All from verified data.',
   'Per nisch': 'Per niche',
   'Hur effektivt din spend förvandlas till uppmärksamhet. Räckvidd, engagemang och kostnadseffektivitet — allt från verklig kampanjdata.': 'How efficiently your spend turns into attention. Reach, engagement and cost efficiency — all from real campaign data.',
+  'Videos som inte granskas inom 48 timmar godkänns automatiskt.': 'Videos not reviewed within 48 hours are approved automatically.',
 };

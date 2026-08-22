@@ -547,6 +547,40 @@ public class AssignmentService : IAssignmentService
         }
     }
 
+    /// <summary>
+    /// Fairness guarantee: a submitted video the brand has not reviewed within
+    /// the window is approved automatically — creators must never wait forever
+    /// on a silent brand. Both parties are notified.
+    /// </summary>
+    public async Task<int> AutoApprovePendingSubmissionsAsync(int olderThanHours, CancellationToken ct = default)
+    {
+        var cutoff = DateTime.UtcNow.AddHours(-olderThanHours);
+        var pending = await _submissions.Query()
+            .Include(s => s.Assignment).ThenInclude(a => a.Campaign).ThenInclude(c => c.PayoutRules)
+            .Include(s => s.Assignment).ThenInclude(a => a.Campaign).ThenInclude(c => c.BrandProfile)
+            .Include(s => s.Assignment).ThenInclude(a => a.CreatorProfile)
+            .Where(s => s.Status == SubmissionStatus.Pending && s.CreatedAt <= cutoff)
+            .ToListAsync(ct);
+
+        foreach (var submission in pending)
+        {
+            submission.Status = SubmissionStatus.Approved;
+            submission.ReviewedAt = DateTime.UtcNow;
+            submission.RejectionReason = null;
+            await ApplyReviewToVerificationAsync(submission, VerificationStatus.Verified, ct);
+            await _uow.SaveChangesAsync(ct);
+
+            var campaignName = submission.Assignment.Campaign.Name;
+            await _notifications.SendAsync(submission.Assignment.CreatorProfile.UserId,
+                NotificationType.SubmissionApproved,
+                $"Din video i {campaignName} godkändes automatiskt — företaget granskade den inte inom {olderThanHours} timmar. Dina views räknas nu mot ersättning.");
+            await _notifications.SendAsync(submission.Assignment.Campaign.BrandProfile.UserId,
+                NotificationType.SystemMessage,
+                $"En video i {campaignName} godkändes automatiskt eftersom den inte granskades inom {olderThanHours} timmar. Granska nya videos i tid för att behålla kontrollen.");
+        }
+        return pending.Count;
+    }
+
     public async Task<Result<TrackingTagDto>> GetTrackingTagAsync(Guid assignmentId, Guid creatorUserId, CancellationToken ct = default)
     {
         var creator = await _creators.Query().FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);

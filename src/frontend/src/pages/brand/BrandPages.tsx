@@ -640,7 +640,7 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
 
       {!['Draft', 'PendingReview'].includes(campaign.status) && analytics && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="sec-head"><h3>{t('Creator-prestanda')}</h3></div>
+          <div className="sec-head"><h3>{t('Creator-prestanda')}</h3><span style={{ fontSize: 12, color: '#9c6b1c', fontWeight: 600 }}>⏱ {t('Videos som inte granskas inom 48 timmar godkänns automatiskt.')}</span></div>
           <div className="space-y-6">
             {analytics.creatorPerformance.map((cp: CreatorPerformance) => {
               const approvedCount = cp.videos.filter(v => v.status === 'Approved').length;

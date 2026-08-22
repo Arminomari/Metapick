@@ -452,6 +452,9 @@ app.MapHealthChecks("/health/ready",
             builder.Configuration["Jobs:CampaignSyncCron"] ?? "*/10 * * * *");
         recurring.AddOrUpdate<CreatorPay.Worker.Jobs.CampaignExpirationJob>(
             "campaign-expiration", j => j.ExecuteAsync(), "0 1 * * *");
+        recurring.AddOrUpdate<CreatorPay.Worker.Jobs.AutoApproveSubmissionsJob>(
+            "auto-approve-submissions", j => j.ExecuteAsync(),
+            builder.Configuration["Jobs:AutoApproveCron"] ?? "0 * * * *");
         recurring.AddOrUpdate<CreatorPay.Worker.Jobs.TokenRefreshJob>(
             "token-refresh", j => j.ExecuteAsync(), "0 */6 * * *");
         recurring.AddOrUpdate<CreatorPay.Worker.Jobs.FraudDetectionJob>(
