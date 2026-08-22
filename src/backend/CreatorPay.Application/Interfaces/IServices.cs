@@ -43,6 +43,7 @@ public interface IAdminUserService
     Task<Result<PendingUserDto>> ApproveUserAsync(Guid userId, Guid adminId);
     Task<Result<PendingUserDto>> RejectUserAsync(Guid userId, Guid adminId, string reason);
     Task<Result<AdminStatsDto>> GetStatsAsync();
+    Task<Result<PendingUserDto>> CreateAdminAsync(Guid callerAdminUserId, CreateAdminRequest request);
 }
 
 public interface IBrandService

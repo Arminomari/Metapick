@@ -22,6 +22,8 @@ public class AdminUserService : IAdminUserService
     private readonly IRepository<PayoutRequest> _payouts;
     private readonly IRepository<FraudFlag> _fraudFlags;
     private readonly IRepository<CreatorCampaignAssignment> _assignments;
+    private readonly IRepository<AdminProfile> _adminProfiles;
+    private readonly IEncryptionService _encryption;
 
     public AdminUserService(
         IRepository<User> users,
@@ -35,7 +37,9 @@ public class AdminUserService : IAdminUserService
         IRepository<Campaign> campaigns,
         IRepository<PayoutRequest> payouts,
         IRepository<FraudFlag> fraudFlags,
-        IRepository<CreatorCampaignAssignment> assignments)
+        IRepository<CreatorCampaignAssignment> assignments,
+        IRepository<AdminProfile> adminProfiles,
+        IEncryptionService encryption)
     {
         _users = users;
         _brands = brands;
@@ -49,6 +53,8 @@ public class AdminUserService : IAdminUserService
         _payouts = payouts;
         _fraudFlags = fraudFlags;
         _assignments = assignments;
+        _adminProfiles = adminProfiles;
+        _encryption = encryption;
     }
 
     public async Task<Result<PagedResult<PendingUserDto>>> GetUsersAsync(string? status, int page, int pageSize)
@@ -310,5 +316,56 @@ public class AdminUserService : IAdminUserService
             activeCampaigns, pendingCampaigns,
             pendingPayouts, pendingPayoutAmount, totalPaidOut,
             totalViews, openFraud);
+    }
+
+    /// <summary>
+    /// Creates an additional admin account. Only the SuperAdmin (the
+    /// bootstrap-seeded admin) may mint new admins; created admins get the
+    /// Moderator level, which has full panel access but cannot add admins.
+    /// </summary>
+    public async Task<Result<PendingUserDto>> CreateAdminAsync(Guid callerAdminUserId, CreateAdminRequest request)
+    {
+        var callerProfile = await _adminProfiles.Query()
+            .FirstOrDefaultAsync(p => p.UserId == callerAdminUserId);
+        if (callerProfile == null || callerProfile.PermissionLevel != AdminLevel.SuperAdmin)
+            return Errors.Forbidden("Endast huvudadmin kan lägga till nya admins");
+
+        var email = request.Email.Trim().ToLowerInvariant();
+        var exists = await _users.Query().IgnoreQueryFilters().AnyAsync(u => u.Email == email);
+        if (exists)
+            return Errors.Conflict("Det finns redan ett konto med den här e-postadressen");
+
+        var admin = new User
+        {
+            Email = email,
+            PasswordHash = _encryption.HashPassword(request.Password),
+            FirstName = request.FirstName.Trim(),
+            LastName = request.LastName.Trim(),
+            Role = UserRole.Admin,
+            Status = UserStatus.Active,
+            EmailVerified = true
+        };
+        _users.Add(admin);
+
+        _adminProfiles.Add(new AdminProfile
+        {
+            UserId = admin.Id,
+            Department = "Platform",
+            PermissionLevel = AdminLevel.Moderator
+        });
+
+        await _uow.SaveChangesAsync();
+        await _audit.LogAsync(callerAdminUserId, "Admin.CreateAdmin", "User", admin.Id);
+
+        await _email.SendAsync(admin.Email, "Du är nu admin på VYRLE",
+            EmailTemplates.Branded(
+                "Välkommen till admin-teamet",
+                $"<p>Hej {System.Net.WebUtility.HtmlEncode(admin.FirstName)}!</p>" +
+                "<p>Ett admin-konto har skapats åt dig på VYRLE. Logga in med din " +
+                "e-postadress och lösenordet du fått separat — och byt lösenord " +
+                "direkt under inställningarna.</p>",
+                "Logga in", "https://www.vyrle.co/login"));
+
+        return (await GetPendingUserDto(admin))!;
     }
 }

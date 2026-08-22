@@ -313,6 +313,7 @@ public record FraudFlagDto(
 
 // ──── Common request types ────
 public record RejectReasonRequest(string Reason);
+public record CreateAdminRequest(string Email, string Password, string FirstName, string LastName);
 public record AdminStatsDto(
     int TotalUsers, int PendingUsers, int Creators, int Brands,
     int ActiveCampaigns, int PendingCampaigns,

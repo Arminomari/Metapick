@@ -52,6 +52,20 @@ public class ChangePasswordRequestValidator : AbstractValidator<ChangePasswordRe
     }
 }
 
+public class CreateAdminRequestValidator : AbstractValidator<CreateAdminRequest>
+{
+    public CreateAdminRequestValidator()
+    {
+        RuleFor(x => x.Email).NotEmpty().EmailAddress();
+        RuleFor(x => x.FirstName).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.LastName).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.Password).NotEmpty().MinimumLength(12).MaximumLength(128)
+            .Matches(@"[A-Z]").WithMessage("Lösenord måste innehålla minst en versal")
+            .Matches(@"[a-z]").WithMessage("Lösenord måste innehålla minst en gemen")
+            .Matches(@"[0-9]").WithMessage("Lösenord måste innehålla minst en siffra");
+    }
+}
+
 public class ForgotPasswordRequestValidator : AbstractValidator<ForgotPasswordRequest>
 {
     public ForgotPasswordRequestValidator()

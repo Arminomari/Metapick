@@ -223,3 +223,42 @@ export function AdminAuditSection() {
     </div>
   );
 }
+
+/* ── Lägg till admin (endast huvudadmin) ───────────────── */
+export function AdminCreateAdminCard() {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ email: '', firstName: '', lastName: '', password: '' });
+  const [message, setMessage] = useState('');
+  const create = useMutation({
+    mutationFn: async () => { await api.post('/admin/users/admins', form); },
+    onSuccess: () => { setMessage('Admin skapad! Skicka inloggningsuppgifterna säkert.'); setForm({ email: '', firstName: '', lastName: '', password: '' }); },
+    onError: (err: any) => setMessage(err?.response?.data?.error?.message ?? 'Kunde inte skapa admin.'),
+  });
+
+  const input: React.CSSProperties = { width: '100%', padding: '.6rem .8rem', borderRadius: 12, border: '1px solid rgba(241,168,143,.3)', background: '#fff', fontSize: '.88rem', color: '#0B0F17' };
+
+  return (
+    <div style={{ ...card, padding: '1.1rem 1.3rem' }}>
+      <button type="button" onClick={() => setOpen((v) => !v)}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '.92rem', color: '#0B0F17', padding: 0 }}>
+        {open ? '▾' : '▸'} Lägg till admin
+      </button>
+      <div style={{ ...mutedTx, marginTop: 2 }}>Endast huvudadmin. Nya admins får full panelåtkomst men kan inte skapa fler admins.</div>
+      {open && (
+        <form style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '.7rem', marginTop: '.9rem' }}
+          onSubmit={(e) => { e.preventDefault(); setMessage(''); create.mutate(); }}>
+          <input style={input} type="email" required placeholder="E-post" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          <input style={input} type="text" required placeholder="Förnamn" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
+          <input style={input} type="text" required placeholder="Efternamn" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
+          <input style={input} type="password" required minLength={12} placeholder="Lösenord (minst 12 tecken)" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} autoComplete="new-password" />
+          <button type="submit" disabled={create.isPending}
+            style={{ padding: '.6rem 1.4rem', borderRadius: 980, background: 'linear-gradient(135deg,#1A2230,#0B0F17)', color: '#fff', border: 'none', fontWeight: 600, fontSize: '.85rem', cursor: 'pointer' }}>
+            {create.isPending ? 'Skapar…' : 'Skapa admin'}
+          </button>
+        </form>
+      )}
+      {message && <div style={{ marginTop: '.6rem', fontSize: '.85rem', color: message.startsWith('Admin skapad') ? '#2f9d5b' : '#cf4b4b', fontWeight: 600 }}>{message}</div>}
+    </div>
+  );
+}
+

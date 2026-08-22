@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AdminOverviewSection, AdminPayoutsSection, AdminFraudSection, AdminAuditSection } from './AdminExtraSections';
+import { AdminOverviewSection, AdminPayoutsSection, AdminFraudSection, AdminAuditSection, AdminCreateAdminCard } from './AdminExtraSections';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import api from '@/lib/api';
@@ -515,6 +515,7 @@ export function AdminDashboardPage() {
         {/* ── Users section ── */}
         {section === 'users' && (
           <>
+            <AdminCreateAdminCard />
             <div style={s.tabs}>
               <button style={s.tab(filter === 'pending')} onClick={() => setFilter('pending')}>Väntande</button>
               <button style={s.tab(filter === 'active')} onClick={() => setFilter('active')}>Godkända</button>

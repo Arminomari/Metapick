@@ -132,6 +132,11 @@ public class AdminUserController : BaseController
         return ToActionResult(await _adminUsers.GetUsersAsync(status, page, pageSize));
     }
 
+    /// <summary>Skapa ytterligare en admin (endast huvudadmin)</summary>
+    [HttpPost("admins")]
+    public async Task<IActionResult> CreateAdmin([FromBody] CreateAdminRequest request)
+        => ToActionResult(await _adminUsers.CreateAdminAsync(GetUserId(), request));
+
     /// <summary>Plattformsstatistik för admin-översikten</summary>
     [HttpGet("/api/admin/stats")]
     public async Task<IActionResult> GetStats()
