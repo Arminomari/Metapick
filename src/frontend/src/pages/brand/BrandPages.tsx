@@ -573,6 +573,36 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
         <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 10h18" /></svg></div><div><div className="lbl">{t('Utbetalningsmodell')} · {campaign.payoutModel}</div><div className="val" style={{ fontSize: 16.5 }}>{payoutTerms}</div></div></div></div>
       </div>
 
+      {!['Draft', 'PendingReview'].includes(campaign.status) && applications && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="sec-head"><h3>{t('Ansökningar')} ({applications.totalCount})</h3></div>
+          {applications.data.length ? (
+            applications.data.map((a: ApplicationItem) => (
+              <div key={a.id} className="list-row" style={{ gap: 14 }}>
+                <span className="mono" style={{ background: grad(a.creatorName) }}>{initial(a.creatorName)}</span>
+                <div className="row-main" style={{ flex: 1 }}>
+                  <div className="t" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{a.creatorName}{a.creatorCategory && <span className="badge grey">{a.creatorCategory}</span>}</div>
+                  {a.tikTokUsername && <a href={`https://www.tiktok.com/@${a.tikTokUsername}`} target="_blank" rel="noopener noreferrer" className="s" style={{ color: '#C26A4A' }}>@{a.tikTokUsername}</a>}
+                  {a.message && <div className="s">{a.message}</div>}
+                  <div className="s" style={{ color: 'var(--muted-2)' }}>{formatDate(a.createdAt)}</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '0 0 auto' }}>
+                  <StatusBadge status={a.status} />
+                  {a.status === 'Pending' && (
+                    <>
+                      <button className="btn-apply" style={{ width: 'auto', padding: '9px 16px', fontSize: 12.5 }} onClick={() => approve.mutateAsync({ id: a.id })} disabled={approve.isPending}>{t('Godkänn')}</button>
+                      <button className="btn-outline" style={{ padding: '9px 16px', fontSize: 12.5 }} onClick={() => reject.mutateAsync({ id: a.id, reason: 'Avvisad av varumärke' })} disabled={reject.isPending}>{t('Neka')}</button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div style={{ textAlign: 'center', padding: '34px 24px', color: 'var(--muted)' }}>{t('Inga ansökningar ännu. Väntar på att creators ska ansöka.')}</div>
+          )}
+        </div>
+      )}
+
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="sec-head"><h3>{t('Beskrivning')}</h3></div>
         <p className="text-sm text-muted-foreground">{campaign.description}</p>
@@ -737,35 +767,6 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
         </div>
       )}
 
-      {!['Draft', 'PendingReview'].includes(campaign.status) && applications && (
-        <div className="card">
-          <div className="sec-head"><h3>{t('Ansökningar')} ({applications.totalCount})</h3></div>
-          {applications.data.length ? (
-            applications.data.map((a: ApplicationItem) => (
-              <div key={a.id} className="list-row" style={{ gap: 14 }}>
-                <span className="mono" style={{ background: grad(a.creatorName) }}>{initial(a.creatorName)}</span>
-                <div className="row-main" style={{ flex: 1 }}>
-                  <div className="t" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{a.creatorName}{a.creatorCategory && <span className="badge grey">{a.creatorCategory}</span>}</div>
-                  {a.tikTokUsername && <a href={`https://www.tiktok.com/@${a.tikTokUsername}`} target="_blank" rel="noopener noreferrer" className="s" style={{ color: '#C26A4A' }}>@{a.tikTokUsername}</a>}
-                  {a.message && <div className="s">{a.message}</div>}
-                  <div className="s" style={{ color: 'var(--muted-2)' }}>{formatDate(a.createdAt)}</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '0 0 auto' }}>
-                  <StatusBadge status={a.status} />
-                  {a.status === 'Pending' && (
-                    <>
-                      <button className="btn-apply" style={{ width: 'auto', padding: '9px 16px', fontSize: 12.5 }} onClick={() => approve.mutateAsync({ id: a.id })} disabled={approve.isPending}>{t('Godkänn')}</button>
-                      <button className="btn-outline" style={{ padding: '9px 16px', fontSize: 12.5 }} onClick={() => reject.mutateAsync({ id: a.id, reason: 'Avvisad av varumärke' })} disabled={reject.isPending}>{t('Neka')}</button>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div style={{ textAlign: 'center', padding: '34px 24px', color: 'var(--muted)' }}>{t('Inga ansökningar ännu. Väntar på att creators ska ansöka.')}</div>
-          )}
-        </div>
-      )}
     </section>
   );
 }
