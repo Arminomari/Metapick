@@ -7,7 +7,7 @@ using Testcontainers.PostgreSql;
 
 namespace CreatorPay.Tests.Infrastructure;
 
-public class CreatorPayFactory : WebApplicationFactory<Program>, IAsyncLifetime
+public class CreatorPayFactory : WebApplicationFactory<CreatorPay.Api.ApiMarker>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
         .WithImage("postgres:16-alpine")

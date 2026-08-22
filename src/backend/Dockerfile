@@ -6,6 +6,7 @@ COPY CreatorPay.Domain/CreatorPay.Domain.csproj CreatorPay.Domain/
 COPY CreatorPay.Application/CreatorPay.Application.csproj CreatorPay.Application/
 COPY CreatorPay.Infrastructure/CreatorPay.Infrastructure.csproj CreatorPay.Infrastructure/
 COPY CreatorPay.Api/CreatorPay.Api.csproj CreatorPay.Api/
+COPY CreatorPay.Worker/CreatorPay.Worker.csproj CreatorPay.Worker/
 RUN dotnet restore CreatorPay.Api/CreatorPay.Api.csproj
 
 # Copy everything and build

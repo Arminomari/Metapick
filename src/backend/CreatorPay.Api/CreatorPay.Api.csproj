@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CreatorPay.Application\CreatorPay.Application.csproj" />
     <ProjectReference Include="..\CreatorPay.Infrastructure\CreatorPay.Infrastructure.csproj" />
+    <ProjectReference Include="..\CreatorPay.Worker\CreatorPay.Worker.csproj" />
   </ItemGroup>
 </Project>
 

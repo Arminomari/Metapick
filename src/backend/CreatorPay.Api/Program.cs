@@ -166,7 +166,24 @@ if (hangfireConn != null && hangfireConn.StartsWith("postgresql://"))
 builder.Services.AddHangfire(config =>
     config.UsePostgreSqlStorage(options =>
         options.UseNpgsqlConnection(hangfireConn)));
-// HangfireServer only on Worker – API is client-only
+
+// The background jobs normally run in the separate Worker service. On
+// deployments without one (e.g. Railway today) the API hosts the Hangfire
+// server itself — nothing would ever process the queue otherwise.
+// Disable with Hangfire__RunServerInApi=false once a dedicated worker exists.
+var runHangfireServerInApi = builder.Configuration.GetValue<bool?>("Hangfire:RunServerInApi") ?? true;
+if (runHangfireServerInApi)
+{
+    builder.Services.AddHangfireServer(options => options.WorkerCount = 2);
+    builder.Services.AddPayoutEngine();
+    builder.Services.AddScoped<CreatorPay.Worker.Jobs.DailyCampaignSyncJob>();
+    builder.Services.AddScoped<CreatorPay.Application.Interfaces.ICampaignSyncTrigger, CreatorPay.Worker.Jobs.DailyCampaignSyncJob>();
+    builder.Services.AddScoped<CreatorPay.Worker.Jobs.CampaignExpirationJob>();
+    builder.Services.AddScoped<CreatorPay.Worker.Jobs.TokenRefreshJob>();
+    builder.Services.AddScoped<CreatorPay.Worker.Jobs.FraudDetectionJob>();
+    builder.Services.AddScoped<CreatorPay.Worker.Jobs.PayoutSettlementJob>();
+    builder.Services.AddScoped<CreatorPay.Worker.Jobs.PayoutRecalculationJob>();
+}
 
 // ── Health checks ─────────────────────────────────────
 builder.Services.AddHealthChecks()
@@ -354,6 +371,27 @@ app.MapHealthChecks("/health/ready",
         }
     }
 
+    // ── Recurring jobs (only when the API hosts the Hangfire server) ──
+    if (runHangfireServerInApi)
+    {
+        var recurring = scope.ServiceProvider.GetRequiredService<Hangfire.IRecurringJobManager>();
+        recurring.AddOrUpdate<CreatorPay.Worker.Jobs.DailyCampaignSyncJob>(
+            "daily-campaign-sync", j => j.ExecuteAsync(),
+            builder.Configuration["Jobs:CampaignSyncCron"] ?? "*/10 * * * *");
+        recurring.AddOrUpdate<CreatorPay.Worker.Jobs.CampaignExpirationJob>(
+            "campaign-expiration", j => j.ExecuteAsync(), "0 1 * * *");
+        recurring.AddOrUpdate<CreatorPay.Worker.Jobs.TokenRefreshJob>(
+            "token-refresh", j => j.ExecuteAsync(), "0 */6 * * *");
+        recurring.AddOrUpdate<CreatorPay.Worker.Jobs.FraudDetectionJob>(
+            "fraud-detection", j => j.ExecuteAsync(), "0 5 * * *");
+        recurring.AddOrUpdate<CreatorPay.Worker.Jobs.PayoutSettlementJob>(
+            "payout-settlement", j => j.ExecuteAsync(), "0 */4 * * *");
+        recurring.AddOrUpdate<CreatorPay.Worker.Jobs.PayoutRecalculationJob>(
+            "payout-recalculation", j => j.ExecuteAsync(CancellationToken.None),
+            builder.Configuration["Jobs:PayoutRecalcCron"] ?? "*/15 * * * *");
+        Log.Information("Hangfire server + recurring jobs hosted in API process");
+    }
+
     // ── Seed launch brand account (only the bcrypt hash lives in the repo;
     //    the password is held by the owner) ─────────────────────────────
     var seedBrandAccount = builder.Configuration.GetValue<bool?>("Bootstrap:SeedBrandAccountEnabled") ?? false;
@@ -392,3 +430,13 @@ app.Run();
 
 // Make Program accessible to integration tests
 public partial class Program { }
+
+namespace CreatorPay.Api
+{
+    /// <summary>
+    /// Entry-point marker for WebApplicationFactory in tests. The generated
+    /// Program type is ambiguous now that the API also references the Worker
+    /// assembly (to host its Hangfire jobs in-process).
+    /// </summary>
+    public sealed class ApiMarker { }
+}
