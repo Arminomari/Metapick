@@ -80,10 +80,16 @@ public class CreateCampaignRequestValidator : AbstractValidator<CreateCampaignRe
 
 public class PayoutRuleValidator : AbstractValidator<PayoutRuleDto>
 {
+    /// <summary>Locked business rule: CPM compensation may never be below 20 SEK per 1000 views.</summary>
+    public const decimal MinCpmSek = 20m;
+
     public PayoutRuleValidator()
     {
         RuleFor(x => x.PayoutType).NotEmpty();
         RuleFor(x => x.Amount).GreaterThan(0);
+        RuleFor(x => x.Amount).GreaterThanOrEqualTo(MinCpmSek)
+            .When(x => string.Equals(x.PayoutType, "CPM", StringComparison.OrdinalIgnoreCase))
+            .WithMessage("Priset måste vara minst 20 kr per 1 000 visningar");
         RuleFor(x => x.MinViews).GreaterThanOrEqualTo(0);
         RuleFor(x => x.MaxViews).GreaterThan(x => x.MinViews)
             .When(x => x.MaxViews.HasValue);

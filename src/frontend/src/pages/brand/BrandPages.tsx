@@ -398,10 +398,10 @@ export function CreateCampaignPage() {
             {form.payoutModel === 'CPM' && (
               <>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 14 }}>
-                  <div className="field"><label>Pris per 1 000 views (SEK)</label>
+                  <div className="field"><label>Pris per 1 000 views (SEK, minst 20)</label>
                     <input type="text" inputMode="numeric" value={form.payoutRules[0]?.amount || ''}
                       onChange={(e) => updateRule(0, { amount: Number(e.target.value.replace(/\D/g, '')) || 0 })}
-                      placeholder="t.ex. 50" />
+                      placeholder="minst 20 kr" />
                   </div>
                   <div className="field"><label>Max per creator (SEK, valfritt)</label>
                     <input type="text" inputMode="numeric" value={form.payoutRules[0]?.maxPayoutPerCreator ?? ''}

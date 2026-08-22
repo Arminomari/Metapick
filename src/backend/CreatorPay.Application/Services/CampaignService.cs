@@ -111,6 +111,10 @@ public class CampaignService : ICampaignService
         {
             if (Enum.TryParse<PayoutType>(pr.PayoutType, out var pt))
             {
+                // Locked business rule: never below 20 SEK per 1000 views.
+                if (pt == PayoutType.CPM && pr.Amount < Validators.PayoutRuleValidator.MinCpmSek)
+                    return Errors.Validation("Priset måste vara minst 20 kr per 1 000 visningar");
+
                 var triggerType = Enum.TryParse<PayoutTriggerType>(pr.TriggerType, out var tt)
                     ? tt
                     : PayoutTriggerType.Views;

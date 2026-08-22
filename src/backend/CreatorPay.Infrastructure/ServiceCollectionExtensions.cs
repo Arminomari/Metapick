@@ -80,7 +80,12 @@ public static class ServiceCollectionExtensions
                 options.CircuitBreaker.FailureRatio = 0.6;
                 options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(15);
             });
-        services.AddScoped<IPayoutProvider, PayoutProviderService>();
+        // GigaPay becomes the live payout provider as soon as credentials are
+        // configured; until then the null provider refuses to settle anything.
+        if (!string.IsNullOrWhiteSpace(config["GigaPay:ApiKey"]))
+            services.AddHttpClient<IPayoutProvider, GigaPayPayoutProvider>();
+        else
+            services.AddScoped<IPayoutProvider, PayoutProviderService>();
 
         // Social login (Google/Apple/Facebook) — token verification calls external APIs.
         services.AddScoped<ISocialAuthService, SocialAuthService>();
