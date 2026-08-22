@@ -73,10 +73,18 @@ public class AuthService : IAuthService
             : null;
         if (normalizedTikTok != null)
         {
-            var tikTokTaken = await _tiktokAccounts.Query()
-                .AnyAsync(t => t.TikTokUsername == normalizedTikTok);
-            if (tikTokTaken)
+            // Only ACTIVE claims block. Rows left by deleted accounts release
+            // the name so it can be claimed again.
+            var holders = await _tiktokAccounts.Query()
+                .Where(t => t.TikTokUsername == normalizedTikTok)
+                .ToListAsync();
+            if (holders.Any(h => h.IsActive))
                 return Errors.Conflict("Detta TikTok-användarnamn är redan kopplat till ett annat konto");
+            foreach (var h in holders)
+            {
+                h.TikTokUsername = $"released-{Guid.NewGuid():N}";
+                h.TikTokUserId = $"released-{Guid.NewGuid():N}";
+            }
         }
 
         var user = new User
@@ -386,6 +394,15 @@ public class AuthService : IAuthService
         var normalized = email.Trim().ToLowerInvariant();
         var exists = await _users.Query().IgnoreQueryFilters().AnyAsync(u => u.Email == normalized);
         return !exists;
+    }
+
+    public async Task<Result<bool>> IsTikTokUsernameAvailableAsync(string username)
+    {
+        var normalized = username.Trim().TrimStart('@');
+        if (string.IsNullOrWhiteSpace(normalized)) return true;
+        var takenByActive = await _tiktokAccounts.Query()
+            .AnyAsync(t => t.IsActive && t.TikTokUsername.ToLower() == normalized.ToLower());
+        return !takenByActive;
     }
 
     private async Task SendVerificationEmailAsync(User user)

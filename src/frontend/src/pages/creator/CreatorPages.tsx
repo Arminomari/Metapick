@@ -1,6 +1,5 @@
 import { ChangeEmailCard, ChangePasswordCard } from '@/components/ui/AccountCards';
 import { maskSwishNumber, maskBankAccount } from '@/lib/masks';
-import type { CSSProperties } from 'react';
 import { CopyField } from '@/components/ui/CopyButton';
 import { t } from '@/lib/i18n';
 import { useState } from 'react';
@@ -447,8 +446,6 @@ export function CreatorAssignmentsPage() {
   );
 }
 
-const ttPill = (bg: string, color: string): CSSProperties => ({ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 11px', borderRadius: 980, fontSize: 12, fontWeight: 700, background: bg, color, whiteSpace: 'nowrap' });
-
 function VideoStat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div style={{ padding: '10px 12px', borderRadius: 13, textAlign: 'center', background: highlight ? 'linear-gradient(140deg,#FFE3D3,#FFD3BC)' : 'rgba(255,244,236,.75)', border: '1px solid rgba(241,168,143,.2)' }}>
@@ -494,50 +491,40 @@ function TikTokConnectionCard() {
   if (isLoading) return <Card><LoadingSpinner /></Card>;
 
   return (
-    <Card>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-        <div style={{ width: 44, height: 44, borderRadius: 13, background: '#0B0F17', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flex: '0 0 44px' }} aria-hidden>♪</div>
-        <div style={{ flex: 1, minWidth: 230 }}>
-          <h2 style={{ margin: 0, fontWeight: 700, fontSize: 15.5 }}>{t('TikTok-konto')}</h2>
-          {status?.connected ? (
-            <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 7 }}>
-                {status.isOAuth ? (
-                  <span style={ttPill('rgba(169,220,192,.35)', '#2f7d52')}>✓ {t('Kopplat via OAuth')}</span>
-                ) : (
-                  <span style={ttPill('rgba(242,197,138,.35)', '#9c6b1c')}>⚠ {t('Manuellt tillagd')}</span>
-                )}
-                <a href={`https://www.tiktok.com/@${status.username}`} target="_blank" rel="noopener noreferrer" style={{ ...ttPill('rgba(241,168,143,.18)', '#9c4f31'), textDecoration: 'none' }}>@{status.username}</a>
-                {status.followerCount != null && (
-                  <span style={ttPill('rgba(183,188,200,.22)', '#5c6270')}>{formatNumber(status.followerCount)} {t('följare')}</span>
-                )}
-              </div>
-              {status.lastSyncAt && (
-                <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>{t('Senast synkad')} {formatDate(status.lastSyncAt)}</div>
-              )}
-              {!status.isOAuth && (
-                <div style={{ fontSize: 12, color: '#9c6b1c', marginTop: 6 }}>{t('anslut via OAuth för automatisk tracking')}</div>
-              )}
-            </>
-          ) : (
-            <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--muted)', lineHeight: 1.5 }}>
-              {t('Anslut ditt TikTok-konto för automatisk tracking av views och engagement.')}
-            </p>
-          )}
-        </div>
-        <div style={{ flex: '0 0 auto' }}>
-          {status?.connected && status?.isOAuth ? (
-            <Button variant={armDisconnect ? 'destructive' : 'secondary'} size="sm" onClick={handleDisconnect} disabled={disconnect.isPending}>
-              {disconnect.isPending ? t('Kopplar bort…') : armDisconnect ? t('Klicka igen för att bekräfta') : t('Koppla bort')}
-            </Button>
-          ) : (
-            <Button onClick={handleConnect} disabled={connecting}>
-              {connecting ? t('Ansluter…') : '🎵 ' + t('Anslut via OAuth')}
-            </Button>
-          )}
-        </div>
+    <div className="connect-bar" style={{ marginBottom: 16 }}>
+      <div className="logo" aria-hidden>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d={TIKTOK_GLYPH} /></svg>
       </div>
-    </Card>
+      {status?.connected && status?.isOAuth ? (
+        <>
+          <div>
+            <h4>{t('TikTok ansluten')} <span className="tt-handle">@{status.username}</span> <span className="badge green">{t('Verifierad')}</span>{status.followerCount != null && <span style={{ marginLeft: 8, fontSize: 12.5, color: 'var(--muted)' }}>{formatNumber(status.followerCount)} {t('följare')}</span>}</h4>
+            <p>{t('Profil, statistik och videor synkas automatiskt.')}{status.lastSyncAt ? ` ${t('Senast synkad')} ${formatDate(status.lastSyncAt)}.` : ''}</p>
+          </div>
+          <div className="manage">
+            <span className="tt-live"><span className="live-dot" />{t('Ansluten via OAuth')}</span>
+            <button type="button" className="btn-outline" onClick={handleDisconnect} disabled={disconnect.isPending} style={armDisconnect ? { borderColor: 'var(--red)', color: 'var(--red)', fontWeight: 600 } : undefined}>
+              {disconnect.isPending ? t('Kopplar bort…') : armDisconnect ? t('Säker? Klicka igen') : t('Koppla bort')}
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div>
+            <h4>{status?.connected
+              ? <>{t('TikTok ej verifierat')} <span className="tt-handle">@{status.username}</span> <span className="badge amber">{t('Manuellt tillagd')}</span></>
+              : t('Anslut ditt TikTok-konto för automatisk tracking och verifierade resultat.')}</h4>
+            <p>{t('Säker inloggning med TikTok. VYRLE läser endast din profil, statistik och videor.')}</p>
+          </div>
+          <div className="manage">
+            <button type="button" className="tt-connect-btn" onClick={handleConnect} disabled={connecting}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d={TIKTOK_GLYPH} /></svg>
+              {connecting ? t('Ansluter…') : t('Fortsätt med TikTok')}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 

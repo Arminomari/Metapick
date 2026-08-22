@@ -260,6 +260,15 @@ export function RegisterPage() {
   const pwOk = pwRules.every(([ok]) => ok);
 
   const [emailTaken, setEmailTaken] = useState(false);
+  const [tiktokTaken, setTiktokTaken] = useState(false);
+  const checkTikTok = async () => {
+    const v = form.tikTokUsername.trim().replace(/^@/, '');
+    if (!v) return;
+    try {
+      const res = await api.post('/auth/check-tiktok', { username: v });
+      setTiktokTaken(res.data.data === false);
+    } catch { /* final submit still guards */ }
+  };
   const checkEmail = async () => {
     const v = form.email.trim();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) return;
@@ -285,6 +294,7 @@ export function RegisterPage() {
     }
     if (label === 'Räckvidd') {
       if (!form.tikTokUsername.trim()) return t('TikTok-användarnamn krävs');
+      if (tiktokTaken) return t('Det här TikTok-kontot är redan kopplat till ett annat VYRLE-konto.');
       return null;
     }
     if (label === 'Expertis') {
@@ -483,7 +493,10 @@ export function RegisterPage() {
         {stepLabel === 'Räckvidd' && (
           <div className="wiz-pane" key="reach" style={{ display: 'flex', flexDirection: 'column', gap: 17 }}>
             <div className="field"><label htmlFor="rg-tt">{t('TikTok-användarnamn')} *</label>
-              <div className="auth-at"><span>@</span><input id="rg-tt" type="text" value={form.tikTokUsername} onChange={set('tikTokUsername')} required placeholder={t('dittanvändarnamn')} /></div>
+              <div className="auth-at"><span>@</span><input id="rg-tt" type="text" value={form.tikTokUsername} onChange={(e) => { setTiktokTaken(false); setForm((f) => ({ ...f, tikTokUsername: e.target.value })); }} onBlur={checkTikTok} required placeholder={t('dittanvändarnamn')} /></div>
+              {tiktokTaken && (
+                <div className="auth-err" style={{ marginTop: 6 }}>{t('Det här TikTok-kontot är redan kopplat till ett annat VYRLE-konto.')}</div>
+              )}
               <div className="auth-hint">{t('Efter godkännande kopplar du kontot via TikTok för automatisk visningsverifiering.')}</div>
             </div>
             <div className="field"><label htmlFor="rg-ig">{t('Instagram-användarnamn')}</label>

@@ -313,8 +313,14 @@ app.MapHealthChecks("/health/ready",
             var deadProfileIds = await db.Set<CreatorPay.Domain.Entities.CreatorProfile>().IgnoreQueryFilters()
                 .Where(c => deletedUserIds.Contains(c.UserId)).Select(c => c.Id).ToListAsync();
             var deadTikToks = await db.Set<CreatorPay.Domain.Entities.TikTokAccount>()
-                .Where(t => t.IsActive && deadProfileIds.Contains(t.CreatorProfileId)).ToListAsync();
-            foreach (var t in deadTikToks) t.IsActive = false;
+                .Where(t => deadProfileIds.Contains(t.CreatorProfileId) && !t.TikTokUsername.StartsWith("released-"))
+                .ToListAsync();
+            foreach (var t in deadTikToks)
+            {
+                t.IsActive = false;
+                t.TikTokUserId = $"released-{Guid.NewGuid():N}";
+                t.TikTokUsername = $"released-{Guid.NewGuid():N}";
+            }
         }
         await db.SaveChangesAsync();
     }

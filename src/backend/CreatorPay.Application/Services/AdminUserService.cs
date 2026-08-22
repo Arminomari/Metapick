@@ -504,7 +504,12 @@ public class AdminUserService : IAdminUserService
             .Include(c => c.TikTokAccount)
             .FirstOrDefaultAsync(c => c.UserId == userId);
         if (deletedCreator?.TikTokAccount != null)
-            deletedCreator.TikTokAccount.IsActive = false; // frees the TikTok for reconnection
+        {
+            // Free both unique identities (open_id + username) immediately.
+            deletedCreator.TikTokAccount.IsActive = false;
+            deletedCreator.TikTokAccount.TikTokUserId = $"released-{Guid.NewGuid():N}";
+            deletedCreator.TikTokAccount.TikTokUsername = $"released-{Guid.NewGuid():N}";
+        }
 
         await _uow.SaveChangesAsync();
         await _audit.LogAsync(callerAdminUserId, "Admin.DeleteUser", "User", userId);

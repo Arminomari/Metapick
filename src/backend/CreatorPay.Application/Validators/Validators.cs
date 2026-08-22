@@ -71,6 +71,11 @@ public class CheckEmailRequestValidator : AbstractValidator<CheckEmailRequest>
     public CheckEmailRequestValidator() => RuleFor(x => x.Email).NotEmpty().EmailAddress();
 }
 
+public class CheckTikTokRequestValidator : AbstractValidator<CheckTikTokRequest>
+{
+    public CheckTikTokRequestValidator() => RuleFor(x => x.Username).NotEmpty().MaximumLength(100);
+}
+
 public class ResendVerificationRequestValidator : AbstractValidator<ResendVerificationRequest>
 {
     public ResendVerificationRequestValidator() => RuleFor(x => x.Email).NotEmpty().EmailAddress();

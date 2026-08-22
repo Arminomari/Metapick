@@ -283,4 +283,5 @@ export const auth: Record<string, string> = {
   'Vi har skickat ett bekräftelsemejl till': 'We have sent a confirmation email to',
   'din e-postadress': 'your email address',
   'klicka på länken i mejlet för att verifiera din adress. Hittar du det inte? Kolla skräpposten.': 'click the link in the email to verify your address. Cannot find it? Check your spam folder.',
+  'Det här TikTok-kontot är redan kopplat till ett annat VYRLE-konto.': 'That TikTok account is already connected to another VYRLE account.',
 };

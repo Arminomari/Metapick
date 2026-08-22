@@ -19,6 +19,7 @@ public interface IAuthService
     Task<Result<bool>> ResendVerificationEmailAsync(string email);
     Task<Result<bool>> ChangeEmailAsync(Guid userId, ChangeEmailRequest request);
     Task<Result<bool>> IsEmailAvailableAsync(string email);
+    Task<Result<bool>> IsTikTokUsernameAvailableAsync(string username);
 }
 
 public interface ISocialAuthService

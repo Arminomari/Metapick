@@ -138,15 +138,27 @@ public class CreatorService : ICreatorService
         if (!string.IsNullOrWhiteSpace(request.TikTokUsername))
         {
             var tiktokUsername = request.TikTokUsername.TrimStart('@').Trim();
-            // Unique index on TikTokUsername — block collisions with a clean error (not a 500).
-            var takenByOther = await _tiktokAccounts.Query()
-                .AnyAsync(t => t.TikTokUsername == tiktokUsername && t.CreatorProfileId != creator.Id);
-            if (takenByOther)
+            // An OAuth connection is proven identity — the name follows TikTok
+            // and must never be overwritten by hand (it would corrupt open_id).
+            if (creator.TikTokAccount is { IsActive: true } && creator.TikTokAccount.Scopes != "manual"
+                && !creator.TikTokAccount.TikTokUsername.Equals(tiktokUsername, StringComparison.OrdinalIgnoreCase))
+                return Errors.Conflict("Ditt TikTok-konto är kopplat via OAuth — användarnamnet uppdateras automatiskt från TikTok.");
+
+            var holders = await _tiktokAccounts.Query()
+                .Where(t => t.TikTokUsername == tiktokUsername && t.CreatorProfileId != creator.Id)
+                .ToListAsync();
+            if (holders.Any(h => h.IsActive))
                 return Errors.Conflict("Detta TikTok-användarnamn är redan kopplat till ett annat konto");
+            foreach (var h in holders)
+            {
+                h.TikTokUsername = $"released-{Guid.NewGuid():N}";
+                h.TikTokUserId = $"released-{Guid.NewGuid():N}";
+            }
             if (creator.TikTokAccount != null)
             {
                 creator.TikTokAccount.TikTokUsername = tiktokUsername;
-                creator.TikTokAccount.TikTokUserId = tiktokUsername;
+                if (creator.TikTokAccount.Scopes == "manual")
+                    creator.TikTokAccount.TikTokUserId = tiktokUsername;
             }
             else
             {

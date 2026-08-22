@@ -107,6 +107,11 @@ public class AuthController : BaseController
     public async Task<IActionResult> CheckEmail([FromBody] CheckEmailRequest request)
         => ToActionResult(await _auth.IsEmailAvailableAsync(request.Email));
 
+    [HttpPost("check-tiktok")]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> CheckTikTok([FromBody] CheckTikTokRequest request)
+        => ToActionResult(await _auth.IsTikTokUsernameAvailableAsync(request.Username));
+
     [HttpPost("resend-verification")]
     [EnableRateLimiting("auth")]
     public async Task<IActionResult> ResendVerification([FromBody] ResendVerificationRequest request)

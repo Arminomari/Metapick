@@ -64,6 +64,7 @@ public record VerifyEmailRequest(string Token);
 public record ChangeEmailRequest(string NewEmail, string CurrentPassword);
 public record ResendVerificationRequest(string Email);
 public record CheckEmailRequest(string Email);
+public record CheckTikTokRequest(string Username);
 public record BroadcastRequest(string Audience, string Subject, string Message, bool SendEmail = true);
 
 /// <summary>Everything the platform knows about a creator account — admin eyes only.</summary>
