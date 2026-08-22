@@ -3,7 +3,8 @@ import type { CSSProperties } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
-import { useApplyToCampaign, useBrandProfile } from '@/hooks/api';
+import { useApplyToCampaign, useBrandProfile, useUpdateBrandProfile } from '@/hooks/api';
+import { ImagePicker } from '@/components/auth/ImagePicker';
 import { formatNumber, formatDate } from '@/lib/utils';
 import { t, statusLabel } from '@/lib/i18n';
 import { LoadingSpinner } from '@/components/ui';
@@ -26,7 +27,7 @@ interface BrandPublicProfile {
 
 const statBox: CSSProperties = { textAlign: 'center', padding: '14px 10px', borderRadius: 15, background: 'rgba(255,255,255,.7)', border: '1px solid rgba(241,168,143,.22)' };
 
-export function BrandProfilePage({ brandId, ownView }: { brandId?: string; ownView?: boolean } = {}) {
+export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: string; ownView?: boolean; onEdit?: () => void } = {}) {
   const { id: routeId } = useParams<{ id: string }>();
   const id = brandId ?? routeId;
   const navigate = useNavigate();
@@ -77,15 +78,25 @@ export function BrandProfilePage({ brandId, ownView }: { brandId?: string; ownVi
     <section className="view active reveal">
       {/* ── Cover + identity ── */}
       <div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: 16 }}>
-        <div style={{ height: 120, background: 'linear-gradient(120deg, #1A2230 0%, #0B0F17 55%, #3a2a22 100%), radial-gradient(600px 200px at 80% 0%, rgba(241,168,143,.5), transparent)', backgroundBlendMode: 'screen' }} />
+        <div style={{ height: 150, position: 'relative', overflow: 'hidden', background: 'radial-gradient(700px 260px at 85% -20%, rgba(241,168,143,.65), transparent 60%), radial-gradient(500px 220px at 10% 120%, rgba(237,225,255,.35), transparent 60%), linear-gradient(120deg, #141b28 0%, #0B0F17 60%, #2a1d16 100%)' }}>
+          <svg viewBox="0 0 220 220" style={{ position: 'absolute', right: 26, top: -30, width: 200, height: 200, opacity: .25 }} aria-hidden>
+            <path d="M110 20 C118 78 142 102 200 110 C142 118 118 142 110 200 C102 142 78 118 20 110 C78 102 102 78 110 20Z" fill="#FFD8C7" />
+          </svg>
+          {ownView && (
+            <button type="button" onClick={() => onEdit?.()} className="btn-outline"
+              style={{ position: 'absolute', top: 14, right: 16, width: 'auto', padding: '9px 18px', background: 'rgba(255,255,255,.92)', fontSize: 13 }}>
+              ✎ {t('Redigera profil')}
+            </button>
+          )}
+        </div>
         <div style={{ padding: '0 24px 22px' }}>
-          <div style={{ display: 'flex', gap: 18, alignItems: 'flex-end', flexWrap: 'wrap', marginTop: -44 }}>
+          <div style={{ display: 'flex', gap: 18, alignItems: 'flex-end', flexWrap: 'wrap', marginTop: -54 }}>
             {p.logoUrl
-              ? <img src={p.logoUrl} alt={p.companyName} style={{ width: 92, height: 92, borderRadius: 24, objectFit: 'cover', border: '4px solid #fff', boxShadow: '0 10px 26px rgba(11,15,23,.18)' }} />
-              : <div style={{ width: 92, height: 92, borderRadius: 24, border: '4px solid #fff', background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"Fraunces",serif', fontSize: 38, color: '#fff', boxShadow: '0 10px 26px rgba(11,15,23,.18)' }}>{initial}</div>}
+              ? <img src={p.logoUrl} alt={p.companyName} style={{ width: 112, height: 112, borderRadius: 30, objectFit: 'cover', border: '5px solid #fff', boxShadow: '0 14px 34px rgba(11,15,23,.22)' }} />
+              : <div style={{ width: 112, height: 112, borderRadius: 30, border: '5px solid #fff', background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"Fraunces",serif', fontSize: 46, color: '#fff', boxShadow: '0 14px 34px rgba(11,15,23,.22)' }}>{initial}</div>}
             <div style={{ flex: 1, minWidth: 220, paddingBottom: 4 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700, letterSpacing: '-.02em', color: 'var(--ink)' }}>{p.companyName}</h1>
+                <h1 style={{ margin: 0, fontSize: 32, fontWeight: 600, letterSpacing: '-.02em', color: 'var(--ink)', fontFamily: '"Fraunces",serif' }}>{p.companyName}</h1>
                 <span className="badge green">✓ {t('Verifierat företag')}</span>
               </div>
               <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 3 }}>
@@ -111,17 +122,17 @@ export function BrandProfilePage({ brandId, ownView }: { brandId?: string; ownVi
 
       {/* ── Stats ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginBottom: 16 }}>
-        {[
-          [t('Följare'), formatNumber(p.followerCount)],
-          [t('Aktiva kampanjer'), String(p.activeCampaignCount)],
-          [t('Genomförda'), String(p.completedCampaignCount)],
-          [t('Totala views'), formatNumber(p.totalVerifiedViews)],
-          [t('Creators anlitade'), String(p.creatorsWorkedWith)],
-          [t('Betyg'), p.reviewCount > 0 ? `${p.averageRating.toFixed(1)} ★` : '–'],
-        ].map(([lbl, val]) => (
-          <div key={lbl} style={statBox}>
-            <div style={{ fontWeight: 800, fontSize: 20, color: '#0B0F17' }}>{val}</div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: 2 }}>{lbl}</div>
+        {([
+          [t('Följare'), formatNumber(p.followerCount), true],
+          [t('Aktiva kampanjer'), String(p.activeCampaignCount), false],
+          [t('Genomförda'), String(p.completedCampaignCount), false],
+          [t('Totala views'), formatNumber(p.totalVerifiedViews), false],
+          [t('Ambassadörer'), String(p.creatorsWorkedWith), false],
+          [t('Betyg'), p.reviewCount > 0 ? `${p.averageRating.toFixed(1)} ★` : '–', false],
+        ] as [string, string, boolean][]).map(([lbl, val, hi]) => (
+          <div key={lbl} style={{ ...statBox, ...(hi ? { background: 'linear-gradient(140deg,#FFE3D3,#FFD3BC)', border: '1px solid rgba(241,168,143,.4)' } : {}) }}>
+            <div style={{ fontWeight: 800, fontSize: 22, color: '#0B0F17', fontFamily: '"Fraunces",serif' }}>{val}</div>
+            <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: hi ? '#9c4f31' : 'var(--muted)', marginTop: 2 }}>{lbl}</div>
           </div>
         ))}
       </div>
@@ -136,6 +147,7 @@ export function BrandProfilePage({ brandId, ownView }: { brandId?: string; ownVi
                 <div style={{ fontWeight: 700, fontSize: 15 }}>{c.name}</div>
                 <div style={{ fontSize: 12.5, color: '#9c4f31', fontWeight: 700 }}>{c.payoutSummary}</div>
                 <div style={{ fontSize: 12, color: 'var(--muted)' }}>{c.category} · {c.spotsLeft} {t('platser kvar')} · {formatDate(c.startDate)} – {formatDate(c.endDate)}</div>
+                {c.totalViews > 0 && <div style={{ fontSize: 12, fontWeight: 700, color: '#2f7d52' }}>👁 {formatNumber(c.totalViews)} {t('levererade views')}</div>}
                 {!ownView && (
                   <button
                     type="button"
@@ -199,18 +211,67 @@ export function BrandProfilePage({ brandId, ownView }: { brandId?: string; ownVi
   );
 }
 
-/** The brand's own view of its public profile — how creators see it. */
+/** The brand's own view of its public profile — how creators see it, editable in place. */
 export function BrandOwnPublicProfilePage() {
   const { data: profile, isLoading } = useBrandProfile();
+  const update = useUpdateBrandProfile();
+  const qc = useQueryClient();
+  const toast = useToast();
+  const [editing, setEditing] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [form, setForm] = useState({ description: '', website: '', industry: '', logoUrl: null as string | null });
+
+  if (profile && !loaded) {
+    setForm({ description: profile.description ?? '', website: profile.website ?? '', industry: profile.industry ?? '', logoUrl: profile.logoUrl ?? null });
+    setLoaded(true);
+  }
+
   if (isLoading) return <LoadingSpinner />;
   if (!profile?.id) return null;
+
+  const input: CSSProperties = { width: '100%', border: '1px solid rgba(241,168,143,.28)', borderRadius: 13, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', background: 'rgba(255,255,255,.8)', color: '#0B0F17' };
+  const lbl: CSSProperties = { fontSize: 12, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6, display: 'block' };
+
+  const save = async () => {
+    try {
+      await update.mutateAsync({ companyName: profile.companyName, contactPhone: profile.contactPhone ?? undefined, ...form, logoUrl: form.logoUrl });
+      await qc.invalidateQueries({ queryKey: ['brand-public'] });
+      toast.push(t('Profilen uppdaterad!'), 'success');
+      setEditing(false);
+    } catch (err: any) {
+      toast.push(err?.response?.data?.error?.message ?? t('Kunde inte spara'), 'error');
+    }
+  };
+
   return (
     <>
       <div className="card" style={{ marginBottom: 16, padding: '12px 18px', background: 'rgba(237,225,255,.35)', border: '1px solid rgba(157,139,196,.3)' }}>
-        <span style={{ fontSize: 13, color: '#6a4ea8', fontWeight: 600 }}>👁 {t('Så här ser din profil ut för creators. Håll den uppdaterad under Inställningar — en stark profil ger fler ansökningar.')}</span>
+        <span style={{ fontSize: 13, color: '#6a4ea8', fontWeight: 600 }}>👁 {t('Så här ser din profil ut för creators. En stark profil ger fler ansökningar.')}</span>
       </div>
-      <BrandProfilePage brandId={profile.id} ownView />
+
+      {editing && (
+        <form className="card" style={{ marginBottom: 16, border: '1px solid rgba(241,168,143,.4)' }}
+          onSubmit={(e) => { e.preventDefault(); void save(); }}>
+          <div className="sec-head"><h3>{t('Redigera profil')}</h3></div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 14 }}>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <ImagePicker value={form.logoUrl} onChange={(v) => setForm({ ...form, logoUrl: v })} label={t('Logotyp')} shape="rounded" />
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <span style={lbl}>{t('Beskrivning — berätta vad ni gör och vilka creators ni söker')}</span>
+              <textarea style={{ ...input, resize: 'vertical' }} rows={4} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder={t('Vilka är ni? Vad står ni för? Varför ska en creator jobba med er?')} />
+            </div>
+            <div><span style={lbl}>{t('Bransch')}</span><input style={input} value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} /></div>
+            <div><span style={lbl}>{t('Webbplats')}</span><input style={input} type="url" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="https://…" /></div>
+          </div>
+          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+            <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 26px' }} disabled={update.isPending}>{update.isPending ? t('Sparar…') : t('Spara profil')}</button>
+            <button type="button" className="btn-outline" style={{ width: 'auto', padding: '12px 26px' }} onClick={() => setEditing(false)}>{t('Avbryt')}</button>
+          </div>
+        </form>
+      )}
+
+      <BrandProfilePage brandId={profile.id} ownView onEdit={() => setEditing((v) => !v)} />
     </>
   );
 }
-

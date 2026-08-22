@@ -420,4 +420,12 @@ export const creator: Record<string, string> = {
   'Visa företagsprofil': 'View brand profile',
   'Så här ser din profil ut för creators. Håll den uppdaterad under Inställningar — en stark profil ger fler ansökningar.': 'This is how creators see your profile. Keep it fresh under Settings — a strong profile brings more applications.',
   'Min profil': 'My Profile',
+  'Ambassadörer': 'Ambassadors',
+  'levererade views': 'delivered views',
+  'Så här ser din profil ut för creators. En stark profil ger fler ansökningar.': 'This is how creators see your profile. A strong profile brings more applications.',
+  'Profilen uppdaterad!': 'Profile updated!',
+  'Logotyp': 'Logo',
+  'Beskrivning — berätta vad ni gör och vilka creators ni söker': 'Description — tell what you do and which creators you look for',
+  'Vilka är ni? Vad står ni för? Varför ska en creator jobba med er?': 'Who are you? What do you stand for? Why should a creator work with you?',
+  'Bransch': 'Industry',
 };

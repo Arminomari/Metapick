@@ -820,7 +820,8 @@ public class CampaignService : ICampaignService
             .Include(c => c.PayoutRules)
             .Include(c => c.Assignments)
             .Where(c => c.BrandProfileId == brandProfileId && !c.IsDeleted
-                && (c.Status == CampaignStatus.Active || c.Status == CampaignStatus.Completed))
+                && (c.Status == CampaignStatus.Active || c.Status == CampaignStatus.Completed
+                    || c.Status == CampaignStatus.Paused))
             .ToListAsync(ct);
 
         var followerCount = await _brandFollowers.Query()
@@ -849,7 +850,7 @@ public class CampaignService : ICampaignService
 
         var active = campaigns.Where(c => c.Status == CampaignStatus.Active)
             .OrderByDescending(c => c.CreatedAt).ToList();
-        var past = campaigns.Where(c => c.Status == CampaignStatus.Completed)
+        var past = campaigns.Where(c => c.Status != CampaignStatus.Active)
             .OrderByDescending(c => c.EndDate).Take(12).ToList();
 
         return new BrandPublicProfileDto(
