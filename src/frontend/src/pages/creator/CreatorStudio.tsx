@@ -1,3 +1,4 @@
+import { BrandFeedSection } from '@/components/vyrle/BrandFeed';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { statusLabel, t } from '@/lib/i18n';
