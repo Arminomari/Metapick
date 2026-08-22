@@ -24,6 +24,26 @@ public class BrandController : BaseController
         => ToActionResult(await _brands.UpdateProfileAsync(GetUserId(), request));
 }
 
+/// <summary>Community-inlägg på företagets profil.</summary>
+[Route("api/brand/posts")]
+[Authorize(Policy = "BrandOnly")]
+public class BrandPostsController : BaseController
+{
+    private readonly ICampaignService _campaignsSvc;
+
+    public BrandPostsController(ICampaignService campaigns) => _campaignsSvc = campaigns;
+
+    /// <summary>Publicera ett inlägg — alla följare notifieras</summary>
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CreateBrandPostRequest request, CancellationToken ct)
+        => ToActionResult(await _campaignsSvc.CreateBrandPostAsync(GetUserId(), request, ct));
+
+    /// <summary>Ta bort ett eget inlägg</summary>
+    [HttpDelete("{postId:guid}")]
+    public async Task<IActionResult> Delete(Guid postId, CancellationToken ct)
+        => ToActionResult(await _campaignsSvc.DeleteBrandPostAsync(GetUserId(), postId, ct));
+}
+
 /// <summary>Offentliga företagsprofiler — nås av alla inloggade.</summary>
 [Route("api/brands")]
 [Authorize]

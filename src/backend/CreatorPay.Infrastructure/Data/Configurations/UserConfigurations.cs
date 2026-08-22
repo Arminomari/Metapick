@@ -131,3 +131,20 @@ public class BrandFollowerConfiguration : IEntityTypeConfiguration<BrandFollower
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
+
+public class BrandPostConfiguration : IEntityTypeConfiguration<BrandPost>
+{
+    public void Configure(EntityTypeBuilder<BrandPost> b)
+    {
+        b.ToTable("brand_posts");
+        b.HasKey(e => e.Id);
+        b.Property(e => e.Body).HasMaxLength(2000).IsRequired();
+        b.Property(e => e.ImageUrl).HasMaxLength(400_000);
+        b.HasIndex(e => new { e.BrandProfileId, e.CreatedAt });
+
+        b.HasOne(e => e.BrandProfile)
+            .WithMany()
+            .HasForeignKey(e => e.BrandProfileId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}

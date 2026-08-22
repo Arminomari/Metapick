@@ -16,6 +16,9 @@ interface BrandPublicCampaign {
   id: string; name: string; category: string; status: string; payoutSummary: string;
   startDate: string; endDate: string; spotsLeft: number; totalViews: number;
 }
+interface BrandPost {
+  id: string; body: string; imageUrl?: string | null; createdAt: string;
+}
 interface BrandPublicProfile {
   brandProfileId: string; companyName: string; logoUrl?: string | null; industry: string; country: string;
   description?: string | null; website?: string | null; memberSince: string;
@@ -23,6 +26,7 @@ interface BrandPublicProfile {
   activeCampaignCount: number; completedCampaignCount: number; totalVerifiedViews: number; creatorsWorkedWith: number;
   averageRating: number; reviewCount: number; recentReviews: ReviewDto[];
   activeCampaigns: BrandPublicCampaign[]; pastCampaigns: BrandPublicCampaign[];
+  posts?: BrandPost[] | null;
 }
 
 const statBox: CSSProperties = { textAlign: 'center', padding: '14px 10px', borderRadius: 15, background: 'rgba(255,255,255,.7)', border: '1px solid rgba(241,168,143,.22)' };
@@ -78,19 +82,14 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
     <section className="view active reveal">
       {/* ── Cover + identity ── */}
       <div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: 16 }}>
-        <div style={{ height: 150, position: 'relative', overflow: 'hidden', background: 'radial-gradient(640px 260px at 88% -30%, rgba(255,255,255,.55), transparent 55%), radial-gradient(520px 240px at 8% 130%, rgba(237,225,255,.5), transparent 60%), linear-gradient(120deg, #FFD8C7 0%, #F1A88F 55%, #d98d6e 100%)' }}>
-          <svg viewBox="0 0 220 220" style={{ position: 'absolute', right: 34, top: -12, width: 130, height: 130, opacity: .4 }} aria-hidden>
-            <path d="M110 20 C118 78 142 102 200 110 C142 118 118 142 110 200 C102 142 78 118 20 110 C78 102 102 78 110 20Z" fill="#ffffff" />
-          </svg>
+        <div style={{ padding: '24px 24px 22px', position: 'relative' }}>
           {ownView && (
             <button type="button" onClick={() => onEdit?.()} className="btn-outline"
-              style={{ position: 'absolute', top: 14, right: 16, width: 'auto', padding: '9px 18px', background: 'rgba(255,255,255,.92)', fontSize: 13 }}>
+              style={{ position: 'absolute', top: 18, right: 18, width: 'auto', padding: '9px 18px', fontSize: 13 }}>
               ✎ {t('Redigera profil')}
             </button>
           )}
-        </div>
-        <div style={{ padding: '0 24px 22px' }}>
-          <div style={{ display: 'flex', gap: 18, alignItems: 'flex-end', flexWrap: 'wrap', marginTop: -54 }}>
+          <div style={{ display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap' }}>
             {p.logoUrl
               ? <img src={p.logoUrl} alt={p.companyName} style={{ width: 112, height: 112, borderRadius: 30, objectFit: 'cover', border: '5px solid #fff', boxShadow: '0 14px 34px rgba(11,15,23,.22)' }} />
               : <div style={{ width: 112, height: 112, borderRadius: 30, border: '5px solid #fff', background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"Fraunces",serif', fontSize: 46, color: '#fff', boxShadow: '0 14px 34px rgba(11,15,23,.22)' }}>{initial}</div>}
@@ -136,6 +135,33 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
           </div>
         ))}
       </div>
+
+      {/* ── Community feed ── */}
+      {(ownView || (p.posts?.length ?? 0) > 0) && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="sec-head"><h3>{t('Uppdateringar')}</h3>{!ownView && <span style={{ fontSize: 13, color: 'var(--muted)' }}>{t('Nytt från')} {p.companyName}</span>}</div>
+          {ownView && <PostComposer onPosted={() => qc.invalidateQueries({ queryKey: ['brand-public', id] })} />}
+          {(p.posts ?? []).map((post) => (
+            <div key={post.id} style={{ display: 'flex', gap: 12, padding: '14px 0', borderTop: '1px solid rgba(241,168,143,.16)' }}>
+              {p.logoUrl
+                ? <img src={p.logoUrl} style={{ width: 40, height: 40, borderRadius: 12, objectFit: 'cover', flex: '0 0 40px' }} alt="" />
+                : <div style={{ width: 40, height: 40, borderRadius: 12, flex: '0 0 40px', background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800 }}>{initial}</div>}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <span style={{ fontWeight: 700, fontSize: 13.5 }}>{p.companyName}</span>
+                  <span style={{ fontSize: 12, color: 'var(--muted)' }}>{formatDate(post.createdAt)}</span>
+                  {ownView && <DeletePostButton postId={post.id} onDeleted={() => qc.invalidateQueries({ queryKey: ['brand-public', id] })} />}
+                </div>
+                <p style={{ margin: '6px 0 0', fontSize: 14, lineHeight: 1.55, color: 'var(--ink-2)', whiteSpace: 'pre-line' }}>{post.body}</p>
+                {post.imageUrl && <img src={post.imageUrl} alt="" style={{ marginTop: 10, maxWidth: '100%', maxHeight: 340, borderRadius: 14, objectFit: 'cover' }} />}
+              </div>
+            </div>
+          ))}
+          {(p.posts?.length ?? 0) === 0 && ownView && (
+            <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>{t('Inga inlägg ännu — skriv ditt första och nå alla dina följare direkt.')}</p>
+          )}
+        </div>
+      )}
 
       {/* ── Active campaigns ── */}
       <div className="card" style={{ marginBottom: 16 }}>
@@ -275,3 +301,70 @@ export function BrandOwnPublicProfilePage() {
     </>
   );
 }
+
+// ── Community composer (own view) ──────────────────────
+function PostComposer({ onPosted }: { onPosted: () => void }) {
+  const toast = useToast();
+  const [body, setBody] = useState('');
+  const [image, setImage] = useState<string | null>(null);
+  const [showImage, setShowImage] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const publish = async () => {
+    if (!body.trim()) return;
+    setBusy(true);
+    try {
+      await api.post('/brand/posts', { body: body.trim(), imageUrl: image });
+      setBody(''); setImage(null); setShowImage(false);
+      toast.push(t('Inlägget publicerat — alla följare har notifierats!'), 'success');
+      onPosted();
+    } catch (err: any) {
+      toast.push(err?.response?.data?.error?.message ?? t('Kunde inte publicera inlägget'), 'error');
+    }
+    setBusy(false);
+  };
+
+  return (
+    <div style={{ border: '1px solid rgba(241,168,143,.3)', borderRadius: 16, padding: 14, background: 'linear-gradient(160deg,#fff,#FFF9F5)', marginBottom: 4 }}>
+      <textarea
+        value={body}
+        onChange={(e) => setBody(e.target.value)}
+        rows={3}
+        maxLength={2000}
+        placeholder={t('Dela en nyhet, en kommande kampanj eller lite reklam — dina följare ser det direkt…')}
+        style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: 14, fontFamily: 'inherit', color: '#0B0F17', resize: 'vertical', lineHeight: 1.55 }}
+      />
+      {showImage && (
+        <div style={{ marginTop: 10 }}>
+          <ImagePicker value={image} onChange={setImage} label={t('Bild till inlägget')} shape="rounded" />
+        </div>
+      )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
+        <button type="button" className="btn-outline" style={{ width: 'auto', padding: '8px 14px', fontSize: 12.5 }} onClick={() => setShowImage((v) => !v)}>
+          🖼 {showImage ? t('Utan bild') : t('Lägg till bild')}
+        </button>
+        <button type="button" className="btn-apply" style={{ width: 'auto', padding: '9px 22px', marginLeft: 'auto' }} onClick={() => void publish()} disabled={busy || !body.trim()}>
+          {busy ? t('Publicerar…') : t('Publicera')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DeletePostButton({ postId, onDeleted }: { postId: string; onDeleted: () => void }) {
+  const [armed, setArmed] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const del = async () => {
+    if (!armed) { setArmed(true); setTimeout(() => setArmed(false), 3500); return; }
+    setBusy(true);
+    try { await api.delete(`/brand/posts/${postId}`); onDeleted(); } catch { /* stays visible */ }
+    setBusy(false);
+  };
+  return (
+    <button type="button" onClick={() => void del()} disabled={busy}
+      style={{ marginLeft: 'auto', border: 'none', background: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: armed ? '#cf4b4b' : 'var(--muted)', fontFamily: 'inherit', padding: 0 }}>
+      {armed ? t('Säker?') : t('Ta bort')}
+    </button>
+  );
+}
+

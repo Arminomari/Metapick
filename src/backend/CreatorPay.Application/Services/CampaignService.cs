@@ -20,6 +20,7 @@ public class CampaignService : ICampaignService
     private readonly IRepository<User> _userAccounts;
     private readonly IRepository<BrandFollower> _brandFollowers;
     private readonly IRepository<Review> _reviewRows;
+    private readonly IRepository<BrandPost> _brandPosts;
 
     public CampaignService(
         IUnitOfWork uow,
@@ -31,7 +32,8 @@ public class CampaignService : ICampaignService
         INotificationService notifications,
         IRepository<User> userAccounts,
         IRepository<BrandFollower> brandFollowers,
-        IRepository<Review> reviewRows)
+        IRepository<Review> reviewRows,
+        IRepository<BrandPost> brandPosts)
     {
         _uow = uow;
         _campaigns = campaigns;
@@ -43,6 +45,7 @@ public class CampaignService : ICampaignService
         _userAccounts = userAccounts;
         _brandFollowers = brandFollowers;
         _reviewRows = reviewRows;
+        _brandPosts = brandPosts;
     }
 
     public async Task<Result<CampaignDetailDto>> CreateCampaignAsync(Guid brandUserId, CreateCampaignRequest request, CancellationToken ct = default)
@@ -853,6 +856,13 @@ public class CampaignService : ICampaignService
         var past = campaigns.Where(c => c.Status != CampaignStatus.Active)
             .OrderByDescending(c => c.EndDate).Take(12).ToList();
 
+        var posts = await _brandPosts.Query()
+            .Where(bp => bp.BrandProfileId == brandProfileId)
+            .OrderByDescending(bp => bp.CreatedAt)
+            .Take(10)
+            .Select(bp => new BrandPostDto(bp.Id, bp.Body, bp.ImageUrl, bp.CreatedAt))
+            .ToListAsync(ct);
+
         return new BrandPublicProfileDto(
             brand.Id, brand.CompanyName, brand.LogoUrl, brand.Industry, brand.Country,
             brand.Description, brand.Website, brand.CreatedAt,
@@ -861,7 +871,7 @@ public class CampaignService : ICampaignService
             campaigns.SelectMany(c => c.Assignments).Sum(a => a.TotalVerifiedViews),
             campaigns.SelectMany(c => c.Assignments).Select(a => a.CreatorProfileId).Distinct().Count(),
             avgRating, reviews.Count, recentReviews,
-            Map(active), Map(past));
+            Map(active), Map(past), posts);
     }
 
     public async Task<Result<bool>> SetBrandFollowAsync(Guid viewerUserId, Guid brandProfileId, bool follow, CancellationToken ct = default)
@@ -882,5 +892,56 @@ public class CampaignService : ICampaignService
             await _uow.SaveChangesAsync(ct);
         }
         return follow;
+    }
+
+    /// <summary>
+    /// Community post on the brand profile. Every follower gets a bell
+    /// notification — the loop that keeps creators coming back.
+    /// </summary>
+    public async Task<Result<BrandPostDto>> CreateBrandPostAsync(Guid brandUserId, CreateBrandPostRequest request, CancellationToken ct = default)
+    {
+        var brand = await _brands.Query()
+            .FirstOrDefaultAsync(b => b.UserId == brandUserId && b.Status == BrandStatus.Approved, ct);
+        if (brand == null) return Errors.Forbidden("Endast godkända företag kan publicera inlägg");
+
+        var post = new BrandPost
+        {
+            BrandProfileId = brand.Id,
+            Body = request.Body.Trim(),
+            ImageUrl = string.IsNullOrWhiteSpace(request.ImageUrl) ? null : request.ImageUrl
+        };
+        _brandPosts.Add(post);
+        await _uow.SaveChangesAsync(ct);
+
+        var followerUserIds = await _brandFollowers.Query()
+            .Where(f => f.BrandProfileId == brand.Id)
+            .Join(_creatorProfiles.Query(), f => f.CreatorProfileId, c => c.Id, (f, c) => c.UserId)
+            .ToListAsync(ct);
+        var preview = post.Body.Length > 120 ? post.Body[..120] + "…" : post.Body;
+        foreach (var followerId in followerUserIds)
+        {
+            try
+            {
+                await _notifications.SendAsync(followerId, NotificationType.SystemMessage,
+                    $"{brand.CompanyName} har publicerat ett nytt inlägg: {preview}");
+            }
+            catch { /* one bad follower must not stop the fan-out */ }
+        }
+
+        return new BrandPostDto(post.Id, post.Body, post.ImageUrl, post.CreatedAt);
+    }
+
+    public async Task<Result<bool>> DeleteBrandPostAsync(Guid brandUserId, Guid postId, CancellationToken ct = default)
+    {
+        var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);
+        if (brand == null) return Errors.Forbidden("Brand profile not found");
+
+        var post = await _brandPosts.Query()
+            .FirstOrDefaultAsync(bp => bp.Id == postId && bp.BrandProfileId == brand.Id, ct);
+        if (post == null) return Errors.NotFound("Post", postId);
+
+        _brandPosts.Remove(post);
+        await _uow.SaveChangesAsync(ct);
+        return true;
     }
 }

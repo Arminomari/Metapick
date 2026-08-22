@@ -75,6 +75,16 @@ public class VerifyEmailRequestValidator : AbstractValidator<VerifyEmailRequest>
     public VerifyEmailRequestValidator() => RuleFor(x => x.Token).NotEmpty().MaximumLength(300);
 }
 
+public class CreateBrandPostRequestValidator : AbstractValidator<CreateBrandPostRequest>
+{
+    public CreateBrandPostRequestValidator()
+    {
+        RuleFor(x => x.Body).NotEmpty().MaximumLength(2000);
+        RuleFor(x => x.ImageUrl).Must(CreatorPay.Application.Common.MediaValidation.IsValidImageRef)
+            .WithMessage("Ogiltig bild");
+    }
+}
+
 public class CheckEmailRequestValidator : AbstractValidator<CheckEmailRequest>
 {
     public CheckEmailRequestValidator() => RuleFor(x => x.Email).NotEmpty().EmailAddress();

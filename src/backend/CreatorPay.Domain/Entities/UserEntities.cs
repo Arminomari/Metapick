@@ -126,3 +126,13 @@ public class BrandFollower : BaseEntity
     public BrandProfile BrandProfile { get; set; } = null!;
     public CreatorProfile CreatorProfile { get; set; } = null!;
 }
+
+/// <summary>A brand community post — updates and promos shown on the profile.</summary>
+public class BrandPost : BaseEntity
+{
+    public Guid BrandProfileId { get; set; }
+    public string Body { get; set; } = null!;
+    public string? ImageUrl { get; set; }
+
+    public BrandProfile BrandProfile { get; set; } = null!;
+}

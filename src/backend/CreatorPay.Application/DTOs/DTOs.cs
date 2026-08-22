@@ -255,6 +255,9 @@ public record CampaignBrowseDto(
     string? Perks, List<string> ContentTags,
     List<PayoutRuleDto>? PayoutRules = null, Guid? BrandProfileId = null);
 
+public record BrandPostDto(Guid Id, string Body, string? ImageUrl, DateTime CreatedAt);
+public record CreateBrandPostRequest(string Body, string? ImageUrl);
+
 public record BrandPublicCampaignDto(
     Guid Id, string Name, string Category, string Status, string PayoutSummary,
     DateTime StartDate, DateTime EndDate, int SpotsLeft, long TotalViews);
@@ -265,7 +268,8 @@ public record BrandPublicProfileDto(
     int FollowerCount, bool IsFollowing,
     int ActiveCampaignCount, int CompletedCampaignCount, long TotalVerifiedViews, int CreatorsWorkedWith,
     double AverageRating, int ReviewCount, List<ReviewDto> RecentReviews,
-    List<BrandPublicCampaignDto> ActiveCampaigns, List<BrandPublicCampaignDto> PastCampaigns);
+    List<BrandPublicCampaignDto> ActiveCampaigns, List<BrandPublicCampaignDto> PastCampaigns,
+    List<BrandPostDto>? Posts = null);
 
 // ──── Application ────
 public record ApplyToCampaignRequest(Guid CampaignId, string? Message);
