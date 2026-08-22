@@ -427,11 +427,6 @@ export function AdminDashboardPage() {
   const filter = (searchParams.get('tab') as 'all' | 'pending' | 'active' | 'rejected') || 'pending';
   const creatorId = searchParams.get('creatorId');
 
-  // If viewing a creator profile, show that instead
-  if (creatorId) {
-    return <AdminCreatorProfilePage creatorId={creatorId} onBack={() => setSearchParams({ section, tab: filter })} />;
-  }
-
   const setSection = (sec: AdminSection) => setSearchParams({ section: sec, tab: sec === 'users' ? 'pending' : '' });
   const setFilter = (f: 'all' | 'pending' | 'active' | 'rejected') => setSearchParams({ section, tab: f });
 
@@ -448,6 +443,13 @@ export function AdminDashboardPage() {
   const rejectCampaign = useRejectCampaign();
   const [rejectingCampaignId, setRejectingCampaignId] = useState<string | null>(null);
   const [campaignRejectReason, setCampaignRejectReason] = useState('');
+
+  // Profile view renders instead of the dashboard — placed AFTER every hook:
+  // an early return above any hook makes React render fewer hooks than the
+  // previous pass and crash with minified error #300.
+  if (creatorId) {
+    return <AdminCreatorProfilePage creatorId={creatorId} onBack={() => setSearchParams({ section, tab: filter })} />;
+  }
 
   const filteredUsers = (data?.data || []).filter(u => {
     if (filter === 'pending') return u.status === 'PendingVerification';
