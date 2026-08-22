@@ -591,7 +591,7 @@ public class AuditService : IAuditService
 
         // Resolve who performed each action (IgnoreQueryFilters: soft-deleted
         // accounts must still be identifiable in the audit trail).
-        var actorIds = items.Select(l => l.UserId).Distinct().ToList();
+        var actorIds = items.Where(l => l.UserId.HasValue).Select(l => l.UserId!.Value).Distinct().ToList();
         var actors = (await _users.Query().IgnoreQueryFilters()
                 .Where(u => actorIds.Contains(u.Id))
                 .Select(u => new { u.Id, u.Email, u.Role })
@@ -600,10 +600,13 @@ public class AuditService : IAuditService
 
         return new PagedResult<AuditLogDto>
         {
-            Data = items.Select(l => new AuditLogDto(
-                l.Id, l.UserId, l.Action, l.EntityType, l.EntityId, l.IpAddress, l.CreatedAt,
-                actors.TryGetValue(l.UserId, out var actor) ? actor.Email : null,
-                actors.TryGetValue(l.UserId, out var actorRole) ? actorRole.Role.ToString() : null)).ToList(),
+            Data = items.Select(l =>
+            {
+                actors.TryGetValue(l.UserId ?? Guid.Empty, out var actor);
+                return new AuditLogDto(
+                    l.Id, l.UserId, l.Action, l.EntityType, l.EntityId, l.IpAddress, l.CreatedAt,
+                    actor?.Email, actor?.Role.ToString());
+            }).ToList(),
             Page = page, PageSize = pageSize, TotalCount = totalCount
         };
     }

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuthStore } from '@/stores/authStore';
 import { AdminOverviewSection, AdminPayoutsSection, AdminFraudSection, AdminAuditSection, AdminCreateAdminCard } from './AdminExtraSections';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
@@ -420,6 +421,7 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
 export function AdminDashboardPage() {
   const [page] = useState(1);
   const [searchParams, setSearchParams] = useSearchParams();
+  const { logout } = useAuthStore();
   const section = (searchParams.get('section') as AdminSection) || 'overview';
   const filter = (searchParams.get('tab') as 'all' | 'pending' | 'active' | 'rejected') || 'pending';
   const creatorId = searchParams.get('creatorId');
@@ -482,12 +484,19 @@ export function AdminDashboardPage() {
             <h1 style={s.title}>Admin Panel</h1>
             <p style={{ color: '#6E7480', fontSize: '.9rem' }}>Statistik, användare, kampanjer, utbetalningar och säkerhet</p>
           </div>
-          <button
+          <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
+            <button
             onClick={() => triggerSync.mutate()}
             disabled={triggerSync.isPending}
             style={{ padding: '.5rem 1rem', borderRadius: '.5rem', border: '1px solid #7c3aed', background: '#6a4ea8', color: '#fff', cursor: 'pointer', fontSize: '.8rem', fontWeight: 600, opacity: triggerSync.isPending ? 0.6 : 1 }}>
             {triggerSync.isPending ? '⏳ Synkar...' : triggerSync.isSuccess ? '✓ Synk startad!' : '🔄 Synka TikTok nu'}
-          </button>
+            </button>
+            <button
+              onClick={() => { logout(); window.location.href = '/login'; }}
+              style={{ padding: '.5rem 1rem', borderRadius: 980, border: '1px solid rgba(207,75,75,.4)', background: 'rgba(255,255,255,.7)', color: '#cf4b4b', cursor: 'pointer', fontSize: '.8rem', fontWeight: 600 }}>
+              Logga ut
+            </button>
+          </div>
         </div>
 
         {/* Section selector */}
