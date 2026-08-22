@@ -1,3 +1,4 @@
+import { t } from '@/lib/i18n';
 import { useEffect, useRef, useState } from 'react';
 import { useChatMessages, useSendMessage, useMarkChatRead, useChatConversations } from '@/hooks/api';
 import { useAuthStore } from '@/stores/authStore';
@@ -40,7 +41,7 @@ export function ChatPanel({ assignmentId }: ChatPanelProps) {
     try { await send.mutateAsync({ assignmentId, body: t }); } catch { setBody(t); }
   };
 
-  const name = convo?.counterpartName ?? 'Direktchatt';
+  const name = convo?.counterpartName ?? t('Direktchatt');
 
   return (
     <div style={{
@@ -59,8 +60,9 @@ export function ChatPanel({ assignmentId }: ChatPanelProps) {
       </div>
 
       <div className="mc-thread-scroll" ref={scrollRef}>
-        {isLoading ? <div className="mc-day">Laddar…</div>
-          : messages.length === 0 ? <div className="mc-day">Inga meddelanden än — starta konversationen!</div>
+        <div style={{ marginTop: 'auto' }} aria-hidden />
+        {isLoading ? <div className="mc-day">{t('Laddar…')}</div>
+          : messages.length === 0 ? <div className="mc-day">{t('Inga meddelanden än — starta konversationen!')}</div>
           : messages.map((m: ChatMessageDto) => {
             const me = m.senderId === userId;
             return (
@@ -77,7 +79,7 @@ export function ChatPanel({ assignmentId }: ChatPanelProps) {
           <input
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="Skriv ett meddelande…"
+            placeholder={t('Skriv ett meddelande…')}
             autoComplete="off"
             aria-label="Meddelande"
           />

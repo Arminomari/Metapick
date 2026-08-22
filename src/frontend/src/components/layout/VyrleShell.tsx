@@ -1,3 +1,4 @@
+import { t, statusLabel, LangSwitcher } from '@/lib/i18n';
 import { ReactNode, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
@@ -61,7 +62,7 @@ function ShellChrome({ group, role, nav, name, handle, sub, initial, imageUrl, b
           <div className="nav-sep" />
           <nav className="nav-group">
             <button className="nav-item nav-logout" onClick={handleLogout}>
-              {ICON.logout} <span className="nav-tx">Log out</span>
+              {ICON.logout} <span className="nav-tx">{t('Logga ut')}</span>
             </button>
           </nav>
 
@@ -84,10 +85,11 @@ function ShellChrome({ group, role, nav, name, handle, sub, initial, imageUrl, b
           <header className="topbar">
             <div className="search">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
-              <input placeholder="Search campaigns, brands, insights..." />
+              <input placeholder={t('Sök kampanjer, varumärken, insikter…')} />
               <span className="kbd">⌘ K</span>
             </div>
             <div className="top-right">
+              <LangSwitcher />
               <button className="icon-btn" aria-label="Meddelanden" onClick={() => setDrawer((d) => d === 'msg' ? 'none' : 'msg')}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
                 {chatBadge > 0 && <span className="ping ping-chat">{chatBadge > 9 ? '9+' : chatBadge}</span>}
@@ -125,21 +127,21 @@ export function CreatorShell() {
   const name = profile?.displayName || 'Creator';
   const handle = profile?.tikTokUsername ? '@' + profile.tikTokUsername : (email || '');
   const nav: NavItem[] = [
-    { label: 'Dashboard', path: '/creator', icon: 'dashboard' },
-    { label: 'Discover', path: '/creator/browse', icon: 'discover' },
-    { label: 'My Campaigns', path: '/creator/assignments', icon: 'campaigns' },
-    { label: 'Portfolio', path: '/creator/portfolio', icon: 'portfolio' },
-    { label: 'Analytics', path: '/creator/analytics', icon: 'analytics' },
-    { label: 'PR Hub', path: '/creator/pr', icon: 'pr', badge: prUnread || undefined },
-    { label: 'Link Tree', path: '/creator/links', icon: 'links' },
-    { label: 'Earnings', path: '/creator/earnings', icon: 'earnings' },
-    { label: 'Creator Levels', path: '/creator/levels', icon: 'levels', tag: 'NEW' },
-    { label: 'Saved', path: '/creator/saved', icon: 'saved' },
-    { label: 'Settings', path: '/creator/profile', icon: 'settings' },
+    { label: t('Översikt'), path: '/creator', icon: 'dashboard' },
+    { label: t('Upptäck'), path: '/creator/browse', icon: 'discover' },
+    { label: t('Mina kampanjer'), path: '/creator/assignments', icon: 'campaigns' },
+    { label: t('Portfolio'), path: '/creator/portfolio', icon: 'portfolio' },
+    { label: t('Statistik'), path: '/creator/analytics', icon: 'analytics' },
+    { label: t('PR-hubb'), path: '/creator/pr', icon: 'pr', badge: prUnread || undefined },
+    { label: t('Länkar'), path: '/creator/links', icon: 'links' },
+    { label: t('Intäkter'), path: '/creator/earnings', icon: 'earnings' },
+    { label: t('Creator-nivåer'), path: '/creator/levels', icon: 'levels', tag: 'NEW' },
+    { label: t('Sparat'), path: '/creator/saved', icon: 'saved' },
+    { label: t('Inställningar'), path: '/creator/profile', icon: 'settings' },
   ];
   const sub = (
     <div style={{ marginTop: 12, fontSize: 12, color: 'var(--muted)', textAlign: 'center' }}>
-      {formatNumber(profile?.followerCount ?? 0)} followers · {profile?.category || 'Creator'}
+      {formatNumber(profile?.followerCount ?? 0)} {t('följare')} · {profile?.category || 'Creator'}
     </div>
   );
   return <ShellChrome group="Creator" role="Creator" nav={nav} name={name} handle={handle} sub={sub} initial={(name[0] || 'C').toUpperCase()} imageUrl={profile?.avatarUrl} bellBadge={notifs?.totalCount ?? 0} chatBadge={chatUnread ?? 0} />;
@@ -153,18 +155,18 @@ export function BrandShell() {
 
   const name = profile?.companyName || 'Brand';
   const nav: NavItem[] = [
-    { label: 'Dashboard', path: '/brand', icon: 'dashboard' },
-    { label: 'Analytics', path: '/brand/analytics', icon: 'analytics' },
-    { label: 'Campaigns', path: '/brand/campaigns', icon: 'campaigns' },
-    { label: 'Applications', path: '/brand/applications', icon: 'applications' },
-    { label: 'Find Creators', path: '/brand/creators', icon: 'creators' },
-    { label: 'PR Outreach', path: '/brand/pr', icon: 'pr' },
-    { label: 'Settings', path: '/brand/settings', icon: 'settings' },
+    { label: t('Översikt'), path: '/brand', icon: 'dashboard' },
+    { label: t('Statistik'), path: '/brand/analytics', icon: 'analytics' },
+    { label: t('Kampanjer'), path: '/brand/campaigns', icon: 'campaigns' },
+    { label: t('Ansökningar'), path: '/brand/applications', icon: 'applications' },
+    { label: t('Hitta creators'), path: '/brand/creators', icon: 'creators' },
+    { label: t('PR-utskick'), path: '/brand/pr', icon: 'pr' },
+    { label: t('Inställningar'), path: '/brand/settings', icon: 'settings' },
   ];
   const sub = (
     <div style={{ marginTop: 12, fontSize: 12, color: 'var(--muted)', textAlign: 'center' }}>
-      {profile?.industry || 'Brand'} · {profile?.status || ''}
+      {profile?.industry || t('Varumärke')} · {statusLabel(profile?.status || '')}
     </div>
   );
-  return <ShellChrome group="Brand" role="Brand" nav={nav} name={name} handle={email || ''} sub={sub} initial={(name[0] || 'B').toUpperCase()} imageUrl={profile?.logoUrl} bellBadge={notifs?.totalCount ?? 0} chatBadge={chatUnread ?? 0} />;
+  return <ShellChrome group={t('Varumärke')} role="Brand" nav={nav} name={name} handle={email || ''} sub={sub} initial={(name[0] || 'B').toUpperCase()} imageUrl={profile?.logoUrl} bellBadge={notifs?.totalCount ?? 0} chatBadge={chatUnread ?? 0} />;
 }

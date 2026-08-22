@@ -1,3 +1,6 @@
+import type { CSSProperties } from 'react';
+import { CopyField } from '@/components/ui/CopyButton';
+import { t } from '@/lib/i18n';
 import { useState } from 'react';
 import { RefreshViewsButton } from '@/components/ui/RefreshViewsButton';
 import { useNavigate, useParams, Link } from 'react-router-dom';
@@ -431,6 +434,17 @@ export function CreatorAssignmentsPage() {
   );
 }
 
+const ttPill = (bg: string, color: string): CSSProperties => ({ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 11px', borderRadius: 980, fontSize: 12, fontWeight: 700, background: bg, color, whiteSpace: 'nowrap' });
+
+function VideoStat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div style={{ padding: '10px 12px', borderRadius: 13, textAlign: 'center', background: highlight ? 'linear-gradient(140deg,#FFE3D3,#FFD3BC)' : 'rgba(255,244,236,.75)', border: '1px solid rgba(241,168,143,.2)' }}>
+      <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: highlight ? '#9c4f31' : 'var(--muted)' }}>{label}</div>
+      <div style={{ fontWeight: 800, fontSize: 16.5, color: '#0B0F17', marginTop: 2 }}>{value}</div>
+    </div>
+  );
+}
+
 // ── TikTok Connection Card ─────────────────────────────
 function TikTokConnectionCard() {
   const { data: status, isLoading } = useTikTokStatus();
@@ -468,41 +482,44 @@ function TikTokConnectionCard() {
 
   return (
     <Card>
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-semibold">TikTok-konto</h2>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+        <div style={{ width: 44, height: 44, borderRadius: 13, background: '#0B0F17', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flex: '0 0 44px' }} aria-hidden>♪</div>
+        <div style={{ flex: 1, minWidth: 230 }}>
+          <h2 style={{ margin: 0, fontWeight: 700, fontSize: 15.5 }}>{t('TikTok-konto')}</h2>
           {status?.connected ? (
-            <div className="mt-1">
-              {status.isOAuth ? (
-                <span className="text-green-400 font-medium">✓ Kopplat via OAuth</span>
-              ) : (
-                <span className="text-yellow-400 font-medium">⚠ Manuellt tillagd — anslut via OAuth för automatisk tracking</span>
-              )}
-              <a href={`https://www.tiktok.com/@${status.username}`} target="_blank" rel="noopener noreferrer"
-                className="ml-3 text-primary hover:underline">
-                @{status.username}
-              </a>
-              {status.followerCount != null && (
-                <span className="ml-3 text-sm text-muted-foreground">{formatNumber(status.followerCount)} följare</span>
-              )}
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 7 }}>
+                {status.isOAuth ? (
+                  <span style={ttPill('rgba(169,220,192,.35)', '#2f7d52')}>✓ {t('Kopplat via OAuth')}</span>
+                ) : (
+                  <span style={ttPill('rgba(242,197,138,.35)', '#9c6b1c')}>⚠ {t('Manuellt tillagd')}</span>
+                )}
+                <a href={`https://www.tiktok.com/@${status.username}`} target="_blank" rel="noopener noreferrer" style={{ ...ttPill('rgba(241,168,143,.18)', '#9c4f31'), textDecoration: 'none' }}>@{status.username}</a>
+                {status.followerCount != null && (
+                  <span style={ttPill('rgba(183,188,200,.22)', '#5c6270')}>{formatNumber(status.followerCount)} {t('följare')}</span>
+                )}
+              </div>
               {status.lastSyncAt && (
-                <p className="text-xs text-muted-foreground mt-1">Senast synkad: {formatDate(status.lastSyncAt)}</p>
+                <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>{t('Senast synkad')} {formatDate(status.lastSyncAt)}</div>
               )}
-            </div>
+              {!status.isOAuth && (
+                <div style={{ fontSize: 12, color: '#9c6b1c', marginTop: 6 }}>{t('anslut via OAuth för automatisk tracking')}</div>
+              )}
+            </>
           ) : (
-            <p className="text-sm text-muted-foreground mt-1">
-              Anslut ditt TikTok-konto för automatisk tracking av views och engagement.
+            <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--muted)', lineHeight: 1.5 }}>
+              {t('Anslut ditt TikTok-konto för automatisk tracking av views och engagement.')}
             </p>
           )}
         </div>
-        <div>
+        <div style={{ flex: '0 0 auto' }}>
           {status?.connected && status?.isOAuth ? (
             <Button variant={armDisconnect ? 'destructive' : 'secondary'} size="sm" onClick={handleDisconnect} disabled={disconnect.isPending}>
-              {disconnect.isPending ? 'Kopplar bort...' : armDisconnect ? 'Klicka igen för att bekräfta' : 'Koppla bort'}
+              {disconnect.isPending ? t('Kopplar bort…') : armDisconnect ? t('Klicka igen för att bekräfta') : t('Koppla bort')}
             </Button>
           ) : (
             <Button onClick={handleConnect} disabled={connecting}>
-              {connecting ? 'Ansluter...' : '🎵 Anslut via OAuth'}
+              {connecting ? t('Ansluter…') : '🎵 ' + t('Anslut via OAuth')}
             </Button>
           )}
         </div>
@@ -597,46 +614,23 @@ export function AssignmentDetailPage() {
 
       {assignment.trackingTag && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="sec-head"><h3>Så här funkar det</h3></div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Lägg till följande i din TikTok-videos beskrivning så hittar vi videon automatiskt:
+          <div className="sec-head"><h3>{t('Så här funkar det')}</h3></div>
+          <p style={{ margin: '0 0 14px', fontSize: 13.5, color: 'var(--muted)', lineHeight: 1.55 }}>
+            {t('Kopiera med ett tryck och klistra in i din videobeskrivning på TikTok — så hittar vi videon automatiskt.')}
           </p>
-
-          <div className="space-y-3">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {assignment.trackingTag.recommendedHashtag && (
-              <div className="flex items-center gap-3 bg-muted rounded-lg p-3">
-                <span className="text-lg">#️⃣</span>
-                <div>
-                  <p className="text-xs text-muted-foreground">Kampanjens hashtag</p>
-                  <p className="font-mono font-bold text-base">{assignment.trackingTag.recommendedHashtag}</p>
-                </div>
-              </div>
+              <CopyField icon="#" label={t('Kampanjens hashtag')} value={assignment.trackingTag.recommendedHashtag} />
             )}
-            <div className="flex items-center gap-3 bg-muted rounded-lg p-3">
-              <span className="text-lg">🏷️</span>
-              <div>
-                <p className="text-xs text-muted-foreground">Din unika tracking-tag (kopiera exakt, UTAN #)</p>
-                <p className="font-mono font-bold text-base select-all">{assignment.trackingTag.tagCode}</p>
-              </div>
-            </div>
+            <CopyField icon="✦" label={t('Din unika tracking-tag (utan #)')} value={assignment.trackingTag.tagCode}
+              hint={t('Skriv den som vanlig text — sätt inget # framför.')} />
+            <CopyField icon="✎" label={t('Färdig videobeskrivning (exempel)')}
+              value={`${t('Min recension av produkten!')} ${assignment.trackingTag.recommendedHashtag ?? ''} ${assignment.trackingTag.tagCode}`.replace(/\s+/g, ' ').trim()} />
           </div>
-
-          <div className="mt-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md px-3 py-2">
-            <p className="text-xs text-yellow-300">
-              ⚠️ <strong>Viktigt:</strong> Skriv tracking-tagen som vanlig text, INTE som hashtag. Sätt inget # framför den.
-            </p>
-          </div>
-
-          <div className="mt-4 bg-muted/50 border border-border rounded-lg p-3">
-            <p className="text-xs text-muted-foreground mb-1">Exempel på videobeskrivning:</p>
-            <p className="text-sm font-mono bg-background rounded p-2">
-              Min recension av produkten! {assignment.trackingTag.recommendedHashtag ?? ''} {assignment.trackingTag.tagCode}
-            </p>
-          </div>
-
-          <div className="mt-3 bg-green-500/10 border border-green-500/20 rounded-md px-3 py-2">
-            <p className="text-xs text-green-300">
-              🤖 <strong>Automatisk tracking:</strong> Vårt system scannar dagligen efter nya videos. När vi hittar en video som matchar din tag dyker den upp automatiskt nedan — du behöver inte göra något mer efter att du publicerat.
+          <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'flex-start', padding: '11px 14px', borderRadius: 13, background: 'rgba(169,220,192,.22)', border: '1px solid rgba(95,185,138,.35)' }}>
+            <span style={{ fontSize: 15, lineHeight: 1 }} aria-hidden>🤖</span>
+            <p style={{ margin: 0, fontSize: 12.5, color: '#2f7d52', lineHeight: 1.55 }}>
+              <strong>{t('Automatisk tracking:')}</strong> {t('Vi scannar regelbundet efter nya videos. När din video hittas dyker den upp nedan av sig själv — publicera och luta dig tillbaka.')}
             </p>
           </div>
         </div>
@@ -644,74 +638,68 @@ export function AssignmentDetailPage() {
 
       {assignment.status === 'Active' && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="sec-head"><h3>Skicka in video manuellt</h3></div>
-          <p className="text-xs text-muted-foreground mb-3">
-            Videos som matchar din tracking-tag hittas automatiskt. Använd formuläret nedan om du vill lägga till en video manuellt.
+          <div className="sec-head"><h3>{t('Skicka in video manuellt')}</h3></div>
+          <p style={{ margin: '0 0 12px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.55 }}>
+            {t('Videos som matchar din tracking-tag hittas automatiskt. Använd formuläret nedan om du vill lägga till en video manuellt.')}
           </p>
           <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 10 }}>
             <input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://www.tiktok.com/@ditt-namn/video/123..." required
               style={{ flex: 1, border: '1px solid rgba(241,168,143,.22)', borderRadius: 13, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', background: 'rgba(255,255,255,.7)' }} />
-            <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={submitVideo.isPending}>{submitVideo.isPending ? 'Skickar…' : 'Skicka in'}</button>
+            <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={submitVideo.isPending}>{submitVideo.isPending ? t('Skickar…') : t('Skicka in')}</button>
           </form>
         </div>
       )}
 
       <div className="card" style={{ marginBottom: 16 }}>
-        <div className="sec-head"><h3>Spårade videos</h3><RefreshViewsButton assignmentId={assignment.id} /></div>
+        <div className="sec-head"><h3>{t('Spårade videos')}</h3><RefreshViewsButton assignmentId={assignment.id} /></div>
         {(assignment.socialPosts?.length > 0) ? (
-          <div className="space-y-6">
+          <div style={{ display: 'grid', gap: 14 }}>
             {assignment.socialPosts.map((sp) => (
-              <div key={sp.id} className="border border-border rounded-lg p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <StatusBadge status={sp.status} />
-                    <span className="text-sm font-medium">{formatNumber(sp.views)} views</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">{formatDate(sp.discoveredAt)}</span>
+              <div key={sp.id} style={{ border: '1px solid rgba(241,168,143,.22)', borderRadius: 18, padding: 16, background: 'linear-gradient(160deg,#fff,#FFF9F5)', boxShadow: '0 8px 24px rgba(180,120,90,.06)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+                  <StatusBadge status={sp.status} />
+                  <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--muted)', whiteSpace: 'nowrap' }}>{t('Hittad')} {formatDate(sp.discoveredAt)}</span>
                 </div>
-                <div className="flex gap-3 text-xs text-muted-foreground">
-                  <span>❤️ {formatNumber(sp.likes)}</span>
-                  <span>💬 {formatNumber(sp.comments)}</span>
-                  <span>🔗 {formatNumber(sp.shares)}</span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(105px, 1fr))', gap: 8, marginBottom: 14 }}>
+                  <VideoStat label="Views" value={formatNumber(sp.views)} highlight />
+                  <VideoStat label={t('Gilla')} value={formatNumber(sp.likes)} />
+                  <VideoStat label={t('Kommentarer')} value={formatNumber(sp.comments)} />
+                  <VideoStat label={t('Delningar')} value={formatNumber(sp.shares)} />
                 </div>
                 <TikTokEmbed videoUrl={sp.tikTokUrl} compact />
               </div>
             ))}
           </div>
         ) : assignment.submissions.length ? (
-          <div className="space-y-3">
+          <div style={{ display: 'grid', gap: 10 }}>
             {assignment.submissions.map((s) => (
-              <div key={s.id} className="border border-border rounded-lg p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <a href={s.tikTokVideoUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-sm truncate max-w-[300px]">{s.tikTokVideoUrl}</a>
-                  <div className="flex items-center gap-2">
-                    <StatusBadge status={s.status} />
-                    <span className="text-xs text-muted-foreground">{formatDate(s.createdAt)}</span>
-                  </div>
+              <div key={s.id} style={{ border: '1px solid rgba(241,168,143,.22)', borderRadius: 14, padding: '12px 14px', background: 'rgba(255,255,255,.6)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <a href={s.tikTokVideoUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1, minWidth: 160, fontSize: 13, fontWeight: 600, color: '#9c4f31', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: 'none' }}>{s.tikTokVideoUrl}</a>
+                  <StatusBadge status={s.status} />
+                  <span style={{ fontSize: 12, color: 'var(--muted)', whiteSpace: 'nowrap' }}>{formatDate(s.createdAt)}</span>
                 </div>
                 {s.status === 'Approved' && (
-                  <p className="text-xs text-green-400 font-medium">✓ Godkänd av varumärket</p>
+                  <p style={{ margin: '8px 0 0', fontSize: 12.5, fontWeight: 600, color: '#2f7d52' }}>✓ {t('Godkänd av varumärket')}</p>
                 )}
                 {s.status === 'Rejected' && (
-                  <p className="text-xs text-red-400 font-medium">
-                    ✗ Nekad{s.rejectionReason ? `: ${s.rejectionReason}` : ''}
-                  </p>
+                  <p style={{ margin: '8px 0 0', fontSize: 12.5, fontWeight: 600, color: '#cf4b4b' }}>✗ {t('Nekad')}{s.rejectionReason ? `: ${s.rejectionReason}` : ''}</p>
                 )}
               </div>
             ))}
-            <p className="text-xs text-muted-foreground">⏳ Väntar på att systemet ska hämta videodata...</p>
+            <p style={{ margin: 0, fontSize: 12.5, color: 'var(--muted)' }}>⏳ {t('Väntar på att systemet ska hämta videodata…')}</p>
           </div>
         ) : (
-          <div style={{ textAlign: 'center', padding: '34px 24px', color: 'var(--muted)' }}>Inga videos ännu. Publicera en TikTok-video med din tracking-tag så hittas den automatiskt, eller skicka in manuellt ovan.</div>
+          <div style={{ textAlign: 'center', padding: '34px 24px', color: 'var(--muted)' }}>{t('Inga videos ännu. Publicera en TikTok-video med din tracking-tag så hittas den automatiskt, eller skicka in manuellt ovan.')}</div>
         )}
       </div>
       <div className="card" style={{ marginBottom: 16 }}>
-        <div className="sec-head"><h3>Meddelanden</h3></div>
+        <div className="sec-head"><h3>{t('Meddelanden')}</h3></div>
         <ChatPanel assignmentId={assignment.id} />
       </div>
 
       <div className="card">
-        <div className="sec-head"><h3>Omdöme</h3></div>
+        <div className="sec-head"><h3>{t('Omdöme')}</h3></div>
         <ReviewSection assignmentId={assignment.id} revieweeUserId={assignment.brandUserId} assignmentCompleted={assignment.status === 'Completed'} />
       </div>
     </section>

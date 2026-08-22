@@ -1,3 +1,4 @@
+import { statusLabel } from '@/lib/i18n';
 import React from 'react';
 import { cn, getStatusColor } from '@/lib/utils';
 
@@ -12,11 +13,11 @@ export function StatusBadge({ status }: { status: string }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-[0.72rem] font-medium tracking-wide',
+        'inline-flex items-center rounded-full px-2.5 py-0.5 text-[0.72rem] font-medium tracking-wide whitespace-nowrap',
         getStatusColor(status),
       )}
     >
-      {status}
+      {statusLabel(status)}
     </span>
   );
 }

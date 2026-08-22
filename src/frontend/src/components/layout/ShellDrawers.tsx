@@ -1,3 +1,4 @@
+import { t } from '@/lib/i18n';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import {
@@ -74,9 +75,9 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
       <div className={`nd-backdrop${open ? ' open' : ''}`} onClick={onClose} />
       <aside className={`nd-drawer${open ? ' open' : ''}`} aria-hidden={!open}>
         <div className="nd-head">
-          <div className="nd-head-l"><h3>Notiser</h3>{unread.length > 0 && <span className="nd-count">{unread.length} nya</span>}</div>
+          <div className="nd-head-l"><h3>{t('Notiser')}</h3>{unread.length > 0 && <span className="nd-count">{unread.length} {t('nya')}</span>}</div>
           <div className="nd-head-r">
-            {unread.length > 0 && <button className="nd-readall" onClick={() => markAll.mutate()} disabled={markAll.isPending}>Markera alla lästa</button>}
+            {unread.length > 0 && <button className="nd-readall" onClick={() => markAll.mutate()} disabled={markAll.isPending}>{t('Markera alla lästa')}</button>}
             <button className="nd-close" onClick={onClose} aria-label="Stäng"><XIcon /></button>
           </div>
         </div>
@@ -95,7 +96,7 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
                 </div>
               </div>
             );
-          }) : <DrawerEmpty>Inga notiser än. Vi hör av oss här när något händer.</DrawerEmpty>}
+          }) : <DrawerEmpty>{t('Inga notiser än. Vi hör av oss här när något händer.')}</DrawerEmpty>}
         </div>
       </aside>
     </>
@@ -113,7 +114,7 @@ export function MessagesDrawer({ open, onClose }: { open: boolean; onClose: () =
       <div className={`mc-backdrop${open ? ' open' : ''}`} onClick={onClose} />
       <aside className={`msg-drawer${open ? ' open' : ''}`} aria-hidden={!open}>
         <div className="nd-head">
-          <div className="nd-head-l"><h3>Meddelanden</h3></div>
+          <div className="nd-head-l"><h3>{t('Meddelanden')}</h3></div>
           <div className="nd-head-r"><button className="nd-close" onClick={onClose} aria-label="Stäng"><XIcon /></button></div>
         </div>
         {open && <ConversationList onOpen={setSel} />}
@@ -176,6 +177,7 @@ function ChatThread({ sel, onBack }: { sel: ChatConversationDto | null; onBack: 
             <div className="mc-thread-meta"><div className="mc-thread-name">{sel.counterpartName}</div><div className="mc-thread-status">{sel.campaignName}</div></div>
           </div>
           <div className="mc-thread-scroll" ref={scrollRef}>
+            <div style={{ marginTop: 'auto' }} aria-hidden />
             {isLoading ? <div className="mc-day">Laddar…</div>
               : messages.length === 0 ? <div className="mc-day">Starta konversationen</div>
               : messages.map((m: ChatMessageDto) => {

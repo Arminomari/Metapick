@@ -1,3 +1,4 @@
+import { LangSwitcher } from '@/lib/i18n';
 import React, { useState, type ReactNode } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLogin, useRegister } from '@/hooks/api';
@@ -64,7 +65,8 @@ function AuthShell({ children, wide }: { children: ReactNode; wide?: boolean }) 
           <div className="auth-brand-foot">Byggt för kreatörer och varumärken i Norden.</div>
         </aside>
 
-        <main className="auth-main">
+        <main className="auth-main" style={{ position: 'relative' }}>
+          <div style={{ position: 'absolute', top: 16, right: 18, zIndex: 5 }}><LangSwitcher /></div>
           <div className={`card${wide ? ' auth-card-lg' : ''}`}>
             <div className="auth-lockup"><Star fill="#0B0F17" /> VYRLE</div>
             {children}
