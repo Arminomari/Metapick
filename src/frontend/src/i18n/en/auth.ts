@@ -280,4 +280,7 @@ export const auth: Record<string, string> = {
   'E-postadressen används redan — logga in istället.': 'That email address is already in use — log in instead.',
   'E-postadressen används redan.': 'That email address is already in use.',
   'Logga in istället?': 'Log in instead?',
+  'Vi har skickat ett bekräftelsemejl till': 'We have sent a confirmation email to',
+  'din e-postadress': 'your email address',
+  'klicka på länken i mejlet för att verifiera din adress. Hittar du det inte? Kolla skräpposten.': 'click the link in the email to verify your address. Cannot find it? Check your spam folder.',
 };

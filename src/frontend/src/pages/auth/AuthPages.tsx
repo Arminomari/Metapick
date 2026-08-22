@@ -354,7 +354,7 @@ export function RegisterPage() {
     }
   };
 
-  if (submitted) return <PendingApprovalPage />;
+  if (submitted) return <PendingApprovalPage email={social?.email ?? form.email.trim()} />;
 
   const stepLabel = steps[step];
 
@@ -609,7 +609,7 @@ function RegisterSummary({ form, social }: { form: WizardForm; social: PendingSo
 }
 
 /* ───────────────────────── Pending ───────────────────────── */
-export function PendingApprovalPage() {
+export function PendingApprovalPage({ email }: { email?: string }) {
   const navigate = useNavigate();
   return (
     <AuthShell>
@@ -617,10 +617,16 @@ export function PendingApprovalPage() {
         <div className="auth-pending-ic"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg></div>
         <h1 className="auth-title">{t('Ansökan')} <em>{t('mottagen')}</em></h1>
         <p className="auth-sub" style={{ maxWidth: 360, margin: '8px auto 0' }}>{t('Tack för att du går med i VYRLE. Vi granskar din profil nu och hör av oss så snart du är godkänd, oftast inom 1 till 2 arbetsdagar.')}</p>
-        <div style={{ background: 'rgba(237,225,255,.35)', border: '1px solid rgba(157,139,196,.2)', borderRadius: 14, padding: 14, margin: '20px 0', fontSize: 12.5, color: 'var(--muted)' }}>
+        <div style={{ background: 'rgba(255,227,211,.45)', border: '1px solid rgba(241,168,143,.4)', borderRadius: 14, padding: 14, margin: '20px 0 10px', fontSize: 12.5, color: '#7a4a30', textAlign: 'left', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          <span style={{ fontSize: 17, lineHeight: 1 }} aria-hidden>📧</span>
+          <span style={{ lineHeight: 1.55 }}>
+            {t('Vi har skickat ett bekräftelsemejl till')} {email ? <strong>{email}</strong> : t('din e-postadress')} — {t('klicka på länken i mejlet för att verifiera din adress. Hittar du det inte? Kolla skräpposten.')}
+          </span>
+        </div>
+        <div style={{ background: 'rgba(237,225,255,.35)', border: '1px solid rgba(157,139,196,.2)', borderRadius: 14, padding: 14, margin: '0 0 20px', fontSize: 12.5, color: 'var(--muted)' }}>
           {t('Du får ett meddelande när ditt konto har godkänts.')}
         </div>
-        <button onClick={() => navigate('/')} className="btn-outline" style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>{t('Tillbaka till startsidan')}</button>
+        <button onClick={() => navigate('/login')} className="btn-outline" style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>{t('Till inloggningen')}</button>
       </div>
     </AuthShell>
   );
