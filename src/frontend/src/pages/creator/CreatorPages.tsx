@@ -665,8 +665,11 @@ export function AssignmentDetailPage() {
       {assignment.status === 'Active' && (
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="sec-head"><h3>{t('Lägg till video')}</h3></div>
-          <p style={{ margin: '0 0 12px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.55 }}>
+          <p style={{ margin: '0 0 8px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.55 }}>
             {t('Videos med din tracking-tag hittas automatiskt — klistra in länken här om du vill lägga till din video direkt.')}
+          </p>
+          <p style={{ margin: '0 0 12px', fontSize: 12.5, color: '#2f7d52', lineHeight: 1.55, fontWeight: 600 }}>
+            💡 {t('Lägger du till videon via länk behöver du inte skriva koderna i beskrivningen — videon kopplas direkt till kampanjen och verifieras när företaget godkänner den.')}
           </p>
           <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 10 }}>
             <input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder={t('https://www.tiktok.com/@ditt-namn/video/123...')} required
