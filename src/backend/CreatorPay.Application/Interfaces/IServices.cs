@@ -122,6 +122,7 @@ public interface ICampaignService
     Task<Result<bool>> SetBrandFollowAsync(Guid viewerUserId, Guid brandProfileId, bool follow, CancellationToken ct = default);
     Task<Result<BrandPostDto>> CreateBrandPostAsync(Guid brandUserId, CreateBrandPostRequest request, CancellationToken ct = default);
     Task<Result<bool>> DeleteBrandPostAsync(Guid brandUserId, Guid postId, CancellationToken ct = default);
+    Task<Result<List<FeedPostDto>>> GetFollowedFeedAsync(Guid creatorUserId, CancellationToken ct = default);
     Task<Result<bool>> UnsaveCampaignAsync(Guid creatorUserId, Guid campaignId, CancellationToken ct = default);
     Task<Result<List<SavedCampaignDto>>> GetSavedCampaignsAsync(Guid creatorUserId, CancellationToken ct = default);
     Task<Result<List<Guid>>> GetSavedCampaignIdsAsync(Guid creatorUserId, CancellationToken ct = default);

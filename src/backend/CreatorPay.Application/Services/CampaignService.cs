@@ -885,6 +885,19 @@ public class CampaignService : ICampaignService
         {
             _brandFollowers.Add(new BrandFollower { BrandProfileId = brandProfileId, CreatorProfileId = creator.Id });
             await _uow.SaveChangesAsync(ct);
+
+            // The brand hears about every new follower — social proof they act on.
+            var followedBrand = await _brands.Query().FirstOrDefaultAsync(b => b.Id == brandProfileId, ct);
+            if (followedBrand != null)
+            {
+                var total = await _brandFollowers.Query().CountAsync(f => f.BrandProfileId == brandProfileId, ct);
+                try
+                {
+                    await _notifications.SendAsync(followedBrand.UserId, NotificationType.SystemMessage,
+                        $"{creator.DisplayName} följer nu {followedBrand.CompanyName} — ni har {total} {(total == 1 ? "följare" : "följare")} på VYRLE.");
+                }
+                catch { /* best-effort */ }
+            }
         }
         else if (!follow && existing != null)
         {
@@ -943,5 +956,25 @@ public class CampaignService : ICampaignService
         _brandPosts.Remove(post);
         await _uow.SaveChangesAsync(ct);
         return true;
+    }
+
+    /// <summary>
+    /// The creator's home feed: latest posts from every brand they follow.
+    /// </summary>
+    public async Task<Result<List<FeedPostDto>>> GetFollowedFeedAsync(Guid creatorUserId, CancellationToken ct = default)
+    {
+        var creator = await _creatorProfiles.Query().FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
+        if (creator == null) return new List<FeedPostDto>();
+
+        var feed = await _brandFollowers.Query()
+            .Where(f => f.CreatorProfileId == creator.Id)
+            .Join(_brandPosts.Query(), f => f.BrandProfileId, p => p.BrandProfileId, (f, p) => p)
+            .OrderByDescending(p => p.CreatedAt)
+            .Take(20)
+            .Join(_brands.Query(), p => p.BrandProfileId, b => b.Id,
+                (p, b) => new FeedPostDto(p.Id, p.Body, p.ImageUrl, p.CreatedAt, b.Id, b.CompanyName, b.LogoUrl))
+            .ToListAsync(ct);
+
+        return feed;
     }
 }

@@ -53,6 +53,11 @@ public class BrandPublicController : BaseController
 
     public BrandPublicController(ICampaignService campaigns) => _campaigns = campaigns;
 
+    /// <summary>Creatorns flöde: senaste inläggen från företag hen följer</summary>
+    [HttpGet("feed")]
+    public async Task<IActionResult> Feed(CancellationToken ct)
+        => ToActionResult(await _campaigns.GetFollowedFeedAsync(GetUserId(), ct));
+
     /// <summary>Företagets publika profil: följare, kampanjer, omdömen</summary>
     [HttpGet("{brandProfileId:guid}/public")]
     public async Task<IActionResult> GetPublicProfile(Guid brandProfileId, CancellationToken ct)

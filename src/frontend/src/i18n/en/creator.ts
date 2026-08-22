@@ -443,4 +443,8 @@ export const creator: Record<string, string> = {
   'nyss': 'just now',
   'tim': 'h',
   'Vad händer hos er? Dela nyheter, kampanjsläpp eller reklam — dina följare ser det direkt…': 'What is happening? Share news, campaign drops or promo — your followers see it instantly…',
+  'Ditt flöde': 'Your feed',
+  'Senaste från företagen du följer': 'Latest from the brands you follow',
+  'Ditt flöde är tomt': 'Your feed is empty',
+  'Följ företag du gillar så dyker deras uppdateringar, kampanjsläpp och nyheter upp här.': 'Follow brands you like and their updates, campaign drops and news show up here.',
 };

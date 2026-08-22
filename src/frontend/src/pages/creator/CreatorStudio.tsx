@@ -217,6 +217,8 @@ export function CreatorStudioDashboard() {
           {browse.length > 0 && <Link className="vperf-link center" to="/creator/browse">{t('Utforska alla kampanjer')} <Arrow /></Link>}
         </div>
       </div>
+
+      <BrandFeedSection />
     </section>
   );
 }

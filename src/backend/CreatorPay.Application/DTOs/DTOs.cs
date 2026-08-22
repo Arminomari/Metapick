@@ -256,6 +256,9 @@ public record CampaignBrowseDto(
     List<PayoutRuleDto>? PayoutRules = null, Guid? BrandProfileId = null);
 
 public record BrandPostDto(Guid Id, string Body, string? ImageUrl, DateTime CreatedAt);
+public record FeedPostDto(
+    Guid Id, string Body, string? ImageUrl, DateTime CreatedAt,
+    Guid BrandProfileId, string BrandName, string? BrandLogoUrl);
 public record CreateBrandPostRequest(string Body, string? ImageUrl);
 
 public record BrandPublicCampaignDto(
