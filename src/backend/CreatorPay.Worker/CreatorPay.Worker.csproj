@@ -20,8 +20,12 @@
     <ProjectReference Include="..\CreatorPay.Infrastructure\CreatorPay.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Never published: would collide with the API's appsettings when the
+         API references this project to host the Hangfire jobs in-process.
+         Deployed workers get their config from environment variables. -->
     <Content Include="appsettings*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
 </Project>
