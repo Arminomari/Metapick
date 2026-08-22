@@ -124,11 +124,22 @@ public class TikTokConnectService : ITikTokConnectService
             var authResult = await _tikTok.ExchangeCodeForTokenAsync(code, _settings.RedirectUri, codeVerifier);
             var userInfo = await _tikTok.GetUserInfoAsync(authResult.AccessToken);
 
-            // One TikTok account may only ever be connected to one creator profile.
-            var openIdTaken = await _tiktokAccounts.Query().AnyAsync(t =>
-                t.TikTokUserId == userInfo.OpenId && t.CreatorProfileId != profile.Id && t.IsActive);
-            if (openIdTaken)
-                return Errors.Conflict("Det här TikTok-kontot är redan kopplat till en annan VYRLE-profil.");
+            // One TikTok account may only ever be connected to one creator
+            // profile. The unique indexes on open_id/username also cover rows
+            // from deleted accounts and unverified manual claims — the person
+            // who just PROVED ownership via TikTok login wins those names.
+            var blockers = await _tiktokAccounts.Query()
+                .Where(t => t.CreatorProfileId != profile.Id
+                    && (t.TikTokUserId == userInfo.OpenId || t.TikTokUsername == userInfo.Username))
+                .ToListAsync();
+            foreach (var blocker in blockers)
+            {
+                if (blocker.IsActive && blocker.Scopes != "manual")
+                    return Errors.Conflict("Det här TikTok-kontot är redan kopplat till en annan VYRLE-profil.");
+                blocker.IsActive = false;
+                blocker.TikTokUserId = $"released-{Guid.NewGuid():N}";
+                blocker.TikTokUsername = $"released-{Guid.NewGuid():N}";
+            }
 
             // Update or create TikTok account
             var existing = profile.TikTokAccount;

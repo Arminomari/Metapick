@@ -21,6 +21,15 @@ import { CreatorPortfolioPage } from '@/pages/creator/PortfolioPage';
 import { CreatorPrInboxPage } from '@/pages/creator/PrInboxPage';
 import { CreatorAnalyticsPage, CreatorLinksPage, CreatorLevelsPage, CreatorSavedPage } from '@/pages/creator/CreatorExtraPages';
 
+function VyrleFrame({ src, title }: { src: string; title: string }) {
+  return (
+    <iframe
+      src={src}
+      title={title}
+      style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', border: 'none' }}
+    />
+  );
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,7 +63,7 @@ export default function App() {
         <Router>
         <Routes>
           {/* Public landing — the VYRLE marketing site */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<VyrleFrame src="/vyrle.html" title="VYRLE" />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />

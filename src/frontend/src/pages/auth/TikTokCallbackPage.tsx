@@ -38,41 +38,33 @@ export function TikTokCallbackPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const s = {
-    page: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0f', padding: '2rem' } as React.CSSProperties,
-    card: { width: '100%', maxWidth: 480, background: '#14141f', border: '1px solid #1e1e2e', borderRadius: '1rem', padding: '2.5rem', textAlign: 'center' } as React.CSSProperties,
-  };
+  const box: React.CSSProperties = { width: '100%', maxWidth: 460, background: 'rgba(255,255,255,.85)', border: '1px solid rgba(241,168,143,.3)', borderRadius: 22, padding: '2.4rem 2rem', textAlign: 'center', boxShadow: '0 14px 40px rgba(180,120,90,.12)' };
 
   return (
-    <div style={s.page}>
-      <div style={s.card}>
-        <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fafafa', marginBottom: '1rem' }}>
-          Meta<span style={{ color: '#e84393' }}>Pick</span>
-        </div>
+    <div className="vy-app" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(1000px 500px at 15% -5%, rgba(255,216,199,.55), transparent 60%), #FFF4EC', padding: '2rem' }}>
+      <div style={box}>
+        <div style={{ fontFamily: '"Fraunces",serif', fontSize: '1.4rem', fontWeight: 700, color: '#0B0F17', marginBottom: '1.2rem' }}>✦ VYRLE</div>
 
         {error ? (
           <>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>❌</div>
-            <h2 style={{ color: '#e84393', fontSize: '1.25rem', fontWeight: 600, marginBottom: '.5rem' }}>{t('Anslutning misslyckades')}</h2>
-            <p style={{ color: '#8b8ba3', fontSize: '.875rem', marginBottom: '1.5rem' }}>{error}</p>
-            <button
-              onClick={() => navigate('/creator/profile')}
-              style={{ padding: '.75rem 2rem', borderRadius: '.5rem', background: '#e84393', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer' }}
-            >
+            <div style={{ width: 54, height: 54, margin: '0 auto 14px', borderRadius: '50%', background: 'rgba(255,90,77,.14)', color: '#c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }} aria-hidden>✕</div>
+            <h2 style={{ color: '#0B0F17', fontSize: '1.15rem', fontWeight: 700, margin: '0 0 .5rem' }}>{t('Anslutning misslyckades')}</h2>
+            <p style={{ color: '#8a8f9c', fontSize: '.88rem', margin: '0 0 1.4rem', lineHeight: 1.55 }}>{error}</p>
+            <button onClick={() => navigate('/creator/profile')} className="btn-apply" style={{ width: 'auto', padding: '12px 26px' }}>
               {t('Tillbaka till profil')}
             </button>
           </>
         ) : done ? (
           <>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
-            <h2 style={{ color: '#4ade80', fontSize: '1.25rem', fontWeight: 600, marginBottom: '.5rem' }}>{t('TikTok anslutet!')}</h2>
-            <p style={{ color: '#8b8ba3', fontSize: '.875rem' }}>{t('Omdirigerar till din profil...')}</p>
+            <div style={{ width: 54, height: 54, margin: '0 auto 14px', borderRadius: '50%', background: 'linear-gradient(135deg,#3dbb77,#2f9d5b)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }} aria-hidden>✓</div>
+            <h2 style={{ color: '#0B0F17', fontSize: '1.15rem', fontWeight: 700, margin: '0 0 .5rem' }}>{t('TikTok anslutet!')}</h2>
+            <p style={{ color: '#8a8f9c', fontSize: '.88rem', margin: 0 }}>{t('Omdirigerar till din profil...')}</p>
           </>
         ) : (
           <>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem', animation: 'spin 1s linear infinite' }}>⏳</div>
-            <h2 style={{ color: '#fafafa', fontSize: '1.25rem', fontWeight: 600, marginBottom: '.5rem' }}>{t('Ansluter TikTok...')}</h2>
-            <p style={{ color: '#8b8ba3', fontSize: '.875rem' }}>{t('Vänta medan vi kopplar ditt konto.')}</p>
+            <div style={{ width: 54, height: 54, margin: '0 auto 14px', borderRadius: '50%', background: '#0B0F17', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }} aria-hidden>♪</div>
+            <h2 style={{ color: '#0B0F17', fontSize: '1.15rem', fontWeight: 700, margin: '0 0 .5rem' }}>{t('Ansluter TikTok...')}</h2>
+            <p style={{ color: '#8a8f9c', fontSize: '.88rem', margin: 0 }}>{t('Vänta medan vi kopplar ditt konto.')}</p>
           </>
         )}
       </div>
