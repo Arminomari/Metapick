@@ -326,6 +326,10 @@ public class CampaignService : ICampaignService
         if (request.Name != null) campaign.Name = request.Name;
         if (request.Description != null) campaign.Description = request.Description;
         if (request.Budget.HasValue) campaign.Budget = request.Budget.Value;
+        if (request.MaxCreators is >= 1) campaign.MaxCreators = request.MaxCreators.Value;
+        if (request.Category != null) campaign.Category = request.Category;
+        if (request.TargetAudience != null) campaign.TargetAudience = request.TargetAudience;
+        if (request.ContentInstructions != null) campaign.ContentInstructions = request.ContentInstructions;
         if (request.StartDate.HasValue) campaign.StartDate = request.StartDate.Value;
         if (request.EndDate.HasValue) campaign.EndDate = request.EndDate.Value;
 

@@ -1,3 +1,5 @@
+import api from '@/lib/api';
+import { useQueryClient } from '@tanstack/react-query';
 import { ChangeEmailCard } from '@/components/ui/AccountCards';
 import { useState, type FormEvent as ReactFormEvent } from 'react';
 import { RefreshViewsButton } from '@/components/ui/RefreshViewsButton';
@@ -523,8 +525,18 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
   const markManualPayoutSent = useMarkManualPayoutSent();
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [editingDraft, setEditingDraft] = useState(false);
 
   if (isLoading || !campaign) return <LoadingSpinner />;
+
+  const isDraftish = ['Draft', 'PendingReview'].includes(campaign.status);
+  const firstRule = campaign.payoutRules?.[0];
+  const payoutTerms = campaign.payoutModel === 'CPM'
+    ? `${firstRule?.amount ?? 0} kr / 1 000 views`
+    : campaign.payoutModel === 'Tiered'
+      ? t('Trappsteg per views')
+      : `${firstRule?.amount ?? 0} kr ${t('vid')} ${formatNumber(firstRule?.minViews ?? 0)}+ views`;
+  const spentSoFar = campaign.budgetSpent + campaign.budgetReserved;
 
   return (
     <section className="view active reveal">
@@ -537,18 +549,28 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
           <div style={{ marginTop: 10 }}><StatusBadge status={campaign.status} /></div>
         </div>
         {campaign.status === 'Draft' && (
-          <button className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} onClick={() => publish.mutateAsync(campaignId)} disabled={publish.isPending}>{publish.isPending ? t('Skickar…') : t('Skicka för granskning')}</button>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button className="btn-outline" style={{ width: 'auto', padding: '12px 22px' }} onClick={() => setEditingDraft((v) => !v)}>{editingDraft ? t('Stäng redigering') : t('Redigera kampanj')}</button>
+            <button className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} onClick={() => publish.mutateAsync(campaignId)} disabled={publish.isPending}>{publish.isPending ? t('Skickar…') : t('Skicka för granskning')}</button>
+          </div>
         )}
         {campaign.status === 'PendingReview' && (
           <span className="badge amber" style={{ alignSelf: 'center' }}>{t('Väntar på granskning av admin')}</span>
         )}
       </div>
 
+      {editingDraft && campaign.status === 'Draft' && (
+        <DraftEditCard campaign={campaign} onDone={() => setEditingDraft(false)} />
+      )}
+
       <div className="stat-row">
         <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg></div><div><div className="lbl">{t('Total views')}</div><div className="val">{formatNumber(campaign.totalViews)}</div></div></div></div>
-        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="9" cy="7" rx="6" ry="3" /><path d="M3 7v5c0 1.7 2.7 3 6 3" /><ellipse cx="15" cy="14" rx="6" ry="3" /></svg></div><div><div className="lbl">{t('Budget kvar')}</div><div className="val">{formatCurrency(campaign.budget - campaign.budgetSpent - campaign.budgetReserved)}</div></div></div></div>
-        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3" /><circle cx="16" cy="9" r="2.5" /><path d="M3 19a6 6 0 0 1 12 0M14 18a5 5 0 0 1 7-1" /></svg></div><div><div className="lbl">{t('Aktiva creators')}</div><div className="val">{campaign.approvedCreatorCount} / {campaign.maxCreators}</div></div></div></div>
-        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 10h18" /></svg></div><div><div className="lbl">{t('Utbetalningsmodell')}</div><div className="val" style={{ fontSize: 20 }}>{campaign.payoutModel}</div></div></div></div>
+        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="9" cy="7" rx="6" ry="3" /><path d="M3 7v5c0 1.7 2.7 3 6 3" /><ellipse cx="15" cy="14" rx="6" ry="3" /></svg></div><div><div className="lbl">{isDraftish ? t('Kampanjens maximala kostnad') : t('Budget kvar')}</div><div className="val">{formatCurrency(isDraftish ? campaign.budget : campaign.budget - campaign.budgetSpent - campaign.budgetReserved)}</div></div></div></div>
+        {!isDraftish && (
+          <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 7H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg></div><div><div className="lbl">{t('Upparbetat hittills')}</div><div className="val">{formatCurrency(spentSoFar)}</div></div></div></div>
+        )}
+        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3" /><circle cx="16" cy="9" r="2.5" /><path d="M3 19a6 6 0 0 1 12 0M14 18a5 5 0 0 1 7-1" /></svg></div><div><div className="lbl">{isDraftish ? t('Maximalt antal kreatörer') : t('Aktiva creators')}</div><div className="val">{isDraftish ? campaign.maxCreators : `${campaign.approvedCreatorCount} / ${campaign.maxCreators}`}</div></div></div></div>
+        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 10h18" /></svg></div><div><div className="lbl">{t('Utbetalningsmodell')} · {campaign.payoutModel}</div><div className="val" style={{ fontSize: 16.5 }}>{payoutTerms}</div></div></div></div>
       </div>
 
       <div className="card" style={{ marginBottom: 16 }}>
@@ -621,13 +643,14 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
                         <span className="text-xs text-muted-foreground">{formatDate(cp.paidAt)}</span>
                       )}
                       {canMarkPaid && (
-                        <Button
-                          size="sm"
+                        <button
+                          className="btn-apply"
+                          style={{ width: 'auto', padding: '8px 16px', fontSize: 12.5 }}
                           onClick={() => markManualPayoutSent.mutateAsync(cp.assignmentId)}
                           disabled={markManualPayoutSent.isPending}
                         >
-                          {markManualPayoutSent.isPending ? t('Markerar...') : t('Betala manuellt')}
-                        </Button>
+                          {markManualPayoutSent.isPending ? t('Markerar…') : t('Markera som betald')}
+                        </button>
                       )}
                     </div>
                   </div>
@@ -1027,3 +1050,63 @@ export function BrandAssignmentDetailPage() {
     </section>
   );
 }
+
+// ── Edit a draft campaign in place ─────────────────────
+function DraftEditCard({ campaign, onDone }: { campaign: any; onDone: () => void }) {
+  const qc = useQueryClient();
+  const [form, setForm] = useState({
+    name: campaign.name ?? '',
+    description: campaign.description ?? '',
+    budget: String(campaign.budget ?? ''),
+    maxCreators: String(campaign.maxCreators ?? ''),
+    startDate: (campaign.startDate ?? '').slice(0, 10),
+    endDate: (campaign.endDate ?? '').slice(0, 10),
+  });
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const input: React.CSSProperties = { width: '100%', border: '1px solid rgba(241,168,143,.28)', borderRadius: 13, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', background: 'rgba(255,255,255,.75)', color: '#0B0F17' };
+  const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6, display: 'block' };
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErr('');
+    setBusy(true);
+    try {
+      await api.put(`/campaigns/${campaign.id}`, {
+        name: form.name.trim(),
+        description: form.description.trim(),
+        budget: Number(form.budget) || campaign.budget,
+        maxCreators: Number(form.maxCreators) || campaign.maxCreators,
+        startDate: form.startDate || null,
+        endDate: form.endDate || null,
+      });
+      await qc.invalidateQueries({ queryKey: ['campaign'] });
+      await qc.invalidateQueries({ queryKey: ['brand-campaigns'] });
+      onDone();
+    } catch (e2: any) {
+      setErr(e2?.response?.data?.error?.message ?? t('Kunde inte spara ändringarna.'));
+    }
+    setBusy(false);
+  };
+
+  return (
+    <form onSubmit={save} className="card" style={{ marginBottom: 16, border: '1px solid rgba(241,168,143,.4)' }}>
+      <div className="sec-head"><h3>{t('Redigera utkast')}</h3></div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
+        <div style={{ gridColumn: '1 / -1' }}><span style={lbl}>{t('Kampanjnamn')}</span><input style={input} required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+        <div style={{ gridColumn: '1 / -1' }}><span style={lbl}>{t('Beskrivning')}</span><textarea style={{ ...input, resize: 'vertical' }} rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+        <div><span style={lbl}>{t('Maximal kostnad (SEK)')}</span><input style={input} type="number" min={1} required value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} /></div>
+        <div><span style={lbl}>{t('Maximalt antal kreatörer')}</span><input style={input} type="number" min={1} required value={form.maxCreators} onChange={(e) => setForm({ ...form, maxCreators: e.target.value })} /></div>
+        <div><span style={lbl}>{t('Startdatum')}</span><DateInput value={form.startDate} onChange={(v) => setForm({ ...form, startDate: v })} style={input} /></div>
+        <div><span style={lbl}>{t('Slutdatum')}</span><DateInput value={form.endDate} onChange={(v) => setForm({ ...form, endDate: v })} style={input} /></div>
+      </div>
+      {err && <div style={{ marginTop: 10, fontSize: 13, fontWeight: 600, color: '#cf4b4b' }}>{err}</div>}
+      <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+        <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 24px' }} disabled={busy}>{busy ? t('Sparar…') : t('Spara ändringar')}</button>
+        <button type="button" className="btn-outline" style={{ width: 'auto', padding: '12px 24px' }} onClick={onDone}>{t('Avbryt')}</button>
+      </div>
+    </form>
+  );
+}
+
