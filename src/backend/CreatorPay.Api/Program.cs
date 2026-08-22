@@ -165,8 +165,15 @@ if (hangfireConn != null && hangfireConn.StartsWith("postgresql://"))
     hangfireConn = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={ui[0]};Password={ui[1]};SSL Mode=Require;Trust Server Certificate=true";
 }
 builder.Services.AddHangfire(config =>
-    config.UsePostgreSqlStorage(options =>
-        options.UseNpgsqlConnection(hangfireConn)));
+    config.UsePostgreSqlStorage(
+        options => options.UseNpgsqlConnection(hangfireConn),
+        new Hangfire.PostgreSql.PostgreSqlStorageOptions
+        {
+            // Gentler polling: the shared Railway Postgres times out under
+            // Hangfire's default ~1s hammering.
+            QueuePollInterval = TimeSpan.FromSeconds(15),
+            DistributedLockTimeout = TimeSpan.FromMinutes(2)
+        }));
 
 // The background jobs normally run in the separate Worker service. On
 // deployments without one (e.g. Railway today) the API hosts the Hangfire
@@ -175,7 +182,11 @@ builder.Services.AddHangfire(config =>
 var runHangfireServerInApi = builder.Configuration.GetValue<bool?>("Hangfire:RunServerInApi") ?? true;
 if (runHangfireServerInApi)
 {
-    builder.Services.AddHangfireServer(options => options.WorkerCount = 2);
+    builder.Services.AddHangfireServer(options =>
+    {
+        options.WorkerCount = 2;
+        options.SchedulePollingInterval = TimeSpan.FromSeconds(15);
+    });
     builder.Services.AddScoped<CreatorPay.Worker.Jobs.DailyCampaignSyncJob>();
     builder.Services.AddScoped<CreatorPay.Application.Interfaces.ICampaignSyncTrigger, CreatorPay.Worker.Jobs.DailyCampaignSyncJob>();
     builder.Services.AddScoped<CreatorPay.Worker.Jobs.CampaignExpirationJob>();
