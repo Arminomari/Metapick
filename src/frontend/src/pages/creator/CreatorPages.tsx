@@ -222,6 +222,8 @@ export function BrowseCampaignsPage() {
   const [page, setPage] = useState(1);
   const { data, isLoading, isError, error } = useBrowseCampaigns(category, undefined, page);
   const { data: myApps, isError: myAppsError, error: myAppsErrorObj } = useMyApplications();
+  const { data: myAssignments } = useCreatorAssignments(undefined, 1);
+  const navigate = useNavigate();
   const { data: savedIds } = useSavedCampaignIds();
   const toggleSave = useToggleSaveCampaign();
   const toast = useToast();
@@ -232,7 +234,14 @@ export function BrowseCampaignsPage() {
   // Build a map of campaignId -> application status from backend data
   const appStatusMap = new Map<string, string>();
   myApps?.data.forEach((a) => appStatusMap.set(a.campaignId, a.status));
+  const assignmentByCampaign = new Map<string, string>();
+  myAssignments?.data.forEach((a) => assignmentByCampaign.set(a.campaignId, a.id));
   const savedSet = new Set(savedIds ?? []);
+
+  const goToAssignment = (campaignId: string) => {
+    const assignmentId = assignmentByCampaign.get(campaignId);
+    navigate(assignmentId ? `/creator/assignments/${assignmentId}` : '/creator/assignments');
+  };
 
   const handleApply = async (campaignId: string) => {
     setApplyingId(campaignId);
@@ -257,16 +266,18 @@ export function BrowseCampaignsPage() {
   };
 
   const getButtonLabel = (campaignId: string, spotsRemaining: number) => {
-    if (spotsRemaining <= 0) return t('Fullbokad');
-    if (applyingId === campaignId) return t('Skickar…');
     const status = appStatusMap.get(campaignId);
     if (status === 'Approved') return '✓ ' + t('Godkänd — gå till Mina uppdrag');
+    if (spotsRemaining <= 0) return t('Fullbokad');
+    if (applyingId === campaignId) return t('Skickar…');
     if (status === 'Pending') return '⏳ ' + t('Ansökan skickad — väntar på svar');
     if (status === 'Rejected') return '✗ ' + t('Ansökan nekad');
     return t('Ansök');
   };
 
   const isDisabled = (campaignId: string, spotsRemaining: number) => {
+    // Approved stays clickable — it navigates to the assignment.
+    if (appStatusMap.get(campaignId) === 'Approved') return false;
     if (spotsRemaining <= 0 || applyingId === campaignId) return true;
     return appStatusMap.has(campaignId); // already applied in any status
   };
@@ -339,7 +350,7 @@ export function BrowseCampaignsPage() {
                         </div>
                       )}
                       <button className={status === 'Approved' || status === 'Rejected' || status === 'Pending' || full ? 'btn-outline' : 'btn-apply'} style={{ width: '100%', marginTop: 'auto' }}
-                        onClick={() => handleApply(c.id)} disabled={isDisabled(c.id, c.spotsLeft)}>
+                        onClick={() => appStatusMap.get(c.id) === 'Approved' ? goToAssignment(c.id) : handleApply(c.id)} disabled={isDisabled(c.id, c.spotsLeft)}>
                         {getButtonLabel(c.id, c.spotsLeft)}
                       </button>
                     </div>
