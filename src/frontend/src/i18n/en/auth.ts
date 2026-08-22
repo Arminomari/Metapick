@@ -267,4 +267,6 @@ export const auth: Record<string, string> = {
   'Barn & Familj': 'Kids & Family',
   'Djur': 'Animals',
   'Hållbarhet & Miljö': 'Sustainability & Environment',
+  'iPhone-bilder i HEIC-format stöds inte av webbläsaren — spara om bilden som JPG/PNG och försök igen': 'HEIC photos from iPhone are not supported by the browser — re-save the image as JPG/PNG and try again',
+  'Bilden kunde inte läsas — prova en JPG- eller PNG-fil': 'The image could not be read — try a JPG or PNG file',
 };

@@ -32,7 +32,10 @@ export function ImagePicker({
       const dataUrl = await resizeToSquareJpeg(file, 384);
       onChange(dataUrl);
     } catch {
-      setError(t('Bilden kunde inte läsas — prova en annan fil'));
+      const isHeic = /heic|heif/i.test(file.type) || /\.hei[cf]$/i.test(file.name);
+      setError(isHeic
+        ? t('iPhone-bilder i HEIC-format stöds inte av webbläsaren — spara om bilden som JPG/PNG och försök igen')
+        : t('Bilden kunde inte läsas — prova en JPG- eller PNG-fil'));
     } finally {
       setBusy(false);
     }
@@ -87,7 +90,7 @@ export function ImagePicker({
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/*"
         style={{ display: 'none' }}
         onChange={(e) => { const f = e.target.files?.[0]; if (f) void processFile(f); e.target.value = ''; }}
       />
