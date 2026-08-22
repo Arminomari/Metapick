@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useBrandAnalytics, useMarketBenchmarks } from '@/hooks/api';
+import { useBrandAnalytics } from '@/hooks/api';
 import { AreaChart, Donut, MiniBars, BLUSH } from '@/components/vyrle/Viz';
 import { formatNumber, formatCurrency } from '@/lib/utils';
 import { t } from '@/lib/i18n';
@@ -17,7 +17,6 @@ type Vid = CreatorVideo & { creator: string };
 
 export function BrandAnalyticsPage() {
   const { campaigns, analytics, isLoading } = useBrandAnalytics();
-  const { data: market } = useMarketBenchmarks();
 
   const byId = new Map(campaigns.map((c) => [c.id, c]));
   const joined = analytics.map((a) => ({ a, c: byId.get(a.campaignId) })).filter((x) => x.c) as { a: CampaignAnalytics; c: typeof campaigns[number] }[];
@@ -47,8 +46,6 @@ export function BrandAnalyticsPage() {
   const CPSH = shares ? TS / shares : 0;
   const SHR = TV ? (shares / TV) * 100 : 0;
   const costPerView = TV ? TS / TV : 0;
-  const marketCpm = market?.marketCpm ?? 0;
-  const cei = marketCpm > 0 && CPM > 0 ? (1 - CPM / marketCpm) * 100 : null; // +% = below market (cheaper)
 
   // ── all videos flattened (for content/duration/timing/hashtag/virality) ──
   const allVideos: Vid[] = analytics.flatMap((a) => a.creatorPerformance.flatMap((cp: CreatorPerformance) => (cp.videos || []).map((v) => ({ ...v, creator: cp.displayName }))));
@@ -58,8 +55,7 @@ export function BrandAnalyticsPage() {
   const engScore = clamp(ER * 8);
   const shareScore = clamp(SHR * 40);
   const ctrScore = clamp(CTR * 20);
-  const effScore = marketCpm > 0 && CPM > 0 ? clamp((marketCpm / CPM) * 70) : (CPM > 0 ? 50 : 0);
-  const AES = Math.round(0.3 * engScore + 0.2 * shareScore + 0.2 * ctrScore + 0.3 * effScore);
+  const AES = Math.round(0.45 * engScore + 0.25 * shareScore + 0.3 * ctrScore);
 
   // ── chart: views by campaign ──
   const chartRows = [...joined].filter((x) => x.a.totalViews > 0).sort((x, y) => x.a.totalViews - y.a.totalViews).slice(-10);
@@ -110,7 +106,6 @@ export function BrandAnalyticsPage() {
     nicheMap.set(c.category, e);
   });
   const niches = [...nicheMap.entries()].map(([cat, v]) => ({ cat, ...v, cpm: v.views ? (v.spend / v.views) * 1000 : 0, er: v.views ? (v.eng / v.views) * 100 : 0 })).filter((n) => n.views > 0).sort((a, b) => b.views - a.views);
-  const marketCat = new Map((market?.byCategory ?? []).map((n) => [n.category, n.cpm]));
 
   // ── virality (VR) ──
   const vrThresholds = [100_000, 500_000, 1_000_000];
@@ -122,7 +117,6 @@ export function BrandAnalyticsPage() {
   const bestCpm = withViews.map((x) => ({ name: x.c.name, cpm: (x.a.budgetSpent / x.a.totalViews) * 1000 })).sort((a, b) => a.cpm - b.cpm)[0];
   const bestNiche = niches.slice().sort((a, b) => a.cpm - b.cpm)[0];
   const insights: { t: React.ReactNode }[] = [];
-  if (cei != null) insights.push({ t: <>{t('Din CPM ligger')} <b>{Math.abs(cei).toFixed(0)}% {cei >= 0 ? t('under') : t('över')}</b> {t('marknadssnittet')} ({kr2(marketCpm)}).</> });
   if (bestCpm) insights.push({ t: <><b>{bestCpm.name}</b> {t('levererar din lägsta CPM,')} {kr2(bestCpm.cpm)} {t('per 1 000 visningar.')}</> });
   if (vpd.length) { const best = [...vpd].sort((a, b) => b.avgViews - a.avgViews)[0]; insights.push({ t: <>{t('Videos på')} <b>{best.label}</b> {t('drar flest visningar i snitt')} ({short(best.avgViews)}).</> }); }
   if (bpt.length) insights.push({ t: <>{t('Bäst att posta på')} <b>{bpt[0].label.split(' · ')[0].toLowerCase()}</b>, {short(bpt[0].avgViews)} {t('visningar i snitt.')}</> });
@@ -135,7 +129,7 @@ export function BrandAnalyticsPage() {
       <div className="page-head">
         <div>
           <h1 className="page-title">{t('Attention')} <em>{t('intelligence')}</em></h1>
-          <p className="page-sub">{t('Hur effektivt din spend förvandlas till uppmärksamhet. Räckvidd, engagemang, kostnadseffektivitet och marknadsjämförelse, allt från verklig kampanjdata.')}</p>
+          <p className="page-sub">{t('Hur effektivt din spend förvandlas till uppmärksamhet. Räckvidd, engagemang och kostnadseffektivitet — allt från verklig kampanjdata.')}</p>
         </div>
       </div>
 
@@ -151,7 +145,7 @@ export function BrandAnalyticsPage() {
           <div className="vstat-row">
             <Kpi tint="peach" featured label={t('Totala visningar')} val={formatNumber(TV)} sub={`${creators} ${t('kreatörer')} · ${TP} ${t('posts')}`} icon={<><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></>} />
             <Kpi tint="green" label={t('Total spend')} val={formatCurrency(TS)} sub={`${formatCurrency(remaining)} ${t('kvar')}`} icon={<><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 10h18M7 15h4" /></>} />
-            <Kpi tint="lilac" label="CPM" val={kr2(CPM)} sub={cei != null ? `${Math.abs(cei).toFixed(0)}% ${cei >= 0 ? t('under') : t('över')} ${t('marknad')}` : t('kostnad / 1 000 visn.')} icon={<><path d="M5 20V10M12 20V4M19 20v-6" /></>} />
+            <Kpi tint="lilac" label="CPM" val={kr2(CPM)} sub={t('kostnad / 1 000 visn.')} icon={<><path d="M5 20V10M12 20V4M19 20v-6" /></>} />
             <Kpi tint="amber" label={t('Snitt visningar / post')} val={short(AVP)} sub={`${formatNumber(views24h)} ${t('senaste dygnet')}`} icon={<><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></>} />
           </div>
           <div className="an-kpi-grid" style={{ marginBottom: 20 }}>
@@ -175,16 +169,14 @@ export function BrandAnalyticsPage() {
                     { label: t('Engagemang'), pct: engScore, value: pct(ER) },
                     { label: t('Delningar'), pct: shareScore, value: pct(SHR) },
                     { label: t('Klick'), pct: ctrScore, value: pct(CTR) },
-                    { label: t('Kostnadseffektivitet'), pct: effScore, value: marketCpm ? `${Math.round(effScore)}` : '—' },
                   ]} />
                 </div>
               </div>
               <div className="vperf-foot">
-                <div className="vf-stat"><div className="vf-l">{t('CPM vs marknad')}</div><div className="vf-v" style={{ color: cei != null && cei >= 0 ? '#2f9d5b' : 'var(--ink)' }}>{cei != null ? `${cei >= 0 ? '−' : '+'}${Math.abs(cei).toFixed(0)}%` : '—'}</div></div>
-                <div className="vf-stat"><div className="vf-l">{t('Marknads-CPM')}</div><div className="vf-v">{marketCpm ? kr2(marketCpm) : '—'}</div></div>
+                <div className="vf-stat"><div className="vf-l">CPM</div><div className="vf-v">{kr2(CPM)}</div></div>
                 <div className="vf-stat"><div className="vf-l">{t('Viral rate')}</div><div className="vf-v">{pct(viralRate)}</div></div>
               </div>
-              <div style={{ fontSize: 11, color: 'var(--muted-2)', marginTop: 10 }}>{t('Vägt index av engagemang, delningar, klickfrekvens och CPM mot marknaden. Allt från verifierad data.')}</div>
+              <div style={{ fontSize: 11, color: 'var(--muted-2)', marginTop: 10 }}>{t('Vägt index av engagemang, delningar och klickfrekvens. Allt från verifierad data.')}</div>
             </div>
 
             <div className="card vrep">
@@ -286,10 +278,8 @@ export function BrandAnalyticsPage() {
               }) : <Muted>{t('Inga kreatörer med data än.')}</Muted>}
             </div>
             <div className="card">
-              <div className="vperf-head"><h3>{t('Per nisch vs marknad')}</h3></div>
+              <div className="vperf-head"><h3>{t('Per nisch')}</h3></div>
               {niches.length ? niches.slice(0, 6).map((n) => {
-                const mk = marketCat.get(n.cat);
-                const diff = mk && n.cpm ? (1 - n.cpm / mk) * 100 : null;
                 return (
                   <div key={n.cat} className="list-row">
                     <div className="row-main" style={{ flex: 1 }}>
@@ -297,7 +287,6 @@ export function BrandAnalyticsPage() {
                       <div className="s">{formatNumber(n.views)} {t('views')} · ER {pct(n.er)}</div>
                     </div>
                     <div style={{ textAlign: 'right', minWidth: 80 }}><div className="t">{kr2(n.cpm)}</div><div className="s">CPM</div></div>
-                    <div style={{ textAlign: 'right', minWidth: 76 }}>{diff != null ? <span className={`badge ${diff >= 0 ? 'green' : 'red'}`}>{diff >= 0 ? '−' : '+'}{Math.abs(diff).toFixed(0)}%</span> : <span className="s">—</span>}</div>
                   </div>
                 );
               }) : <Muted>{t('Ingen nisch-data än.')}</Muted>}

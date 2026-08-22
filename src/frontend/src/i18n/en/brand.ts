@@ -418,4 +418,7 @@ export const brand: Record<string, string> = {
   'Kunde inte spara ändringarna.': 'Could not save the changes.',
   'Markera som betald': 'Mark as paid',
   'Markerar…': 'Marking…',
+  'Vägt index av engagemang, delningar och klickfrekvens. Allt från verifierad data.': 'Weighted index of engagement, shares and click-through. All from verified data.',
+  'Per nisch': 'Per niche',
+  'Hur effektivt din spend förvandlas till uppmärksamhet. Räckvidd, engagemang och kostnadseffektivitet — allt från verklig kampanjdata.': 'How efficiently your spend turns into attention. Reach, engagement and cost efficiency — all from real campaign data.',
 };
