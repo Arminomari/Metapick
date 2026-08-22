@@ -18,6 +18,10 @@ public class AdminUserService : IAdminUserService
     private readonly IAuditService _audit;
     private readonly INotificationService _notify;
     private readonly IEmailService _email;
+    private readonly IRepository<Campaign> _campaigns;
+    private readonly IRepository<PayoutRequest> _payouts;
+    private readonly IRepository<FraudFlag> _fraudFlags;
+    private readonly IRepository<CreatorCampaignAssignment> _assignments;
 
     public AdminUserService(
         IRepository<User> users,
@@ -27,7 +31,11 @@ public class AdminUserService : IAdminUserService
         IUnitOfWork uow,
         IAuditService audit,
         INotificationService notify,
-        IEmailService email)
+        IEmailService email,
+        IRepository<Campaign> campaigns,
+        IRepository<PayoutRequest> payouts,
+        IRepository<FraudFlag> fraudFlags,
+        IRepository<CreatorCampaignAssignment> assignments)
     {
         _users = users;
         _brands = brands;
@@ -37,6 +45,10 @@ public class AdminUserService : IAdminUserService
         _audit = audit;
         _notify = notify;
         _email = email;
+        _campaigns = campaigns;
+        _payouts = payouts;
+        _fraudFlags = fraudFlags;
+        _assignments = assignments;
     }
 
     public async Task<Result<PagedResult<PendingUserDto>>> GetUsersAsync(string? status, int page, int pageSize)
@@ -273,5 +285,30 @@ public class AdminUserService : IAdminUserService
             companyName, orgNumber, contactPhone,
             displayName, bio, category, tiktokUsername, dateOfBirth,
             rejectionReason);
+    }
+
+    public async Task<Result<AdminStatsDto>> GetStatsAsync()
+    {
+        var totalUsers = await _users.Query().CountAsync(u => u.Role != UserRole.Admin);
+        var pendingUsers = await _users.Query().CountAsync(u => u.Role != UserRole.Admin && u.Status == UserStatus.PendingVerification);
+        var creators = await _creators.Query().CountAsync();
+        var brands = await _brands.Query().CountAsync();
+        var activeCampaigns = await _campaigns.Query().CountAsync(c => c.Status == CampaignStatus.Active);
+        var pendingCampaigns = await _campaigns.Query().CountAsync(c => c.Status == CampaignStatus.PendingReview);
+        var pendingPayouts = await _payouts.Query().CountAsync(p => p.Status == PayoutStatus.Pending || p.Status == PayoutStatus.UnderReview);
+        var pendingPayoutAmount = await _payouts.Query()
+            .Where(p => p.Status == PayoutStatus.Pending || p.Status == PayoutStatus.UnderReview)
+            .SumAsync(p => (decimal?)p.RequestedAmount) ?? 0m;
+        var totalPaidOut = await _payouts.Query()
+            .Where(p => p.Status == PayoutStatus.Completed)
+            .SumAsync(p => (decimal?)p.RequestedAmount) ?? 0m;
+        var totalViews = await _assignments.Query().SumAsync(a => (long?)a.TotalVerifiedViews) ?? 0L;
+        var openFraud = await _fraudFlags.Query().CountAsync(f => f.Status == FraudStatus.Open || f.Status == FraudStatus.UnderReview);
+
+        return new AdminStatsDto(
+            totalUsers, pendingUsers, creators, brands,
+            activeCampaigns, pendingCampaigns,
+            pendingPayouts, pendingPayoutAmount, totalPaidOut,
+            totalViews, openFraud);
     }
 }

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AdminOverviewSection, AdminPayoutsSection, AdminFraudSection, AdminAuditSection } from './AdminExtraSections';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import api from '@/lib/api';
@@ -53,34 +54,37 @@ function getApiErrorMessage(error: any, fallback: string) {
     ?? fallback;
 }
 
+type AdminSection = 'overview' | 'users' | 'campaigns' | 'payouts' | 'fraud' | 'audit';
+
 const s = {
-  page: { minHeight: '100vh', background: '#0a0a0f', color: '#fafafa', padding: 'clamp(1rem, 4vw, 2rem)' } as React.CSSProperties,
-  container: { maxWidth: 1100, margin: '0 auto' } as React.CSSProperties,
-  header: { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '2rem' } as React.CSSProperties,
-  title: { fontSize: 'clamp(1.25rem, 4vw, 1.75rem)', fontWeight: 700 } as React.CSSProperties,
-  tabs: { display: 'flex', flexWrap: 'wrap', gap: '.5rem', marginBottom: '2rem' } as React.CSSProperties,
-  tab: (active: boolean) => ({ padding: '.5rem 1rem', borderRadius: '.5rem', border: '1px solid #1e1e2e', background: active ? '#e84393' : 'transparent', color: active ? '#fff' : '#8b8ba3', cursor: 'pointer', fontSize: '.875rem', fontWeight: 600 }) as React.CSSProperties,
-  card: { background: '#14141f', border: '1px solid #1e1e2e', borderRadius: '1rem', padding: '1.5rem', marginBottom: '1rem' } as React.CSSProperties,
+  page: { minHeight: '100vh', background: 'radial-gradient(1200px 600px at 12% -8%, rgba(255,216,199,.55), transparent 60%), radial-gradient(900px 500px at 105% 0%, rgba(237,225,255,.45), transparent 55%), #FFF4EC', color: '#0B0F17', padding: 'clamp(1rem, 4vw, 2rem)' } as React.CSSProperties,
+  container: { maxWidth: 1160, margin: '0 auto' } as React.CSSProperties,
+  header: { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.6rem' } as React.CSSProperties,
+  title: { fontSize: 'clamp(1.5rem, 4vw, 2.2rem)', fontWeight: 700, letterSpacing: '-0.02em' } as React.CSSProperties,
+  tabs: { display: 'flex', flexWrap: 'wrap', gap: '.5rem', marginBottom: '1.6rem' } as React.CSSProperties,
+  tab: (active: boolean) => ({ padding: '.5rem 1.1rem', borderRadius: 980, border: active ? '1px solid #0B0F17' : '1px solid rgba(241,168,143,.25)', background: active ? 'linear-gradient(135deg,#1A2230,#0B0F17)' : 'rgba(255,255,255,.7)', color: active ? '#fff' : '#2C333F', cursor: 'pointer', fontSize: '.85rem', fontWeight: 600 }) as React.CSSProperties,
+  card: { background: 'rgba(255,255,255,.82)', border: '1px solid rgba(255,255,255,.7)', borderRadius: 24, padding: '1.5rem', marginBottom: '1rem', boxShadow: '0 10px 34px rgba(180,120,90,.08), 0 2px 8px rgba(11,15,23,.04)' } as React.CSSProperties,
   badge: (status: string) => {
     const colors: Record<string, { bg: string; color: string }> = {
-      PendingVerification: { bg: 'rgba(255,193,7,.15)', color: '#ffc107' },
-      Active: { bg: 'rgba(76,175,80,.15)', color: '#4caf50' },
-      Deactivated: { bg: 'rgba(244,67,54,.15)', color: '#f44336' },
+      PendingVerification: { bg: 'rgba(255,216,199,.55)', color: '#b07d1c' },
+      Active: { bg: 'rgba(47,157,91,.12)', color: '#2f9d5b' },
+      Deactivated: { bg: 'rgba(207,75,75,.12)', color: '#cf4b4b' },
     };
     const c = colors[status] || colors.PendingVerification;
     return { display: 'inline-block', padding: '.25rem .75rem', borderRadius: 999, fontSize: '.75rem', fontWeight: 600, background: c.bg, color: c.color } as React.CSSProperties;
   },
   roleBadge: (role: string) => {
-    const c = role === 'Creator' ? { bg: 'rgba(232,67,147,.15)', color: '#e84393' } : { bg: 'rgba(124,58,237,.15)', color: '#7c3aed' };
+    const c = role === 'Creator' ? { bg: 'rgba(255,216,199,.6)', color: '#9c4f31' } : { bg: '#EDE1FF', color: '#6a4ea8' };
     return { display: 'inline-block', padding: '.25rem .75rem', borderRadius: 999, fontSize: '.75rem', fontWeight: 600, background: c.bg, color: c.color } as React.CSSProperties;
   },
-  btnApprove: { padding: '.5rem 1.25rem', borderRadius: '.5rem', background: '#4caf50', color: '#fff', border: 'none', fontWeight: 600, fontSize: '.8rem', cursor: 'pointer' } as React.CSSProperties,
-  btnReject: { padding: '.5rem 1.25rem', borderRadius: '.5rem', background: '#f44336', color: '#fff', border: 'none', fontWeight: 600, fontSize: '.8rem', cursor: 'pointer' } as React.CSSProperties,
+  btnApprove: { padding: '.55rem 1.3rem', borderRadius: 980, background: '#2f9d5b', color: '#fff', border: 'none', fontWeight: 600, fontSize: '.8rem', cursor: 'pointer' } as React.CSSProperties,
+  btnReject: { padding: '.55rem 1.3rem', borderRadius: 980, background: '#cf4b4b', color: '#fff', border: 'none', fontWeight: 600, fontSize: '.8rem', cursor: 'pointer' } as React.CSSProperties,
   detailRow: { display: 'flex', flexWrap: 'wrap', gap: '.5rem', marginBottom: '.5rem', fontSize: '.875rem' } as React.CSSProperties,
-  detailLabel: { color: '#8b8ba3', minWidth: 160 } as React.CSSProperties,
-  detailValue: { color: '#fafafa' } as React.CSSProperties,
-  empty: { textAlign: 'center', padding: '4rem 0', color: '#8b8ba3' } as React.CSSProperties,
+  detailLabel: { color: '#6E7480', minWidth: 160 } as React.CSSProperties,
+  detailValue: { color: '#0B0F17' } as React.CSSProperties,
+  empty: { textAlign: 'center', padding: '4rem 0', color: '#6E7480' } as React.CSSProperties,
 };
+
 
 function usePendingUsers(page: number) {
   return useQuery({
@@ -180,7 +184,7 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
 
   if (isLoading) {
     return (
-      <div style={s.page}>
+      <div className="vy-app" style={s.page}>
         <div style={s.container}>
           <div style={s.empty}>Laddar profil...</div>
         </div>
@@ -190,11 +194,11 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
 
   if (isError || !profile) {
     return (
-      <div style={s.page}>
+      <div className="vy-app" style={s.page}>
         <div style={s.container}>
           <button
             onClick={onBack}
-            style={{ background: 'none', border: 'none', color: '#7c3aed', cursor: 'pointer', fontSize: '.9rem', fontWeight: 600, marginBottom: '1rem' }}
+            style={{ background: 'none', border: 'none', color: '#6a4ea8', cursor: 'pointer', fontSize: '.9rem', fontWeight: 600, marginBottom: '1rem' }}
           >
             ← Tillbaka
           </button>
@@ -208,16 +212,16 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
   }
 
   return (
-    <div style={s.page}>
+    <div className="vy-app" style={s.page}>
       <div style={s.container}>
         <button
           onClick={onBack}
-          style={{ background: 'none', border: 'none', color: '#7c3aed', cursor: 'pointer', fontSize: '.9rem', fontWeight: 600, marginBottom: '1.5rem', textDecoration: 'underline' }}
+          style={{ background: 'none', border: 'none', color: '#6a4ea8', cursor: 'pointer', fontSize: '.9rem', fontWeight: 600, marginBottom: '1.5rem', textDecoration: 'underline' }}
         >
           ← Tillbaka till admin-panel
         </button>
 
-        <div style={{ background: '#14141f', border: '1px solid #1e1e2e', borderRadius: '1rem', padding: 'clamp(1.5rem, 4vw, 2rem)', marginBottom: '2rem' }}>
+        <div style={{ background: 'rgba(255,255,255,.82)', border: '1px solid #1e1e2e', borderRadius: '1rem', padding: 'clamp(1.5rem, 4vw, 2rem)', marginBottom: '2rem' }}>
           {/* Profile header */}
           <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: '2rem', marginBottom: '2rem' }}>
             {/* Avatar */}
@@ -246,15 +250,15 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
             {/* Main info */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
-                <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#fafafa' }}>{profile.displayName}</h1>
+                <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#0B0F17' }}>{profile.displayName}</h1>
                 <span style={s.badge(profile.status || 'Pending')}>
                   {profile.status === 'Approved' ? 'Godkänd' : profile.status === 'Rejected' ? 'Avvisad' : 'Väntande'}
                 </span>
               </div>
-              <p style={{ color: '#8b8ba3', fontSize: '.95rem', marginBottom: '0.5rem' }}>
+              <p style={{ color: '#6E7480', fontSize: '.95rem', marginBottom: '0.5rem' }}>
                 📧 {profile.userId || 'user@hidden'}
               </p>
-              <p style={{ color: '#8b8ba3', fontSize: '.95rem' }}>
+              <p style={{ color: '#6E7480', fontSize: '.95rem' }}>
                 📍 {profile.country || '–'} · Medlem sedan {(profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('sv-SE') : '–')}
               </p>
             </div>
@@ -262,7 +266,7 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
             {/* Status badge */}
             <div style={{ textAlign: 'right' }}>
               {profile.tikTokConnected && (
-                <div style={{ display: 'inline-block', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: 'rgba(76,175,80,.15)', color: '#4caf50', fontSize: '.85rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+                <div style={{ display: 'inline-block', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: 'rgba(47,157,91,.15)', color: '#2f9d5b', fontSize: '.85rem', fontWeight: 600, marginBottom: '0.5rem' }}>
                   ✓ TikTok kopplat
                 </div>
               )}
@@ -271,40 +275,40 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
 
           {/* Bio */}
           {profile.bio && (
-            <div style={{ background: '#0a0a0f', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', borderLeft: '3px solid #7c3aed' }}>
-              <p style={{ color: '#fafafa', fontSize: '.95rem', lineHeight: 1.6 }}>{profile.bio}</p>
+            <div style={{ background: '#FFF4EC', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', borderLeft: '3px solid #7c3aed' }}>
+              <p style={{ color: '#0B0F17', fontSize: '.95rem', lineHeight: 1.6 }}>{profile.bio}</p>
             </div>
           )}
 
           {/* Stats grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-            <div style={{ background: '#0a0a0f', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-              <p style={{ color: '#8b8ba3', fontSize: '.8rem', marginBottom: '0.25rem' }}>Kategori</p>
-              <p style={{ color: '#fafafa', fontSize: '1.1rem', fontWeight: 600 }}>{profile.category}</p>
+            <div style={{ background: '#FFF4EC', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.25rem' }}>Kategori</p>
+              <p style={{ color: '#0B0F17', fontSize: '1.1rem', fontWeight: 600 }}>{profile.category}</p>
             </div>
-            <div style={{ background: '#0a0a0f', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-              <p style={{ color: '#8b8ba3', fontSize: '.8rem', marginBottom: '0.25rem' }}>Följare</p>
-              <p style={{ color: '#fafafa', fontSize: '1.1rem', fontWeight: 600 }}>{formatNumber(profile.followerCount)}</p>
+            <div style={{ background: '#FFF4EC', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.25rem' }}>Följare</p>
+              <p style={{ color: '#0B0F17', fontSize: '1.1rem', fontWeight: 600 }}>{formatNumber(profile.followerCount)}</p>
             </div>
-            <div style={{ background: '#0a0a0f', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-              <p style={{ color: '#8b8ba3', fontSize: '.8rem', marginBottom: '0.25rem' }}>Snitt-views</p>
-              <p style={{ color: '#fafafa', fontSize: '1.1rem', fontWeight: 600 }}>{profile.averageViews ? formatNumber(profile.averageViews) : '–'}</p>
+            <div style={{ background: '#FFF4EC', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.25rem' }}>Snitt-views</p>
+              <p style={{ color: '#0B0F17', fontSize: '1.1rem', fontWeight: 600 }}>{profile.averageViews ? formatNumber(profile.averageViews) : '–'}</p>
             </div>
-            <div style={{ background: '#0a0a0f', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-              <p style={{ color: '#8b8ba3', fontSize: '.8rem', marginBottom: '0.25rem' }}>Språk</p>
-              <p style={{ color: '#fafafa', fontSize: '1.1rem', fontWeight: 600 }}>{profile.language || '–'}</p>
+            <div style={{ background: '#FFF4EC', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.25rem' }}>Språk</p>
+              <p style={{ color: '#0B0F17', fontSize: '1.1rem', fontWeight: 600 }}>{profile.language || '–'}</p>
             </div>
           </div>
 
           {/* TikTok info */}
           {profile.tikTokUsername && (
-            <div style={{ background: '#0a0a0f', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', borderLeft: '3px solid #4caf50' }}>
-              <p style={{ color: '#8b8ba3', fontSize: '.8rem', marginBottom: '0.5rem' }}>🎵 TikTok</p>
+            <div style={{ background: '#FFF4EC', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', borderLeft: '3px solid #4caf50' }}>
+              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.5rem' }}>🎵 TikTok</p>
               <a
                 href={`https://www.tiktok.com/@${profile.tikTokUsername}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: '#7c3aed', textDecoration: 'none', fontSize: '1rem', fontWeight: 600 }}
+                style={{ color: '#6a4ea8', textDecoration: 'none', fontSize: '1rem', fontWeight: 600 }}
               >
                 @{profile.tikTokUsername}
               </a>
@@ -314,7 +318,7 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
           {/* Profile tags */}
           {profile.profileTags && profile.profileTags.length > 0 && (
             <div style={{ marginBottom: '1.5rem' }}>
-              <p style={{ color: '#8b8ba3', fontSize: '.8rem', marginBottom: '0.75rem' }}>Experttaggar</p>
+              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.75rem' }}>Experttaggar</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {profile.profileTags.map((tag) => (
                   <span
@@ -323,7 +327,7 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
                       display: 'inline-block',
                       padding: '0.5rem 1rem',
                       borderRadius: '999px',
-                      background: 'rgba(124,58,237,.2)',
+                      background: 'rgba(106,78,168,.2)',
                       color: '#c4b5fd',
                       fontSize: '.85rem',
                       fontWeight: 600,
@@ -338,19 +342,19 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
           )}
 
           {/* Additional info */}
-          <div style={{ background: '#0a0a0f', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+          <div style={{ background: '#FFF4EC', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
             <div>
-              <p style={{ color: '#8b8ba3', fontSize: '.75rem', marginBottom: '0.25rem' }}>FÖDSELDATUM</p>
-              <p style={{ color: '#fafafa', fontWeight: 600 }}>{profile.id ? '••••••••' : '–'}</p>
+              <p style={{ color: '#6E7480', fontSize: '.75rem', marginBottom: '0.25rem' }}>FÖDSELDATUM</p>
+              <p style={{ color: '#0B0F17', fontWeight: 600 }}>{profile.id ? '••••••••' : '–'}</p>
               <p style={{ color: '#5a5a7a', fontSize: '.75rem', marginTop: '0.25rem' }}>Skyddat för integritet</p>
             </div>
             <div>
-              <p style={{ color: '#8b8ba3', fontSize: '.75rem', marginBottom: '0.25rem' }}>MEDLEMSID</p>
-              <p style={{ color: '#fafafa', fontWeight: 600, fontSize: '.85rem', fontFamily: 'monospace' }}>{profile.userId?.slice(0, 8)}...</p>
+              <p style={{ color: '#6E7480', fontSize: '.75rem', marginBottom: '0.25rem' }}>MEDLEMSID</p>
+              <p style={{ color: '#0B0F17', fontWeight: 600, fontSize: '.85rem', fontFamily: 'monospace' }}>{profile.userId?.slice(0, 8)}...</p>
             </div>
             <div>
-              <p style={{ color: '#8b8ba3', fontSize: '.75rem', marginBottom: '0.25rem' }}>REGISTRERAD</p>
-              <p style={{ color: '#fafafa', fontWeight: 600 }}>{(profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('sv-SE') : '–')}</p>
+              <p style={{ color: '#6E7480', fontSize: '.75rem', marginBottom: '0.25rem' }}>REGISTRERAD</p>
+              <p style={{ color: '#0B0F17', fontWeight: 600 }}>{(profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('sv-SE') : '–')}</p>
             </div>
           </div>
 
@@ -377,7 +381,7 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
                   placeholder="Orsak till avvisning..."
-                  style={{ flex: 1, borderRadius: '.5rem', border: '1px solid #1e1e2e', background: '#0a0a0f', padding: '.75rem', fontSize: '.9rem', color: '#fafafa', outline: 'none' }}
+                  style={{ flex: 1, borderRadius: '.5rem', border: '1px solid #1e1e2e', background: '#FFF4EC', padding: '.75rem', fontSize: '.9rem', color: '#0B0F17', outline: 'none' }}
                 />
                 <button
                   onClick={() => rejectCreator.mutate(rejectReason)}
@@ -397,14 +401,14 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
           )}
 
           {profile.status === 'Rejected' && (
-            <div style={{ background: 'rgba(244,67,54,.1)', border: '1px solid #f44336', borderRadius: '0.5rem', padding: '1rem' }}>
-              <p style={{ color: '#f44336', fontSize: '.9rem', fontWeight: 600 }}>❌ Denna profil har avvisats</p>
+            <div style={{ background: 'rgba(207,75,75,.1)', border: '1px solid #f44336', borderRadius: '0.5rem', padding: '1rem' }}>
+              <p style={{ color: '#cf4b4b', fontSize: '.9rem', fontWeight: 600 }}>❌ Denna profil har avvisats</p>
             </div>
           )}
 
           {profile.status === 'Approved' && (
-            <div style={{ background: 'rgba(76,175,80,.1)', border: '1px solid #4caf50', borderRadius: '0.5rem', padding: '1rem' }}>
-              <p style={{ color: '#4caf50', fontSize: '.9rem', fontWeight: 600 }}>✓ Denna profil är godkänd</p>
+            <div style={{ background: 'rgba(47,157,91,.1)', border: '1px solid #4caf50', borderRadius: '0.5rem', padding: '1rem' }}>
+              <p style={{ color: '#2f9d5b', fontSize: '.9rem', fontWeight: 600 }}>✓ Denna profil är godkänd</p>
             </div>
           )}
         </div>
@@ -416,7 +420,7 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
 export function AdminDashboardPage() {
   const [page] = useState(1);
   const [searchParams, setSearchParams] = useSearchParams();
-  const section = (searchParams.get('section') as 'users' | 'campaigns') || 'users';
+  const section = (searchParams.get('section') as AdminSection) || 'overview';
   const filter = (searchParams.get('tab') as 'all' | 'pending' | 'active' | 'rejected') || 'pending';
   const creatorId = searchParams.get('creatorId');
 
@@ -425,7 +429,7 @@ export function AdminDashboardPage() {
     return <AdminCreatorProfilePage creatorId={creatorId} onBack={() => setSearchParams({ section, tab: filter })} />;
   }
 
-  const setSection = (s: 'users' | 'campaigns') => setSearchParams({ section: s, tab: s === 'users' ? 'pending' : '' });
+  const setSection = (sec: AdminSection) => setSearchParams({ section: sec, tab: sec === 'users' ? 'pending' : '' });
   const setFilter = (f: 'all' | 'pending' | 'active' | 'rejected') => setSearchParams({ section, tab: f });
 
   const { data, isLoading, isError, error } = usePendingUsers(page);
@@ -471,52 +475,42 @@ export function AdminDashboardPage() {
   const pendingUserCount = (data?.data || []).filter(u => u.status === 'PendingVerification').length;
 
   return (
-    <div style={s.page}>
+    <div className="vy-app" style={s.page}>
       <div style={s.container}>
         <div style={s.header}>
           <div>
             <h1 style={s.title}>Admin Panel</h1>
-            <p style={{ color: '#8b8ba3', fontSize: '.9rem' }}>Hantera användare och kampanjer</p>
+            <p style={{ color: '#6E7480', fontSize: '.9rem' }}>Statistik, användare, kampanjer, utbetalningar och säkerhet</p>
           </div>
           <button
             onClick={() => triggerSync.mutate()}
             disabled={triggerSync.isPending}
-            style={{ padding: '.5rem 1rem', borderRadius: '.5rem', border: '1px solid #7c3aed', background: '#7c3aed', color: '#fff', cursor: 'pointer', fontSize: '.8rem', fontWeight: 600, opacity: triggerSync.isPending ? 0.6 : 1 }}>
+            style={{ padding: '.5rem 1rem', borderRadius: '.5rem', border: '1px solid #7c3aed', background: '#6a4ea8', color: '#fff', cursor: 'pointer', fontSize: '.8rem', fontWeight: 600, opacity: triggerSync.isPending ? 0.6 : 1 }}>
             {triggerSync.isPending ? '⏳ Synkar...' : triggerSync.isSuccess ? '✓ Synk startad!' : '🔄 Synka TikTok nu'}
           </button>
         </div>
 
         {/* Section selector */}
-        <div style={{ display: 'flex', gap: '.75rem', marginBottom: '1.5rem' }}>
-          <button
-            onClick={() => setSection('users')}
-            style={{
-              padding: '.625rem 1.25rem', borderRadius: '.625rem', fontWeight: 700, fontSize: '.9rem', cursor: 'pointer',
-              border: section === 'users' ? '2px solid #e84393' : '2px solid #1e1e2e',
-              background: section === 'users' ? 'rgba(232,67,147,.12)' : 'transparent',
-              color: section === 'users' ? '#e84393' : '#8b8ba3',
-              display: 'flex', alignItems: 'center', gap: '.5rem',
-            }}>
-            👤 Användare
-            {pendingUserCount > 0 && (
-              <span style={{ background: '#e84393', color: '#fff', borderRadius: 999, fontSize: '.7rem', fontWeight: 700, padding: '1px 7px' }}>{pendingUserCount}</span>
-            )}
-          </button>
-          <button
-            onClick={() => setSection('campaigns')}
-            style={{
-              padding: '.625rem 1.25rem', borderRadius: '.625rem', fontWeight: 700, fontSize: '.9rem', cursor: 'pointer',
-              border: section === 'campaigns' ? '2px solid #7c3aed' : '2px solid #1e1e2e',
-              background: section === 'campaigns' ? 'rgba(124,58,237,.12)' : 'transparent',
-              color: section === 'campaigns' ? '#7c3aed' : '#8b8ba3',
-              display: 'flex', alignItems: 'center', gap: '.5rem',
-            }}>
-            📢 Kampanjer
-            {pendingCampaignCount > 0 && (
-              <span style={{ background: '#7c3aed', color: '#fff', borderRadius: 999, fontSize: '.7rem', fontWeight: 700, padding: '1px 7px' }}>{pendingCampaignCount}</span>
-            )}
-          </button>
+        <div style={{ display: 'flex', gap: '.6rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+          {([
+            ['overview', 'Översikt', 0],
+            ['users', 'Användare', pendingUserCount],
+            ['campaigns', 'Kampanjer', pendingCampaignCount],
+            ['payouts', 'Utbetalningar', 0],
+            ['fraud', 'Säkerhet', 0],
+            ['audit', 'Logg', 0],
+          ] as [AdminSection, string, number][]).map(([key, label, badge]) => (
+            <button key={key} onClick={() => setSection(key)} style={s.tab(section === key)}>
+              {label}
+              {badge > 0 && <span style={{ marginLeft: 6, background: '#C26A4A', color: '#fff', borderRadius: 999, fontSize: '.7rem', fontWeight: 700, padding: '1px 7px' }}>{badge}</span>}
+            </button>
+          ))}
         </div>
+
+        {section === 'overview' && <AdminOverviewSection />}
+        {section === 'payouts' && <AdminPayoutsSection />}
+        {section === 'fraud' && <AdminFraudSection />}
+        {section === 'audit' && <AdminAuditSection />}
 
         {/* ── Users section ── */}
         {section === 'users' && (
@@ -557,7 +551,7 @@ export function AdminDashboardPage() {
                       <span style={s.roleBadge(user.role)}>{user.role}</span>
                       <span style={s.badge(user.status)}>{user.status === 'PendingVerification' ? 'Väntande' : user.status === 'Active' ? 'Godkänd' : 'Avvisad'}</span>
                     </div>
-                    <p style={{ color: '#8b8ba3', fontSize: '.8rem' }}>
+                    <p style={{ color: '#6E7480', fontSize: '.8rem' }}>
                       {user.email} · Registrerad {new Date(user.createdAt).toLocaleDateString('sv-SE')}
                     </p>
                   </div>
@@ -565,14 +559,14 @@ export function AdminDashboardPage() {
                     {user.role === 'Creator' && (
                       <button
                         onClick={() => setSearchParams({ section: 'users', tab: filter, creatorId: user.id })}
-                        style={{ background: 'none', border: '1px solid #7c3aed', borderRadius: '.5rem', padding: '.5rem .75rem', color: '#7c3aed', cursor: 'pointer', fontSize: '.8rem', fontWeight: 600 }}
+                        style={{ background: 'none', border: '1px solid #7c3aed', borderRadius: '.5rem', padding: '.5rem .75rem', color: '#6a4ea8', cursor: 'pointer', fontSize: '.8rem', fontWeight: 600 }}
                       >
                         Visa profil
                       </button>
                     )}
                     <button
                       onClick={() => setExpandedId(expandedId === user.id ? null : user.id)}
-                      style={{ background: 'none', border: '1px solid #1e1e2e', borderRadius: '.5rem', padding: '.5rem .75rem', color: '#8b8ba3', cursor: 'pointer', fontSize: '.8rem' }}
+                      style={{ background: 'none', border: '1px solid #1e1e2e', borderRadius: '.5rem', padding: '.5rem .75rem', color: '#6E7480', cursor: 'pointer', fontSize: '.8rem' }}
                     >
                       {expandedId === user.id ? 'Dölj' : 'Detaljer'}
                     </button>
@@ -584,7 +578,7 @@ export function AdminDashboardPage() {
                     {(user.avatarUrl || user.authProvider) && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
                         {user.avatarUrl && <img src={user.avatarUrl} alt="" style={{ width: 44, height: 44, borderRadius: user.role === 'Brand' ? 10 : '50%', objectFit: 'cover', border: '1px solid #1e1e2e' }} />}
-                        {user.authProvider && <span style={{ fontSize: '.75rem', color: '#4caf50', border: '1px solid rgba(76,175,80,.4)', borderRadius: 999, padding: '3px 10px' }}>E-post verifierad via {user.authProvider}</span>}
+                        {user.authProvider && <span style={{ fontSize: '.75rem', color: '#2f9d5b', border: '1px solid rgba(47,157,91,.4)', borderRadius: 999, padding: '3px 10px' }}>E-post verifierad via {user.authProvider}</span>}
                       </div>
                     )}
                     {user.role === 'Creator' && (
@@ -609,7 +603,7 @@ export function AdminDashboardPage() {
                       </>
                     )}
                     {user.rejectionReason && (
-                      <div style={s.detailRow}><span style={s.detailLabel}>Avvisningsorsak:</span><span style={{ color: '#f44336' }}>{user.rejectionReason}</span></div>
+                      <div style={s.detailRow}><span style={s.detailLabel}>Avvisningsorsak:</span><span style={{ color: '#cf4b4b' }}>{user.rejectionReason}</span></div>
                     )}
                   </div>
                 )}
@@ -626,17 +620,17 @@ export function AdminDashboardPage() {
                           value={rejectReason}
                           onChange={(e) => setRejectReason(e.target.value)}
                           placeholder="Orsak till avvisning..."
-                          style={{ flex: 1, borderRadius: '.5rem', border: '1px solid #1e1e2e', background: '#0a0a0f', padding: '.5rem .75rem', fontSize: '.8rem', color: '#fafafa', outline: 'none' }}
+                          style={{ flex: 1, borderRadius: '.5rem', border: '1px solid #1e1e2e', background: '#FFF4EC', padding: '.5rem .75rem', fontSize: '.8rem', color: '#0B0F17', outline: 'none' }}
                         />
                         <button style={s.btnReject} onClick={() => handleReject(user.id)} disabled={rejectUser.isPending || !rejectReason.trim()}>
                           Avvisa
                         </button>
-                        <button onClick={() => { setRejectingId(null); setRejectReason(''); }} style={{ background: 'none', border: 'none', color: '#8b8ba3', cursor: 'pointer', fontSize: '.8rem' }}>
+                        <button onClick={() => { setRejectingId(null); setRejectReason(''); }} style={{ background: 'none', border: 'none', color: '#6E7480', cursor: 'pointer', fontSize: '.8rem' }}>
                           Avbryt
                         </button>
                       </div>
                     ) : (
-                      <button style={{ ...s.btnReject, background: 'transparent', border: '1px solid #f44336', color: '#f44336' }} onClick={() => setRejectingId(user.id)}>
+                      <button style={{ ...s.btnReject, background: 'transparent', border: '1px solid #f44336', color: '#cf4b4b' }} onClick={() => setRejectingId(user.id)}>
                         ✕ Avvisa
                       </button>
                     )}
@@ -650,7 +644,7 @@ export function AdminDashboardPage() {
         {/* ── Campaigns section ── */}
         {section === 'campaigns' && (
           <>
-            <p style={{ color: '#8b8ba3', fontSize: '.875rem', marginBottom: '1rem' }}>
+            <p style={{ color: '#6E7480', fontSize: '.875rem', marginBottom: '1rem' }}>
               Kampanjer som väntar på granskning innan de publiceras.
             </p>
 
@@ -676,12 +670,12 @@ export function AdminDashboardPage() {
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginBottom: '.25rem' }}>
                       <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>{campaign.name}</span>
-                      <span style={{ display: 'inline-block', padding: '.25rem .75rem', borderRadius: 999, fontSize: '.75rem', fontWeight: 600, background: 'rgba(255,193,7,.15)', color: '#ffc107' }}>Granskas</span>
+                      <span style={{ display: 'inline-block', padding: '.25rem .75rem', borderRadius: 999, fontSize: '.75rem', fontWeight: 600, background: 'rgba(255,216,199,.55)', color: '#b07d1c' }}>Granskas</span>
                     </div>
-                    <p style={{ color: '#8b8ba3', fontSize: '.8rem' }}>
+                    <p style={{ color: '#6E7480', fontSize: '.8rem' }}>
                       {campaign.brandName} · {campaign.category} · {campaign.country}
                     </p>
-                    <p style={{ color: '#8b8ba3', fontSize: '.8rem', marginTop: '.25rem' }}>
+                    <p style={{ color: '#6E7480', fontSize: '.8rem', marginTop: '.25rem' }}>
                       Budget: {formatCurrency(campaign.budget)} · Max {campaign.maxCreators} creators · {formatDate(campaign.startDate)} – {formatDate(campaign.endDate)}
                     </p>
                     <p style={{ color: '#5a5a7a', fontSize: '.75rem', marginTop: '.25rem' }}>
@@ -701,17 +695,17 @@ export function AdminDashboardPage() {
                         value={campaignRejectReason}
                         onChange={(e) => setCampaignRejectReason(e.target.value)}
                         placeholder="Orsak till avvisning..."
-                        style={{ flex: 1, borderRadius: '.5rem', border: '1px solid #1e1e2e', background: '#0a0a0f', padding: '.5rem .75rem', fontSize: '.8rem', color: '#fafafa', outline: 'none' }}
+                        style={{ flex: 1, borderRadius: '.5rem', border: '1px solid #1e1e2e', background: '#FFF4EC', padding: '.5rem .75rem', fontSize: '.8rem', color: '#0B0F17', outline: 'none' }}
                       />
                       <button style={s.btnReject} onClick={() => handleCampaignReject(campaign.id)} disabled={rejectCampaign.isPending || !campaignRejectReason.trim()}>
                         Neka
                       </button>
-                      <button onClick={() => { setRejectingCampaignId(null); setCampaignRejectReason(''); }} style={{ background: 'none', border: 'none', color: '#8b8ba3', cursor: 'pointer', fontSize: '.8rem' }}>
+                      <button onClick={() => { setRejectingCampaignId(null); setCampaignRejectReason(''); }} style={{ background: 'none', border: 'none', color: '#6E7480', cursor: 'pointer', fontSize: '.8rem' }}>
                         Avbryt
                       </button>
                     </div>
                   ) : (
-                    <button style={{ ...s.btnReject, background: 'transparent', border: '1px solid #f44336', color: '#f44336' }} onClick={() => setRejectingCampaignId(campaign.id)}>
+                    <button style={{ ...s.btnReject, background: 'transparent', border: '1px solid #f44336', color: '#cf4b4b' }} onClick={() => setRejectingCampaignId(campaign.id)}>
                       ✕ Neka
                     </button>
                   )}

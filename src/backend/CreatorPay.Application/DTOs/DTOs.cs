@@ -313,6 +313,11 @@ public record FraudFlagDto(
 
 // ──── Common request types ────
 public record RejectReasonRequest(string Reason);
+public record AdminStatsDto(
+    int TotalUsers, int PendingUsers, int Creators, int Brands,
+    int ActiveCampaigns, int PendingCampaigns,
+    int PendingPayouts, decimal PendingPayoutAmount, decimal TotalPaidOut,
+    long TotalVerifiedViews, int OpenFraudFlags);
 public record TikTokCallbackRequest(string Code);
 
 // ──── Analytics ────

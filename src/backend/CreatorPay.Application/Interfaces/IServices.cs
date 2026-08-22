@@ -42,6 +42,7 @@ public interface IAdminUserService
     Task<Result<PagedResult<PendingUserDto>>> GetUsersAsync(string? status, int page, int pageSize);
     Task<Result<PendingUserDto>> ApproveUserAsync(Guid userId, Guid adminId);
     Task<Result<PendingUserDto>> RejectUserAsync(Guid userId, Guid adminId, string reason);
+    Task<Result<AdminStatsDto>> GetStatsAsync();
 }
 
 public interface IBrandService

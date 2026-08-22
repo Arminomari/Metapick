@@ -404,7 +404,10 @@ public class FraudService : IFraudService
             return Errors.Conflict("Flag already resolved");
 
         flag.Status = string.Equals(request.Action, "dismiss", StringComparison.OrdinalIgnoreCase)
-            ? FraudStatus.Dismissed : FraudStatus.Resolved_Fraud;
+            ? FraudStatus.Dismissed
+            : string.Equals(request.Action, "legitimate", StringComparison.OrdinalIgnoreCase)
+                ? FraudStatus.Resolved_Legitimate
+                : FraudStatus.Resolved_Fraud;
         flag.ResolvedBy = adminUserId;
         flag.Resolution = request.Note;
         flag.ResolvedAt = DateTime.UtcNow;

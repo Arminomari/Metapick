@@ -132,6 +132,11 @@ public class AdminUserController : BaseController
         return ToActionResult(await _adminUsers.GetUsersAsync(status, page, pageSize));
     }
 
+    /// <summary>Plattformsstatistik för admin-översikten</summary>
+    [HttpGet("/api/admin/stats")]
+    public async Task<IActionResult> GetStats()
+        => ToActionResult(await _adminUsers.GetStatsAsync());
+
     [HttpPost("{id:guid}/approve")]
     public async Task<IActionResult> ApproveUser(Guid id)
         => ToActionResult(await _adminUsers.ApproveUserAsync(id, GetUserId()));
