@@ -137,6 +137,11 @@ public class AdminUserController : BaseController
     public async Task<IActionResult> CreateAdmin([FromBody] CreateAdminRequest request)
         => ToActionResult(await _adminUsers.CreateAdminAsync(GetUserId(), request));
 
+    /// <summary>Skicka meddelande till alla användare (notis + valfritt mejl)</summary>
+    [HttpPost("broadcast")]
+    public async Task<IActionResult> Broadcast([FromBody] BroadcastRequest request)
+        => ToActionResult(await _adminUsers.BroadcastAsync(GetUserId(), request));
+
     /// <summary>Plattformsstatistik för admin-översikten</summary>
     [HttpGet("/api/admin/stats")]
     public async Task<IActionResult> GetStats()

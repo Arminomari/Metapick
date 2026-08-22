@@ -1,3 +1,5 @@
+import api from '@/lib/api';
+import { useProfile } from '@/hooks/api';
 import { t, statusLabel, LangSwitcher } from '@/lib/i18n';
 import { FEATURES } from '@/lib/features';
 import { ReactNode, useState } from 'react';
@@ -107,6 +109,7 @@ function ShellChrome({ group, role, nav, name, handle, sub, initial, imageUrl, b
               </div>
             </div>
           </header>
+          <EmailVerifyBanner />
           <div className="scroll"><Outlet /></div>
         </div>
       </div>
@@ -171,3 +174,28 @@ export function BrandShell() {
   );
   return <ShellChrome group={t('Varumärke')} role="Brand" nav={nav} name={name} handle={email || ''} sub={sub} initial={(name[0] || 'B').toUpperCase()} imageUrl={profile?.logoUrl} bellBadge={notifs?.totalCount ?? 0} chatBadge={chatUnread ?? 0} />;
 }
+
+/** Slim amber bar shown until the logged-in user has confirmed their email. */
+function EmailVerifyBanner() {
+  const { data: prof } = useProfile();
+  const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  if (!prof || prof.emailVerified) return null;
+
+  const resend = async () => {
+    setBusy(true);
+    try { await api.post('/auth/resend-verification', { email: prof.email }); setSent(true); } catch { /* banner stays; user can retry */ }
+    setBusy(false);
+  };
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '9px 22px', background: 'rgba(242,197,138,.28)', borderBottom: '1px solid rgba(212,155,46,.35)', fontSize: 13 }}>
+      <span aria-hidden>✉️</span>
+      <span>{t('Bekräfta din e-postadress — vi har skickat en länk till')} <strong>{prof.email}</strong></span>
+      {sent
+        ? <span style={{ fontWeight: 700, color: '#2f7d52' }}>✓ {t('Skickat! Kolla inkorgen (och skräpposten).')}</span>
+        : <button type="button" onClick={resend} disabled={busy} style={{ border: 'none', background: 'none', color: '#9c4f31', fontWeight: 700, cursor: 'pointer', fontSize: 13, padding: 0, fontFamily: 'inherit' }}>{busy ? t('Skickar…') : t('Skicka länken igen')}</button>}
+    </div>
+  );
+}
+

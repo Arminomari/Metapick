@@ -1,3 +1,4 @@
+import { maskSwishNumber, maskBankAccount } from '@/lib/masks';
 import type { CSSProperties } from 'react';
 import { CopyField } from '@/components/ui/CopyButton';
 import { t } from '@/lib/i18n';
@@ -862,7 +863,7 @@ const METHOD_META: Record<string, { label: string; hint: string; placeholder: st
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10h16M5 10 12 5l7 5M6 10v7M10 10v7M14 10v7M18 10v7M4 20h16" /></svg>,
   },
   Swish: {
-    label: 'Swish', hint: t('Mobilnummer kopplat till Swish'), placeholder: '07X-XXX XX XX',
+    label: 'Swish', hint: t('Mobilnummer kopplat till Swish'), placeholder: '070-123 45 67',
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="7" y="2" width="10" height="20" rx="2.5" /><path d="M11 18h2" /></svg>,
   },
   PayPal: {
@@ -930,11 +931,11 @@ function PayoutMethodCard() {
         <form onSubmit={save}>
           <div className="auth-role" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', marginBottom: 16 }} role="group" aria-label={t('Metod')}>
             {Object.entries(METHOD_META).map(([key, m]) => (
-              <button key={key} type="button" aria-pressed={method === key} className={method === key ? 'on' : ''} onClick={() => setMethodType(key)}>{m.label}</button>
+              <button key={key} type="button" aria-pressed={method === key} className={method === key ? 'on' : ''} onClick={() => { setMethodType(key); setDetails(''); }}>{m.label}</button>
             ))}
           </div>
           <div className="form-grid">
-            <div className="field"><label htmlFor="pm-details">{meta.hint} *</label><input id="pm-details" value={details} onChange={(e) => setDetails(e.target.value)} required minLength={4} maxLength={200} placeholder={meta.placeholder} autoComplete="off" /></div>
+            <div className="field"><label htmlFor="pm-details">{meta.hint} *</label><input id="pm-details" value={details} inputMode={method === 'PayPal' ? 'email' : 'numeric'} onChange={(e) => setDetails(method === 'Swish' ? maskSwishNumber(e.target.value) : method === 'BankTransfer' ? maskBankAccount(e.target.value) : e.target.value)} required minLength={4} maxLength={200} placeholder={meta.placeholder} autoComplete="off" /></div>
             <div className="field"><label htmlFor="pm-holder">{t('Kontoinnehavare')}</label><input id="pm-holder" value={holder} onChange={(e) => setHolder(e.target.value)} placeholder={t('För- och efternamn')} /></div>
             <div className="field full" style={{ flexDirection: 'row', gap: 10 }}>
               <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={setMethod.isPending}>{setMethod.isPending ? t('Sparar…') : t('Spara metod')}</button>

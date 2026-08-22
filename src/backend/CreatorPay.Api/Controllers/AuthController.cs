@@ -90,4 +90,14 @@ public class AuthController : BaseController
     [EnableRateLimiting("auth")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         => ToActionResult(await _auth.ResetPasswordAsync(request));
+
+    [HttpPost("verify-email")]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request)
+        => ToActionResult(await _auth.VerifyEmailAsync(request));
+
+    [HttpPost("resend-verification")]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> ResendVerification([FromBody] ResendVerificationRequest request)
+        => ToActionResult(await _auth.ResendVerificationEmailAsync(request.Email));
 }

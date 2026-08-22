@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
-import { AdminOverviewSection, AdminPayoutsSection, AdminFraudSection, AdminAuditSection, AdminCreateAdminCard } from './AdminExtraSections';
+import { AdminOverviewSection, AdminPayoutsSection, AdminFraudSection, AdminAuditSection, AdminCreateAdminCard, AdminBroadcastCard } from './AdminExtraSections';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import api from '@/lib/api';
@@ -526,6 +526,7 @@ export function AdminDashboardPage() {
         {section === 'users' && (
           <>
             <AdminCreateAdminCard />
+            <AdminBroadcastCard />
             <div style={s.tabs}>
               <button style={s.tab(filter === 'pending')} onClick={() => setFilter('pending')}>{t('Väntande')}</button>
               <button style={s.tab(filter === 'active')} onClick={() => setFilter('active')}>{t('Godkända')}</button>

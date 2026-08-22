@@ -17,6 +17,7 @@ public class CampaignService : ICampaignService
     private readonly IRepository<SavedCampaign> _savedCampaigns;
     private readonly IAuditService _audit;
     private readonly INotificationService _notifications;
+    private readonly IRepository<User> _userAccounts;
 
     public CampaignService(
         IUnitOfWork uow,
@@ -25,7 +26,8 @@ public class CampaignService : ICampaignService
         IRepository<CreatorProfile> creatorProfiles,
         IRepository<SavedCampaign> savedCampaigns,
         IAuditService audit,
-        INotificationService notifications)
+        INotificationService notifications,
+        IRepository<User> userAccounts)
     {
         _uow = uow;
         _campaigns = campaigns;
@@ -34,6 +36,7 @@ public class CampaignService : ICampaignService
         _savedCampaigns = savedCampaigns;
         _audit = audit;
         _notifications = notifications;
+        _userAccounts = userAccounts;
     }
 
     public async Task<Result<CampaignDetailDto>> CreateCampaignAsync(Guid brandUserId, CreateCampaignRequest request, CancellationToken ct = default)
@@ -43,6 +46,13 @@ public class CampaignService : ICampaignService
 
         if (brand == null)
             return Errors.Forbidden("Brand account must be approved before creating campaigns");
+
+        var brandEmailVerified = await _userAccounts.Query()
+            .Where(u => u.Id == brandUserId)
+            .Select(u => u.EmailVerified)
+            .FirstOrDefaultAsync(ct);
+        if (!brandEmailVerified)
+            return Errors.Forbidden("Bekräfta din e-postadress först — kolla mejlet vi skickat, eller begär en ny länk i bannern högst upp.");
 
         if (!Enum.TryParse<PayoutModel>(request.PayoutModel, out var payoutModel))
             return Errors.Validation("Invalid payout model");

@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import { CreatorShell, BrandShell } from '@/components/layout/VyrleShell';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from '@/pages/auth/AuthPages';
+import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage } from '@/pages/auth/AuthPages';
 import { TikTokCallbackPage } from '@/pages/auth/TikTokCallbackPage';
 import { TikTokSigninPage } from '@/pages/auth/TikTokSigninPage';
 import { TermsPage, PrivacyPage } from '@/pages/LegalPages';
@@ -68,6 +68,7 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/auth/tiktok/signin" element={<TikTokSigninPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />

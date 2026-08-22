@@ -15,6 +15,8 @@ public interface IAuthService
     Task<Result<bool>> ChangePasswordAsync(Guid userId, ChangePasswordRequest request);
     Task<Result<bool>> RequestPasswordResetAsync(string email);
     Task<Result<bool>> ResetPasswordAsync(ResetPasswordRequest request);
+    Task<Result<bool>> VerifyEmailAsync(VerifyEmailRequest request);
+    Task<Result<bool>> ResendVerificationEmailAsync(string email);
 }
 
 public interface ISocialAuthService
@@ -44,6 +46,7 @@ public interface IAdminUserService
     Task<Result<PendingUserDto>> RejectUserAsync(Guid userId, Guid adminId, string reason);
     Task<Result<AdminStatsDto>> GetStatsAsync();
     Task<Result<PendingUserDto>> CreateAdminAsync(Guid callerAdminUserId, CreateAdminRequest request);
+    Task<Result<int>> BroadcastAsync(Guid callerAdminUserId, BroadcastRequest request);
 }
 
 public interface IBrandService

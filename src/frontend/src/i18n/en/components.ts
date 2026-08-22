@@ -59,4 +59,7 @@ export const components: Record<string, string> = {
   'Något gick fel': 'Something went wrong',
   'Ett oväntat fel inträffade.': 'An unexpected error occurred.',
   'Försök igen': 'Try again',
+  'Bekräfta din e-postadress — vi har skickat en länk till': 'Confirm your email address — we have sent a link to',
+  'Skickat! Kolla inkorgen (och skräpposten).': 'Sent! Check your inbox (and spam folder).',
+  'Skicka länken igen': 'Send the link again',
 };

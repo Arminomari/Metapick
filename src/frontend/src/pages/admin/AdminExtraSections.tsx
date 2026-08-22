@@ -62,6 +62,8 @@ const ACTION_LABELS: Record<string, string> = {
   'Admin.ApproveUser': 'Konto godkänt av admin',
   'Admin.RejectUser': 'Konto nekat av admin',
   'Admin.CreateAdmin': 'Ny admin skapad',
+  'Admin.Broadcast': 'Utskick till alla användare',
+  'Auth.EmailVerified': 'E-post bekräftad',
 };
 const actionLabel = (a: string) => ACTION_LABELS[a] ?? a.replace('.', ' · ');
 function actionDot(a: string): string {
@@ -304,6 +306,57 @@ export function AdminCreateAdminCard() {
         </form>
       )}
       {message && <div style={{ marginTop: '.6rem', fontSize: '.85rem', color: message.startsWith('Admin skapad') ? '#2f9d5b' : '#cf4b4b', fontWeight: 600 }}>{t(message)}</div>}
+    </div>
+  );
+}
+
+/* ── Meddela alla användare ────────────────────────────── */
+export function AdminBroadcastCard() {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ audience: 'All', subject: '', message: '', sendEmail: true });
+  const [result, setResult] = useState('');
+  const send = useMutation({
+    mutationFn: async () => {
+      const res = await api.post('/admin/users/broadcast', form);
+      return res.data.data as number;
+    },
+    onSuccess: (n) => { setResult(`${t('Skickat till')} ${n} ${t('användare')}.`); setForm((f) => ({ ...f, subject: '', message: '' })); },
+    onError: (err: any) => setResult(err?.response?.data?.error?.message ?? t('Kunde inte skicka utskicket.')),
+  });
+
+  const input: React.CSSProperties = { width: '100%', padding: '.6rem .8rem', borderRadius: 12, border: '1px solid rgba(241,168,143,.3)', background: '#fff', fontSize: '.88rem', color: '#0B0F17', fontFamily: 'inherit' };
+
+  return (
+    <div style={{ ...card, padding: '1.1rem 1.3rem' }}>
+      <button type="button" onClick={() => setOpen((v) => !v)}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '.92rem', color: '#0B0F17', padding: 0 }}>
+        {open ? '▾' : '▸'} {t('Meddela alla användare')}
+      </button>
+      <div style={{ ...mutedTx, marginTop: 2 }}>{t('Skickas som notis i appen och (valfritt) som mejl. Välj målgrupp nedan.')}</div>
+      {open && (
+        <form style={{ display: 'grid', gap: '.7rem', marginTop: '.9rem' }}
+          onSubmit={(e) => { e.preventDefault(); setResult(''); send.mutate(); }}>
+          <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap' }}>
+            {([['All', t('Alla')], ['Creators', 'Creators'], ['Brands', t('Varumärken')]] as const).map(([val, label]) => (
+              <button key={val} type="button" onClick={() => setForm({ ...form, audience: val })}
+                style={{ padding: '.45rem 1.1rem', borderRadius: 980, border: form.audience === val ? 'none' : '1px solid rgba(241,168,143,.4)', background: form.audience === val ? 'linear-gradient(135deg,#1A2230,#0B0F17)' : '#fff', color: form.audience === val ? '#fff' : '#0B0F17', fontWeight: 600, fontSize: '.82rem', cursor: 'pointer' }}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <input style={input} type="text" required maxLength={150} placeholder={t('Ämne')} value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} />
+          <textarea style={{ ...input, resize: 'vertical' }} rows={4} required maxLength={4000} placeholder={t('Meddelande…')} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.85rem', color: '#0B0F17', cursor: 'pointer' }}>
+            <input type="checkbox" checked={form.sendEmail} onChange={(e) => setForm({ ...form, sendEmail: e.target.checked })} />
+            {t('Skicka även som mejl')}
+          </label>
+          <button type="submit" disabled={send.isPending}
+            style={{ padding: '.6rem 1.4rem', borderRadius: 980, background: 'linear-gradient(135deg,#1A2230,#0B0F17)', color: '#fff', border: 'none', fontWeight: 600, fontSize: '.85rem', cursor: 'pointer', justifySelf: 'start' }}>
+            {send.isPending ? t('Skickar…') : t('Skicka utskick')}
+          </button>
+        </form>
+      )}
+      {result && <div style={{ marginTop: '.6rem', fontSize: '.85rem', fontWeight: 600, color: result.startsWith(t('Skickat till')) ? '#2f9d5b' : '#cf4b4b' }}>{result}</div>}
     </div>
   );
 }

@@ -24,6 +24,7 @@ public class AdminUserService : IAdminUserService
     private readonly IRepository<CreatorCampaignAssignment> _assignments;
     private readonly IRepository<AdminProfile> _adminProfiles;
     private readonly IEncryptionService _encryption;
+    private readonly IRepository<Notification> _notificationRows;
 
     public AdminUserService(
         IRepository<User> users,
@@ -39,7 +40,8 @@ public class AdminUserService : IAdminUserService
         IRepository<FraudFlag> fraudFlags,
         IRepository<CreatorCampaignAssignment> assignments,
         IRepository<AdminProfile> adminProfiles,
-        IEncryptionService encryption)
+        IEncryptionService encryption,
+        IRepository<Notification> notificationRows)
     {
         _users = users;
         _brands = brands;
@@ -55,6 +57,7 @@ public class AdminUserService : IAdminUserService
         _assignments = assignments;
         _adminProfiles = adminProfiles;
         _encryption = encryption;
+        _notificationRows = notificationRows;
     }
 
     public async Task<Result<PagedResult<PendingUserDto>>> GetUsersAsync(string? status, int page, int pageSize)
@@ -367,5 +370,57 @@ public class AdminUserService : IAdminUserService
                 "Logga in", "https://www.vyrle.co/login"));
 
         return (await GetPendingUserDto(admin))!;
+    }
+
+    /// <summary>
+    /// Sends a message to every active user in the chosen audience: an in-app
+    /// notification with the subject as title, and optionally a branded email.
+    /// Email failures are counted but never abort the broadcast.
+    /// </summary>
+    public async Task<Result<int>> BroadcastAsync(Guid callerAdminUserId, BroadcastRequest request)
+    {
+        var query = _users.Query()
+            .Where(u => u.Status == UserStatus.Active && u.Role != UserRole.Admin);
+        if (request.Audience == "Creators") query = query.Where(u => u.Role == UserRole.Creator);
+        else if (request.Audience == "Brands") query = query.Where(u => u.Role == UserRole.Brand);
+
+        var recipients = await query
+            .Select(u => new { u.Id, u.Email, u.FirstName })
+            .ToListAsync();
+
+        var subject = request.Subject.Trim();
+        var message = request.Message.Trim();
+
+        foreach (var r in recipients)
+            _notificationRows.Add(new Notification
+            {
+                UserId = r.Id,
+                Type = NotificationType.SystemMessage,
+                Title = subject,
+                Message = message
+            });
+        await _uow.SaveChangesAsync();
+
+        if (request.SendEmail)
+        {
+            foreach (var r in recipients)
+            {
+                try
+                {
+                    await _email.SendAsync(r.Email, subject,
+                        EmailTemplates.Branded(subject,
+                            $"<p>Hej {System.Net.WebUtility.HtmlEncode(r.FirstName)}!</p>" +
+                            $"<p>{System.Net.WebUtility.HtmlEncode(message).Replace("\n", "<br/>")}</p>",
+                            "Öppna VYRLE", "https://www.vyrle.co/login"));
+                }
+                catch
+                {
+                    // best-effort per recipient; the in-app notification already landed
+                }
+            }
+        }
+
+        await _audit.LogAsync(callerAdminUserId, "Admin.Broadcast", "User", null);
+        return recipients.Count;
     }
 }

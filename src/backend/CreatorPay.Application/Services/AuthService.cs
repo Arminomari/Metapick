@@ -156,6 +156,9 @@ public class AuthService : IAuthService
         await _uow.SaveChangesAsync();
         await _audit.LogAsync(user.Id, "Auth.Register", "User", user.Id);
 
+        try { await SendVerificationEmailAsync(user); }
+        catch { /* best-effort: registration must never fail on email delivery */ }
+
         // Don't issue tokens — account must be approved by admin first
         return new AuthResponse("", "", DateTime.UtcNow,
             user.Id, user.Email, user.Role.ToString());
@@ -232,7 +235,8 @@ public class AuthService : IAuthService
         }
 
         return new UserProfileDto(user.Id, user.Email, user.Role.ToString(),
-            user.Status.ToString(), profileName, profileStatus, user.LastLoginAt, user.CreatedAt);
+            user.Status.ToString(), profileName, profileStatus, user.LastLoginAt, user.CreatedAt,
+            user.EmailVerified);
     }
 
     public async Task<Result<bool>> ChangePasswordAsync(Guid userId, ChangePasswordRequest request)
@@ -305,6 +309,70 @@ public class AuthService : IAuthService
         await _tokenService.RevokeAllTokensAsync(user.Id);
         await _audit.LogAsync(user.Id, "Auth.PasswordReset", "User", user.Id);
         return true;
+    }
+
+    // ── Email verification: stateless HMAC token bound to the address, so a
+    //    link stops working if the email ever changes ───────────────────────
+    public async Task<Result<bool>> VerifyEmailAsync(VerifyEmailRequest request)
+    {
+        var parts = request.Token.Split('.');
+        if (parts.Length != 3
+            || !Guid.TryParseExact(parts[0], "N", out var userId)
+            || !long.TryParse(parts[1], out var expiry))
+            return Errors.Validation("Ogiltig verifieringslänk");
+
+        var user = await _users.GetByIdAsync(userId);
+        if (user == null) return Errors.Validation("Ogiltig verifieringslänk");
+        if (user.EmailVerified) return true; // already verified — idempotent success
+
+        if (DateTimeOffset.FromUnixTimeSeconds(expiry) < DateTimeOffset.UtcNow)
+            return Errors.Validation("Verifieringslänken har gått ut. Begär en ny.");
+
+        var expected = ComputeVerifySignature(user, expiry);
+        if (!CryptographicOperations.FixedTimeEquals(
+                Encoding.UTF8.GetBytes(expected), Encoding.UTF8.GetBytes(parts[2])))
+            return Errors.Validation("Ogiltig verifieringslänk");
+
+        user.EmailVerified = true;
+        await _uow.SaveChangesAsync();
+        await _audit.LogAsync(user.Id, "Auth.EmailVerified", "User", user.Id);
+        return true;
+    }
+
+    public async Task<Result<bool>> ResendVerificationEmailAsync(string email)
+    {
+        var user = await _users.Query()
+            .FirstOrDefaultAsync(u => u.Email == email.ToLowerInvariant());
+        // Always report success so the endpoint can't be used to probe emails.
+        if (user == null || user.EmailVerified) return true;
+        await SendVerificationEmailAsync(user);
+        return true;
+    }
+
+    private async Task SendVerificationEmailAsync(User user)
+    {
+        var expiry = DateTimeOffset.UtcNow.AddDays(7).ToUnixTimeSeconds();
+        var token = $"{user.Id:N}.{expiry}.{ComputeVerifySignature(user, expiry)}";
+        var baseUrl = _config["Frontend:BaseUrl"] ?? "https://www.vyrle.co";
+        var link = $"{baseUrl}/verify-email?token={Uri.EscapeDataString(token)}";
+
+        await _email.SendAsync(user.Email, "Bekräfta din e-postadress",
+            EmailTemplates.Branded(
+                "Bekräfta din e-postadress",
+                $"<p>Hej {WebUtility.HtmlEncode(user.FirstName)}!</p>" +
+                "<p>Tryck på knappen nedan för att bekräfta att den här adressen är din. " +
+                "Länken gäller i 7 dagar.</p>" +
+                "<p>Har du inte skapat ett konto på VYRLE kan du ignorera mejlet.</p>",
+                "Bekräfta e-postadress", link));
+    }
+
+    private string ComputeVerifySignature(User user, long expiry)
+    {
+        var secret = _config["Jwt:Secret"]
+            ?? throw new InvalidOperationException("Jwt:Secret missing");
+        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
+        var payload = $"verify|{user.Id:N}|{expiry}|{user.Email}";
+        return Convert.ToHexString(hmac.ComputeHash(Encoding.UTF8.GetBytes(payload))).ToLowerInvariant();
     }
 
     private string ComputeResetSignature(User user, long expiry)

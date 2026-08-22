@@ -52,6 +52,27 @@ public class ChangePasswordRequestValidator : AbstractValidator<ChangePasswordRe
     }
 }
 
+public class VerifyEmailRequestValidator : AbstractValidator<VerifyEmailRequest>
+{
+    public VerifyEmailRequestValidator() => RuleFor(x => x.Token).NotEmpty().MaximumLength(300);
+}
+
+public class ResendVerificationRequestValidator : AbstractValidator<ResendVerificationRequest>
+{
+    public ResendVerificationRequestValidator() => RuleFor(x => x.Email).NotEmpty().EmailAddress();
+}
+
+public class BroadcastRequestValidator : AbstractValidator<BroadcastRequest>
+{
+    public BroadcastRequestValidator()
+    {
+        RuleFor(x => x.Audience).Must(a => a is "All" or "Creators" or "Brands")
+            .WithMessage("Målgrupp måste vara All, Creators eller Brands");
+        RuleFor(x => x.Subject).NotEmpty().MaximumLength(150);
+        RuleFor(x => x.Message).NotEmpty().MaximumLength(4000);
+    }
+}
+
 public class CreateAdminRequestValidator : AbstractValidator<CreateAdminRequest>
 {
     public CreateAdminRequestValidator()

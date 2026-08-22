@@ -19,6 +19,7 @@ export interface UserProfile {
   profileStatus?: string;
   lastLoginAt?: string;
   createdAt: string;
+  emailVerified: boolean;
 }
 
 export interface CreatorProfile {

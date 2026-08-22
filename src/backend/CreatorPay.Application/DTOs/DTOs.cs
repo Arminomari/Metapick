@@ -60,8 +60,11 @@ public record RefreshTokenRequest(string RefreshToken);
 public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 public record ForgotPasswordRequest(string Email);
 public record ResetPasswordRequest(string Token, string NewPassword);
+public record VerifyEmailRequest(string Token);
+public record ResendVerificationRequest(string Email);
+public record BroadcastRequest(string Audience, string Subject, string Message, bool SendEmail = true);
 public record AuthResponse(string AccessToken, string RefreshToken, DateTime ExpiresAt, Guid UserId, string Email, string Role);
-public record UserProfileDto(Guid Id, string Email, string Role, string Status, string? ProfileName, string? ProfileStatus, DateTime? LastLoginAt, DateTime CreatedAt);
+public record UserProfileDto(Guid Id, string Email, string Role, string Status, string? ProfileName, string? ProfileStatus, DateTime? LastLoginAt, DateTime CreatedAt, bool EmailVerified = false);
 
 // ──── Admin User Management ────
 public record PendingUserDto(

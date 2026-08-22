@@ -1,6 +1,7 @@
+import { maskOrgNr, maskPhone } from '@/lib/masks';
 import { LangSwitcher, t } from '@/lib/i18n';
-import React, { useState, type ReactNode } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useEffect, useState, type ReactNode } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useLogin, useRegister } from '@/hooks/api';
 import { useAuthStore } from '@/stores/authStore';
 import { DateInput } from '@/components/ui/DateInput';
@@ -517,7 +518,7 @@ export function RegisterPage() {
             />
             <div className="field"><label htmlFor="rg-co">{t('Företagsnamn')} *</label><input id="rg-co" type="text" value={form.companyName} onChange={set('companyName')} required autoComplete="organization" /></div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }}>
-              <div className="field"><label htmlFor="rg-org">{t('Organisationsnummer')} *</label><input id="rg-org" type="text" value={form.organizationNumber} onChange={set('organizationNumber')} required placeholder="XXXXXX-XXXX" /></div>
+              <div className="field"><label htmlFor="rg-org">{t('Organisationsnummer')} *</label><input id="rg-org" type="text" inputMode="numeric" value={form.organizationNumber} onChange={(e) => setForm((f) => ({ ...f, organizationNumber: maskOrgNr(e.target.value) }))} required placeholder="556677-8899" /><span style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 4 }}>{t('10 siffror — strecket sätts automatiskt')}</span></div>
               <div className="field"><label htmlFor="rg-ind">{t('Bransch')} *</label>
                 <select id="rg-ind" value={form.industry} onChange={set('industry')} required>
                   {INDUSTRIES.map((i) => <option key={i} value={i}>{t(i)}</option>)}
@@ -532,7 +533,7 @@ export function RegisterPage() {
         {stepLabel === 'Kontakt' && (
           <div className="wiz-pane" key="contact" style={{ display: 'flex', flexDirection: 'column', gap: 17 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }}>
-              <div className="field"><label htmlFor="rg-phone">{t('Kontakttelefon')}</label><input id="rg-phone" type="tel" value={form.contactPhone} onChange={set('contactPhone')} placeholder="+46…" autoComplete="tel" /></div>
+              <div className="field"><label htmlFor="rg-phone">{t('Kontakttelefon')}</label><input id="rg-phone" type="tel" value={form.contactPhone} onChange={(e) => setForm((f) => ({ ...f, contactPhone: maskPhone(e.target.value) }))} placeholder="070-123 45 67" autoComplete="tel" /></div>
               <div className="field"><label htmlFor="rg-bcountry">{t('Land')} *</label>
                 <select id="rg-bcountry" value={form.country} onChange={set('country')} required>
                   {COUNTRIES.map(([code, name]) => <option key={code} value={code}>{t(name)}</option>)}
@@ -709,6 +710,54 @@ export function ResetPasswordPage() {
           <button type="submit" className="btn-apply" disabled={busy}>{busy ? t('Sparar…') : t('Spara nytt lösenord')}</button>
         </form>
       )}
+    </AuthShell>
+  );
+}
+
+// ── Email verification landing ─────────────────────────
+export function VerifyEmailPage() {
+  const [params] = useSearchParams();
+  const token = params.get('token') ?? '';
+  const [state, setState] = useState<'working' | 'ok' | 'fail'>('working');
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    if (!token) { setState('fail'); setMessage(t('Länken saknar verifieringskod.')); return; }
+    api.post('/auth/verify-email', { token })
+      .then(() => setState('ok'))
+      .catch((err: any) => {
+        setState('fail');
+        setMessage(err?.response?.data?.error?.message ?? t('Länken är ogiltig eller har gått ut.'));
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <AuthShell>
+      <div style={{ textAlign: 'center', padding: '18px 6px' }}>
+        {state === 'working' && (
+          <>
+            <div style={{ fontSize: 30, marginBottom: 10 }} aria-hidden>✉️</div>
+            <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>{t('Bekräftar din e-postadress…')}</h2>
+          </>
+        )}
+        {state === 'ok' && (
+          <>
+            <div style={{ width: 54, height: 54, margin: '0 auto 14px', borderRadius: '50%', background: 'linear-gradient(135deg,#3dbb77,#2f9d5b)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }} aria-hidden>✓</div>
+            <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>{t('E-postadressen är bekräftad!')}</h2>
+            <p style={{ fontSize: 13.5, color: 'var(--muted)', marginTop: 8, lineHeight: 1.55 }}>{t('Tack! Ditt konto är nu verifierat. Du kan stänga den här sidan eller logga in direkt.')}</p>
+            <Link to="/login" className="btn-apply" style={{ display: 'inline-block', width: 'auto', padding: '12px 26px', marginTop: 16, textDecoration: 'none' }}>{t('Logga in')}</Link>
+          </>
+        )}
+        {state === 'fail' && (
+          <>
+            <div style={{ fontSize: 30, marginBottom: 10 }} aria-hidden>⚠️</div>
+            <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>{t('Kunde inte bekräfta adressen')}</h2>
+            <p style={{ fontSize: 13.5, color: 'var(--muted)', marginTop: 8, lineHeight: 1.55 }}>{message} {t('Logga in och begär en ny länk från bannern högst upp.')}</p>
+            <Link to="/login" className="btn-apply" style={{ display: 'inline-block', width: 'auto', padding: '12px 26px', marginTop: 16, textDecoration: 'none' }}>{t('Logga in')}</Link>
+          </>
+        )}
+      </div>
     </AuthShell>
   );
 }

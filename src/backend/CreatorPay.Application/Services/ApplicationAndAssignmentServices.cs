@@ -24,6 +24,7 @@ public class ApplicationService : IApplicationService
     private readonly IAuditService _audit;
     private readonly INotificationService _notifications;
     private readonly ILogger<ApplicationService> _logger;
+    private readonly IRepository<User> _userAccounts;
 
     public ApplicationService(
         IUnitOfWork uow,
@@ -34,7 +35,8 @@ public class ApplicationService : IApplicationService
         IRepository<TrackingTag> tags,
         IAuditService audit,
         INotificationService notifications,
-        ILogger<ApplicationService> logger)
+        ILogger<ApplicationService> logger,
+        IRepository<User> userAccounts)
     {
         _uow = uow;
         _applications = applications;
@@ -45,6 +47,7 @@ public class ApplicationService : IApplicationService
         _audit = audit;
         _notifications = notifications;
         _logger = logger;
+        _userAccounts = userAccounts;
     }
 
     public async Task<Result<ApplicationDto>> ApplyToCampaignAsync(Guid creatorUserId, ApplyToCampaignRequest request, CancellationToken ct = default)
@@ -56,6 +59,14 @@ public class ApplicationService : IApplicationService
         if (creator == null) return Errors.Forbidden("Creator profile not found");
         if (creator.Status != CreatorStatus.Approved)
             return Errors.Forbidden("Ditt konto är inte godkänt för kampanjer ännu.");
+
+        // Fake addresses stop here: campaign work requires a proven inbox.
+        var applicantEmailVerified = await _userAccounts.Query()
+            .Where(u => u.Id == creatorUserId)
+            .Select(u => u.EmailVerified)
+            .FirstOrDefaultAsync(ct);
+        if (!applicantEmailVerified)
+            return Errors.Forbidden("Bekräfta din e-postadress först — kolla mejlet vi skickat, eller begär en ny länk i bannern högst upp.");
 
         var campaign = await _campaigns.Query()
             .Include(c => c.BrandProfile)

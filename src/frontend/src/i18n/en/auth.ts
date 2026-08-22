@@ -269,4 +269,12 @@ export const auth: Record<string, string> = {
   'Hållbarhet & Miljö': 'Sustainability & Environment',
   'iPhone-bilder i HEIC-format stöds inte av webbläsaren — spara om bilden som JPG/PNG och försök igen': 'HEIC photos from iPhone are not supported by the browser — re-save the image as JPG/PNG and try again',
   'Bilden kunde inte läsas — prova en JPG- eller PNG-fil': 'The image could not be read — try a JPG or PNG file',
+  '10 siffror — strecket sätts automatiskt': '10 digits — the dash is added automatically',
+  'Länken saknar verifieringskod.': 'The link is missing a verification code.',
+  'Länken är ogiltig eller har gått ut.': 'The link is invalid or has expired.',
+  'Bekräftar din e-postadress…': 'Confirming your email address…',
+  'E-postadressen är bekräftad!': 'Your email address is confirmed!',
+  'Tack! Ditt konto är nu verifierat. Du kan stänga den här sidan eller logga in direkt.': 'Thank you! Your account is now verified. You can close this page or log in right away.',
+  'Kunde inte bekräfta adressen': 'Could not confirm the address',
+  'Logga in och begär en ny länk från bannern högst upp.': 'Log in and request a new link from the banner at the top.',
 };
