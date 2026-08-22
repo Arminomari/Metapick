@@ -66,6 +66,11 @@ public class VerifyEmailRequestValidator : AbstractValidator<VerifyEmailRequest>
     public VerifyEmailRequestValidator() => RuleFor(x => x.Token).NotEmpty().MaximumLength(300);
 }
 
+public class CheckEmailRequestValidator : AbstractValidator<CheckEmailRequest>
+{
+    public CheckEmailRequestValidator() => RuleFor(x => x.Email).NotEmpty().EmailAddress();
+}
+
 public class ResendVerificationRequestValidator : AbstractValidator<ResendVerificationRequest>
 {
     public ResendVerificationRequestValidator() => RuleFor(x => x.Email).NotEmpty().EmailAddress();

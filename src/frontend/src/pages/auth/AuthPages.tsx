@@ -259,11 +259,22 @@ export function RegisterPage() {
   ];
   const pwOk = pwRules.every(([ok]) => ok);
 
+  const [emailTaken, setEmailTaken] = useState(false);
+  const checkEmail = async () => {
+    const v = form.email.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) return;
+    try {
+      const res = await api.post('/auth/check-email', { email: v });
+      setEmailTaken(res.data.data === false);
+    } catch { /* offline or rate-limited — the final submit still guards */ }
+  };
+
   const validateStep = (): string | null => {
     const label = steps[step];
     if (label === 'Konto') {
       if (social) return null;
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email.trim())) return t('Ange en giltig e-postadress');
+      if (emailTaken) return t('E-postadressen används redan — logga in istället.');
       if (!pwOk) return t('Lösenordet uppfyller inte alla krav');
       return null;
     }
@@ -403,13 +414,19 @@ export function RegisterPage() {
               </div>
               {social.provider === 'TikTok' && (
                 <div className="field"><label htmlFor="rg-email-tt">{t('E-post')} *</label>
-                  <input id="rg-email-tt" type="email" value={form.email} onChange={set('email')} required autoComplete="email" placeholder={t('du@exempel.se')} />
+                  <input id="rg-email-tt" type="email" value={form.email} onChange={(e) => { setEmailTaken(false); setForm((f) => ({ ...f, email: e.target.value })); }} onBlur={checkEmail} required autoComplete="email" placeholder={t('du@exempel.se')} />
+                  {emailTaken && (
+                    <div className="auth-err" style={{ marginTop: 6 }}>{t('E-postadressen används redan.')} <Link to="/login" style={{ fontWeight: 700 }}>{t('Logga in istället?')}</Link></div>
+                  )}
                 </div>
               )}
               </>
             ) : (
               <>
-                <div className="field"><label htmlFor="rg-email">{t('E-post')} *</label><input id="rg-email" type="email" value={form.email} onChange={set('email')} required autoComplete="email" placeholder={t('du@exempel.se')} /></div>
+                <div className="field"><label htmlFor="rg-email">{t('E-post')} *</label><input id="rg-email" type="email" value={form.email} onChange={(e) => { setEmailTaken(false); setForm((f) => ({ ...f, email: e.target.value })); }} onBlur={checkEmail} required autoComplete="email" placeholder={t('du@exempel.se')} />
+                  {emailTaken && (
+                    <div className="auth-err" style={{ marginTop: 6 }}>{t('E-postadressen används redan.')} <Link to="/login" style={{ fontWeight: 700 }}>{t('Logga in istället?')}</Link></div>
+                  )}</div>
                 <div className="field"><label htmlFor="rg-pw">{t('Lösenord')} *</label>
                   <div className="auth-pw-wrap">
                     <input id="rg-pw" type={showPw ? 'text' : 'password'} value={form.password} onChange={set('password')} required minLength={8} autoComplete="new-password" placeholder={t('Minst 8 tecken')} />

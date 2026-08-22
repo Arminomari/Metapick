@@ -277,4 +277,7 @@ export const auth: Record<string, string> = {
   'Tack! Ditt konto är nu verifierat. Du kan stänga den här sidan eller logga in direkt.': 'Thank you! Your account is now verified. You can close this page or log in right away.',
   'Kunde inte bekräfta adressen': 'Could not confirm the address',
   'Logga in och begär en ny länk från bannern högst upp.': 'Log in and request a new link from the banner at the top.',
+  'E-postadressen används redan — logga in istället.': 'That email address is already in use — log in instead.',
+  'E-postadressen används redan.': 'That email address is already in use.',
+  'Logga in istället?': 'Log in instead?',
 };

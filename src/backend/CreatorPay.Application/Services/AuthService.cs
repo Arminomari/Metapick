@@ -377,6 +377,17 @@ public class AuthService : IAuthService
         return true;
     }
 
+    /// <summary>
+    /// Reveals no more than the register endpoint already does (its
+    /// duplicate error), and sits behind the same rate limit.
+    /// </summary>
+    public async Task<Result<bool>> IsEmailAvailableAsync(string email)
+    {
+        var normalized = email.Trim().ToLowerInvariant();
+        var exists = await _users.Query().IgnoreQueryFilters().AnyAsync(u => u.Email == normalized);
+        return !exists;
+    }
+
     private async Task SendVerificationEmailAsync(User user)
     {
         var expiry = DateTimeOffset.UtcNow.AddDays(7).ToUnixTimeSeconds();

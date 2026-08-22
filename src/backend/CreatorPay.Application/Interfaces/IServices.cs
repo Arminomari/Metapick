@@ -18,6 +18,7 @@ public interface IAuthService
     Task<Result<bool>> VerifyEmailAsync(VerifyEmailRequest request);
     Task<Result<bool>> ResendVerificationEmailAsync(string email);
     Task<Result<bool>> ChangeEmailAsync(Guid userId, ChangeEmailRequest request);
+    Task<Result<bool>> IsEmailAvailableAsync(string email);
 }
 
 public interface ISocialAuthService

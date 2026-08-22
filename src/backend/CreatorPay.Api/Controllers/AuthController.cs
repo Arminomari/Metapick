@@ -102,6 +102,11 @@ public class AuthController : BaseController
     public async Task<IActionResult> ChangeEmail([FromBody] ChangeEmailRequest request)
         => ToActionResult(await _auth.ChangeEmailAsync(GetUserId(), request));
 
+    [HttpPost("check-email")]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> CheckEmail([FromBody] CheckEmailRequest request)
+        => ToActionResult(await _auth.IsEmailAvailableAsync(request.Email));
+
     [HttpPost("resend-verification")]
     [EnableRateLimiting("auth")]
     public async Task<IActionResult> ResendVerification([FromBody] ResendVerificationRequest request)
