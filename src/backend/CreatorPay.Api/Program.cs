@@ -286,44 +286,74 @@ app.MapHealthChecks("/health/ready",
     // ── Seed admin account ─────────────────────────────
     var seedAdminEnabled = builder.Configuration.GetValue<bool?>("Bootstrap:SeedAdminEnabled")
         ?? app.Environment.IsDevelopment();
-    if (seedAdminEnabled && !await db.Users.AnyAsync(u => u.Role == CreatorPay.Domain.Enums.UserRole.Admin))
+    if (seedAdminEnabled)
     {
         var encryption = scope.ServiceProvider.GetRequiredService<CreatorPay.Application.Interfaces.IEncryptionService>();
-        var adminEmail = builder.Configuration["Bootstrap:AdminEmail"];
-        var adminPassword = builder.Configuration["Bootstrap:AdminPassword"];
+        // Trim + lowercase: whitespace pasted into an env var or a mixed-case
+        // email must never produce an account that cannot log in.
+        var adminEmail = (builder.Configuration["Bootstrap:AdminEmail"] ?? "").Trim().ToLowerInvariant();
+        var adminPassword = (builder.Configuration["Bootstrap:AdminPassword"] ?? "").Trim();
 
-        if (string.IsNullOrWhiteSpace(adminEmail))
-            adminEmail = app.Environment.IsDevelopment() ? "admin@metapick.se" : null;
-        if (string.IsNullOrWhiteSpace(adminPassword))
-            adminPassword = app.Environment.IsDevelopment() ? "Admin123!" : null;
+        if (string.IsNullOrWhiteSpace(adminEmail) && app.Environment.IsDevelopment()) adminEmail = "admin@metapick.se";
+        if (string.IsNullOrWhiteSpace(adminPassword) && app.Environment.IsDevelopment()) adminPassword = "Admin123!";
 
         if (string.IsNullOrWhiteSpace(adminEmail) || string.IsNullOrWhiteSpace(adminPassword))
             throw new InvalidOperationException("Bootstrap admin credentials must be configured when Bootstrap:SeedAdminEnabled is true");
         if (!app.Environment.IsDevelopment() && adminPassword.Length < 12)
             throw new InvalidOperationException("Bootstrap admin password must be at least 12 characters outside development");
 
-        var admin = new CreatorPay.Domain.Entities.User
-        {
-            Email = adminEmail,
-            PasswordHash = encryption.HashPassword(adminPassword),
-            FirstName = "Admin",
-            LastName = "MetaPick",
-            Role = CreatorPay.Domain.Enums.UserRole.Admin,
-            Status = CreatorPay.Domain.Enums.UserStatus.Active,
-            EmailVerified = true
-        };
-        db.Users.Add(admin);
+        var existingUser = await db.Users.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.Email == adminEmail);
 
-        var adminProfile = new CreatorPay.Domain.Entities.AdminProfile
+        if (existingUser == null)
         {
-            UserId = admin.Id,
-            Department = "Platform",
-            PermissionLevel = CreatorPay.Domain.Enums.AdminLevel.SuperAdmin
-        };
-        db.Set<CreatorPay.Domain.Entities.AdminProfile>().Add(adminProfile);
+            var admin = new CreatorPay.Domain.Entities.User
+            {
+                Email = adminEmail,
+                PasswordHash = encryption.HashPassword(adminPassword),
+                FirstName = "Admin",
+                LastName = "VYRLE",
+                Role = CreatorPay.Domain.Enums.UserRole.Admin,
+                Status = CreatorPay.Domain.Enums.UserStatus.Active,
+                EmailVerified = true
+            };
+            db.Users.Add(admin);
+            db.Set<CreatorPay.Domain.Entities.AdminProfile>().Add(new CreatorPay.Domain.Entities.AdminProfile
+            {
+                UserId = admin.Id,
+                Department = "Platform",
+                PermissionLevel = CreatorPay.Domain.Enums.AdminLevel.SuperAdmin
+            });
+            await db.SaveChangesAsync();
+            Log.Information("Seeded admin account: {Email}", adminEmail);
+        }
+        else if (existingUser.Role == CreatorPay.Domain.Enums.UserRole.Admin)
+        {
+            // Recovery path: while seeding is enabled the configured credentials
+            // always win, so a lost admin password is fixed by updating the
+            // variable and redeploying. Disable seeding once logged in.
+            existingUser.PasswordHash = encryption.HashPassword(adminPassword);
+            existingUser.Status = CreatorPay.Domain.Enums.UserStatus.Active;
+            existingUser.IsDeleted = false;
+            existingUser.RefreshTokenHash = null;
 
-        await db.SaveChangesAsync();
-        Log.Information("Seeded admin account: {Email}", adminEmail);
+            var hasProfile = await db.Set<CreatorPay.Domain.Entities.AdminProfile>()
+                .AnyAsync(pr => pr.UserId == existingUser.Id);
+            if (!hasProfile)
+                db.Set<CreatorPay.Domain.Entities.AdminProfile>().Add(new CreatorPay.Domain.Entities.AdminProfile
+                {
+                    UserId = existingUser.Id,
+                    Department = "Platform",
+                    PermissionLevel = CreatorPay.Domain.Enums.AdminLevel.SuperAdmin
+                });
+
+            await db.SaveChangesAsync();
+            Log.Warning("Bootstrap admin password reset from configuration for {Email}", adminEmail);
+        }
+        else
+        {
+            Log.Error("Bootstrap admin email {Email} belongs to a non-admin account — refusing to convert it", adminEmail);
+        }
     }
 
     // ── Auto-approve all pending brand accounts ────────
