@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { t, lang } from '@/lib/i18n';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useAuthStore } from '@/stores/authStore';
@@ -118,7 +119,7 @@ export function MessagesDrawer({ open, onClose }: { open: boolean; onClose: () =
           <div className="nd-head-r"><button className="nd-close" onClick={onClose} aria-label={t('Stäng')}><XIcon /></button></div>
         </div>
         {open && <ConversationList onOpen={setSel} />}
-        <ChatThread sel={sel} onBack={() => setSel(null)} />
+        <ChatThread sel={sel} onBack={() => setSel(null)} onCloseAll={() => { setSel(null); onClose(); }} />
       </aside>
     </>
   );
@@ -139,7 +140,7 @@ function ConversationList({ onOpen }: { onOpen: (c: ChatConversationDto) => void
               <span className="mc-name">{c.counterpartName}</span>
               {c.lastMessageAt && <span className="mc-time">{ago(c.lastMessageAt)}</span>}
             </div>
-            <div className="mc-prev">{c.lastMessage ?? c.campaignName}</div>
+            <div className="mc-prev"><span style={{ color: '#9c4f31', fontWeight: 600 }}>{c.campaignName}</span>{c.lastMessage ? ` · ${c.lastMessage}` : ''}</div>
           </div>
           {c.unreadCount > 0 && <span className="mc-unread">{c.unreadCount > 9 ? '9+' : c.unreadCount}</span>}
         </div>
@@ -148,8 +149,15 @@ function ConversationList({ onOpen }: { onOpen: (c: ChatConversationDto) => void
   );
 }
 
-function ChatThread({ sel, onBack }: { sel: ChatConversationDto | null; onBack: () => void }) {
+function ChatThread({ sel, onBack, onCloseAll }: { sel: ChatConversationDto | null; onBack: () => void; onCloseAll?: () => void }) {
   const { userId } = useAuthStore();
+  const navigate = useNavigate();
+  const openCounterpart = () => {
+    if (!sel) return;
+    onCloseAll?.();
+    if (sel.counterpartRole === 'Creator' && sel.counterpartProfileId) navigate(`/brand/creators/${sel.counterpartProfileId}`);
+    else navigate(`/creator/assignments/${sel.assignmentId}`);
+  };
   const { data: messages = [], isLoading } = useChatMessages(sel?.assignmentId ?? '');
   const send = useSendMessage();
   const markRead = useMarkChatRead();
@@ -173,8 +181,12 @@ function ChatThread({ sel, onBack }: { sel: ChatConversationDto | null; onBack: 
         <>
           <div className="mc-thread-head">
             <button className="mc-back" onClick={onBack} aria-label={t('Tillbaka')}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg></button>
-            <ChatAvatar name={sel.counterpartName} imageUrl={sel.counterpartImageUrl} size={42} radius={12} />
-            <div className="mc-thread-meta"><div className="mc-thread-name">{sel.counterpartName}</div><div className="mc-thread-status">{sel.campaignName}</div></div>
+            <div onClick={openCounterpart} role="button" tabIndex={0} title={t('Visa profil')}
+              onKeyDown={(e) => { if (e.key === 'Enter') openCounterpart(); }}
+              style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', flex: 1, minWidth: 0 }}>
+              <ChatAvatar name={sel.counterpartName} imageUrl={sel.counterpartImageUrl} size={42} radius={12} />
+              <div className="mc-thread-meta"><div className="mc-thread-name">{sel.counterpartName} <span style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600 }}>›</span></div><div className="mc-thread-status">{sel.campaignName}</div></div>
+            </div>
           </div>
           <div className="mc-thread-scroll" ref={scrollRef}>
             <div style={{ marginTop: 'auto' }} aria-hidden />

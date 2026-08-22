@@ -61,6 +61,7 @@ public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 public record ForgotPasswordRequest(string Email);
 public record ResetPasswordRequest(string Token, string NewPassword);
 public record VerifyEmailRequest(string Token);
+public record ChangeEmailRequest(string NewEmail, string CurrentPassword);
 public record ResendVerificationRequest(string Email);
 public record BroadcastRequest(string Audience, string Subject, string Message, bool SendEmail = true);
 public record AuthResponse(string AccessToken, string RefreshToken, DateTime ExpiresAt, Guid UserId, string Email, string Role);
@@ -129,7 +130,9 @@ public record CreatorPublicProfileDto(
     List<string> ProfileTags, bool OpenToPrOffers,
     List<PortfolioItemDto> Portfolio,
     double AverageRating, int ReviewCount, List<ReviewDto> RecentReviews,
-    int CompletedCampaigns, DateTime CreatedAt);
+    int CompletedCampaigns, DateTime CreatedAt,
+    long TotalVerifiedViews = 0, long TotalLikes = 0, long TotalComments = 0,
+    long TotalShares = 0, double EngagementRate = 0);
 
 // ──── Portfolio ────
 public record PortfolioItemDto(
@@ -388,4 +391,5 @@ public record ChatMessageDto(
     string SenderName, string Body, bool IsRead, DateTime CreatedAt);
 public record ChatConversationDto(
     Guid AssignmentId, string CounterpartName, string? CounterpartImageUrl,
-    string CampaignName, string? LastMessage, DateTime? LastMessageAt, int UnreadCount);
+    string CampaignName, string? LastMessage, DateTime? LastMessageAt, int UnreadCount,
+    Guid? CounterpartProfileId = null, string? CounterpartRole = null);

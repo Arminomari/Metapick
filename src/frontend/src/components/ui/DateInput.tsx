@@ -1,6 +1,3 @@
-import { useRef } from 'react';
-import { t } from '@/lib/i18n';
-
 interface DateInputProps {
   value: string;
   onChange: (value: string) => void;
@@ -9,47 +6,26 @@ interface DateInputProps {
   className?: string;
   style?: React.CSSProperties;
   placeholder?: string;
+  min?: string;
+  max?: string;
 }
 
 /**
- * Smart date input: user types digits, dashes are auto-inserted.
- * Format: YYYY-MM-DD. Outputs ISO date string to onChange.
+ * Native date input: opens the browser/OS calendar picker on click.
+ * Value in/out is an ISO date string (YYYY-MM-DD), same contract as before.
  */
-export function DateInput({ value, onChange, required, disabled, className, style, placeholder }: DateInputProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    // Strip everything that isn't a digit or dash, then rebuild
-    const digits = raw.replace(/\D/g, '').slice(0, 8);
-    let formatted = digits;
-    if (digits.length > 4) formatted = digits.slice(0, 4) + '-' + digits.slice(4);
-    if (digits.length > 6) formatted = digits.slice(0, 4) + '-' + digits.slice(4, 6) + '-' + digits.slice(6);
-    onChange(formatted);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Allow backspace to remove trailing dash transparently
-    if (e.key === 'Backspace' && value.endsWith('-')) {
-      e.preventDefault();
-      onChange(value.slice(0, -1));
-    }
-  };
-
+export function DateInput({ value, onChange, required, disabled, className, style, min, max }: DateInputProps) {
   return (
     <input
-      ref={inputRef}
-      type="text"
-      inputMode="numeric"
+      type="date"
       value={value}
-      onChange={handleChange}
-      onKeyDown={handleKeyDown}
-      placeholder={placeholder ?? t('ÅÅÅÅ-MM-DD')}
+      onChange={(e) => onChange(e.target.value)}
       required={required}
       disabled={disabled}
       className={className}
-      style={style}
-      maxLength={10}
+      style={{ fontFamily: 'inherit', ...style }}
+      min={min}
+      max={max}
     />
   );
 }

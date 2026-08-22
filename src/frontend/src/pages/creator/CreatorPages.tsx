@@ -1,3 +1,4 @@
+import { ChangeEmailCard, ChangePasswordCard } from '@/components/ui/AccountCards';
 import { maskSwishNumber, maskBankAccount } from '@/lib/masks';
 import type { CSSProperties } from 'react';
 import { CopyField } from '@/components/ui/CopyButton';
@@ -1160,6 +1161,8 @@ export function CreatorProfilePage() {
         </div>
       </div>
 
+      <ChangeEmailCard />
+      <ChangePasswordCard />
       <div style={{ maxWidth: 860, marginTop: 16 }}><CreatorReviewCard userId={profile.userId} /></div>
     </section>
   );

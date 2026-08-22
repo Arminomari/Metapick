@@ -52,6 +52,15 @@ public class ChangePasswordRequestValidator : AbstractValidator<ChangePasswordRe
     }
 }
 
+public class ChangeEmailRequestValidator : AbstractValidator<ChangeEmailRequest>
+{
+    public ChangeEmailRequestValidator()
+    {
+        RuleFor(x => x.NewEmail).NotEmpty().EmailAddress().MaximumLength(256);
+        RuleFor(x => x.CurrentPassword).NotEmpty();
+    }
+}
+
 public class VerifyEmailRequestValidator : AbstractValidator<VerifyEmailRequest>
 {
     public VerifyEmailRequestValidator() => RuleFor(x => x.Token).NotEmpty().MaximumLength(300);

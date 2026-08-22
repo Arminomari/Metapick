@@ -17,6 +17,7 @@ public interface IAuthService
     Task<Result<bool>> ResetPasswordAsync(ResetPasswordRequest request);
     Task<Result<bool>> VerifyEmailAsync(VerifyEmailRequest request);
     Task<Result<bool>> ResendVerificationEmailAsync(string email);
+    Task<Result<bool>> ChangeEmailAsync(Guid userId, ChangeEmailRequest request);
 }
 
 public interface ISocialAuthService

@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { t } from '@/lib/i18n';
 import { useEffect, useRef, useState } from 'react';
 import { useChatMessages, useSendMessage, useMarkChatRead, useChatConversations } from '@/hooks/api';
@@ -42,6 +43,7 @@ export function ChatPanel({ assignmentId }: ChatPanelProps) {
   };
 
   const name = convo?.counterpartName ?? t('Direktchatt');
+  const navigate = useNavigate();
 
   return (
     <div style={{
@@ -49,7 +51,9 @@ export function ChatPanel({ assignmentId }: ChatPanelProps) {
       background: 'rgba(255,255,255,.75)', border: '1px solid rgba(241,168,143,.2)',
       borderRadius: 20, boxShadow: '0 10px 30px rgba(180,120,90,.08)',
     }}>
-      <div className="mc-thread-head">
+      <div className="mc-thread-head" onClick={() => { if (convo?.counterpartRole === 'Creator' && convo.counterpartProfileId) navigate(`/brand/creators/${convo.counterpartProfileId}`); }}
+        style={convo?.counterpartRole === 'Creator' && convo?.counterpartProfileId ? { cursor: 'pointer' } : undefined}
+        title={convo?.counterpartRole === 'Creator' && convo?.counterpartProfileId ? t('Visa profil') : undefined}>
         {convo?.counterpartImageUrl
           ? <img src={convo.counterpartImageUrl} alt="" style={{ width: 42, height: 42, borderRadius: 12, objectFit: 'cover', flex: '0 0 42px', boxShadow: '0 4px 12px rgba(180,120,90,.16)' }} />
           : <span className="mc-thread-av" style={{ background: grad(name) }}><span className="brand-mono">{initial(name)}</span></span>}

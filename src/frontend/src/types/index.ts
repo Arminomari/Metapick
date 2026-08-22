@@ -89,6 +89,11 @@ export interface CreatorDiscoveryItem {
 }
 
 export interface CreatorPublicProfile {
+  totalVerifiedViews?: number;
+  totalLikes?: number;
+  totalComments?: number;
+  totalShares?: number;
+  engagementRate?: number;
   id: string;
   userId: string;
   displayName: string;
@@ -409,6 +414,8 @@ export interface ChatConversationDto {
   lastMessage?: string | null;
   lastMessageAt?: string | null;
   unreadCount: number;
+  counterpartProfileId?: string | null;
+  counterpartRole?: 'Creator' | 'Brand' | null;
 }
 
 // ── Analytics ──────────────────────────────────────────

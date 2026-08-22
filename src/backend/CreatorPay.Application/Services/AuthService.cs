@@ -349,6 +349,34 @@ public class AuthService : IAuthService
         return true;
     }
 
+    public async Task<Result<bool>> ChangeEmailAsync(Guid userId, ChangeEmailRequest request)
+    {
+        var user = await _users.GetByIdAsync(userId);
+        if (user == null) return Errors.NotFound("User", userId);
+
+        if (string.IsNullOrWhiteSpace(user.PasswordHash))
+            return Errors.Validation("Kontot använder social inloggning — sätt först ett lösenord via Glömt lösenord.");
+        if (!_encryption.VerifyPassword(request.CurrentPassword, user.PasswordHash))
+            return Errors.Validation("Fel lösenord");
+
+        var newEmail = request.NewEmail.Trim().ToLowerInvariant();
+        if (newEmail == user.Email) return true;
+
+        var taken = await _users.Query().IgnoreQueryFilters()
+            .AnyAsync(u => u.Email == newEmail && u.Id != userId);
+        if (taken) return Errors.Conflict("E-postadressen används redan av ett annat konto");
+
+        user.Email = newEmail;
+        user.EmailVerified = false; // the new address must be proven too
+        await _uow.SaveChangesAsync();
+        await _audit.LogAsync(userId, "Auth.EmailChanged", "User", userId);
+
+        try { await SendVerificationEmailAsync(user); }
+        catch { /* banner offers resend */ }
+
+        return true;
+    }
+
     private async Task SendVerificationEmailAsync(User user)
     {
         var expiry = DateTimeOffset.UtcNow.AddDays(7).ToUnixTimeSeconds();

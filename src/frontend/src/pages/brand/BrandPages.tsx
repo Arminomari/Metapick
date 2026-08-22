@@ -1,3 +1,4 @@
+import { ChangeEmailCard } from '@/components/ui/AccountCards';
 import { useState, type FormEvent as ReactFormEvent } from 'react';
 import { RefreshViewsButton } from '@/components/ui/RefreshViewsButton';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -572,7 +573,20 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
         </div>
       )}
 
-      {analytics && (
+      {['Draft', 'PendingReview'].includes(campaign.status) && (
+        <div className="card" style={{ marginBottom: 16, background: 'rgba(242,197,138,.14)', border: '1px solid rgba(212,155,46,.3)' }}>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 20 }} aria-hidden>📋</span>
+            <p style={{ margin: 0, fontSize: 13.5, color: '#7a5518', lineHeight: 1.55, flex: 1, minWidth: 220 }}>
+              {campaign.status === 'Draft'
+                ? t('Kampanjen är ett utkast — skicka in den för granskning så öppnas den för ansökningar när den godkänts.')
+                : t('Kampanjen väntar på granskning. Så fort den godkänns blir den synlig för creators och kan ta emot ansökningar.')}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {!['Draft', 'PendingReview'].includes(campaign.status) && analytics && (
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="sec-head"><h3>{t('Creator-prestanda')}</h3></div>
           <div className="space-y-6">
@@ -700,7 +714,7 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
         </div>
       )}
 
-      {applications && (
+      {!['Draft', 'PendingReview'].includes(campaign.status) && applications && (
         <div className="card">
           <div className="sec-head"><h3>{t('Ansökningar')} ({applications.totalCount})</h3></div>
           {applications.data.length ? (
@@ -956,6 +970,7 @@ export function BrandSettingsPage() {
         </div>
       )}
 
+      {activeTab === 'security' && <ChangeEmailCard />}
       {activeTab === 'security' && (
         <div className="card" style={{ maxWidth: 720 }}>
           <div className="sec-head"><h3>{t('Byt lösenord')}</h3></div>

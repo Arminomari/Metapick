@@ -165,6 +165,28 @@ export function BrandCreatorDetailPage() {
         <div className="card stat"><div className="top"><div className="ico amber"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m12 4 2.3 4.8 5.2.7-3.8 3.6.9 5.1L12 16l-4.6 2.8.9-5.1L4.5 9.5l5.2-.7z" /></svg></div><div><div className="lbl">{t('Betyg')}</div><div className="val">{creator.reviewCount > 0 ? creator.averageRating.toFixed(1) : '–'}</div></div></div></div>
       </div>
 
+      <div className="card" style={{ marginTop: 16, background: 'linear-gradient(160deg,#fff,#FFF6F0)' }}>
+        <div className="sec-head"><h3>{t('Verifierat engagemang')}</h3><span style={{ fontSize: 12, color: 'var(--muted)' }}>{t('Uppmätt av VYRLE på kampanjvideos — inte självrapporterat')}</span></div>
+        {(creator.totalVerifiedViews ?? 0) > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
+            {[
+              [t('Views'), formatNumber(creator.totalVerifiedViews ?? 0), true],
+              [t('Gilla'), formatNumber(creator.totalLikes ?? 0), false],
+              [t('Kommentarer'), formatNumber(creator.totalComments ?? 0), false],
+              [t('Delningar'), formatNumber(creator.totalShares ?? 0), false],
+              [t('Engagemang'), `${(creator.engagementRate ?? 0).toFixed(1)}%`, false],
+            ].map(([lbl, val, hi]) => (
+              <div key={lbl as string} style={{ padding: '12px 14px', borderRadius: 14, textAlign: 'center', background: hi ? 'linear-gradient(140deg,#FFE3D3,#FFD3BC)' : 'rgba(255,244,236,.75)', border: '1px solid rgba(241,168,143,.2)' }}>
+                <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: hi ? '#9c4f31' : 'var(--muted)' }}>{lbl}</div>
+                <div style={{ fontWeight: 800, fontSize: 18, color: '#0B0F17', marginTop: 2 }}>{val}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>{t('Inga verifierade kampanjvideos ännu — siffrorna dyker upp när kreatören kört sin första kampanj.')}</p>
+        )}
+      </div>
+
       {showPr && id && <SendPrOfferForm creatorProfileId={id} onDone={() => setShowPr(false)} />}
 
       <div className="card" style={{ marginTop: 16 }}>
@@ -213,7 +235,7 @@ function PortfolioCard({ item }: { item: PortfolioItem }) {
       )}
       <div className="pf-body">
         <div className="t">{item.title}</div>
-        <div className="s">{[item.brandName, item.views != null ? `${formatNumber(item.views)} ${t('views')}` : null].filter(Boolean).join(' · ')}</div>
+        <div className="s">{[item.brandName, item.views != null ? `${formatNumber(item.views)} ${t('views (uppgivet)')}` : null].filter(Boolean).join(' · ')}</div>
         {item.description && <p style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 8, lineHeight: 1.5 }}>{item.description}</p>}
       </div>
     </div>

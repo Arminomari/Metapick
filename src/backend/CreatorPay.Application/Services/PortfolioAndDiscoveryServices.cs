@@ -282,6 +282,30 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
             .OrderByDescending(p => p.IsFeatured).ThenBy(p => p.SortOrder).ThenByDescending(p => p.CreatedAt)
             .Select(PortfolioService.MapToDto).ToList();
 
+        // Real, platform-verified engagement across all campaign videos —
+        // never creator-reported numbers.
+        var engagement = await _assignments.Query()
+            .Where(a => a.CreatorProfileId == creator.Id)
+            .SelectMany(a => a.SocialPosts)
+            .Where(sp => sp.IsActive && sp.VerificationStatus == VerificationStatus.Verified)
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Views = g.Sum(sp => (long?)sp.LatestViewCount) ?? 0,
+                Likes = g.Sum(sp => (long?)sp.LatestLikeCount) ?? 0,
+                Comments = g.Sum(sp => (long?)sp.LatestCommentCount) ?? 0,
+                Shares = g.Sum(sp => (long?)sp.LatestShareCount) ?? 0
+            })
+            .FirstOrDefaultAsync(ct);
+
+        var tViews = engagement?.Views ?? 0;
+        var tLikes = engagement?.Likes ?? 0;
+        var tComments = engagement?.Comments ?? 0;
+        var tShares = engagement?.Shares ?? 0;
+        var engagementRate = tViews > 0
+            ? Math.Round((tLikes + tComments + tShares) * 100.0 / tViews, 1)
+            : 0;
+
         return new CreatorPublicProfileDto(
             creator.Id, creator.UserId, creator.DisplayName, creator.Bio, creator.Category, creator.Country,
             creator.Language, creator.AvatarUrl, creator.Website, creator.FollowerCount, creator.AverageViews,
@@ -289,6 +313,7 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
             creator.TikTokAccount?.FollowerCount ?? 0,
             creator.InstagramUsername, creator.InstagramFollowerCount,
             creator.ProfileTags?.ToList() ?? [], creator.OpenToPrOffers,
-            portfolio, avg, reviews.Count, recent, completed, creator.CreatedAt);
+            portfolio, avg, reviews.Count, recent, completed, creator.CreatedAt,
+            tViews, tLikes, tComments, tShares, engagementRate);
     }
 }

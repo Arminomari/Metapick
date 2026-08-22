@@ -298,7 +298,9 @@ public class ChatService : IChatService
                 a.Campaign.Name,
                 lastBody,
                 agg?.LastAt,
-                agg?.Unread ?? 0);
+                agg?.Unread ?? 0,
+                isBrandSide ? a.CreatorProfile?.Id : a.Campaign.BrandProfile?.Id,
+                isBrandSide ? "Creator" : "Brand");
         })
         .OrderByDescending(c => c.LastMessageAt ?? DateTime.MinValue)
         .ThenBy(c => c.CounterpartName)

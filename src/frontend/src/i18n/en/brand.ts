@@ -402,4 +402,10 @@ export const brand: Record<string, string> = {
   'Svar:': 'Responded:',
   'Kreatörens svar:': 'The creator’s reply:',
   'Dra tillbaka': 'Withdraw',
+  'Verifierat engagemang': 'Verified engagement',
+  'Uppmätt av VYRLE på kampanjvideos — inte självrapporterat': 'Measured by VYRLE on campaign videos — not self-reported',
+  'Inga verifierade kampanjvideos ännu — siffrorna dyker upp när kreatören kört sin första kampanj.': 'No verified campaign videos yet — the numbers appear once the creator has run their first campaign.',
+  'views (uppgivet)': 'views (self-reported)',
+  'Kampanjen är ett utkast — skicka in den för granskning så öppnas den för ansökningar när den godkänts.': 'This campaign is a draft — submit it for review and it opens for applications once approved.',
+  'Kampanjen väntar på granskning. Så fort den godkänns blir den synlig för creators och kan ta emot ansökningar.': 'This campaign is awaiting review. As soon as it is approved it becomes visible to creators and can receive applications.',
 };
