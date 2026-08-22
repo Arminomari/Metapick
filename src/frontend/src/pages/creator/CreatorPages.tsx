@@ -321,7 +321,7 @@ export function BrowseCampaignsPage() {
                     <div className="camp-card" key={c.id}>
                       <div className="ch">
                         <span className="mono" style={{ background: grad(c.name) }}>{initial(c.brandName || c.name)}</span>
-                        <div style={{ flex: 1 }}><div className="ttl">{c.name}</div><div className="brand">{c.brandName}</div></div>
+                        <div style={{ flex: 1 }}><div className="ttl">{c.name}</div><div className="brand" onClick={(e) => { if (c.brandProfileId) { e.stopPropagation(); navigate(`/creator/brands/${c.brandProfileId}`); } }} style={c.brandProfileId ? { cursor: 'pointer', textDecoration: 'underline', textDecorationColor: 'rgba(156,79,49,.35)' } : undefined} title={c.brandProfileId ? t('Visa företagsprofil') : undefined}>{c.brandName}</div></div>
                         <button className="lt-icbtn" style={{ borderRadius: '50%' }} aria-label={saved ? t('Ta bort från sparade') : t('Spara kampanj')} aria-pressed={saved}
                           onClick={() => handleSave(c.id)} disabled={toggleSave.isPending}>
                           <svg width="16" height="16" viewBox="0 0 24 24" fill={saved ? '#C26A4A' : 'none'} stroke="#C26A4A" strokeWidth="1.6" strokeLinejoin="round"><path d="M7 4h10v16l-5-3-5 3z" /></svg>
@@ -1104,7 +1104,7 @@ export function CreatorProfilePage() {
               <option value="SE">{t('Sverige')}</option><option value="NO">{t('Norge')}</option><option value="DK">{t('Danmark')}</option><option value="FI">{t('Finland')}</option>
             </select>
           </div>
-          <div className="field"><label>{t('Födelsedatum')}</label><DateInput value={form.dateOfBirth} onChange={v => setForm({ ...form, dateOfBirth: v })} disabled={!editing} className="" /></div>
+          <div className="field"><label>{t('Födelsedatum')}</label><DateInput value={form.dateOfBirth} onChange={v => setForm({ ...form, dateOfBirth: v })} disabled={!editing} className="" max={new Date(Date.now() - 13 * 365.25 * 86400000).toISOString().slice(0, 10)} /></div>
           <div className="field"><label>{t('Instagram-användarnamn')}</label><input type="text" value={form.instagramUsername} onChange={set('instagramUsername')} disabled={!editing} placeholder={t('@dittinstagram')} /></div>
           <div className="field"><label>{t('Instagram-följare')}</label><input type="text" inputMode="numeric" value={form.instagramFollowerCount} disabled={!editing} onChange={(e) => setForm({ ...form, instagramFollowerCount: e.target.value.replace(/\D/g, '') })} /></div>
           <div className="field"><label>{t('Följare (TikTok/övrigt)')}</label><input type="text" inputMode="numeric" value={form.followerCount} disabled={!editing} onChange={(e) => setForm({ ...form, followerCount: e.target.value.replace(/\D/g, '') })} /></div>

@@ -253,7 +253,7 @@ public record CampaignBrowseDto(
     int MaxCreators, int SpotsLeft, DateTime StartDate, DateTime EndDate,
     List<CampaignRequirementDto> Requirements, string? CoverImageUrl,
     string? Perks, List<string> ContentTags,
-    List<PayoutRuleDto>? PayoutRules = null);
+    List<PayoutRuleDto>? PayoutRules = null, Guid? BrandProfileId = null);
 
 public record BrandPublicCampaignDto(
     Guid Id, string Name, string Category, string Status, string PayoutSummary,

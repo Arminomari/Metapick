@@ -485,7 +485,7 @@ export function RegisterPage() {
                 </select>
               </div>
             </div>
-            <div className="field"><label>{t('Födelsedatum')}</label><DateInput value={form.dateOfBirth} onChange={(v) => setForm((f) => ({ ...f, dateOfBirth: v }))} className="" /></div>
+            <div className="field"><label>{t('Födelsedatum')}</label><DateInput value={form.dateOfBirth} onChange={(v) => setForm((f) => ({ ...f, dateOfBirth: v }))} className="" max={new Date(Date.now() - 13 * 365.25 * 86400000).toISOString().slice(0, 10)} /></div>
           </div>
         )}
 

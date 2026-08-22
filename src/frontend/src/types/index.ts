@@ -218,6 +218,7 @@ export interface CampaignBrowseItem {
   id: string;
   name: string;
   brandName: string;
+  brandProfileId?: string | null;
   category: string;
   country: string;
   description: string;

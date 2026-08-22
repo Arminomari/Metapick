@@ -3,10 +3,19 @@ using FluentValidation;
 
 namespace CreatorPay.Application.Validators;
 
+public static class DobRules
+{
+    public static bool Reasonable(DateOnly? d) =>
+        d == null || (d <= DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-13))
+                   && d >= new DateOnly(1900, 1, 1));
+}
+
 public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
 {
     public RegisterRequestValidator()
     {
+        RuleFor(x => x.DateOfBirth).Must(DobRules.Reasonable)
+            .WithMessage("Ange ett rimligt födelsedatum — du måste vara minst 13 år.");
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(256);
         RuleFor(x => x.Password).NotEmpty().MinimumLength(8).MaximumLength(128)
             .Matches(@"[A-Z]").WithMessage("Lösenord måste innehålla minst en versal")

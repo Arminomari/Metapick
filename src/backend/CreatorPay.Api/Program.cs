@@ -495,6 +495,21 @@ app.MapHealthChecks("/health/ready",
         await db.SaveChangesAsync();
         Log.Information("Seeded brand account nellie@vyrle.co");
     }
+
+    // Keep the Nellie showcase profile presentable: fill in branding once so
+    // the public brand page has a real example (only when still bare).
+    {
+        var nellieBrand = await db.Set<CreatorPay.Domain.Entities.BrandProfile>()
+            .FirstOrDefaultAsync(b => b.CompanyName == "Nellie");
+        if (nellieBrand != null && string.IsNullOrEmpty(nellieBrand.LogoUrl))
+        {
+            nellieBrand.Description = "Nellie är ett svenskt mode- och livsstilsvarumärke som samarbetar med creators för att visa upp nya kollektioner genom äkta, personligt innehåll. Vi tror på kreatörer med egen röst — inte manus. Följ oss för att se när nästa kampanj släpps.";
+            nellieBrand.Website = "https://www.vyrle.co";
+            nellieBrand.LogoUrl = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2Ij48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNGRkQ4QzciLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNGMUE4OEYiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgcng9IjU2IiBmaWxsPSJ1cmwoI2cpIi8+PHRleHQgeD0iMTI4IiB5PSIxNzIiIGZvbnQtZmFtaWx5PSJHZW9yZ2lhLCBzZXJpZiIgZm9udC1zaXplPSIxNTAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5OPC90ZXh0Pjwvc3ZnPg==";
+            await db.SaveChangesAsync();
+            Log.Information("Enriched Nellie showcase profile");
+        }
+    }
 }
 
 Log.Information("CreatorPay API starting on {Env}", app.Environment.EnvironmentName);

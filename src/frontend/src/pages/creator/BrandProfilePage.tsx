@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
-import { useApplyToCampaign } from '@/hooks/api';
+import { useApplyToCampaign, useBrandProfile } from '@/hooks/api';
 import { formatNumber, formatDate } from '@/lib/utils';
 import { t, statusLabel } from '@/lib/i18n';
 import { LoadingSpinner } from '@/components/ui';
@@ -26,8 +26,9 @@ interface BrandPublicProfile {
 
 const statBox: CSSProperties = { textAlign: 'center', padding: '14px 10px', borderRadius: 15, background: 'rgba(255,255,255,.7)', border: '1px solid rgba(241,168,143,.22)' };
 
-export function BrandProfilePage() {
-  const { id } = useParams<{ id: string }>();
+export function BrandProfilePage({ brandId, ownView }: { brandId?: string; ownView?: boolean } = {}) {
+  const { id: routeId } = useParams<{ id: string }>();
+  const id = brandId ?? routeId;
   const navigate = useNavigate();
   const qc = useQueryClient();
   const toast = useToast();
@@ -92,15 +93,17 @@ export function BrandProfilePage() {
                 {p.website && <> · <a href={p.website} target="_blank" rel="noopener noreferrer" style={{ color: '#9c4f31', fontWeight: 600 }}>{t('Webbplats')}</a></>}
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => follow.mutate(!p.isFollowing)}
-              disabled={follow.isPending}
-              className={p.isFollowing ? 'btn-outline' : 'btn-apply'}
-              style={{ width: 'auto', padding: '11px 26px', marginBottom: 4 }}
-            >
-              {p.isFollowing ? `✓ ${t('Följer')}` : `＋ ${t('Följ')}`}
-            </button>
+            {!ownView && (
+              <button
+                type="button"
+                onClick={() => follow.mutate(!p.isFollowing)}
+                disabled={follow.isPending}
+                className={p.isFollowing ? 'btn-outline' : 'btn-apply'}
+                style={{ width: 'auto', padding: '11px 26px', marginBottom: 4 }}
+              >
+                {p.isFollowing ? `✓ ${t('Följer')}` : `＋ ${t('Följ')}`}
+              </button>
+            )}
           </div>
           {p.description && <p style={{ margin: '14px 0 0', fontSize: 14, color: 'var(--ink-2)', lineHeight: 1.6, maxWidth: 720 }}>{p.description}</p>}
         </div>
@@ -133,15 +136,17 @@ export function BrandProfilePage() {
                 <div style={{ fontWeight: 700, fontSize: 15 }}>{c.name}</div>
                 <div style={{ fontSize: 12.5, color: '#9c4f31', fontWeight: 700 }}>{c.payoutSummary}</div>
                 <div style={{ fontSize: 12, color: 'var(--muted)' }}>{c.category} · {c.spotsLeft} {t('platser kvar')} · {formatDate(c.startDate)} – {formatDate(c.endDate)}</div>
-                <button
-                  type="button"
-                  className="btn-apply"
-                  style={{ width: '100%', padding: 10, marginTop: 'auto' }}
-                  onClick={() => handleApply(c.id)}
-                  disabled={applyingId === c.id || c.spotsLeft <= 0}
-                >
-                  {applyingId === c.id ? t('Skickar…') : c.spotsLeft <= 0 ? t('Fullbokad') : t('Ansök')}
-                </button>
+                {!ownView && (
+                  <button
+                    type="button"
+                    className="btn-apply"
+                    style={{ width: '100%', padding: 10, marginTop: 'auto' }}
+                    onClick={() => handleApply(c.id)}
+                    disabled={applyingId === c.id || c.spotsLeft <= 0}
+                  >
+                    {applyingId === c.id ? t('Skickar…') : c.spotsLeft <= 0 ? t('Fullbokad') : t('Ansök')}
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -193,3 +198,19 @@ export function BrandProfilePage() {
     </section>
   );
 }
+
+/** The brand's own view of its public profile — how creators see it. */
+export function BrandOwnPublicProfilePage() {
+  const { data: profile, isLoading } = useBrandProfile();
+  if (isLoading) return <LoadingSpinner />;
+  if (!profile?.id) return null;
+  return (
+    <>
+      <div className="card" style={{ marginBottom: 16, padding: '12px 18px', background: 'rgba(237,225,255,.35)', border: '1px solid rgba(157,139,196,.3)' }}>
+        <span style={{ fontSize: 13, color: '#6a4ea8', fontWeight: 600 }}>👁 {t('Så här ser din profil ut för creators. Håll den uppdaterad under Inställningar — en stark profil ger fler ansökningar.')}</span>
+      </div>
+      <BrandProfilePage brandId={profile.id} ownView />
+    </>
+  );
+}
+

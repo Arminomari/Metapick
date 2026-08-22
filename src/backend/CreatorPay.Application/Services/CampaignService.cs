@@ -419,7 +419,8 @@ public class CampaignService : ICampaignService
             x.Requirements,
             x.Campaign.CoverImageUrl,
             x.Campaign.Perks, x.Campaign.ContentTags?.ToList() ?? [],
-            MapPayoutRules(x.PayoutRules)
+            MapPayoutRules(x.PayoutRules),
+            x.Campaign.BrandProfileId
         )).ToList();
 
         return new PagedResult<CampaignBrowseDto>
@@ -504,7 +505,8 @@ public class CampaignService : ICampaignService
             c.Requirements.Select(r => new CampaignRequirementDto(r.RequirementType.ToString(), r.Value, r.IsRequired)).ToList(),
             c.CoverImageUrl,
             c.Perks, c.ContentTags?.ToList() ?? [],
-            MapPayoutRules(c.PayoutRules)
+            MapPayoutRules(c.PayoutRules),
+            c.BrandProfileId
         )).ToList();
 
         return new CursorPagedResult<CampaignBrowseDto>
@@ -752,7 +754,8 @@ public class CampaignService : ICampaignService
                 x.Campaign.StartDate, x.Campaign.EndDate,
                 x.Requirements, x.Campaign.CoverImageUrl,
                 x.Campaign.Perks, x.Campaign.ContentTags?.ToList() ?? [],
-                MapPayoutRules(x.PayoutRules)))
+                MapPayoutRules(x.PayoutRules),
+                x.Campaign.BrandProfileId))
         ).ToList();
     }
 

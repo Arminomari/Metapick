@@ -417,4 +417,7 @@ export const creator: Record<string, string> = {
   'Tillbaka': 'Back',
   'Totala views': 'Total views',
   'Betyg': 'Rating',
+  'Visa företagsprofil': 'View brand profile',
+  'Så här ser din profil ut för creators. Håll den uppdaterad under Inställningar — en stark profil ger fler ansökningar.': 'This is how creators see your profile. Keep it fresh under Settings — a strong profile brings more applications.',
+  'Min profil': 'My Profile',
 };

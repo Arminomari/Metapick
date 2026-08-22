@@ -165,6 +165,7 @@ export function BrandShell() {
     { label: t('Ansökningar'), path: '/brand/applications', icon: 'applications' },
     { label: t('Hitta creators'), path: '/brand/creators', icon: 'creators' },
     { label: t('PR-utskick'), path: '/brand/pr', icon: 'pr' },
+    { label: t('Min profil'), path: '/brand/public-profile', icon: 'portfolio' },
     { label: t('Inställningar'), path: '/brand/settings', icon: 'settings' },
   ];
   const sub = (
