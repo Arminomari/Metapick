@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { t } from '@/lib/i18n';
 import { StatusBadge } from '@/components/ui';
 import { useReceivedPrOffers, useRespondPrOffer, useMarkPrViewed } from '@/hooks/api';
@@ -104,6 +105,8 @@ export function CreatorPrInboxPage() {
   const history = offers.filter((o) => o.status === 'Declined' || o.status === 'Completed');
   const newCount = offers.filter((o) => o.status === 'Sent').length;
   const valueReceived = accepted.reduce((s, o) => s + VAL(o), 0);
+  const productValue = accepted.reduce((s, o) => s + (o.productValue ?? 0), 0);
+  const cashValue = accepted.reduce((s, o) => s + (o.compensationAmount ?? 0), 0);
 
   const shown = tab === 'new' ? inbox.filter((o) => o.status === 'Sent')
     : tab === 'active' ? accepted
@@ -126,15 +129,15 @@ export function CreatorPrInboxPage() {
       <div className="vstat-row">
         <div className="card vstat" style={{ background: 'linear-gradient(160deg,#fff,#FFF6F0)' }}>
           <div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#d7f0e0,#a9dcc0)', color: '#2f7d52' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 10h18M7 15h4" /></svg></div>
-          <div className="vstat-lbl">{t('PR-värde mottaget')}</div>
+          <div className="vstat-lbl">{t('PR-värde att deklarera')}</div>
           <div className="vstat-val">{formatCurrency(valueReceived)}</div>
-          <div className="vstat-sub"><span className="vmut">{t('att redovisa · skattepliktigt')}</span></div>
+          <div className="vstat-sub"><span className="vmut">{valueReceived > 0 ? `${t('varav produkter')} ${formatCurrency(productValue)} · ${t('ersättning')} ${formatCurrency(cashValue)}` : t('skattepliktig förmån — tas upp i deklarationen')}</span></div>
         </div>
         <div className="card vstat">
           <div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#FFE3D3,#FFC2A6)', color: '#9c4f31' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 7" /></svg></div>
-          <div className="vstat-lbl">{t('Aktiva samarbeten')}</div>
+          <div className="vstat-lbl">{t('Aktiva PR-samarbeten')}</div>
           <div className="vstat-val">{accepted.length}</div>
-          <div className="vstat-sub"><span className="vmut">{t('accepterade PR')}</span></div>
+          <div className="vstat-sub"><span className="vmut">{t('accepterade PR-erbjudanden')}</span></div>
         </div>
         <div className="card vstat">
           <div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#EDE1FF,#cdb8f2)', color: '#6a4ea8' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m12 4 2.3 4.8 5.2.7-3.8 3.6.9 5.1L12 16l-4.6 2.8.9-5.1L4.5 9.5l5.2-.7z" /></svg></div>
@@ -148,6 +151,11 @@ export function CreatorPrInboxPage() {
           <div className="vstat-val">{offers.length}</div>
           <div className="vstat-sub"><span className="vmut">{t('genom tiderna')}</span></div>
         </div>
+      </div>
+
+      <div className="card" style={{ padding: '12px 16px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 13, color: 'var(--muted)' }}>ℹ️ {t('Den här sidan visar PR-erbjudanden (produkter och gåvor). Dina betalda kampanjsamarbeten hittar du under')}</span>
+        <Link to="/creator/assignments" style={{ fontSize: 13, fontWeight: 700, color: '#9c4f31' }}>{t('Mina kampanjer')} →</Link>
       </div>
 
       <div className="tabs">

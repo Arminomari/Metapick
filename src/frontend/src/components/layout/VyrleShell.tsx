@@ -1,4 +1,5 @@
 import { t, statusLabel, LangSwitcher } from '@/lib/i18n';
+import { FEATURES } from '@/lib/features';
 import { ReactNode, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
@@ -133,7 +134,7 @@ export function CreatorShell() {
     { label: t('Portfolio'), path: '/creator/portfolio', icon: 'portfolio' },
     { label: t('Statistik'), path: '/creator/analytics', icon: 'analytics' },
     { label: t('PR-hubb'), path: '/creator/pr', icon: 'pr', badge: prUnread || undefined },
-    { label: t('Länkar'), path: '/creator/links', icon: 'links' },
+    ...(FEATURES.linkTree ? ([{ label: t('Länkar'), path: '/creator/links', icon: 'links' }] as NavItem[]) : []),
     { label: t('Intäkter'), path: '/creator/earnings', icon: 'earnings' },
     { label: t('Creator-nivåer'), path: '/creator/levels', icon: 'levels', tag: 'NEW' },
     { label: t('Sparat'), path: '/creator/saved', icon: 'saved' },

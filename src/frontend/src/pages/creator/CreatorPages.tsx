@@ -649,14 +649,14 @@ export function AssignmentDetailPage() {
 
       {assignment.status === 'Active' && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="sec-head"><h3>{t('Skicka in video manuellt')}</h3></div>
+          <div className="sec-head"><h3>{t('Lägg till video')}</h3></div>
           <p style={{ margin: '0 0 12px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.55 }}>
-            {t('Videos som matchar din tracking-tag hittas automatiskt. Använd formuläret nedan om du vill lägga till en video manuellt.')}
+            {t('Videos med din tracking-tag hittas automatiskt — klistra in länken här om du vill lägga till din video direkt.')}
           </p>
           <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 10 }}>
             <input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder={t('https://www.tiktok.com/@ditt-namn/video/123...')} required
               style={{ flex: 1, border: '1px solid rgba(241,168,143,.22)', borderRadius: 13, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', background: 'rgba(255,255,255,.7)' }} />
-            <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={submitVideo.isPending}>{submitVideo.isPending ? t('Skickar…') : t('Skicka in')}</button>
+            <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={submitVideo.isPending}>{submitVideo.isPending ? t('Skickar…') : t('Lägg till')}</button>
           </form>
         </div>
       )}

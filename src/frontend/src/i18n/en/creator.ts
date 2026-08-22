@@ -386,4 +386,13 @@ export const creator: Record<string, string> = {
   'Inga PR-erbjudanden ännu': 'No PR offers yet',
   'Inget här ännu': 'Nothing here yet',
   'När företag skickar dig ett PR-erbjudande dyker det upp här. Se till att din profil och portfölj är uppdaterad så fler hittar dig.': 'When a brand sends you a PR offer it shows up here. Make sure your profile and portfolio are up to date so more brands find you.',
+  'PR-värde att deklarera': 'PR value to declare',
+  'skattepliktig förmån — tas upp i deklarationen': 'taxable benefit — must be declared in your tax return',
+  'varav produkter': 'of which products',
+  'ersättning': 'compensation',
+  'Aktiva PR-samarbeten': 'Active PR collaborations',
+  'accepterade PR-erbjudanden': 'accepted PR offers',
+  'Den här sidan visar PR-erbjudanden (produkter och gåvor). Dina betalda kampanjsamarbeten hittar du under': 'This page shows PR offers (products and gifts). Your paid campaign collaborations live under',
+  'Lägg till video': 'Add video',
+  'Videos med din tracking-tag hittas automatiskt — klistra in länken här om du vill lägga till din video direkt.': 'Videos with your tracking tag are found automatically — paste the link here to add your video right away.',
 };
