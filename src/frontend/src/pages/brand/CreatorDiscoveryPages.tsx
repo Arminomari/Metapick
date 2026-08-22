@@ -1,3 +1,4 @@
+import { DateInput } from '@/components/ui/DateInput';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Pagination } from '@/components/ui';
@@ -305,7 +306,7 @@ function SendPrOfferForm({ creatorProfileId, onDone }: { creatorProfileId: strin
         <div className="field full"><label>{t('Vad får kreatören? (PR-utbud)')}</label><textarea value={form.productDescription} onChange={(e) => setForm({ ...form, productDescription: e.target.value })} rows={2} placeholder={t('t.ex. Måltid för två + dryck')} /></div>
         <div className="field"><label>{t('Ersättning (SEK)')}{needsCash ? ' *' : ''}</label><input inputMode="numeric" value={form.compensationAmount} onChange={(e) => setForm({ ...form, compensationAmount: e.target.value.replace(/\D/g, '') })} placeholder="0" /></div>
         <div className="field"><label>{t('Produktvärde (SEK)')}</label><input inputMode="numeric" value={form.productValue} onChange={(e) => setForm({ ...form, productValue: e.target.value.replace(/\D/g, '') })} placeholder={t('t.ex. 500')} /></div>
-        <div className="field"><label>{t('Deadline')}</label><input type="date" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })} /></div>
+        <div className="field"><label>{t('Deadline')}</label><DateInput value={form.deadline} onChange={(v) => setForm({ ...form, deadline: v })} className="" /></div>
         <div className="field full">
           {error && <p style={{ color: 'var(--red)', fontSize: 13, marginBottom: 8 }}>{error}</p>}
           <div style={{ display: 'flex', gap: 10 }}>

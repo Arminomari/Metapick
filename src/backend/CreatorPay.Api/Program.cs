@@ -294,6 +294,31 @@ app.MapHealthChecks("/health/ready",
     var db = scope.ServiceProvider.GetRequiredService<CreatorPay.Infrastructure.Data.AppDbContext>();
     await db.Database.MigrateAsync();
 
+    // Self-heal: soft-deleted accounts from before identity anonymization
+    // still hold their email (unique index) and TikTok binding. Free both.
+    {
+        var staleDeleted = await db.Users.IgnoreQueryFilters()
+            .Where(u => u.IsDeleted && !u.Email.StartsWith("deleted-"))
+            .ToListAsync();
+        foreach (var du in staleDeleted)
+        {
+            du.Email = $"deleted-{du.Id:N}@deleted.vyrle.co";
+            du.EmailVerified = false;
+        }
+
+        var deletedUserIds = await db.Users.IgnoreQueryFilters()
+            .Where(u => u.IsDeleted).Select(u => u.Id).ToListAsync();
+        if (deletedUserIds.Count > 0)
+        {
+            var deadProfileIds = await db.Set<CreatorPay.Domain.Entities.CreatorProfile>().IgnoreQueryFilters()
+                .Where(c => deletedUserIds.Contains(c.UserId)).Select(c => c.Id).ToListAsync();
+            var deadTikToks = await db.Set<CreatorPay.Domain.Entities.TikTokAccount>()
+                .Where(t => t.IsActive && deadProfileIds.Contains(t.CreatorProfileId)).ToListAsync();
+            foreach (var t in deadTikToks) t.IsActive = false;
+        }
+        await db.SaveChangesAsync();
+    }
+
     // ── Seed admin account ─────────────────────────────
     var seedAdminEnabled = builder.Configuration.GetValue<bool?>("Bootstrap:SeedAdminEnabled")
         ?? app.Environment.IsDevelopment();

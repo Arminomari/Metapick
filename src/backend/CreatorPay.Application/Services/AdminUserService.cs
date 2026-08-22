@@ -494,6 +494,18 @@ public class AdminUserService : IAdminUserService
         user.IsDeleted = true;
         user.Status = UserStatus.Deactivated;
         user.RefreshTokenHash = null;
+        // The Email column has a unique index, so a deleted account would
+        // otherwise hold its address hostage forever. Anonymize identity;
+        // campaign/payout history stays under the anonymized row.
+        user.Email = $"deleted-{user.Id:N}@deleted.vyrle.co";
+        user.EmailVerified = false;
+
+        var deletedCreator = await _creators.Query().IgnoreQueryFilters()
+            .Include(c => c.TikTokAccount)
+            .FirstOrDefaultAsync(c => c.UserId == userId);
+        if (deletedCreator?.TikTokAccount != null)
+            deletedCreator.TikTokAccount.IsActive = false; // frees the TikTok for reconnection
+
         await _uow.SaveChangesAsync();
         await _audit.LogAsync(callerAdminUserId, "Admin.DeleteUser", "User", userId);
         return true;
