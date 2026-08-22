@@ -474,4 +474,28 @@ public class AdminUserService : IAdminUserService
             !string.IsNullOrEmpty(creator.PayoutMethod), creator.PayoutMethod,
             Math.Round(reviewAgg?.Avg ?? 0, 1), reviewAgg?.Count ?? 0, creator.PortfolioItems?.Count ?? 0);
     }
+
+    /// <summary>
+    /// Soft-deletes an account: it disappears from every listing, cannot log
+    /// in, and its refresh tokens are revoked — while campaign and payout
+    /// history stays intact for auditing. Admin accounts and the caller's
+    /// own account are protected.
+    /// </summary>
+    public async Task<Result<bool>> DeleteUserAsync(Guid callerAdminUserId, Guid userId)
+    {
+        if (callerAdminUserId == userId)
+            return Errors.Validation("Du kan inte radera ditt eget konto");
+
+        var user = await _users.Query().IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null) return Errors.NotFound("User", userId);
+        if (user.Role == UserRole.Admin)
+            return Errors.Forbidden("Admin-konton kan inte raderas härifrån");
+
+        user.IsDeleted = true;
+        user.Status = UserStatus.Deactivated;
+        user.RefreshTokenHash = null;
+        await _uow.SaveChangesAsync();
+        await _audit.LogAsync(callerAdminUserId, "Admin.DeleteUser", "User", userId);
+        return true;
+    }
 }

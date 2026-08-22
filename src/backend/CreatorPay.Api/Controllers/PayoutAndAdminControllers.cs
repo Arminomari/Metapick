@@ -155,6 +155,11 @@ public class AdminUserController : BaseController
     public async Task<IActionResult> RejectUser(Guid id, [FromBody] RejectReasonRequest request)
         => ToActionResult(await _adminUsers.RejectUserAsync(id, GetUserId(), request.Reason));
 
+    /// <summary>Radera ett konto (mjuk radering — historik bevaras för spårbarhet)</summary>
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteUser(Guid id)
+        => ToActionResult(await _adminUsers.DeleteUserAsync(GetUserId(), id));
+
     /// <summary>Trigga kampanjsynk manuellt (Admin)</summary>
     [HttpPost("/api/admin/trigger-sync")]
     public IActionResult TriggerSync()

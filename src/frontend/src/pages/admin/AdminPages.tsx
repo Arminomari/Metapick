@@ -130,6 +130,14 @@ function useRejectCampaign() {
   });
 }
 
+function useDeleteUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => (await api.delete(`/admin/users/${id}`)).data.data,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-users'] }),
+  });
+}
+
 function useApproveUser() {
   const qc = useQueryClient();
   return useMutation({
@@ -202,6 +210,11 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-creator-profile'] }); onBack(); },
   });
   const [rejectReason, setRejectReason] = useState('');
+  const deleteAccount = useMutation({
+    mutationFn: async () => (await api.delete(`/admin/users/${creatorId}`)).data.data,
+    onSuccess: () => onBack(),
+  });
+  const [armedDelete, setArmedDelete] = useState(false);
 
   if (isLoading) return <div style={{ padding: '3rem', textAlign: 'center', color: '#8a8f9c' }}>{t('Laddar…')}</div>;
   if (isError || !p) return (
@@ -303,6 +316,19 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
             </button>
           </div>
         )}
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(241,168,143,.2)' }}>
+          <button
+            onClick={() => {
+              if (!armedDelete) { setArmedDelete(true); setTimeout(() => setArmedDelete(false), 4000); return; }
+              deleteAccount.mutate();
+            }}
+            disabled={deleteAccount.isPending}
+            style={{ padding: '.55rem 1.3rem', borderRadius: 980, background: armedDelete ? '#cf4b4b' : 'transparent', color: armedDelete ? '#fff' : '#cf4b4b', border: '1px solid rgba(207,75,75,.45)', fontWeight: 700, fontSize: '.8rem', cursor: 'pointer' }}
+          >
+            {deleteAccount.isPending ? t('Raderar…') : armedDelete ? t('Säker? Klicka igen för att radera') : t('Radera konto')}
+          </button>
+          <span style={{ ...apMuted, marginLeft: 10 }}>{t('Mjuk radering — kontot släcks och loggas ut, kampanjhistorik bevaras för spårbarhet.')}</span>
+        </div>
       </div>
     </div>
   );
@@ -333,6 +359,19 @@ export function AdminDashboardPage() {
   const rejectCampaign = useRejectCampaign();
   const [rejectingCampaignId, setRejectingCampaignId] = useState<string | null>(null);
   const [campaignRejectReason, setCampaignRejectReason] = useState('');
+  const deleteUser = useDeleteUser();
+  const [armedDeleteId, setArmedDeleteId] = useState<string | null>(null);
+
+  // Two-step inline confirm: first click arms, second deletes.
+  const handleDeleteUser = (id: string) => {
+    if (armedDeleteId !== id) {
+      setArmedDeleteId(id);
+      setTimeout(() => setArmedDeleteId((cur) => (cur === id ? null : cur)), 4000);
+      return;
+    }
+    setArmedDeleteId(null);
+    deleteUser.mutate(id);
+  };
 
   // Profile view renders instead of the dashboard — placed AFTER every hook:
   // an early return above any hook makes React render fewer hooks than the
@@ -538,6 +577,17 @@ export function AdminDashboardPage() {
                         {t('✕ Avvisa')}
                       </button>
                     )}
+                  </div>
+                )}
+                {user.role !== 'Admin' && (
+                  <div style={{ marginTop: '.6rem' }}>
+                    <button
+                      style={{ ...s.btnReject, background: armedDeleteId === user.id ? '#cf4b4b' : 'transparent', color: armedDeleteId === user.id ? '#fff' : '#cf4b4b', border: '1px solid rgba(207,75,75,.45)' }}
+                      onClick={() => handleDeleteUser(user.id)}
+                      disabled={deleteUser.isPending}
+                    >
+                      {armedDeleteId === user.id ? t('Säker? Klicka igen för att radera') : t('Radera konto')}
+                    </button>
                   </div>
                 )}
               </div>

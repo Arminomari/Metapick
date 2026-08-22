@@ -193,4 +193,9 @@ export const admin: Record<string, string> = {
   'Nekar…': 'Rejecting…',
   'Neka konto': 'Reject account',
   'ej verifierad': 'not verified',
+  'Radera konto': 'Delete account',
+  'Säker? Klicka igen för att radera': 'Sure? Click again to delete',
+  'Raderar…': 'Deleting…',
+  'Mjuk radering — kontot släcks och loggas ut, kampanjhistorik bevaras för spårbarhet.': 'Soft delete — the account is disabled and signed out; campaign history is kept for auditability.',
+  'Konto raderat av admin': 'Account deleted by admin',
 };

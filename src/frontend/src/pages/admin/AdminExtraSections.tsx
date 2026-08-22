@@ -63,6 +63,7 @@ const ACTION_LABELS: Record<string, string> = {
   'Admin.RejectUser': 'Konto nekat av admin',
   'Admin.CreateAdmin': 'Ny admin skapad',
   'Admin.Broadcast': 'Utskick till alla användare',
+  'Admin.DeleteUser': 'Konto raderat av admin',
   'Auth.EmailVerified': 'E-post bekräftad',
 };
 const actionLabel = (a: string) => ACTION_LABELS[a] ?? a.replace('.', ' · ');
