@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import api from '@/lib/api';
 import { useTriggerSync } from '@/hooks/api';
-import type { ApiResponse, PagedResult, CreatorProfile } from '@/types';
+import type { ApiResponse, PagedResult } from '@/types';
 import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
 import { t } from '@/lib/i18n';
 
@@ -153,271 +153,161 @@ function useRejectUser() {
 }
 
 // ── Admin Creator Profile Page ────────────────────────────────
+interface AdminCreatorFull {
+  userId: string; email: string; emailVerified: boolean; accountStatus: string; authProvider?: string | null;
+  registeredAt: string; lastLoginAt?: string | null;
+  creatorProfileId: string; displayName: string; bio?: string | null; category: string; country: string; language: string;
+  avatarUrl?: string | null; website?: string | null; dateOfBirth?: string | null; profileTags: string[];
+  followerCount: number; averageViews?: number | null; instagramUsername?: string | null; instagramFollowerCount: number;
+  profileStatus: string;
+  tikTokUsername?: string | null; tikTokConnected: boolean; tikTokOAuth: boolean; tikTokFollowerCount: number; tikTokLastSync?: string | null;
+  activeAssignments: number; completedAssignments: number; totalVerifiedViews: number; totalEarned: number; totalPaidOut: number;
+  payoutMethodConfigured: boolean; payoutMethod?: string | null;
+  averageRating: number; reviewCount: number; portfolioCount: number;
+}
+
+const apCard: React.CSSProperties = { background: '#fff', borderRadius: 18, border: '1px solid rgba(241,168,143,.25)', padding: '1.2rem 1.4rem', marginBottom: 14, boxShadow: '0 8px 24px rgba(180,120,90,.06)' };
+const apMuted: React.CSSProperties = { fontSize: '.8rem', color: '#8a8f9c' };
+const apPill = (bg: string, color: string): React.CSSProperties => ({ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 11px', borderRadius: 980, fontSize: '.75rem', fontWeight: 700, background: bg, color, whiteSpace: 'nowrap' });
+const apStat = ({ label, value, sub }: { label: string; value: React.ReactNode; sub?: string }) => (
+  <div key={label} style={{ padding: '12px 14px', borderRadius: 13, background: 'rgba(255,244,236,.75)', border: '1px solid rgba(241,168,143,.2)' }}>
+    <div style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: '#8a8f9c' }}>{label}</div>
+    <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#0B0F17', marginTop: 2 }}>{value}</div>
+    {sub && <div style={{ fontSize: '.72rem', color: '#8a8f9c', marginTop: 1 }}>{sub}</div>}
+  </div>
+);
+const apRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
+  <div key={label} style={{ display: 'flex', gap: 12, padding: '7px 0', borderBottom: '1px solid rgba(241,168,143,.14)', fontSize: '.86rem' }}>
+    <span style={{ color: '#8a8f9c', minWidth: 160 }}>{label}</span>
+    <span style={{ color: '#0B0F17', fontWeight: 600, wordBreak: 'break-word' }}>{value}</span>
+  </div>
+);
+
 function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onBack: () => void }) {
-  const { data: profile, isLoading, isError, error } = useQuery({
+  const { data: p, isLoading, isError, error } = useQuery({
     queryKey: ['admin-creator-profile', creatorId],
     queryFn: async () => {
-      const res = await api.get<ApiResponse<CreatorProfile>>(`/admin/creators/${creatorId}`);
+      const res = await api.get<ApiResponse<AdminCreatorFull>>(`/admin/creators/${creatorId}`);
       return res.data.data;
     },
   });
 
+  const qc = useQueryClient();
   const approveCreator = useMutation({
-    mutationFn: async () => {
-      const res = await api.post(`/admin/users/${creatorId}/approve`);
-      return res.data.data;
-    },
-    onSuccess: () => {
-      onBack();
-    },
+    mutationFn: async () => (await api.post(`/admin/users/${creatorId}/approve`)).data.data,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-creator-profile'] }); onBack(); },
   });
-
   const rejectCreator = useMutation({
-    mutationFn: async (reason: string) => {
-      const res = await api.post(`/admin/users/${creatorId}/reject`, { reason });
-      return res.data.data;
-    },
-    onSuccess: () => {
-      onBack();
-    },
+    mutationFn: async (reason: string) => (await api.post(`/admin/users/${creatorId}/reject`, { reason })).data.data,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-creator-profile'] }); onBack(); },
   });
-
   const [rejectReason, setRejectReason] = useState('');
 
-  if (isLoading) {
-    return (
-      <div className="vy-app" style={s.page}>
-        <div style={s.container}>
-          <div style={s.empty}>{t('Laddar profil…')}</div>
-        </div>
-      </div>
-    );
-  }
+  if (isLoading) return <div style={{ padding: '3rem', textAlign: 'center', color: '#8a8f9c' }}>{t('Laddar…')}</div>;
+  if (isError || !p) return (
+    <div style={{ padding: '2rem', maxWidth: 900, margin: '0 auto' }}>
+      <button onClick={onBack} style={{ background: 'none', border: 'none', color: '#9c4f31', fontWeight: 700, cursor: 'pointer', marginBottom: 14, padding: 0 }}>← {t('Tillbaka till admin-panel')}</button>
+      <div style={apCard}>{t('Kunde inte hämta profilen.')} {(error as any)?.response?.data?.error?.message ?? ''}</div>
+    </div>
+  );
 
-  if (isError || !profile) {
-    return (
-      <div className="vy-app" style={s.page}>
-        <div style={s.container}>
-          <button
-            onClick={onBack}
-            style={{ background: 'none', border: 'none', color: '#6a4ea8', cursor: 'pointer', fontSize: '.9rem', fontWeight: 600, marginBottom: '1rem' }}
-          >
-            ← {t('Tillbaka')}
-          </button>
-          <div style={s.empty as React.CSSProperties}>
-            <p style={{ fontSize: '1.25rem', marginBottom: '.5rem' }}>{t('Kunde inte hämta profil')}</p>
-            <p style={{ fontSize: '.875rem' }}>{getApiErrorMessage(error, t('Okänt fel'))}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const engagementless = p.totalVerifiedViews === 0;
 
   return (
-    <div className="vy-app" style={s.page}>
-      <div style={s.container}>
-        <button
-          onClick={onBack}
-          style={{ background: 'none', border: 'none', color: '#6a4ea8', cursor: 'pointer', fontSize: '.9rem', fontWeight: 600, marginBottom: '1.5rem', textDecoration: 'underline' }}
-        >
-          ← {t('Tillbaka till admin-panel')}
-        </button>
+    <div style={{ padding: '2rem 1.5rem', maxWidth: 980, margin: '0 auto' }}>
+      <button onClick={onBack} style={{ background: 'none', border: 'none', color: '#9c4f31', fontWeight: 700, cursor: 'pointer', marginBottom: 14, padding: 0, fontSize: '.9rem' }}>← {t('Tillbaka till admin-panel')}</button>
 
-        <div style={{ background: 'rgba(255,255,255,.82)', border: '1px solid #1e1e2e', borderRadius: '1rem', padding: 'clamp(1.5rem, 4vw, 2rem)', marginBottom: '2rem' }}>
-          {/* Profile header */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: '2rem', marginBottom: '2rem' }}>
-            {/* Avatar */}
-            <div
-              style={{
-                width: 120,
-                height: 120,
-                borderRadius: '0.75rem',
-                background: 'linear-gradient(135deg, #7c3aed 0%, #e84393 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                fontSize: '2.5rem',
-                fontWeight: 700,
-                overflow: 'hidden',
-              }}
-            >
-              {profile.avatarUrl ? (
-                <img src={profile.avatarUrl} alt={profile.displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                profile.displayName?.charAt(0).toUpperCase()
-              )}
+      {/* ── Header ── */}
+      <div style={apCard}>
+        <div style={{ display: 'flex', gap: 18, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          {p.avatarUrl
+            ? <img src={p.avatarUrl} alt="" style={{ width: 76, height: 76, borderRadius: 18, objectFit: 'cover' }} />
+            : <div style={{ width: 76, height: 76, borderRadius: 18, background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, fontWeight: 800, color: '#fff' }}>{(p.displayName[0] || '?').toUpperCase()}</div>}
+          <div style={{ flex: 1, minWidth: 240 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: '#0B0F17' }}>{p.displayName}</h1>
+              <span style={apPill(p.profileStatus === 'Approved' ? 'rgba(169,220,192,.4)' : 'rgba(242,197,138,.4)', p.profileStatus === 'Approved' ? '#2f7d52' : '#9c6b1c')}>{p.profileStatus === 'Approved' ? t('Godkänd') : p.profileStatus}</span>
+              {p.emailVerified
+                ? <span style={apPill('rgba(169,220,192,.35)', '#2f7d52')}>✓ {t('E-post verifierad')}</span>
+                : <span style={apPill('rgba(255,90,77,.15)', '#c0392b')}>✗ {t('E-post EJ verifierad')}</span>}
+              {p.tikTokConnected && <span style={apPill('rgba(183,188,200,.25)', '#3c4250')}>{p.tikTokOAuth ? '✓ TikTok OAuth' : '⚠ TikTok manuell'}</span>}
             </div>
-
-            {/* Main info */}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
-                <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#0B0F17' }}>{profile.displayName}</h1>
-                <span style={s.badge(profile.status || 'Pending')}>
-                  {profile.status === 'Approved' ? t('Godkänd') : profile.status === 'Rejected' ? t('Avvisad') : t('Väntande')}
-                </span>
-              </div>
-              <p style={{ color: '#6E7480', fontSize: '.95rem', marginBottom: '0.5rem' }}>
-                📧 {profile.userId || 'user@hidden'}
-              </p>
-              <p style={{ color: '#6E7480', fontSize: '.95rem' }}>
-                📍 {profile.country || '–'} · {t('Medlem sedan')} {(profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('sv-SE') : '–')}
-              </p>
-            </div>
-
-            {/* Status badge */}
-            <div style={{ textAlign: 'right' }}>
-              {profile.tikTokConnected && (
-                <div style={{ display: 'inline-block', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: 'rgba(47,157,91,.15)', color: '#2f9d5b', fontSize: '.85rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-                  {t('✓ TikTok kopplat')}
-                </div>
-              )}
+            <div style={{ ...apMuted, marginTop: 6 }}>{p.email} · {p.country} · {t('Medlem sedan')} {formatDate(p.registeredAt)}</div>
+            {p.bio && <p style={{ margin: '10px 0 0', fontSize: '.9rem', color: '#3c4250', lineHeight: 1.55 }}>{p.bio}</p>}
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+              {p.profileTags.map((tg) => <span key={tg} style={apPill('rgba(237,225,255,.7)', '#6a4ea8')}>{tg}</span>)}
             </div>
           </div>
-
-          {/* Bio */}
-          {profile.bio && (
-            <div style={{ background: '#FFF4EC', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', borderLeft: '3px solid #7c3aed' }}>
-              <p style={{ color: '#0B0F17', fontSize: '.95rem', lineHeight: 1.6 }}>{profile.bio}</p>
-            </div>
-          )}
-
-          {/* Stats grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-            <div style={{ background: '#FFF4EC', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.25rem' }}>{t('Kategori')}</p>
-              <p style={{ color: '#0B0F17', fontSize: '1.1rem', fontWeight: 600 }}>{profile.category}</p>
-            </div>
-            <div style={{ background: '#FFF4EC', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.25rem' }}>{t('Följare')}</p>
-              <p style={{ color: '#0B0F17', fontSize: '1.1rem', fontWeight: 600 }}>{formatNumber(profile.followerCount)}</p>
-            </div>
-            <div style={{ background: '#FFF4EC', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.25rem' }}>{t('Snitt-views')}</p>
-              <p style={{ color: '#0B0F17', fontSize: '1.1rem', fontWeight: 600 }}>{profile.averageViews ? formatNumber(profile.averageViews) : '–'}</p>
-            </div>
-            <div style={{ background: '#FFF4EC', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.25rem' }}>{t('Språk')}</p>
-              <p style={{ color: '#0B0F17', fontSize: '1.1rem', fontWeight: 600 }}>{profile.language || '–'}</p>
-            </div>
-          </div>
-
-          {/* TikTok info */}
-          {profile.tikTokUsername && (
-            <div style={{ background: '#FFF4EC', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', borderLeft: '3px solid #4caf50' }}>
-              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.5rem' }}>🎵 TikTok</p>
-              <a
-                href={`https://www.tiktok.com/@${profile.tikTokUsername}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: '#6a4ea8', textDecoration: 'none', fontSize: '1rem', fontWeight: 600 }}
-              >
-                @{profile.tikTokUsername}
-              </a>
-            </div>
-          )}
-
-          {/* Profile tags */}
-          {profile.profileTags && profile.profileTags.length > 0 && (
-            <div style={{ marginBottom: '1.5rem' }}>
-              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.75rem' }}>{t('Experttaggar')}</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                {profile.profileTags.map((tag) => (
-                  <span
-                    key={tag}
-                    style={{
-                      display: 'inline-block',
-                      padding: '0.5rem 1rem',
-                      borderRadius: '999px',
-                      background: 'rgba(106,78,168,.2)',
-                      color: '#c4b5fd',
-                      fontSize: '.85rem',
-                      fontWeight: 600,
-                      border: '1px solid #7c3aed',
-                    }}
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Additional info */}
-          <div style={{ background: '#FFF4EC', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-            <div>
-              <p style={{ color: '#6E7480', fontSize: '.75rem', marginBottom: '0.25rem' }}>{t('FÖDSELDATUM')}</p>
-              <p style={{ color: '#0B0F17', fontWeight: 600 }}>{profile.id ? '••••••••' : '–'}</p>
-              <p style={{ color: '#5a5a7a', fontSize: '.75rem', marginTop: '0.25rem' }}>{t('Skyddat för integritet')}</p>
-            </div>
-            <div>
-              <p style={{ color: '#6E7480', fontSize: '.75rem', marginBottom: '0.25rem' }}>{t('MEDLEMSID')}</p>
-              <p style={{ color: '#0B0F17', fontWeight: 600, fontSize: '.85rem', fontFamily: 'monospace' }}>{profile.userId?.slice(0, 8)}...</p>
-            </div>
-            <div>
-              <p style={{ color: '#6E7480', fontSize: '.75rem', marginBottom: '0.25rem' }}>{t('REGISTRERAD')}</p>
-              <p style={{ color: '#0B0F17', fontWeight: 600 }}>{(profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('sv-SE') : '–')}</p>
-            </div>
-          </div>
-
-          {/* Action buttons */}
-          {profile.status === 'Pending' && (
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-              <button
-                onClick={() => approveCreator.mutate()}
-                disabled={approveCreator.isPending}
-                style={{
-                  ...s.btnApprove,
-                  padding: '0.75rem 1.5rem',
-                  fontSize: '.95rem',
-                  fontWeight: 700,
-                  opacity: approveCreator.isPending ? 0.6 : 1,
-                }}
-              >
-                {approveCreator.isPending ? t('✓ Godkänner…') : t('✓ Godkänn denna creator')}
-              </button>
-
-              <div style={{ flex: 1, display: 'flex', gap: '.5rem' }}>
-                <input
-                  type="text"
-                  value={rejectReason}
-                  onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder={t('Orsak till avvisning…')}
-                  style={{ flex: 1, borderRadius: '.5rem', border: '1px solid #1e1e2e', background: '#FFF4EC', padding: '.75rem', fontSize: '.9rem', color: '#0B0F17', outline: 'none' }}
-                />
-                <button
-                  onClick={() => rejectCreator.mutate(rejectReason)}
-                  disabled={rejectCreator.isPending || !rejectReason.trim()}
-                  style={{
-                    ...s.btnReject,
-                    padding: '0.75rem 1.5rem',
-                    fontSize: '.95rem',
-                    fontWeight: 700,
-                    opacity: rejectCreator.isPending || !rejectReason.trim() ? 0.6 : 1,
-                  }}
-                >
-                  {rejectCreator.isPending ? t('✕ Avvisar…') : t('✕ Avvisa')}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {profile.status === 'Rejected' && (
-            <div style={{ background: 'rgba(207,75,75,.1)', border: '1px solid #f44336', borderRadius: '0.5rem', padding: '1rem' }}>
-              <p style={{ color: '#cf4b4b', fontSize: '.9rem', fontWeight: 600 }}>{t('❌ Denna profil har avvisats')}</p>
-            </div>
-          )}
-
-          {profile.status === 'Approved' && (
-            <div style={{ background: 'rgba(47,157,91,.1)', border: '1px solid #4caf50', borderRadius: '0.5rem', padding: '1rem' }}>
-              <p style={{ color: '#2f9d5b', fontSize: '.9rem', fontWeight: 600 }}>{t('✓ Denna profil är godkänd')}</p>
-            </div>
-          )}
         </div>
+      </div>
+
+      {/* ── Verksamhet ── */}
+      <div style={apCard}>
+        <h3 style={{ margin: '0 0 10px', fontSize: '.95rem', fontWeight: 800 }}>{t('Verksamhet på plattformen')}</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
+          {apStat({ label: t('Aktiva uppdrag'), value: p.activeAssignments })}
+          {apStat({ label: t('Slutförda'), value: p.completedAssignments })}
+          {apStat({ label: t('Verifierade views'), value: formatNumber(p.totalVerifiedViews) })}
+          {apStat({ label: t('Intjänat'), value: formatCurrency(p.totalEarned) })}
+          {apStat({ label: t('Utbetalt'), value: formatCurrency(p.totalPaidOut) })}
+          {apStat({ label: t('Betyg'), value: p.reviewCount > 0 ? `${p.averageRating.toFixed(1)} / 5` : '–', sub: p.reviewCount > 0 ? `${p.reviewCount} ${t('omdömen')}` : t('inga omdömen') })}
+          {apStat({ label: t('Portfölj'), value: p.portfolioCount })}
+        </div>
+        {engagementless && <div style={{ ...apMuted, marginTop: 8 }}>{t('Ingen kampanjaktivitet ännu.')}</div>}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14 }}>
+        {/* ── Konto ── */}
+        <div style={{ ...apCard, marginBottom: 0 }}>
+          <h3 style={{ margin: '0 0 6px', fontSize: '.95rem', fontWeight: 800 }}>{t('Konto')}</h3>
+          {apRow({ label: t('E-post'), value: <>{p.email} {p.emailVerified ? '✓' : `— ${t('ej verifierad')}`}</> })}
+          {apRow({ label: t('Kontostatus'), value: p.accountStatus })}
+          {apRow({ label: t('Inloggning via'), value: p.authProvider || t('E-post + lösenord') })}
+          {apRow({ label: t('Registrerad'), value: formatDate(p.registeredAt) })}
+          {apRow({ label: t('Senast inloggad'), value: p.lastLoginAt ? formatDate(p.lastLoginAt) : '–' })}
+          {apRow({ label: t('Födelsedatum'), value: p.dateOfBirth ?? '–' })}
+          {apRow({ label: t('Språk'), value: p.language })}
+          {apRow({ label: t('Medlems-ID'), value: <code style={{ fontSize: '.75rem' }}>{p.userId}</code> })}
+        </div>
+
+        {/* ── Räckvidd & kanaler ── */}
+        <div style={{ ...apCard, marginBottom: 0 }}>
+          <h3 style={{ margin: '0 0 6px', fontSize: '.95rem', fontWeight: 800 }}>{t('Räckvidd & kanaler')}</h3>
+          {apRow({ label: t('Kategori'), value: p.category })}
+          {apRow({ label: t('Uppgivna följare'), value: formatNumber(p.followerCount) })}
+          {apRow({ label: t('Uppgivna snitt-views'), value: p.averageViews ? formatNumber(p.averageViews) : '–' })}
+          {apRow({ label: 'TikTok', value: p.tikTokUsername ? <a href={`https://www.tiktok.com/@${p.tikTokUsername}`} target="_blank" rel="noopener noreferrer" style={{ color: '#9c4f31' }}>@{p.tikTokUsername} ({formatNumber(p.tikTokFollowerCount)} {t('följare')})</a> : '–' })}
+          {apRow({ label: t('TikTok-koppling'), value: p.tikTokConnected ? (p.tikTokOAuth ? t('OAuth (verifierad)') : t('Manuell (overifierad)')) : t('Ej kopplad') })}
+          {apRow({ label: t('Senast synkad'), value: p.tikTokLastSync ? formatDate(p.tikTokLastSync) : '–' })}
+          {apRow({ label: 'Instagram', value: p.instagramUsername ? `@${p.instagramUsername} (${formatNumber(p.instagramFollowerCount)})` : '–' })}
+          {apRow({ label: t('Webbplats'), value: p.website ? <a href={p.website} target="_blank" rel="noopener noreferrer" style={{ color: '#9c4f31' }}>{p.website}</a> : '–' })}
+          {apRow({ label: t('Utbetalningsmetod'), value: p.payoutMethodConfigured ? (p.payoutMethod || t('Konfigurerad')) : t('Ej konfigurerad') })}
+        </div>
+      </div>
+
+      {/* ── Moderation ── */}
+      <div style={{ ...apCard, marginTop: 14 }}>
+        {p.profileStatus === 'Approved' ? (
+          <div style={{ color: '#2f7d52', fontWeight: 700, fontSize: '.9rem' }}>✓ {t('Denna profil är godkänd')}</div>
+        ) : (
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+            <button onClick={() => approveCreator.mutate()} disabled={approveCreator.isPending}
+              style={{ padding: '.6rem 1.4rem', borderRadius: 980, background: 'linear-gradient(135deg,#3dbb77,#2f9d5b)', color: '#fff', border: 'none', fontWeight: 700, fontSize: '.85rem', cursor: 'pointer' }}>
+              {approveCreator.isPending ? t('Godkänner…') : t('Godkänn konto')}
+            </button>
+            <input value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder={t('Anledning vid nekande')}
+              style={{ flex: 1, minWidth: 200, padding: '.6rem .9rem', borderRadius: 12, border: '1px solid rgba(241,168,143,.35)', fontSize: '.85rem', fontFamily: 'inherit' }} />
+            <button onClick={() => rejectCreator.mutate(rejectReason || 'Avvisad av admin')} disabled={rejectCreator.isPending}
+              style={{ padding: '.6rem 1.4rem', borderRadius: 980, background: 'rgba(255,90,77,.12)', color: '#c0392b', border: '1px solid rgba(255,90,77,.3)', fontWeight: 700, fontSize: '.85rem', cursor: 'pointer' }}>
+              {rejectCreator.isPending ? t('Nekar…') : t('Neka konto')}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
 
 export function AdminDashboardPage() {
   const [page] = useState(1);

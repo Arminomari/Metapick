@@ -64,6 +64,19 @@ public record VerifyEmailRequest(string Token);
 public record ChangeEmailRequest(string NewEmail, string CurrentPassword);
 public record ResendVerificationRequest(string Email);
 public record BroadcastRequest(string Audience, string Subject, string Message, bool SendEmail = true);
+
+/// <summary>Everything the platform knows about a creator account — admin eyes only.</summary>
+public record AdminCreatorFullDto(
+    Guid UserId, string Email, bool EmailVerified, string AccountStatus, string? AuthProvider,
+    DateTime RegisteredAt, DateTime? LastLoginAt,
+    Guid CreatorProfileId, string DisplayName, string? Bio, string Category, string Country, string Language,
+    string? AvatarUrl, string? Website, DateOnly? DateOfBirth, List<string> ProfileTags,
+    int FollowerCount, int? AverageViews, string? InstagramUsername, int InstagramFollowerCount,
+    string ProfileStatus,
+    string? TikTokUsername, bool TikTokConnected, bool TikTokOAuth, int TikTokFollowerCount, DateTime? TikTokLastSync,
+    int ActiveAssignments, int CompletedAssignments, long TotalVerifiedViews, decimal TotalEarned, decimal TotalPaidOut,
+    bool PayoutMethodConfigured, string? PayoutMethod,
+    double AverageRating, int ReviewCount, int PortfolioCount);
 public record AuthResponse(string AccessToken, string RefreshToken, DateTime ExpiresAt, Guid UserId, string Email, string Role);
 public record UserProfileDto(Guid Id, string Email, string Role, string Status, string? ProfileName, string? ProfileStatus, DateTime? LastLoginAt, DateTime CreatedAt, bool EmailVerified = false);
 

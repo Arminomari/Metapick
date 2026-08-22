@@ -25,6 +25,7 @@ public class AdminUserService : IAdminUserService
     private readonly IRepository<AdminProfile> _adminProfiles;
     private readonly IEncryptionService _encryption;
     private readonly IRepository<Notification> _notificationRows;
+    private readonly IRepository<Review> _reviews;
 
     public AdminUserService(
         IRepository<User> users,
@@ -41,7 +42,8 @@ public class AdminUserService : IAdminUserService
         IRepository<CreatorCampaignAssignment> assignments,
         IRepository<AdminProfile> adminProfiles,
         IEncryptionService encryption,
-        IRepository<Notification> notificationRows)
+        IRepository<Notification> notificationRows,
+        IRepository<Review> reviews)
     {
         _users = users;
         _brands = brands;
@@ -58,6 +60,7 @@ public class AdminUserService : IAdminUserService
         _adminProfiles = adminProfiles;
         _encryption = encryption;
         _notificationRows = notificationRows;
+        _reviews = reviews;
     }
 
     public async Task<Result<PagedResult<PendingUserDto>>> GetUsersAsync(string? status, int page, int pageSize)
@@ -422,5 +425,53 @@ public class AdminUserService : IAdminUserService
 
         await _audit.LogAsync(callerAdminUserId, "Admin.Broadcast", "User", null);
         return recipients.Count;
+    }
+
+    public async Task<Result<AdminCreatorFullDto>> GetCreatorFullProfileAsync(Guid userId)
+    {
+        var user = await _users.Query().IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null) return Errors.NotFound("User", userId);
+
+        var creator = await _creators.Query()
+            .Include(c => c.TikTokAccount)
+            .Include(c => c.PortfolioItems)
+            .FirstOrDefaultAsync(c => c.UserId == userId);
+        if (creator == null) return Errors.NotFound("CreatorProfile", userId);
+
+        var assignmentStats = await _assignments.Query()
+            .Where(a => a.CreatorProfileId == creator.Id)
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Active = g.Count(a => a.Status == AssignmentStatus.Active),
+                Completed = g.Count(a => a.Status == AssignmentStatus.Completed),
+                Views = g.Sum(a => (long?)a.TotalVerifiedViews) ?? 0,
+                Earned = g.Sum(a => (decimal?)a.CurrentPayoutAmount) ?? 0
+            })
+            .FirstOrDefaultAsync();
+
+        var paidOut = await _payouts.Query()
+            .Where(p => p.CreatorProfileId == creator.Id && p.Status == PayoutStatus.Completed)
+            .SumAsync(p => (decimal?)p.RequestedAmount) ?? 0m;
+
+        var reviewAgg = await _reviews.Query()
+            .Where(r => r.RevieweeId == userId)
+            .GroupBy(_ => 1)
+            .Select(g => new { Avg = g.Average(r => (double)r.Stars), Count = g.Count() })
+            .FirstOrDefaultAsync();
+
+        var tt = creator.TikTokAccount;
+        return new AdminCreatorFullDto(
+            user.Id, user.Email, user.EmailVerified, user.Status.ToString(), user.AuthProvider,
+            user.CreatedAt, user.LastLoginAt,
+            creator.Id, creator.DisplayName, creator.Bio, creator.Category, creator.Country, creator.Language,
+            creator.AvatarUrl, creator.Website, creator.DateOfBirth, creator.ProfileTags?.ToList() ?? [],
+            creator.FollowerCount, creator.AverageViews, creator.InstagramUsername, creator.InstagramFollowerCount,
+            creator.Status.ToString(),
+            tt?.TikTokUsername, tt is { IsActive: true }, tt != null && tt.Scopes != "manual", tt?.FollowerCount ?? 0, tt?.LastSyncAt,
+            assignmentStats?.Active ?? 0, assignmentStats?.Completed ?? 0, assignmentStats?.Views ?? 0,
+            assignmentStats?.Earned ?? 0m, paidOut,
+            !string.IsNullOrEmpty(creator.PayoutMethod), creator.PayoutMethod,
+            Math.Round(reviewAgg?.Avg ?? 0, 1), reviewAgg?.Count ?? 0, creator.PortfolioItems?.Count ?? 0);
     }
 }

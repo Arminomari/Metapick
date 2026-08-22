@@ -48,6 +48,7 @@ public interface IAdminUserService
     Task<Result<AdminStatsDto>> GetStatsAsync();
     Task<Result<PendingUserDto>> CreateAdminAsync(Guid callerAdminUserId, CreateAdminRequest request);
     Task<Result<int>> BroadcastAsync(Guid callerAdminUserId, BroadcastRequest request);
+    Task<Result<AdminCreatorFullDto>> GetCreatorFullProfileAsync(Guid userId);
 }
 
 public interface IBrandService

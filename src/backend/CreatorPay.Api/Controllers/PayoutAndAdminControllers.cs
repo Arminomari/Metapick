@@ -168,14 +168,14 @@ public class AdminUserController : BaseController
 [Authorize(Policy = "AdminOnly")]
 public class AdminCreatorController : BaseController
 {
-    private readonly ICreatorService _creators;
+    private readonly IAdminUserService _adminUsersFull;
 
-    public AdminCreatorController(ICreatorService creators) => _creators = creators;
+    public AdminCreatorController(IAdminUserService adminUsers) => _adminUsersFull = adminUsers;
 
-    /// <summary>Hämta en creators profil för admin-granskning</summary>
+    /// <summary>Allt plattformen vet om ett creator-konto — för admin-granskning</summary>
     [HttpGet("{userId:guid}")]
     public async Task<IActionResult> GetCreatorProfile(Guid userId)
-        => ToActionResult(await _creators.GetProfileAsync(userId));
+        => ToActionResult(await _adminUsersFull.GetCreatorFullProfileAsync(userId));
 }
 
 [Route("api/admin/campaigns")]
