@@ -1,46 +1,20 @@
-import { useEffect, useRef } from 'react';
 import { t } from '@/lib/i18n';
-
-declare global {
-  interface Window {
-    tiktokEmbedLoaded?: boolean;
-  }
-}
-
-function loadTikTokScript() {
-  if (window.tiktokEmbedLoaded) return;
-  window.tiktokEmbedLoaded = true;
-  const script = document.createElement('script');
-  script.src = 'https://www.tiktok.com/embed.js';
-  script.async = true;
-  document.body.appendChild(script);
-}
-
-function isEmbeddableUrl(url: string): boolean {
-  return /tiktok\.com\/@.+\/video\/\d+/.test(url);
-}
 
 function extractVideoId(url: string): string {
   const match = url.match(/\/video\/(\d+)/);
   return match?.[1] ?? '';
 }
 
-export function TikTokEmbed({ videoUrl, compact }: { videoUrl: string; compact?: boolean }) {
-  const ref = useRef<HTMLDivElement>(null);
+/**
+ * Plays a TikTok video inline via TikTok's official player iframe
+ * (player/v1) — no redirect to tiktok.com and no embed.js script needed.
+ * Falls back to a link card only when no video id can be resolved
+ * (e.g. an unexpanded vm.tiktok.com short link with no id supplied).
+ */
+export function TikTokEmbed({ videoUrl, videoId, compact }: { videoUrl: string; videoId?: string; compact?: boolean }) {
+  const id = videoId || extractVideoId(videoUrl);
 
-  useEffect(() => {
-    if (!isEmbeddableUrl(videoUrl)) return;
-    loadTikTokScript();
-    const timer = setTimeout(() => {
-      if ((window as any).tiktokEmbed?.lib?.render) {
-        (window as any).tiktokEmbed.lib.render();
-      }
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [videoUrl]);
-
-  // For short URLs (vm.tiktok.com etc), show a link card instead of broken embed
-  if (!isEmbeddableUrl(videoUrl)) {
+  if (!id) {
     return (
       <a
         href={videoUrl}
@@ -61,35 +35,24 @@ export function TikTokEmbed({ videoUrl, compact }: { videoUrl: string; compact?:
     );
   }
 
-  const maxWidth = compact ? '325px' : '605px';
+  const maxWidth = compact ? 325 : 380;
 
   return (
-    <div ref={ref} style={{ maxWidth, width: '100%' }}>
-      <blockquote
-        className="tiktok-embed"
-        cite={videoUrl}
-        data-video-id={extractVideoId(videoUrl)}
-        style={{ maxWidth, minWidth: 'min(325px, 100%)', margin: 0 }}
-      >
-        {/* Shown until TikTok's script swaps the blockquote for the player */}
-        <section>
-          <a
-            href={videoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              gap: 10, minHeight: 170, borderRadius: 16, textDecoration: 'none',
-              border: '1px dashed rgba(241,168,143,.5)',
-              background: 'linear-gradient(160deg,#FFF9F5,#FFF1E8)',
-              color: '#9c6b52', fontSize: 12.5, fontWeight: 600,
-            }}
-          >
-            <span style={{ width: 38, height: 38, borderRadius: '50%', background: '#0B0F17', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }} aria-hidden>♪</span>
-            {t('Laddar video från TikTok…')}
-          </a>
-        </section>
-      </blockquote>
+    <div
+      style={{
+        width: '100%', maxWidth, aspectRatio: '9 / 16',
+        borderRadius: 16, overflow: 'hidden', background: '#0B0F17',
+        boxShadow: '0 10px 28px rgba(11,15,23,.18)',
+      }}
+    >
+      <iframe
+        src={`https://www.tiktok.com/player/v1/${id}?controls=1&rel=0&description=0&native_context_menu=0`}
+        title="TikTok"
+        loading="lazy"
+        allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
+        allowFullScreen
+        style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+      />
     </div>
   );
 }

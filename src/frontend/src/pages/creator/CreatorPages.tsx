@@ -677,7 +677,7 @@ export function AssignmentDetailPage() {
                   <VideoStat label={t('Kommentarer')} value={formatNumber(sp.comments)} />
                   <VideoStat label={t('Delningar')} value={formatNumber(sp.shares)} />
                 </div>
-                <TikTokEmbed videoUrl={sp.tikTokUrl} compact />
+                <TikTokEmbed videoUrl={sp.tikTokUrl} videoId={sp.tikTokVideoId} compact />
               </div>
             ))}
           </div>
