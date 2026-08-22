@@ -159,6 +159,7 @@ export function LoginPage() {
             <EyeButton on={showPw} onClick={() => setShowPw((v) => !v)} />
           </div>
         </div>
+        <p style={{ textAlign: 'right', margin: '-6px 0 0' }}><a href="/forgot-password" className="auth-link" style={{ fontSize: 13 }}>Glömt lösenordet?</a></p>
         {error && <p className="auth-err">{error}</p>}
         <button type="submit" className="btn-apply" disabled={login.isPending} style={{ opacity: login.isPending ? 0.7 : 1 }}>
           {login.isPending ? 'Loggar in…' : <>Logga in <Arrow /></>}
@@ -325,7 +326,7 @@ export function RegisterPage() {
 
     try {
       if (social) {
-        await api.post('/auth/social/register', { provider: social.provider, token: social.token, ...common });
+        await api.post('/auth/social/register', { provider: social.provider, token: social.token, email: form.email.trim() || null, ...common });
         clearSocialSignup();
       } else {
         await register.mutateAsync({ email: form.email.trim(), password: form.password, ...common });
@@ -386,16 +387,23 @@ export function RegisterPage() {
         {stepLabel === 'Konto' && (
           <div className="wiz-pane" key="account" style={{ display: 'flex', flexDirection: 'column', gap: 17 }}>
             {social ? (
+              <>
               <div className="social-chip">
                 <Check />
                 <span>
-                  Inloggad via <b>{social.provider}</b> som <b>{social.email}</b> — inget lösenord behövs.{' '}
+                  Inloggad via <b>{social.provider}</b>{social.email ? <> som <b>{social.email}</b></> : null} — inget lösenord behövs.{' '}
                   <button type="button" className="auth-link" style={{ background: 'none', border: 'none', padding: 0, font: 'inherit' }}
                     onClick={() => { clearSocialSignup(); setSocial(null); }}>
                     Använd e-post i stället
                   </button>
                 </span>
               </div>
+              {social.provider === 'TikTok' && (
+                <div className="field"><label htmlFor="rg-email-tt">E-post *</label>
+                  <input id="rg-email-tt" type="email" value={form.email} onChange={set('email')} required autoComplete="email" placeholder="du@exempel.se" />
+                </div>
+              )}
+              </>
             ) : (
               <>
                 <div className="field"><label htmlFor="rg-email">E-post *</label><input id="rg-email" type="email" value={form.email} onChange={set('email')} required autoComplete="email" placeholder="du@exempel.se" /></div>
@@ -613,3 +621,94 @@ function EyeButton({ on, onClick }: { on: boolean; onClick: () => void }) {
     </button>
   );
 }
+
+/* ───────────────────────── Password reset ───────────────────────── */
+export function ForgotPasswordPage() {
+  const [email, setEmail] = useState('');
+  const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true); setError('');
+    try { await api.post('/auth/forgot-password', { email: email.trim() }); setSent(true); }
+    catch { setError('Något gick fel. Försök igen om en stund.'); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <AuthShell>
+      <h1 className="auth-title">Glömt <em>lösenordet?</em></h1>
+      {sent ? (
+        <p className="auth-sub" style={{ marginTop: 14 }}>
+          Om <b>{email.trim()}</b> finns hos oss har vi skickat en återställningslänk.
+          Kolla inkorgen — och skräpposten för säkerhets skull.
+        </p>
+      ) : (
+        <>
+          <p className="auth-sub">Ange din e-post så skickar vi en länk för att välja ett nytt lösenord.</p>
+          <form className="auth-form" onSubmit={submit}>
+            <div className="field"><label htmlFor="fp-email">E-post</label>
+              <input id="fp-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" placeholder="du@exempel.se" />
+            </div>
+            {error && <p className="auth-err">{error}</p>}
+            <button type="submit" className="btn-apply" disabled={busy}>{busy ? 'Skickar…' : 'Skicka återställningslänk'}</button>
+          </form>
+        </>
+      )}
+      <p className="auth-foot"><a href="/login" className="auth-link">Tillbaka till inloggning</a></p>
+    </AuthShell>
+  );
+}
+
+export function ResetPasswordPage() {
+  const token = new URLSearchParams(window.location.search).get('token') ?? '';
+  const [pw, setPw] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [done, setDone] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true); setError('');
+    try { await api.post('/auth/reset-password', { token, newPassword: pw }); setDone(true); }
+    catch (err: any) { setError(extractApiError(err, 'Länken är ogiltig eller har gått ut. Begär en ny.')); }
+    finally { setBusy(false); }
+  };
+
+  if (!token) {
+    return (
+      <AuthShell>
+        <h1 className="auth-title">Ogiltig <em>länk</em></h1>
+        <p className="auth-sub">Återställningslänken saknas eller är trasig.</p>
+        <p className="auth-foot"><a href="/forgot-password" className="auth-link">Begär en ny länk</a></p>
+      </AuthShell>
+    );
+  }
+
+  return (
+    <AuthShell>
+      <h1 className="auth-title">Välj nytt <em>lösenord</em></h1>
+      {done ? (
+        <>
+          <p className="auth-sub" style={{ marginTop: 14 }}>Klart! Ditt lösenord är uppdaterat.</p>
+          <a href="/login" className="btn-apply" style={{ display: 'inline-block', textAlign: 'center', textDecoration: 'none', marginTop: 10 }}>Logga in</a>
+        </>
+      ) : (
+        <form className="auth-form" onSubmit={submit}>
+          <div className="field"><label htmlFor="rp-pw">Nytt lösenord</label>
+            <div className="auth-pw-wrap">
+              <input id="rp-pw" type={showPw ? 'text' : 'password'} value={pw} onChange={(e) => setPw(e.target.value)} required autoComplete="new-password" placeholder="Minst 8 tecken, versal + siffra" minLength={8} />
+              <EyeButton on={showPw} onClick={() => setShowPw((v) => !v)} />
+            </div>
+          </div>
+          {error && <p className="auth-err">{error}</p>}
+          <button type="submit" className="btn-apply" disabled={busy}>{busy ? 'Sparar…' : 'Spara nytt lösenord'}</button>
+        </form>
+      )}
+    </AuthShell>
+  );
+}
+

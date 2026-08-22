@@ -41,6 +41,18 @@ public class AuthController : BaseController
     public async Task<IActionResult> SocialLogin([FromBody] SocialLoginRequest request)
         => ToActionResult(await _social.LoginAsync(request));
 
+    [HttpGet("tiktok/start")]
+    [AllowAnonymous]
+    [EnableRateLimiting("auth")]
+    public IActionResult TikTokStart()
+        => ToActionResult(_social.StartTikTokSignin());
+
+    [HttpPost("tiktok/exchange")]
+    [AllowAnonymous]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> TikTokExchange([FromBody] TikTokExchangeRequest request)
+        => ToActionResult(await _social.TikTokSigninExchangeAsync(request));
+
     [HttpPost("social/register")]
     [AllowAnonymous]
     [EnableRateLimiting("auth")]

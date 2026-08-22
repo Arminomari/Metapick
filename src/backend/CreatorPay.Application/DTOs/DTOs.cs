@@ -45,10 +45,15 @@ public record SocialRegisterRequest(
     string? InstagramUsername = null,
     string? AvatarUrl = null, int? FollowerCount = null, int? AverageViews = null,
     int? InstagramFollowerCount = null, string? Website = null,
-    string? Industry = null, string? LogoUrl = null, string? Description = null);
+    string? Industry = null, string? LogoUrl = null, string? Description = null,
+    string? Email = null);
 public record SocialIdentityDto(string Provider, string Email, string? FirstName, string? LastName, string? PictureUrl);
 /// <summary>Status is "LoggedIn" (Auth set) or "NeedsRegistration" (Identity set, client continues to signup).</summary>
 public record SocialLoginResponse(string Status, AuthResponse? Auth, SocialIdentityDto? Identity);
+public record TikTokStartResponse(string Url);
+public record TikTokExchangeRequest(string Code, string State);
+/// <summary>TikTok signin result: "LoggedIn" (Auth set) or "NeedsRegistration" (Ticket + Identity set).</summary>
+public record TikTokSigninResponse(string Status, AuthResponse? Auth, string? Ticket, SocialIdentityDto? Identity);
 public record SocialProviderInfo(bool Enabled, string? ClientId);
 public record SocialProvidersDto(SocialProviderInfo Google, SocialProviderInfo Apple, SocialProviderInfo Facebook);
 public record RefreshTokenRequest(string RefreshToken);

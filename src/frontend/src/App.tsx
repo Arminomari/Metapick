@@ -4,8 +4,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import { CreatorShell, BrandShell } from '@/components/layout/VyrleShell';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { LoginPage, RegisterPage } from '@/pages/auth/AuthPages';
+import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from '@/pages/auth/AuthPages';
 import { TikTokCallbackPage } from '@/pages/auth/TikTokCallbackPage';
+import { TikTokSigninPage } from '@/pages/auth/TikTokSigninPage';
 import { TermsPage, PrivacyPage } from '@/pages/LegalPages';
 import { AdminDashboardPage } from '@/pages/admin/AdminPages';
 import { BrandStudioDashboard } from '@/pages/brand/BrandStudio';
@@ -64,6 +65,9 @@ export default function App() {
           <Route path="/" element={<VyrleFrame src="/vyrle.html" title="VYRLE" />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/auth/tiktok/signin" element={<TikTokSigninPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/auth/tiktok/callback" element={<ProtectedRoute allowedRoles={['Creator']}><TikTokCallbackPage /></ProtectedRoute>} />

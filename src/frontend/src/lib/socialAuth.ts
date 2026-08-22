@@ -15,7 +15,7 @@ declare global {
   }
 }
 
-export type SocialProvider = 'Google' | 'Apple' | 'Facebook';
+export type SocialProvider = 'Google' | 'Apple' | 'Facebook' | 'TikTok';
 
 export interface SocialTokenResult {
   provider: SocialProvider;

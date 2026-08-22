@@ -27,8 +27,8 @@ const ICON: Record<string, ReactNode> = {
 
 interface NavItem { label: string; path: string; icon: string; badge?: number; tag?: string }
 
-function ShellChrome({ group, role, nav, name, handle, sub, initial, bellBadge, chatBadge, children }:
-  { group: string; role: string; nav: NavItem[]; name: string; handle: string; sub: ReactNode; initial: string; bellBadge: number; chatBadge: number; children?: ReactNode }) {
+function ShellChrome({ group, role, nav, name, handle, sub, initial, imageUrl, bellBadge, chatBadge, children }:
+  { group: string; role: string; nav: NavItem[]; name: string; handle: string; sub: ReactNode; initial: string; imageUrl?: string | null; bellBadge: number; chatBadge: number; children?: ReactNode }) {
   const { logout } = useAuthStore();
   const navigate = useNavigate();
   const loc = useLocation();
@@ -68,7 +68,9 @@ function ShellChrome({ group, role, nav, name, handle, sub, initial, bellBadge, 
           <div className="creator-card">
             <div className="cc-top">
               <div className="cc-avatar-wrap">
-                <div className="cc-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"Fraunces",serif', fontSize: 26, color: '#fff', background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)' }}>{initial}</div>
+                {imageUrl
+                  ? <img className="cc-avatar" src={imageUrl} alt="" style={{ objectFit: 'cover' }} />
+                  : <div className="cc-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"Fraunces",serif', fontSize: 26, color: '#fff', background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)' }}>{initial}</div>}
                 <span className="cc-online" />
               </div>
               <div className="cc-name">{name}</div>
@@ -95,7 +97,9 @@ function ShellChrome({ group, role, nav, name, handle, sub, initial, bellBadge, 
                 {bellBadge > 0 && <span className="ping">{bellBadge > 9 ? '9+' : bellBadge}</span>}
               </button>
               <div className="profile-chip">
-                <div className="avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"Fraunces",serif', color: '#fff', background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)' }}>{initial}</div>
+                {imageUrl
+                  ? <img className="avatar" src={imageUrl} alt="" style={{ objectFit: 'cover' }} />
+                  : <div className="avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"Fraunces",serif', color: '#fff', background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)' }}>{initial}</div>}
                 <div><div className="nm">{name}</div><div className="hd">{handle}</div></div>
               </div>
             </div>
@@ -138,7 +142,7 @@ export function CreatorShell() {
       {formatNumber(profile?.followerCount ?? 0)} followers · {profile?.category || 'Creator'}
     </div>
   );
-  return <ShellChrome group="Creator" role="Creator" nav={nav} name={name} handle={handle} sub={sub} initial={(name[0] || 'C').toUpperCase()} bellBadge={notifs?.totalCount ?? 0} chatBadge={chatUnread ?? 0} />;
+  return <ShellChrome group="Creator" role="Creator" nav={nav} name={name} handle={handle} sub={sub} initial={(name[0] || 'C').toUpperCase()} imageUrl={profile?.avatarUrl} bellBadge={notifs?.totalCount ?? 0} chatBadge={chatUnread ?? 0} />;
 }
 
 export function BrandShell() {
@@ -162,5 +166,5 @@ export function BrandShell() {
       {profile?.industry || 'Brand'} · {profile?.status || ''}
     </div>
   );
-  return <ShellChrome group="Brand" role="Brand" nav={nav} name={name} handle={email || ''} sub={sub} initial={(name[0] || 'B').toUpperCase()} bellBadge={notifs?.totalCount ?? 0} chatBadge={chatUnread ?? 0} />;
+  return <ShellChrome group="Brand" role="Brand" nav={nav} name={name} handle={email || ''} sub={sub} initial={(name[0] || 'B').toUpperCase()} imageUrl={profile?.logoUrl} bellBadge={notifs?.totalCount ?? 0} chatBadge={chatUnread ?? 0} />;
 }

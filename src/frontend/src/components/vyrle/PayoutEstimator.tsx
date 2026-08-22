@@ -17,24 +17,32 @@ export function estimatePayout(model: string, rules: PayoutRule[] | undefined, v
     total = (views / 1000) * r.amount;
     if (r.maxPayoutPerCreator) total = Math.min(total, r.maxPayoutPerCreator);
   } else if (model === 'Tiered') {
-    // Mirrors backend TieredPayoutCalculator: highest tier (by minViews) the views reach.
+    // Mirrors backend TieredPayoutCalculator: highest reached tier, then cap.
     const byTierDesc = [...sorted].sort((a, b) => b.minViews - a.minViews);
     const matched = byTierDesc.find((r) => views >= r.minViews);
     total = matched?.amount ?? 0;
+    if (matched?.maxPayoutPerCreator) total = Math.min(total, matched.maxPayoutPerCreator);
   } else if (model === 'Hybrid') {
+    // Mirrors backend HybridPayoutCalculator: no base threshold => 0 (bonuses
+    // can never apply alone), then the strictest per-creator cap.
     const base = sorted.find((r) => r.payoutType === 'FixedThreshold');
-    if (base && views >= base.minViews) total += base.amount;
+    if (!base || views < base.minViews) return 0;
+    total = base.amount;
     for (const b of sorted.filter((r) => r.payoutType === 'BonusAboveThreshold')) {
       if (views >= b.minViews) total += b.amount;
     }
+    const caps = sorted.filter((r) => r.maxPayoutPerCreator != null).map((r) => r.maxPayoutPerCreator as number);
+    if (caps.length) total = Math.min(total, Math.min(...caps));
   } else {
-    // Fixed threshold
-    const r = sorted[0];
-    total = views >= r.minViews ? r.amount : 0;
-    if (r.maxPayoutPerCreator) total = Math.min(total, r.maxPayoutPerCreator);
+    // FixedThreshold: the highest qualifying threshold wins (mirrors backend).
+    const qualifying = sorted.filter((r) => views >= r.minViews).sort((a, b) => b.minViews - a.minViews);
+    const r = qualifying[0];
+    total = r?.amount ?? 0;
+    if (r?.maxPayoutPerCreator) total = Math.min(total, r.maxPayoutPerCreator);
   }
   return Math.round(total);
 }
+
 
 function describeRule(r: PayoutRule): string {
   switch (r.payoutType) {

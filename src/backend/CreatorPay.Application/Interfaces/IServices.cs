@@ -22,6 +22,8 @@ public interface ISocialAuthService
     SocialProvidersDto GetProviders();
     Task<Result<SocialLoginResponse>> LoginAsync(SocialLoginRequest request);
     Task<Result<AuthResponse>> RegisterAsync(SocialRegisterRequest request);
+    Result<TikTokStartResponse> StartTikTokSignin();
+    Task<Result<TikTokSigninResponse>> TikTokSigninExchangeAsync(TikTokExchangeRequest request);
 }
 
 /// <summary>Verified identity returned by a social provider after server-side token validation.</summary>

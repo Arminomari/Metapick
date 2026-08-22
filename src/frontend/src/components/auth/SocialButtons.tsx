@@ -51,9 +51,17 @@ export function SocialButtons({ onToken, disabled }: {
     return () => { cancelled = true; };
   }, [googleId]);
 
-  if (!providers || (!providers.google.enabled && !providers.apple.enabled && !providers.facebook.enabled)) {
-    return null;
-  }
+  const tiktokStart = async () => {
+    setError('');
+    setBusy('tiktok');
+    try {
+      const res = await api.get<{ data: { url: string } }>('/auth/tiktok/start');
+      window.location.href = res.data.data.url;
+    } catch {
+      setBusy(null);
+      setError('Kunde inte starta TikTok-inloggning — försök igen');
+    }
+  };
 
   const run = async (name: string, fn: () => Promise<SocialTokenResult>) => {
     setError('');
@@ -73,8 +81,16 @@ export function SocialButtons({ onToken, disabled }: {
     <div className="social-block">
       <div className="auth-divider"><span>eller fortsätt med</span></div>
       <div className="social-row">
-        {providers.google.enabled && <div ref={googleHost} className="gsi-host" aria-label="Fortsätt med Google" />}
-        {providers.apple.enabled && (
+        <button
+          type="button" className="btn-social tiktok" disabled={disabled || busy !== null}
+          onClick={() => void tiktokStart()}
+          style={{ background: '#161823', color: '#fff', borderColor: '#161823' }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.5 5.5c.9 1 2.1 1.6 3.5 1.7v2.6c-1.3 0-2.6-.4-3.6-1.1v6c0 3-2.4 5.4-5.4 5.4S5.6 17.7 5.6 14.7s2.4-5.4 5.4-5.4c.3 0 .6 0 .9.1v2.8c-.3-.1-.6-.2-.9-.2-1.5 0-2.7 1.2-2.7 2.7s1.2 2.7 2.7 2.7 2.7-1.2 2.7-2.7V2.5h2.8c0 1.1.2 2.1.5 3z" /></svg>
+          {busy === 'tiktok' ? 'Öppnar…' : 'Fortsätt med TikTok'}
+        </button>
+        {providers?.google.enabled && <div ref={googleHost} className="gsi-host" aria-label="Fortsätt med Google" />}
+        {providers?.apple.enabled && (
           <button
             type="button" className="btn-social apple" disabled={disabled || busy !== null}
             onClick={() => void run('apple', () => appleSignIn(providers.apple.clientId!))}
@@ -83,7 +99,7 @@ export function SocialButtons({ onToken, disabled }: {
             {busy === 'apple' ? 'Öppnar…' : 'Fortsätt med Apple'}
           </button>
         )}
-        {providers.facebook.enabled && (
+        {providers?.facebook.enabled && (
           <button
             type="button" className="btn-social facebook" disabled={disabled || busy !== null}
             onClick={() => void run('facebook', () => facebookSignIn(providers.facebook.clientId!))}
