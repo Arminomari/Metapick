@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { t } from '@/lib/i18n';
 
 /**
  * Triggers an immediate TikTok view sync for the assignment (creator or the
@@ -31,7 +32,7 @@ export function RefreshViewsButton({ assignmentId }: { assignmentId: string }) {
       disabled={refresh.isPending || done}
       onClick={() => refresh.mutate()}
     >
-      {refresh.isPending ? 'Startar…' : done ? '✓ Synk startad — klar inom någon minut' : '↻ Uppdatera views nu'}
+      {refresh.isPending ? t('Startar…') : done ? t('✓ Synk startad — klar inom någon minut') : t('↻ Uppdatera views nu')}
     </button>
   );
 }

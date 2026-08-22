@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+
 interface TagSelectorProps {
   label: string;
   tags: string[];
@@ -20,7 +22,7 @@ export function TagSelector({ label, tags, selected, onChange, max }: TagSelecto
       <label className="block text-sm font-medium text-muted-foreground mb-2">
         {label}
         {max && <span className="text-xs ml-1 opacity-60">(max {max})</span>}
-        {selected.length > 0 && <span className="text-xs ml-2 text-primary">{selected.length} valda</span>}
+        {selected.length > 0 && <span className="text-xs ml-2 text-primary">{selected.length} {t('valda')}</span>}
       </label>
       <div className="flex flex-wrap gap-2">
         {tags.map(tag => {

@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { t } from '@/lib/i18n';
 
 interface DateInputProps {
   value: string;
@@ -14,7 +15,7 @@ interface DateInputProps {
  * Smart date input: user types digits, dashes are auto-inserted.
  * Format: YYYY-MM-DD. Outputs ISO date string to onChange.
  */
-export function DateInput({ value, onChange, required, disabled, className, style, placeholder = 'ÅÅÅÅ-MM-DD' }: DateInputProps) {
+export function DateInput({ value, onChange, required, disabled, className, style, placeholder }: DateInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,7 +44,7 @@ export function DateInput({ value, onChange, required, disabled, className, styl
       value={value}
       onChange={handleChange}
       onKeyDown={handleKeyDown}
-      placeholder={placeholder}
+      placeholder={placeholder ?? t('ÅÅÅÅ-MM-DD')}
       required={required}
       disabled={disabled}
       className={className}

@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { statusLabel, t } from '@/lib/i18n';
 import { useCreatorAssignments, useCreatorProfile, useCreatorPayouts, useSavedCampaigns, useToggleSaveCampaign } from '@/hooks/api';
 import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
 import { AreaChart, Donut, MiniBars, VizDefs, BLUSH } from '@/components/vyrle/Viz';
@@ -54,47 +55,47 @@ export function CreatorAnalyticsPage() {
       <VizDefs />
       <div className="page-head">
         <div>
-          <h1 className="page-title">Know your <em>numbers</em></h1>
-          <p className="page-sub">A clear read on reach, performance and what actually pays. Every figure is your verified, attributed performance — no estimates.</p>
+          <h1 className="page-title">{t('Koll på dina')} <em>{t('siffror')}</em></h1>
+          <p className="page-sub">{t('En tydlig bild av räckvidd, resultat och vad som faktiskt betalar sig. Varje siffra är din verifierade, attribuerade prestation — inga uppskattningar.')}</p>
         </div>
       </div>
 
       {isLoading ? (
         <CardSkeleton rows={4} />
       ) : assignments.length === 0 ? (
-        <EmptyCard title="No analytics yet" sub="Once you join a campaign and your videos go live, your verified performance shows up here — reach, clicks and earnings, all in one place." cta="Discover campaigns" to="/creator/browse" />
+        <EmptyCard title={t('Ingen statistik ännu')} sub={t('När du går med i en kampanj och dina videos går live visas din verifierade prestation här — räckvidd, klick och intäkter, samlat på ett ställe.')} cta={t('Upptäck kampanjer')} to="/creator/browse" />
       ) : (
         <>
           <div className="vstat-row">
-            <BigStat label="Verified views" val={formatNumber(totalViews)} hint={`across ${assignments.length} campaign${assignments.length === 1 ? '' : 's'}`} tint="peach" featured />
-            <BigStat label="Tracked clicks" val={formatNumber(totalClicks)} hint={`${ctr.toFixed(2)}% click-through`} tint="lilac" />
-            <BigStat label="Earnings" val={formatCurrency(totalEarned)} hint={`${formatCurrency(earningPerView)} / 1K views`} tint="green" money />
-            <BigStat label="Live campaigns" val={String(live)} hint={`${formatNumber(Math.round(avgViews))} avg views`} tint="amber" />
+            <BigStat label={t('Verifierade views')} val={formatNumber(totalViews)} hint={`${t('fördelat på')} ${assignments.length} ${assignments.length === 1 ? t('kampanj') : t('kampanjer')}`} tint="peach" featured />
+            <BigStat label={t('Spårade klick')} val={formatNumber(totalClicks)} hint={`${ctr.toFixed(2)}% ${t('klickfrekvens')}`} tint="lilac" />
+            <BigStat label={t('Intäkter')} val={formatCurrency(totalEarned)} hint={`${formatCurrency(earningPerView)} / 1K views`} tint="green" money />
+            <BigStat label={t('Live-kampanjer')} val={String(live)} hint={`${formatNumber(Math.round(avgViews))} ${t('snittvisningar')}`} tint="amber" />
           </div>
 
           <div className="vtop">
             <div className="card vperf">
-              <div className="vperf-head"><h3>Views by campaign</h3><span className="vchip">{byTime.length} most recent</span></div>
+              <div className="vperf-head"><h3>{t('Views per kampanj')}</h3><span className="vchip">{byTime.length} {t('senaste')}</span></div>
               {chartVals.length >= 2 ? (
                 <AreaChart id="anViews" values={chartVals} labels={chartLabels} fmtY={shortMoney} height={280} />
               ) : (
-                <div style={{ padding: '50px 10px', textAlign: 'center', color: 'var(--muted)' }}>Run a couple of campaigns and your view trend draws itself here.</div>
+                <div style={{ padding: '50px 10px', textAlign: 'center', color: 'var(--muted)' }}>{t('Kör ett par kampanjer så ritar din viewstrend upp sig här.')}</div>
               )}
               <div className="vperf-foot">
-                <div className="vf-stat"><div className="vf-l">Total reach</div><div className="vf-v">{formatNumber(totalViews)}</div></div>
-                <div className="vf-stat"><div className="vf-l">Best campaign</div><div className="vf-v">{ranked[0] ? formatNumber(ranked[0].totalVerifiedViews) : '—'}</div></div>
-                <div className="vf-stat"><div className="vf-l">Click-through</div><div className="vf-v">{ctr.toFixed(2)}%</div></div>
-                <Link className="vperf-link" to="/creator/assignments" style={{ margin: 0 }}>My campaigns <Arrow /></Link>
+                <div className="vf-stat"><div className="vf-l">{t('Total räckvidd')}</div><div className="vf-v">{formatNumber(totalViews)}</div></div>
+                <div className="vf-stat"><div className="vf-l">{t('Bästa kampanjen')}</div><div className="vf-v">{ranked[0] ? formatNumber(ranked[0].totalVerifiedViews) : '—'}</div></div>
+                <div className="vf-stat"><div className="vf-l">{t('Klickfrekvens')}</div><div className="vf-v">{ctr.toFixed(2)}%</div></div>
+                <Link className="vperf-link" to="/creator/assignments" style={{ margin: 0 }}>{t('Mina kampanjer')} <Arrow /></Link>
               </div>
             </div>
 
             <div className="card vrep">
-              <div className="vperf-head"><h3>Where you earn</h3></div>
+              <div className="vperf-head"><h3>{t('Var du tjänar')}</h3></div>
               {earnSegments.length ? (
                 <>
                   <Donut size={170} segments={earnSegments}>
                     <div className="vrep-num" style={{ fontSize: 30 }}>{formatCurrency(totalEarned)}</div>
-                    <div className="vrep-lbl" style={{ color: 'var(--muted)', fontWeight: 600 }}>total earned</div>
+                    <div className="vrep-lbl" style={{ color: 'var(--muted)', fontWeight: 600 }}>{t('totalt intjänat')}</div>
                   </Donut>
                   <div className="an-legend" style={{ marginTop: 'auto' }}>
                     {earners.slice(0, 4).map((a, i) => (
@@ -103,15 +104,15 @@ export function CreatorAnalyticsPage() {
                   </div>
                 </>
               ) : (
-                <div style={{ padding: '40px 10px', textAlign: 'center', color: 'var(--muted)' }}>No earnings tracked yet. Once a campaign pays out, the split shows here.</div>
+                <div style={{ padding: '40px 10px', textAlign: 'center', color: 'var(--muted)' }}>{t('Inga intäkter spårade ännu. När en kampanj betalar ut visas fördelningen här.')}</div>
               )}
-              <Link className="vperf-link" to="/creator/earnings" style={{ marginTop: 18 }}>Open earnings <Arrow /></Link>
+              <Link className="vperf-link" to="/creator/earnings" style={{ marginTop: 18 }}>{t('Öppna intäkter')} <Arrow /></Link>
             </div>
           </div>
 
           <div className="vcsplit" style={{ marginTop: 18 }}>
             <div className="card">
-              <div className="vperf-head"><h3>Top performing content</h3></div>
+              <div className="vperf-head"><h3>{t('Innehåll som presterar bäst')}</h3></div>
               {ranked.slice(0, 5).map((a) => (
                 <div key={a.id} className="vcamp" style={{ cursor: 'default' }}>
                   <span className="vcamp-thumb" style={{ background: grad(a.campaignName) }}><span className="brand-mono">{initial(a.campaignName)}</span></span>
@@ -120,25 +121,25 @@ export function CreatorAnalyticsPage() {
                     <div className="progress-line" style={{ maxWidth: 260, marginTop: 6 }}><span style={{ width: `${Math.round(((a.totalVerifiedViews || 0) / maxViews) * 100)}%` }} /></div>
                   </div>
                   <div className="vcamp-end"><div className="vcamp-k">Views</div><div className="vcamp-v">{formatNumber(a.totalVerifiedViews || 0)}</div></div>
-                  <div className="vcamp-end"><div className="vcamp-k">Clicks</div><div className="vcamp-v">{formatNumber(a.totalTrackedClicks || 0)}</div></div>
+                  <div className="vcamp-end"><div className="vcamp-k">{t('Klick')}</div><div className="vcamp-v">{formatNumber(a.totalTrackedClicks || 0)}</div></div>
                 </div>
               ))}
             </div>
 
             <div className="card">
-              <div className="vperf-head"><h3>Reach &amp; monetization</h3></div>
+              <div className="vperf-head"><h3>{t('Räckvidd & monetarisering')}</h3></div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: 'var(--muted)', marginBottom: 6 }}><span>Audience</span><span>{formatNumber(profile?.followerCount ?? 0)} followers</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: 'var(--muted)', marginBottom: 6 }}><span>{t('Publik')}</span><span>{formatNumber(profile?.followerCount ?? 0)} {t('följare')}</span></div>
                   <MiniBars rows={[
-                    { label: 'Click-through', pct: Math.min(100, ctr * 8), value: ctr.toFixed(2) + '%' },
-                    { label: 'Earn / 1K views', pct: Math.min(100, earningPerView * 2), value: formatCurrency(earningPerView) },
-                    { label: 'Avg views', pct: Math.min(100, (avgViews / maxViews) * 100), value: shortMoney(avgViews) },
+                    { label: t('Klickfrekvens'), pct: Math.min(100, ctr * 8), value: ctr.toFixed(2) + '%' },
+                    { label: t('Intäkt / 1K views'), pct: Math.min(100, earningPerView * 2), value: formatCurrency(earningPerView) },
+                    { label: t('Snittvisningar'), pct: Math.min(100, (avgViews / maxViews) * 100), value: shortMoney(avgViews) },
                   ]} />
                 </div>
                 <div style={{ borderTop: '1px solid rgba(241,168,143,.12)', paddingTop: 14, display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 14 }}>
-                  <div><div className="vcamp-k">Total clicks</div><div className="vcamp-v" style={{ fontSize: 18 }}>{formatNumber(totalClicks)}</div></div>
-                  <div><div className="vcamp-k">Campaigns run</div><div className="vcamp-v" style={{ fontSize: 18 }}>{assignments.length}</div></div>
+                  <div><div className="vcamp-k">{t('Totalt antal klick')}</div><div className="vcamp-v" style={{ fontSize: 18 }}>{formatNumber(totalClicks)}</div></div>
+                  <div><div className="vcamp-k">{t('Genomförda kampanjer')}</div><div className="vcamp-v" style={{ fontSize: 18 }}>{assignments.length}</div></div>
                 </div>
               </div>
             </div>
@@ -180,25 +181,25 @@ export function CreatorLinksPage() {
       <div className="page-head">
         <div>
           <h1 className="page-title">Link <em>Tree</em></h1>
-          <p className="page-sub">Every campaign you are running gets a tracked link. Clicks shown here are the real, attributed clicks that count toward your click based payouts.</p>
+          <p className="page-sub">{t('Varje kampanj du kör får en spårad länk. Klicken som visas här är de riktiga, attribuerade klick som räknas mot dina klickbaserade utbetalningar.')}</p>
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 300px', gap: 20, alignItems: 'start' }}>
         <div className="card">
-          <div className="sec-head"><h3>Your campaign links</h3><span style={{ fontSize: 13, color: 'var(--muted)' }}>{live.length} active</span></div>
+          <div className="sec-head"><h3>{t('Dina kampanjlänkar')}</h3><span style={{ fontSize: 13, color: 'var(--muted)' }}>{live.length} {t('aktiva')}</span></div>
           {live.length === 0 ? (
             <div style={{ padding: '34px 6px', textAlign: 'center' }}>
-              <div style={{ fontWeight: 600 }}>No live links yet</div>
-              <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>Join a campaign and your tracked link appears here automatically.</div>
-              <Link to="/creator/browse" className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 20px', marginTop: 16 }}>Discover campaigns</Link>
+              <div style={{ fontWeight: 600 }}>{t('Inga live-länkar ännu')}</div>
+              <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>{t('Gå med i en kampanj så dyker din spårade länk upp här automatiskt.')}</div>
+              <Link to="/creator/browse" className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 20px', marginTop: 16 }}>{t('Upptäck kampanjer')}</Link>
             </div>
           ) : live.map((a) => (
             <Link key={a.id} to={`/creator/assignments/${a.id}`} className="lt-link" style={{ textDecoration: 'none' }}>
               <span className="lt-grip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="9" cy="6" r="1" /><circle cx="9" cy="12" r="1" /><circle cx="9" cy="18" r="1" /><circle cx="15" cy="6" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="18" r="1" /></svg></span>
               <span className="lt-ic" style={{ background: grad(a.campaignName) }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 17H7a5 5 0 0 1 0-10h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8" /></svg></span>
-              <div className="lt-main"><div className="lt-t">{a.campaignName}</div><div className="lt-u">{a.status} · tracked link</div></div>
-              <div className="lt-clicks"><div className="n">{formatNumber(a.totalTrackedClicks || 0)}</div><div className="l">clicks</div></div>
+              <div className="lt-main"><div className="lt-t">{a.campaignName}</div><div className="lt-u">{statusLabel(a.status)} · {t('spårad länk')}</div></div>
+              <div className="lt-clicks"><div className="n">{formatNumber(a.totalTrackedClicks || 0)}</div><div className="l">{t('klick')}</div></div>
             </Link>
           ))}
         </div>
@@ -209,7 +210,7 @@ export function CreatorLinksPage() {
             <div className="pn">{name}</div>
             <div className="pb">{handle}</div>
             {live.slice(0, 5).map((a) => <span key={a.id} className="lt-pill">{a.campaignName}</span>)}
-            {live.length === 0 && <span className="lt-pill" style={{ opacity: .6 }}>Your links preview here</span>}
+            {live.length === 0 && <span className="lt-pill" style={{ opacity: .6 }}>{t('Dina länkar förhandsvisas här')}</span>}
           </div>
         </div>
       </div>
@@ -248,7 +249,7 @@ export function CreatorLevelsPage() {
       <div className="page-head">
         <div>
           <h1 className="page-title">Creator <em>Levels</em></h1>
-          <p className="page-sub">Your level is earned from real, paid out earnings on the platform. Keep delivering campaigns to climb the ladder and unlock perks.</p>
+          <p className="page-sub">{t('Din nivå förtjänas genom riktiga, utbetalda intäkter på plattformen. Fortsätt leverera kampanjer för att klättra på stegen och låsa upp förmåner.')}</p>
         </div>
       </div>
 
@@ -260,35 +261,35 @@ export function CreatorLevelsPage() {
           </div>
           <div style={{ flex: 1, minWidth: 240 }}>
             <div className="lvl-name">{cur.name}</div>
-            <div className="lvl-sub">{name} · {formatCurrency(lifetimeEarned)} paid out · {completed} campaign{completed === 1 ? '' : 's'} completed</div>
+            <div className="lvl-sub">{name} · {formatCurrency(lifetimeEarned)} {t('utbetalt')} · {completed} {completed === 1 ? t('slutförd kampanj') : t('slutförda kampanjer')}</div>
             <div className="lvl-xpbar"><span style={{ width: `${pct}%` }} /></div>
             <div className="lvl-xp-meta">
               <span>{formatCurrency(lifetimeEarned)}</span>
-              <span>{next ? `${formatCurrency(next.min)} to reach ${next.name}` : 'Top tier reached'}</span>
+              <span>{next ? `${formatCurrency(next.min)} ${t('för att nå')} ${next.name}` : t('Högsta nivån nådd')}</span>
             </div>
           </div>
         </div>
       </div>
 
       <div className="card" style={{ marginBottom: 20 }}>
-        <div className="sec-head"><h3>The ladder</h3></div>
+        <div className="sec-head"><h3>{t('Stegen')}</h3></div>
         <div className="lvl-track">
-          {TIERS.map((t, i) => (
-            <div key={t.name} className={`lvl-node${i < idx ? ' done' : ''}${i === idx ? ' now' : ''}`}>
+          {TIERS.map((tier, i) => (
+            <div key={tier.name} className={`lvl-node${i < idx ? ' done' : ''}${i === idx ? ' now' : ''}`}>
               <div className="lvl-dot">{i + 1}</div>
-              <div className="lvl-cap">{t.name}</div>
-              <div className="lvl-xpc">{t.min === 0 ? 'Start' : formatCurrency(t.min)}</div>
+              <div className="lvl-cap">{tier.name}</div>
+              <div className="lvl-xpc">{tier.min === 0 ? 'Start' : formatCurrency(tier.min)}</div>
             </div>
           ))}
         </div>
       </div>
 
       <div className="card">
-        <div className="sec-head"><h3>Perks</h3></div>
-        {TIERS.map((t, i) => (
-          <div key={t.name} className={`perk${i > idx ? ' locked' : ''}`}>
-            <span className="perk-ic" style={{ background: grad(t.name) }}><svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{i > idx ? <><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></> : <path d="m5 12 4 4L19 7" />}</svg></span>
-            <div><div className="perk-t">{t.name} tier</div><div className="perk-s">{i <= idx ? 'Unlocked' : `Unlocks at ${formatCurrency(t.min)} paid out`}</div></div>
+        <div className="sec-head"><h3>{t('Förmåner')}</h3></div>
+        {TIERS.map((tier, i) => (
+          <div key={tier.name} className={`perk${i > idx ? ' locked' : ''}`}>
+            <span className="perk-ic" style={{ background: grad(tier.name) }}><svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{i > idx ? <><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></> : <path d="m5 12 4 4L19 7" />}</svg></span>
+            <div><div className="perk-t">{tier.name} {t('nivå')}</div><div className="perk-s">{i <= idx ? t('Upplåst') : `${t('Låses upp vid')} ${formatCurrency(tier.min)} ${t('utbetalt')}`}</div></div>
           </div>
         ))}
       </div>
@@ -309,15 +310,15 @@ export function CreatorSavedPage() {
     <section className="view active reveal" data-view="saved">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Sparat för <em>senare</em></h1>
-          <p className="page-sub">Kampanjer du bokmärkt. Kom tillbaka när du är redo att ansöka — men vänta inte för länge, platserna fylls.</p>
+          <h1 className="page-title">{t('Sparat för')} <em>{t('senare')}</em></h1>
+          <p className="page-sub">{t('Kampanjer du bokmärkt. Kom tillbaka när du är redo att ansöka — men vänta inte för länge, platserna fylls.')}</p>
         </div>
       </div>
 
       {isLoading ? (
         <div className="saved-grid"><CardSkeleton rows={3} /><CardSkeleton rows={3} /><CardSkeleton rows={3} /></div>
       ) : items.length === 0 ? (
-        <EmptyCard title="Inget sparat ännu" sub="Bläddra bland kampanjerna och tryck på bokmärket på de som fångar ditt öga, så samlas de här." cta="Hitta kampanjer" to="/creator/browse" />
+        <EmptyCard title={t('Inget sparat ännu')} sub={t('Bläddra bland kampanjerna och tryck på bokmärket på de som fångar ditt öga, så samlas de här.')} cta={t('Hitta kampanjer')} to="/creator/browse" />
       ) : (
         <div className="saved-grid">
           {items.map(({ campaign: c, savedAt }) => {
@@ -328,8 +329,8 @@ export function CreatorSavedPage() {
                 <div className="ch">
                   <span className="mono" style={{ background: grad(c.name) }}>{initial(c.brandName || c.name)}</span>
                   <div style={{ flex: 1 }}><div className="ttl">{c.name}</div><div className="brand">{c.brandName}</div></div>
-                  <button className="lt-icbtn" style={{ borderRadius: '50%' }} aria-label="Ta bort från sparade"
-                    onClick={() => toggleSave.mutate({ campaignId: c.id, save: false }, { onSuccess: () => toast.push('Borttagen från Saved', 'success') })}
+                  <button className="lt-icbtn" style={{ borderRadius: '50%' }} aria-label={t('Ta bort från sparade')}
+                    onClick={() => toggleSave.mutate({ campaignId: c.id, save: false }, { onSuccess: () => toast.push(t('Borttagen från Saved'), 'success') })}
                     disabled={toggleSave.isPending}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="#C26A4A" stroke="#C26A4A" strokeWidth="1.5" strokeLinejoin="round"><path d="M7 4h10v16l-5-3-5 3z" /></svg>
                   </button>
@@ -337,16 +338,16 @@ export function CreatorSavedPage() {
                 <div className="desc">{c.description}</div>
                 <div className="tags">
                   <span className="tag g">{c.category}</span><span className="tag">{c.payoutModel}</span>
-                  <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' }}>Sparad <b style={{ color: 'var(--ink)' }}>{formatDate(savedAt)}</b></span>
+                  <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' }}>{t('Sparad')} <b style={{ color: 'var(--ink)' }}>{formatDate(savedAt)}</b></span>
                 </div>
                 <div className="meta-cols">
-                  <div className="mc"><div className="k">Ersättning</div><div className="v green">{c.payoutSummary}</div></div>
-                  <div className="mc"><div className="k">Platser</div><div className="v">{c.spotsLeft} / {c.maxCreators}</div></div>
-                  <div className="mc"><div className="k">Stänger</div><div className="v">{formatDate(c.endDate)}</div></div>
+                  <div className="mc"><div className="k">{t('Ersättning')}</div><div className="v green">{c.payoutSummary}</div></div>
+                  <div className="mc"><div className="k">{t('Platser')}</div><div className="v">{c.spotsLeft} / {c.maxCreators}</div></div>
+                  <div className="mc"><div className="k">{t('Stänger')}</div><div className="v">{formatDate(c.endDate)}</div></div>
                 </div>
                 <button className={full ? 'btn-outline' : 'btn-apply'} style={{ width: '100%', marginTop: 'auto' }} disabled={full}
                   onClick={() => navigate('/creator/browse')}>
-                  {full ? 'Fullbokad' : 'Ansök via Discover'}
+                  {full ? t('Fullbokad') : t('Ansök via Discover')}
                 </button>
               </div>
             );

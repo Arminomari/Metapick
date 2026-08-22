@@ -1,4 +1,4 @@
-import { LangSwitcher } from '@/lib/i18n';
+import { LangSwitcher, t } from '@/lib/i18n';
 import React, { useState, type ReactNode } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLogin, useRegister } from '@/hooks/api';
@@ -52,17 +52,17 @@ function AuthShell({ children, wide }: { children: ReactNode; wide?: boolean }) 
           <div className="auth-brand-top"><Star fill="#FFF4EC" /> VYRLE</div>
 
           <div className="auth-brand-mid">
-            <div className="hero-eyebrow"><span className="hero-live" /> KREATÖRER × VARUMÄRKEN</div>
-            <h1>Där kreatörer och varumärken faktiskt <em>möts</em>.</h1>
-            <p className="auth-brand-sub">VYRLE matchar rätt kreatörer med rätt kampanjer, och betalar ut i samma stund som jobbet presterar.</p>
+            <div className="hero-eyebrow"><span className="hero-live" /> {t('KREATÖRER × VARUMÄRKEN')}</div>
+            <h1>{t('Där kreatörer och varumärken faktiskt')} <em>{t('möts')}</em>.</h1>
+            <p className="auth-brand-sub">{t('VYRLE matchar rätt kreatörer med rätt kampanjer, och betalar ut i samma stund som jobbet presterar.')}</p>
             <div className="auth-props">
-              <div className="auth-prop"><Check /> Briefs matchade mot din publik, inte ditt följarantal</div>
-              <div className="auth-prop"><Check /> Transparent ersättning innan du postar</div>
-              <div className="auth-prop"><Check /> Direkta utbetalningar, inga mellanhänder</div>
+              <div className="auth-prop"><Check /> {t('Briefs matchade mot din publik, inte ditt följarantal')}</div>
+              <div className="auth-prop"><Check /> {t('Transparent ersättning innan du postar')}</div>
+              <div className="auth-prop"><Check /> {t('Direkta utbetalningar, inga mellanhänder')}</div>
             </div>
           </div>
 
-          <div className="auth-brand-foot">Byggt för kreatörer och varumärken i Norden.</div>
+          <div className="auth-brand-foot">{t('Byggt för kreatörer och varumärken i Norden.')}</div>
         </aside>
 
         <main className="auth-main" style={{ position: 'relative' }}>
@@ -85,8 +85,8 @@ interface SocialLoginOut {
 }
 
 function extractApiError(err: any, fallback: string): string {
-  if (!err?.response) return 'Kunde inte nå servern. Försök igen om en stund.';
-  if (err.response.status === 429) return 'För många försök. Vänta en minut och försök igen.';
+  if (!err?.response) return t('Kunde inte nå servern. Försök igen om en stund.');
+  if (err.response.status === 429) return t('För många försök. Vänta en minut och försök igen.');
   const resp = err.response.data;
   if (resp?.errors && typeof resp.errors === 'object') {
     const msgs = (Object.values(resp.errors) as string[][]).flat().filter(Boolean);
@@ -117,7 +117,7 @@ function useSocialLoginFlow(setError: (msg: string) => void, onNeedsRegistration
         });
       }
     } catch (err: any) {
-      setError(extractApiError(err, 'Inloggningen misslyckades — försök igen'));
+      setError(extractApiError(err, t('Inloggningen misslyckades — försök igen')));
     }
   };
 }
@@ -145,30 +145,30 @@ export function LoginPage() {
       authStore.login(data);
       navigate(data.role === 'Admin' ? '/admin' : data.role === 'Brand' ? '/brand' : '/creator');
     } catch (err: any) {
-      setError(extractApiError(err, 'Fel e-post eller lösenord'));
+      setError(extractApiError(err, t('Fel e-post eller lösenord')));
     }
   };
 
   return (
     <AuthShell>
-      <h1 className="auth-title">Logga <em>in</em></h1>
-      <p className="auth-sub">Fortsätt där du slutade.</p>
+      <h1 className="auth-title">{t('Logga')} <em>{t('in')}</em></h1>
+      <p className="auth-sub">{t('Fortsätt där du slutade.')}</p>
       <form className="auth-form" onSubmit={handleSubmit}>
-        <div className="field"><label htmlFor="li-email">E-post</label><input id="li-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" placeholder="du@exempel.se" /></div>
-        <div className="field"><label htmlFor="li-pw">Lösenord</label>
+        <div className="field"><label htmlFor="li-email">{t('E-post')}</label><input id="li-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" placeholder={t('du@exempel.se')} /></div>
+        <div className="field"><label htmlFor="li-pw">{t('Lösenord')}</label>
           <div className="auth-pw-wrap">
             <input id="li-pw" type={showPw ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" placeholder="••••••••" />
             <EyeButton on={showPw} onClick={() => setShowPw((v) => !v)} />
           </div>
         </div>
-        <p style={{ textAlign: 'right', margin: '-6px 0 0' }}><a href="/forgot-password" className="auth-link" style={{ fontSize: 13 }}>Glömt lösenordet?</a></p>
+        <p style={{ textAlign: 'right', margin: '-6px 0 0' }}><a href="/forgot-password" className="auth-link" style={{ fontSize: 13 }}>{t('Glömt lösenordet?')}</a></p>
         {error && <p className="auth-err">{error}</p>}
         <button type="submit" className="btn-apply" disabled={login.isPending} style={{ opacity: login.isPending ? 0.7 : 1 }}>
-          {login.isPending ? 'Loggar in…' : <>Logga in <Arrow /></>}
+          {login.isPending ? t('Loggar in…') : <>{t('Logga in')} <Arrow /></>}
         </button>
         <SocialButtons onToken={onSocialToken} disabled={login.isPending} />
       </form>
-      <p className="auth-foot">Inget konto? <a href="/register" className="auth-link">Skapa konto</a></p>
+      <p className="auth-foot">{t('Inget konto?')} <a href="/register" className="auth-link">{t('Skapa konto')}</a></p>
     </AuthShell>
   );
 }
@@ -254,7 +254,7 @@ export function RegisterPage() {
 
   const pw = form.password;
   const pwRules: [boolean, string][] = [
-    [/[A-Z]/.test(pw), 'Versal (A–Z)'], [/[a-z]/.test(pw), 'Gemen (a–z)'], [/[0-9]/.test(pw), 'Siffra (0–9)'], [pw.length >= 8, 'Minst 8 tecken'],
+    [/[A-Z]/.test(pw), t('Versal (A–Z)')], [/[a-z]/.test(pw), t('Gemen (a–z)')], [/[0-9]/.test(pw), t('Siffra (0–9)')], [pw.length >= 8, t('Minst 8 tecken')],
   ];
   const pwOk = pwRules.every(([ok]) => ok);
 
@@ -262,26 +262,26 @@ export function RegisterPage() {
     const label = steps[step];
     if (label === 'Konto') {
       if (social) return null;
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email.trim())) return 'Ange en giltig e-postadress';
-      if (!pwOk) return 'Lösenordet uppfyller inte alla krav';
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email.trim())) return t('Ange en giltig e-postadress');
+      if (!pwOk) return t('Lösenordet uppfyller inte alla krav');
       return null;
     }
     if (label === 'Profil') {
-      if (!form.displayName.trim()) return 'Visningsnamn krävs';
-      if (form.bio.trim().length < 20) return 'Skriv minst 20 tecken i din bio — varumärken läser den först av allt';
+      if (!form.displayName.trim()) return t('Visningsnamn krävs');
+      if (form.bio.trim().length < 20) return t('Skriv minst 20 tecken i din bio — varumärken läser den först av allt');
       return null;
     }
     if (label === 'Räckvidd') {
-      if (!form.tikTokUsername.trim()) return 'TikTok-användarnamn krävs';
+      if (!form.tikTokUsername.trim()) return t('TikTok-användarnamn krävs');
       return null;
     }
     if (label === 'Expertis') {
-      if (form.profileTags.length === 0) return 'Välj minst en expertis-tagg';
+      if (form.profileTags.length === 0) return t('Välj minst en expertis-tagg');
       return null;
     }
     if (label === 'Företag') {
-      if (!form.companyName.trim()) return 'Företagsnamn krävs';
-      if (!/^\d{6}-?\d{4}$/.test(form.organizationNumber.trim())) return 'Ange organisationsnummer i formatet XXXXXX-XXXX';
+      if (!form.companyName.trim()) return t('Företagsnamn krävs');
+      if (!/^\d{6}-?\d{4}$/.test(form.organizationNumber.trim())) return t('Ange organisationsnummer i formatet XXXXXX-XXXX');
       return null;
     }
     return null;
@@ -336,7 +336,7 @@ export function RegisterPage() {
       setSubmitted(true);
     } catch (err: any) {
       console.error('Register error:', err?.response?.status, err?.response?.data ?? err?.message);
-      setError(extractApiError(err, 'Registreringen misslyckades. Försök igen.'));
+      setError(extractApiError(err, t('Registreringen misslyckades. Försök igen.')));
     } finally {
       setSubmitting(false);
     }
@@ -348,38 +348,38 @@ export function RegisterPage() {
 
   return (
     <AuthShell wide>
-      <h1 className="auth-title">Skapa <em>konto</em></h1>
-      <p className="auth-sub">{step === 0 ? 'Vem är du? Vi anpassar resten efter ditt svar.' : 'Vi granskar och godkänner din profil innan du går live, oftast inom 1–2 arbetsdagar.'}</p>
+      <h1 className="auth-title">{t('Skapa')} <em>{t('konto')}</em></h1>
+      <p className="auth-sub">{step === 0 ? t('Vem är du? Vi anpassar resten efter ditt svar.') : t('Vi granskar och godkänner din profil innan du går live, oftast inom 1–2 arbetsdagar.')}</p>
 
-      <div className="wiz-track" role="list" aria-label="Registreringssteg">
+      <div className="wiz-track" role="list" aria-label={t('Registreringssteg')}>
         {steps.map((label, i) => (
           <React.Fragment key={label}>
             {i > 0 && <span className={`wiz-conn${i <= step ? ' done' : ''}`} aria-hidden="true" />}
             <div className={`wiz-step${i === step ? ' cur' : ''}${i < step ? ' done' : ''}`} role="listitem" aria-current={i === step ? 'step' : undefined}>
               <span className="wiz-dot">{i < step ? <SmallCheck /> : i + 1}</span>
-              <span className="wiz-lbl">{label}</span>
+              <span className="wiz-lbl">{t(label)}</span>
             </div>
           </React.Fragment>
         ))}
       </div>
-      <div className="wiz-meta">Steg {step + 1} av {steps.length} · {stepLabel}</div>
+      <div className="wiz-meta">{t('Steg')} {step + 1} {t('av')} {steps.length} · {t(stepLabel)}</div>
 
       <div className="auth-form">
         {/* ── Step: Kontotyp ── */}
         {stepLabel === 'Kontotyp' && (
           <div className="wiz-pane" key="role">
-            <div className="role-cards" role="radiogroup" aria-label="Kontotyp">
+            <div className="role-cards" role="radiogroup" aria-label={t('Kontotyp')}>
               <button type="button" role="radio" aria-checked={form.role === 'Creator'} className={`role-card${form.role === 'Creator' ? ' on' : ''}`} onClick={() => setForm((f) => ({ ...f, role: 'Creator' }))}>
                 <span className="rc-check"><SmallCheck /></span>
                 <div className="rc-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 7l-7 5 7 5V7z" /><rect x="1" y="5" width="15" height="14" rx="2" /></svg></div>
-                <div className="rc-t">Jag är kreatör</div>
-                <div className="rc-d">Hitta betalda kampanjer, visa upp ditt innehåll och få betalt per visning.</div>
+                <div className="rc-t">{t('Jag är kreatör')}</div>
+                <div className="rc-d">{t('Hitta betalda kampanjer, visa upp ditt innehåll och få betalt per visning.')}</div>
               </button>
               <button type="button" role="radio" aria-checked={form.role === 'Brand'} className={`role-card${form.role === 'Brand' ? ' on' : ''}`} onClick={() => setForm((f) => ({ ...f, role: 'Brand' }))}>
                 <span className="rc-check"><SmallCheck /></span>
                 <div className="rc-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M9 22V12h6v10" /></svg></div>
-                <div className="rc-t">Jag är varumärke</div>
-                <div className="rc-d">Skapa kampanjer, hitta rätt kreatörer och betala bara för verifierade visningar.</div>
+                <div className="rc-t">{t('Jag är varumärke')}</div>
+                <div className="rc-d">{t('Skapa kampanjer, hitta rätt kreatörer och betala bara för verifierade visningar.')}</div>
               </button>
             </div>
           </div>
@@ -393,25 +393,25 @@ export function RegisterPage() {
               <div className="social-chip">
                 <Check />
                 <span>
-                  Inloggad via <b>{social.provider}</b>{social.email ? <> som <b>{social.email}</b></> : null} — inget lösenord behövs.{' '}
+                  {t('Inloggad via')} <b>{social.provider}</b>{social.email ? <> {t('som')} <b>{social.email}</b></> : null} {t('— inget lösenord behövs.')}{' '}
                   <button type="button" className="auth-link" style={{ background: 'none', border: 'none', padding: 0, font: 'inherit' }}
                     onClick={() => { clearSocialSignup(); setSocial(null); }}>
-                    Använd e-post i stället
+                    {t('Använd e-post i stället')}
                   </button>
                 </span>
               </div>
               {social.provider === 'TikTok' && (
-                <div className="field"><label htmlFor="rg-email-tt">E-post *</label>
-                  <input id="rg-email-tt" type="email" value={form.email} onChange={set('email')} required autoComplete="email" placeholder="du@exempel.se" />
+                <div className="field"><label htmlFor="rg-email-tt">{t('E-post')} *</label>
+                  <input id="rg-email-tt" type="email" value={form.email} onChange={set('email')} required autoComplete="email" placeholder={t('du@exempel.se')} />
                 </div>
               )}
               </>
             ) : (
               <>
-                <div className="field"><label htmlFor="rg-email">E-post *</label><input id="rg-email" type="email" value={form.email} onChange={set('email')} required autoComplete="email" placeholder="du@exempel.se" /></div>
-                <div className="field"><label htmlFor="rg-pw">Lösenord *</label>
+                <div className="field"><label htmlFor="rg-email">{t('E-post')} *</label><input id="rg-email" type="email" value={form.email} onChange={set('email')} required autoComplete="email" placeholder={t('du@exempel.se')} /></div>
+                <div className="field"><label htmlFor="rg-pw">{t('Lösenord')} *</label>
                   <div className="auth-pw-wrap">
-                    <input id="rg-pw" type={showPw ? 'text' : 'password'} value={form.password} onChange={set('password')} required minLength={8} autoComplete="new-password" placeholder="Minst 8 tecken" />
+                    <input id="rg-pw" type={showPw ? 'text' : 'password'} value={form.password} onChange={set('password')} required minLength={8} autoComplete="new-password" placeholder={t('Minst 8 tecken')} />
                     <EyeButton on={showPw} onClick={() => setShowPw((v) => !v)} />
                   </div>
                   <div className="auth-rules">
@@ -425,8 +425,8 @@ export function RegisterPage() {
               </>
             )}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }}>
-              <div className="field"><label htmlFor="rg-fn">{form.role === 'Brand' ? 'Förnamn (kontaktperson)' : 'Förnamn'}</label><input id="rg-fn" type="text" value={form.firstName} onChange={set('firstName')} autoComplete="given-name" /></div>
-              <div className="field"><label htmlFor="rg-ln">Efternamn</label><input id="rg-ln" type="text" value={form.lastName} onChange={set('lastName')} autoComplete="family-name" /></div>
+              <div className="field"><label htmlFor="rg-fn">{form.role === 'Brand' ? t('Förnamn (kontaktperson)') : t('Förnamn')}</label><input id="rg-fn" type="text" value={form.firstName} onChange={set('firstName')} autoComplete="given-name" /></div>
+              <div className="field"><label htmlFor="rg-ln">{t('Efternamn')}</label><input id="rg-ln" type="text" value={form.lastName} onChange={set('lastName')} autoComplete="family-name" /></div>
             </div>
             {!social && <SocialButtons onToken={onSocialToken} />}
           </div>
@@ -436,70 +436,70 @@ export function RegisterPage() {
         {stepLabel === 'Profil' && (
           <div className="wiz-pane" key="profile" style={{ display: 'flex', flexDirection: 'column', gap: 17 }}>
             <ImagePicker
-              label="Profilbild"
+              label={t('Profilbild')}
               value={form.avatarUrl}
               onChange={(v) => setForm((f) => ({ ...f, avatarUrl: v }))}
-              hint="Varumärken ser den först — ett tydligt ansikte ökar dina chanser."
+              hint={t('Varumärken ser den först — ett tydligt ansikte ökar dina chanser.')}
             />
-            <div className="field"><label htmlFor="rg-name">Visningsnamn *</label><input id="rg-name" type="text" value={form.displayName} onChange={set('displayName')} required placeholder="Ditt namn eller alias" /></div>
-            <div className="field"><label htmlFor="rg-bio">Bio *</label><textarea id="rg-bio" value={form.bio} onChange={set('bio')} required rows={3} placeholder="Berätta om dig och ditt innehåll — varför ska varumärken samarbeta med dig?" />
-              <div className="auth-hint">{form.bio.trim().length}/20 tecken minimum</div>
+            <div className="field"><label htmlFor="rg-name">{t('Visningsnamn')} *</label><input id="rg-name" type="text" value={form.displayName} onChange={set('displayName')} required placeholder={t('Ditt namn eller alias')} /></div>
+            <div className="field"><label htmlFor="rg-bio">{t('Bio')} *</label><textarea id="rg-bio" value={form.bio} onChange={set('bio')} required rows={3} placeholder={t('Berätta om dig och ditt innehåll — varför ska varumärken samarbeta med dig?')} />
+              <div className="auth-hint">{form.bio.trim().length}/20 {t('tecken minimum')}</div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }}>
-              <div className="field"><label htmlFor="rg-cat">Kategori *</label>
+              <div className="field"><label htmlFor="rg-cat">{t('Kategori')} *</label>
                 <select id="rg-cat" value={form.category} onChange={set('category')} required>
-                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  {CATEGORIES.map((c) => <option key={c} value={c}>{t(c)}</option>)}
                 </select>
               </div>
-              <div className="field"><label htmlFor="rg-country">Land *</label>
+              <div className="field"><label htmlFor="rg-country">{t('Land')} *</label>
                 <select id="rg-country" value={form.country} onChange={set('country')} required>
-                  {COUNTRIES.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
+                  {COUNTRIES.map(([code, name]) => <option key={code} value={code}>{t(name)}</option>)}
                 </select>
               </div>
             </div>
-            <div className="field"><label>Födelsedatum</label><DateInput value={form.dateOfBirth} onChange={(v) => setForm((f) => ({ ...f, dateOfBirth: v }))} className="" /></div>
+            <div className="field"><label>{t('Födelsedatum')}</label><DateInput value={form.dateOfBirth} onChange={(v) => setForm((f) => ({ ...f, dateOfBirth: v }))} className="" /></div>
           </div>
         )}
 
         {/* ── Step: Räckvidd (creator) ── */}
         {stepLabel === 'Räckvidd' && (
           <div className="wiz-pane" key="reach" style={{ display: 'flex', flexDirection: 'column', gap: 17 }}>
-            <div className="field"><label htmlFor="rg-tt">TikTok-användarnamn *</label>
-              <div className="auth-at"><span>@</span><input id="rg-tt" type="text" value={form.tikTokUsername} onChange={set('tikTokUsername')} required placeholder="dittanvändarnamn" /></div>
-              <div className="auth-hint">Efter godkännande kopplar du kontot via TikTok för automatisk visningsverifiering.</div>
+            <div className="field"><label htmlFor="rg-tt">{t('TikTok-användarnamn')} *</label>
+              <div className="auth-at"><span>@</span><input id="rg-tt" type="text" value={form.tikTokUsername} onChange={set('tikTokUsername')} required placeholder={t('dittanvändarnamn')} /></div>
+              <div className="auth-hint">{t('Efter godkännande kopplar du kontot via TikTok för automatisk visningsverifiering.')}</div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }}>
-              <div className="field"><label htmlFor="rg-fc">Följare på TikTok</label><input id="rg-fc" type="text" inputMode="numeric" value={form.followerCount} onChange={set('followerCount')} placeholder="t.ex. 12000" /></div>
-              <div className="field"><label htmlFor="rg-av">Snittvisningar per video</label><input id="rg-av" type="text" inputMode="numeric" value={form.averageViews} onChange={set('averageViews')} placeholder="t.ex. 8500" /></div>
+              <div className="field"><label htmlFor="rg-fc">{t('Följare på TikTok')}</label><input id="rg-fc" type="text" inputMode="numeric" value={form.followerCount} onChange={set('followerCount')} placeholder={t('t.ex. 12000')} /></div>
+              <div className="field"><label htmlFor="rg-av">{t('Snittvisningar per video')}</label><input id="rg-av" type="text" inputMode="numeric" value={form.averageViews} onChange={set('averageViews')} placeholder={t('t.ex. 8500')} /></div>
             </div>
-            <div className="field"><label htmlFor="rg-ig">Instagram-användarnamn</label>
-              <div className="auth-at"><span>@</span><input id="rg-ig" type="text" value={form.instagramUsername} onChange={set('instagramUsername')} placeholder="dittinstagram" /></div>
+            <div className="field"><label htmlFor="rg-ig">{t('Instagram-användarnamn')}</label>
+              <div className="auth-at"><span>@</span><input id="rg-ig" type="text" value={form.instagramUsername} onChange={set('instagramUsername')} placeholder={t('dittinstagram')} /></div>
             </div>
             {form.instagramUsername.trim() && (
-              <div className="field"><label htmlFor="rg-igf">Följare på Instagram</label><input id="rg-igf" type="text" inputMode="numeric" value={form.instagramFollowerCount} onChange={set('instagramFollowerCount')} placeholder="t.ex. 4300" /></div>
+              <div className="field"><label htmlFor="rg-igf">{t('Följare på Instagram')}</label><input id="rg-igf" type="text" inputMode="numeric" value={form.instagramFollowerCount} onChange={set('instagramFollowerCount')} placeholder={t('t.ex. 4300')} /></div>
             )}
-            <div className="field"><label htmlFor="rg-web">Webbplats / Linktree</label><input id="rg-web" type="url" value={form.website} onChange={set('website')} placeholder="https://…" /></div>
+            <div className="field"><label htmlFor="rg-web">{t('Webbplats / Linktree')}</label><input id="rg-web" type="url" value={form.website} onChange={set('website')} placeholder="https://…" /></div>
           </div>
         )}
 
         {/* ── Step: Expertis (creator, last) ── */}
         {stepLabel === 'Expertis' && (
           <div className="wiz-pane" key="tags" style={{ display: 'flex', flexDirection: 'column', gap: 17 }}>
-            <div className="field"><label>Expertis-taggar * — vad är du bra på?</label>
+            <div className="field"><label>{t('Expertis-taggar * — vad är du bra på?')}</label>
               <div className="auth-tagbox">
                 <div className="auth-tags">
                   {ALL_TAGS.map((tag) => (
                     <button key={tag} type="button" className={`auth-tag${form.profileTags.includes(tag) ? ' on' : ''}`} onClick={() => toggleTag(tag)}>
-                      {form.profileTags.includes(tag) ? '✓ ' : ''}{tag}
+                      {form.profileTags.includes(tag) ? '✓ ' : ''}{t(tag)}
                     </button>
                   ))}
                 </div>
-                <div className="auth-hint" style={{ marginTop: 10 }}>{form.profileTags.length === 0 ? 'Välj minst en tagg' : `Valt: ${form.profileTags.length} tagg(ar)`}</div>
+                <div className="auth-hint" style={{ marginTop: 10 }}>{form.profileTags.length === 0 ? t('Välj minst en tagg') : `${t('Valt:')} ${form.profileTags.length} ${t('tagg(ar)')}`}</div>
               </div>
             </div>
             <label className="checkrow" htmlFor="rg-pr">
               <input id="rg-pr" type="checkbox" checked={form.openToPrOffers} onChange={(e) => setForm((f) => ({ ...f, openToPrOffers: e.target.checked }))} />
-              Öppen för direkta PR-erbjudanden från varumärken
+              {t('Öppen för direkta PR-erbjudanden från varumärken')}
             </label>
             <RegisterSummary form={form} social={social} />
           </div>
@@ -509,22 +509,22 @@ export function RegisterPage() {
         {stepLabel === 'Företag' && (
           <div className="wiz-pane" key="company" style={{ display: 'flex', flexDirection: 'column', gap: 17 }}>
             <ImagePicker
-              label="Logotyp"
+              label={t('Logotyp')}
               shape="rounded"
               value={form.logoUrl}
               onChange={(v) => setForm((f) => ({ ...f, logoUrl: v }))}
-              hint="Visas för kreatörer på era kampanjer."
+              hint={t('Visas för kreatörer på era kampanjer.')}
             />
-            <div className="field"><label htmlFor="rg-co">Företagsnamn *</label><input id="rg-co" type="text" value={form.companyName} onChange={set('companyName')} required autoComplete="organization" /></div>
+            <div className="field"><label htmlFor="rg-co">{t('Företagsnamn')} *</label><input id="rg-co" type="text" value={form.companyName} onChange={set('companyName')} required autoComplete="organization" /></div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }}>
-              <div className="field"><label htmlFor="rg-org">Organisationsnummer *</label><input id="rg-org" type="text" value={form.organizationNumber} onChange={set('organizationNumber')} required placeholder="XXXXXX-XXXX" /></div>
-              <div className="field"><label htmlFor="rg-ind">Bransch *</label>
+              <div className="field"><label htmlFor="rg-org">{t('Organisationsnummer')} *</label><input id="rg-org" type="text" value={form.organizationNumber} onChange={set('organizationNumber')} required placeholder="XXXXXX-XXXX" /></div>
+              <div className="field"><label htmlFor="rg-ind">{t('Bransch')} *</label>
                 <select id="rg-ind" value={form.industry} onChange={set('industry')} required>
-                  {INDUSTRIES.map((i) => <option key={i} value={i}>{i}</option>)}
+                  {INDUSTRIES.map((i) => <option key={i} value={i}>{t(i)}</option>)}
                 </select>
               </div>
             </div>
-            <div className="field"><label htmlFor="rg-bweb">Webbplats</label><input id="rg-bweb" type="url" value={form.website} onChange={set('website')} placeholder="https://erforetag.se" /></div>
+            <div className="field"><label htmlFor="rg-bweb">{t('Webbplats')}</label><input id="rg-bweb" type="url" value={form.website} onChange={set('website')} placeholder={t('https://erforetag.se')} /></div>
           </div>
         )}
 
@@ -532,14 +532,14 @@ export function RegisterPage() {
         {stepLabel === 'Kontakt' && (
           <div className="wiz-pane" key="contact" style={{ display: 'flex', flexDirection: 'column', gap: 17 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }}>
-              <div className="field"><label htmlFor="rg-phone">Kontakttelefon</label><input id="rg-phone" type="tel" value={form.contactPhone} onChange={set('contactPhone')} placeholder="+46…" autoComplete="tel" /></div>
-              <div className="field"><label htmlFor="rg-bcountry">Land *</label>
+              <div className="field"><label htmlFor="rg-phone">{t('Kontakttelefon')}</label><input id="rg-phone" type="tel" value={form.contactPhone} onChange={set('contactPhone')} placeholder="+46…" autoComplete="tel" /></div>
+              <div className="field"><label htmlFor="rg-bcountry">{t('Land')} *</label>
                 <select id="rg-bcountry" value={form.country} onChange={set('country')} required>
-                  {COUNTRIES.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
+                  {COUNTRIES.map(([code, name]) => <option key={code} value={code}>{t(name)}</option>)}
                 </select>
               </div>
             </div>
-            <div className="field"><label htmlFor="rg-desc">Om företaget</label><textarea id="rg-desc" value={form.description} onChange={set('description')} rows={3} placeholder="Vad gör ni, och vilken typ av kreatörer letar ni efter? Kreatörer ser detta på era kampanjer." /></div>
+            <div className="field"><label htmlFor="rg-desc">{t('Om företaget')}</label><textarea id="rg-desc" value={form.description} onChange={set('description')} rows={3} placeholder={t('Vad gör ni, och vilken typ av kreatörer letar ni efter? Kreatörer ser detta på era kampanjer.')} /></div>
             <RegisterSummary form={form} social={social} />
           </div>
         )}
@@ -550,22 +550,22 @@ export function RegisterPage() {
           {step > 0 && (
             <button type="button" className="btn-back" onClick={back} disabled={submitting}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M11 18l-6-6 6-6" /></svg>
-              Tillbaka
+              {t('Tillbaka')}
             </button>
           )}
           {isLast ? (
             <button type="button" className="btn-apply" onClick={handleSubmit} disabled={submitting} style={{ opacity: submitting ? 0.7 : 1 }}>
-              {submitting ? 'Skickar…' : <>Skicka ansökan <Arrow /></>}
+              {submitting ? t('Skickar…') : <>{t('Skicka ansökan')} <Arrow /></>}
             </button>
           ) : (
             <button type="button" className="btn-apply" onClick={next}>
-              Fortsätt <Arrow />
+              {t('Fortsätt')} <Arrow />
             </button>
           )}
         </div>
-        {isLast && <p className="auth-consent">Genom att skicka in godkänner du våra <a className="auth-link" href="/terms" target="_blank" rel="noreferrer">villkor</a> och vår <a className="auth-link" href="/privacy" target="_blank" rel="noreferrer">integritetspolicy</a>. Kontot granskas av en administratör innan du kan logga in.</p>}
+        {isLast && <p className="auth-consent">{t('Genom att skicka in godkänner du våra')} <a className="auth-link" href="/terms" target="_blank" rel="noreferrer">{t('villkor')}</a> {t('och vår')} <a className="auth-link" href="/privacy" target="_blank" rel="noreferrer">{t('integritetspolicy')}</a>. {t('Kontot granskas av en administratör innan du kan logga in.')}</p>}
       </div>
-      <p className="auth-foot">Har redan konto? <a href="/login" className="auth-link">Logga in</a></p>
+      <p className="auth-foot">{t('Har redan konto?')} <a href="/login" className="auth-link">{t('Logga in')}</a></p>
     </AuthShell>
   );
 }
@@ -573,20 +573,20 @@ export function RegisterPage() {
 function RegisterSummary({ form, social }: { form: WizardForm; social: PendingSocialSignup | null }) {
   const rows: [string, string][] = form.role === 'Creator'
     ? [
-        ['Konto', social ? `${social.email} (via ${social.provider})` : form.email],
-        ['Visningsnamn', form.displayName || '—'],
-        ['Kategori', `${form.category} · ${form.country}`],
+        [t('Konto'), social ? `${social.email} (via ${social.provider})` : form.email],
+        [t('Visningsnamn'), form.displayName || '—'],
+        [t('Kategori'), `${t(form.category)} · ${form.country}`],
         ['TikTok', form.tikTokUsername ? `@${form.tikTokUsername.replace(/^@/, '')}` : '—'],
-        ['Räckvidd', form.followerCount ? `${form.followerCount} följare` : 'Ej angiven'],
+        [t('Räckvidd'), form.followerCount ? `${form.followerCount} ${t('följare')}` : t('Ej angiven')],
       ]
     : [
-        ['Konto', social ? `${social.email} (via ${social.provider})` : form.email],
-        ['Företag', form.companyName || '—'],
-        ['Org.nr', form.organizationNumber || '—'],
-        ['Bransch', `${form.industry} · ${form.country}`],
+        [t('Konto'), social ? `${social.email} (via ${social.provider})` : form.email],
+        [t('Företag'), form.companyName || '—'],
+        [t('Org.nr'), form.organizationNumber || '—'],
+        [t('Bransch'), `${t(form.industry)} · ${form.country}`],
       ];
   return (
-    <div className="sum-box" aria-label="Sammanfattning">
+    <div className="sum-box" aria-label={t('Sammanfattning')}>
       {rows.map(([l, v]) => (
         <div className="sum-row" key={l}><span className="sr-l">{l}</span><span className="sr-v">{v}</span></div>
       ))}
@@ -601,12 +601,12 @@ export function PendingApprovalPage() {
     <AuthShell>
       <div style={{ textAlign: 'center' }}>
         <div className="auth-pending-ic"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg></div>
-        <h1 className="auth-title">Ansökan <em>mottagen</em></h1>
-        <p className="auth-sub" style={{ maxWidth: 360, margin: '8px auto 0' }}>Tack för att du går med i VYRLE. Vi granskar din profil nu och hör av oss så snart du är godkänd, oftast inom 1 till 2 arbetsdagar.</p>
+        <h1 className="auth-title">{t('Ansökan')} <em>{t('mottagen')}</em></h1>
+        <p className="auth-sub" style={{ maxWidth: 360, margin: '8px auto 0' }}>{t('Tack för att du går med i VYRLE. Vi granskar din profil nu och hör av oss så snart du är godkänd, oftast inom 1 till 2 arbetsdagar.')}</p>
         <div style={{ background: 'rgba(237,225,255,.35)', border: '1px solid rgba(157,139,196,.2)', borderRadius: 14, padding: 14, margin: '20px 0', fontSize: 12.5, color: 'var(--muted)' }}>
-          Du får ett meddelande när ditt konto har godkänts.
+          {t('Du får ett meddelande när ditt konto har godkänts.')}
         </div>
-        <button onClick={() => navigate('/')} className="btn-outline" style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>Tillbaka till startsidan</button>
+        <button onClick={() => navigate('/')} className="btn-outline" style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>{t('Tillbaka till startsidan')}</button>
       </div>
     </AuthShell>
   );
@@ -614,7 +614,7 @@ export function PendingApprovalPage() {
 
 function EyeButton({ on, onClick }: { on: boolean; onClick: () => void }) {
   return (
-    <button type="button" className="auth-eye" onClick={onClick} aria-label={on ? 'Dölj lösenord' : 'Visa lösenord'}>
+    <button type="button" className="auth-eye" onClick={onClick} aria-label={on ? t('Dölj lösenord') : t('Visa lösenord')}>
       {on ? (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg>
       ) : (
@@ -635,31 +635,30 @@ export function ForgotPasswordPage() {
     e.preventDefault();
     setBusy(true); setError('');
     try { await api.post('/auth/forgot-password', { email: email.trim() }); setSent(true); }
-    catch { setError('Något gick fel. Försök igen om en stund.'); }
+    catch { setError(t('Något gick fel. Försök igen om en stund.')); }
     finally { setBusy(false); }
   };
 
   return (
     <AuthShell>
-      <h1 className="auth-title">Glömt <em>lösenordet?</em></h1>
+      <h1 className="auth-title">{t('Glömt')} <em>{t('lösenordet?')}</em></h1>
       {sent ? (
         <p className="auth-sub" style={{ marginTop: 14 }}>
-          Om <b>{email.trim()}</b> finns hos oss har vi skickat en återställningslänk.
-          Kolla inkorgen — och skräpposten för säkerhets skull.
+          {t('Om')} <b>{email.trim()}</b> {t('finns hos oss har vi skickat en återställningslänk. Kolla inkorgen — och skräpposten för säkerhets skull.')}
         </p>
       ) : (
         <>
-          <p className="auth-sub">Ange din e-post så skickar vi en länk för att välja ett nytt lösenord.</p>
+          <p className="auth-sub">{t('Ange din e-post så skickar vi en länk för att välja ett nytt lösenord.')}</p>
           <form className="auth-form" onSubmit={submit}>
-            <div className="field"><label htmlFor="fp-email">E-post</label>
-              <input id="fp-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" placeholder="du@exempel.se" />
+            <div className="field"><label htmlFor="fp-email">{t('E-post')}</label>
+              <input id="fp-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" placeholder={t('du@exempel.se')} />
             </div>
             {error && <p className="auth-err">{error}</p>}
-            <button type="submit" className="btn-apply" disabled={busy}>{busy ? 'Skickar…' : 'Skicka återställningslänk'}</button>
+            <button type="submit" className="btn-apply" disabled={busy}>{busy ? t('Skickar…') : t('Skicka återställningslänk')}</button>
           </form>
         </>
       )}
-      <p className="auth-foot"><a href="/login" className="auth-link">Tillbaka till inloggning</a></p>
+      <p className="auth-foot"><a href="/login" className="auth-link">{t('Tillbaka till inloggning')}</a></p>
     </AuthShell>
   );
 }
@@ -676,38 +675,38 @@ export function ResetPasswordPage() {
     e.preventDefault();
     setBusy(true); setError('');
     try { await api.post('/auth/reset-password', { token, newPassword: pw }); setDone(true); }
-    catch (err: any) { setError(extractApiError(err, 'Länken är ogiltig eller har gått ut. Begär en ny.')); }
+    catch (err: any) { setError(extractApiError(err, t('Länken är ogiltig eller har gått ut. Begär en ny.'))); }
     finally { setBusy(false); }
   };
 
   if (!token) {
     return (
       <AuthShell>
-        <h1 className="auth-title">Ogiltig <em>länk</em></h1>
-        <p className="auth-sub">Återställningslänken saknas eller är trasig.</p>
-        <p className="auth-foot"><a href="/forgot-password" className="auth-link">Begär en ny länk</a></p>
+        <h1 className="auth-title">{t('Ogiltig')} <em>{t('länk')}</em></h1>
+        <p className="auth-sub">{t('Återställningslänken saknas eller är trasig.')}</p>
+        <p className="auth-foot"><a href="/forgot-password" className="auth-link">{t('Begär en ny länk')}</a></p>
       </AuthShell>
     );
   }
 
   return (
     <AuthShell>
-      <h1 className="auth-title">Välj nytt <em>lösenord</em></h1>
+      <h1 className="auth-title">{t('Välj nytt')} <em>{t('lösenord')}</em></h1>
       {done ? (
         <>
-          <p className="auth-sub" style={{ marginTop: 14 }}>Klart! Ditt lösenord är uppdaterat.</p>
-          <a href="/login" className="btn-apply" style={{ display: 'inline-block', textAlign: 'center', textDecoration: 'none', marginTop: 10 }}>Logga in</a>
+          <p className="auth-sub" style={{ marginTop: 14 }}>{t('Klart! Ditt lösenord är uppdaterat.')}</p>
+          <a href="/login" className="btn-apply" style={{ display: 'inline-block', textAlign: 'center', textDecoration: 'none', marginTop: 10 }}>{t('Logga in')}</a>
         </>
       ) : (
         <form className="auth-form" onSubmit={submit}>
-          <div className="field"><label htmlFor="rp-pw">Nytt lösenord</label>
+          <div className="field"><label htmlFor="rp-pw">{t('Nytt lösenord')}</label>
             <div className="auth-pw-wrap">
-              <input id="rp-pw" type={showPw ? 'text' : 'password'} value={pw} onChange={(e) => setPw(e.target.value)} required autoComplete="new-password" placeholder="Minst 8 tecken, versal + siffra" minLength={8} />
+              <input id="rp-pw" type={showPw ? 'text' : 'password'} value={pw} onChange={(e) => setPw(e.target.value)} required autoComplete="new-password" placeholder={t('Minst 8 tecken, versal + siffra')} minLength={8} />
               <EyeButton on={showPw} onClick={() => setShowPw((v) => !v)} />
             </div>
           </div>
           {error && <p className="auth-err">{error}</p>}
-          <button type="submit" className="btn-apply" disabled={busy}>{busy ? 'Sparar…' : 'Spara nytt lösenord'}</button>
+          <button type="submit" className="btn-apply" disabled={busy}>{busy ? t('Sparar…') : t('Spara nytt lösenord')}</button>
         </form>
       )}
     </AuthShell>

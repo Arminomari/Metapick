@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { cn } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 import { useState } from 'react';
 
 /* ─────────────────────────────────────────────────────────────
@@ -47,7 +48,7 @@ export function AppLayout() {
               onClick={handleLogout}
               className="pill h-9 px-4 text-xs border border-[hsl(var(--border))] bg-transparent hover:bg-[hsl(var(--sand))] hover:border-[hsl(var(--border-strong))] transition-all duration-300 ease-soft"
             >
-              Logga ut
+              {t('Logga ut')}
             </button>
           </div>
 
@@ -55,7 +56,7 @@ export function AppLayout() {
           <button
             className="md:hidden p-2 text-muted-foreground hover:text-foreground transition-colors"
             onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Meny"
+            aria-label={t('Meny')}
           >
             {mobileOpen ? (
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -82,7 +83,7 @@ export function AppLayout() {
                 onClick={handleLogout}
                 className="pill h-9 px-4 text-xs border border-[hsl(var(--border))] hover:bg-[hsl(var(--sand))]"
               >
-                Logga ut
+                {t('Logga ut')}
               </button>
             </div>
           </div>
@@ -97,7 +98,7 @@ export function AppLayout() {
       <footer className="mt-24 border-t border-[hsl(var(--border))]">
         <div className="mx-auto max-w-[1240px] px-6 md:px-10 py-10 flex flex-wrap items-center justify-between gap-3">
           <div className="text-display text-lg">meta<span className="text-sunset">pick</span></div>
-          <p className="text-xs text-muted-foreground">© 2026 MetaPick · Made with ☀ in Stockholm</p>
+          <p className="text-xs text-muted-foreground">© 2026 MetaPick · {t('Skapad med ☀ i Stockholm')}</p>
         </div>
       </footer>
     </div>
@@ -107,24 +108,24 @@ export function AppLayout() {
 function navLinksFor(role: string) {
   const links: Record<string, { label: string; path: string }[]> = {
     Admin: [
-      { label: 'Översikt', path: '/admin' },
+      { label: t('Översikt'), path: '/admin' },
     ],
     Brand: [
-      { label: 'Översikt',     path: '/brand' },
-      { label: 'Kampanjer',    path: '/brand/campaigns' },
-      { label: 'Ansökningar',  path: '/brand/applications' },
-      { label: 'Hitta kreatörer', path: '/brand/creators' },
-      { label: 'PR-utskick',   path: '/brand/pr' },
-      { label: 'Inställningar',path: '/brand/settings' },
+      { label: t('Översikt'),     path: '/brand' },
+      { label: t('Kampanjer'),    path: '/brand/campaigns' },
+      { label: t('Ansökningar'),  path: '/brand/applications' },
+      { label: t('Hitta kreatörer'), path: '/brand/creators' },
+      { label: t('PR-utskick'),   path: '/brand/pr' },
+      { label: t('Inställningar'),path: '/brand/settings' },
     ],
     Creator: [
-      { label: 'Översikt',     path: '/creator' },
-      { label: 'Utforska',     path: '/creator/browse' },
-      { label: 'Mina uppdrag', path: '/creator/assignments' },
-      { label: 'PR-erbjudanden', path: '/creator/pr' },
-      { label: 'Portfölj',     path: '/creator/portfolio' },
-      { label: 'Intjäning',    path: '/creator/earnings' },
-      { label: 'Profil',       path: '/creator/profile' },
+      { label: t('Översikt'),     path: '/creator' },
+      { label: t('Utforska'),     path: '/creator/browse' },
+      { label: t('Mina uppdrag'), path: '/creator/assignments' },
+      { label: t('PR-erbjudanden'), path: '/creator/pr' },
+      { label: t('Portfölj'),     path: '/creator/portfolio' },
+      { label: t('Intjäning'),    path: '/creator/earnings' },
+      { label: t('Profil'),       path: '/creator/profile' },
     ],
   };
   return links[role] ?? [];

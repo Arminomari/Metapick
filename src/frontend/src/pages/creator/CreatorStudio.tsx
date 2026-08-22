@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { statusLabel, t } from '@/lib/i18n';
 import {
   useCreatorAssignments, useCreatorPayouts, useCreatorProfile,
   useBrowseCampaigns, useProfile, useUserReviews,
@@ -20,9 +21,9 @@ const initial = (s: string) => (s?.[0] || '?').toUpperCase();
 
 function campTag(status: string) {
   const s = (status || '').toLowerCase();
-  if (s.includes('review')) return <span className="vcamp-tag rev">IN REVIEW</span>;
-  if (s === 'active') return <span className="vcamp-tag prog">IN PROGRESS</span>;
-  return <span className="vcamp-tag up">{status.toUpperCase()}</span>;
+  if (s.includes('review')) return <span className="vcamp-tag rev">{t('UNDER GRANSKNING')}</span>;
+  if (s === 'active') return <span className="vcamp-tag prog">{t('PÅGÅR')}</span>;
+  return <span className="vcamp-tag up">{statusLabel(status).toUpperCase()}</span>;
 }
 
 type Metric = 'views' | 'earnings' | 'clicks';
@@ -52,7 +53,7 @@ export function CreatorStudioDashboard() {
   const totalEarned = assignments.reduce((s, a) => s + a.currentPayoutAmount, 0);
   const paidOut = payouts.filter((p) => ['Completed', 'Approved', 'Processing'].includes(p.status)).reduce((s, p) => s + p.amount, 0);
   const pending = Math.max(0, totalEarned - paidOut);
-  const name = profile?.displayName || 'there';
+  const name = profile?.displayName || t('kreatör');
 
   // chart: real per-campaign values for selected metric, ascending
   const chartCamps = [...assignments].sort((a, b) => mVal(a, metric) - mVal(b, metric)).slice(-8);
@@ -75,7 +76,7 @@ export function CreatorStudioDashboard() {
   const reviewCount = reviews?.totalReviews ?? 0;
   const score = Math.round((avgStars / 5) * 100);
   const C = 314.159, dash = (score / 100) * C;
-  const repWord = score >= 90 ? 'Excellent' : score >= 75 ? 'Great' : score >= 50 ? 'Good' : reviewCount ? 'Building' : 'New';
+  const repWord = score >= 90 ? t('Utmärkt') : score >= 75 ? t('Mycket bra') : score >= 50 ? t('Bra') : reviewCount ? t('På väg upp') : t('Ny');
 
   return (
     <section className="view active reveal" data-view="overview">
@@ -94,16 +95,16 @@ export function CreatorStudioDashboard() {
         </svg>
         <div className="hero-inner">
           <div className="hero-eyebrow"><span className="hero-live" /> Creator Studio · Live</div>
-          <h1 className="hero-title">Welcome back, <em>{name}</em></h1>
-          <p className="hero-sub">Verified views, accrued payouts and what is live on your account right now.</p>
+          <h1 className="hero-title">{t('Välkommen tillbaka,')} <em>{name}</em></h1>
+          <p className="hero-sub">{t('Verifierade views, upplupna utbetalningar och vad som är live på ditt konto just nu.')}</p>
           <div className="hero-kpis">
-            <div className="hero-kpi"><div className="hk-v">{formatNumber(totalViews)}</div><div className="hk-l">Verified views</div></div>
+            <div className="hero-kpi"><div className="hk-v">{formatNumber(totalViews)}</div><div className="hk-l">{t('Verifierade views')}</div></div>
             <div className="hero-kpi-sep" />
-            <div className="hero-kpi"><div className="hk-v hk-money"><span>{formatCurrency(totalEarned)}</span></div><div className="hk-l">Total accrued</div></div>
+            <div className="hero-kpi"><div className="hk-v hk-money"><span>{formatCurrency(totalEarned)}</span></div><div className="hk-l">{t('Totalt upplupet')}</div></div>
             <div className="hero-kpi-sep" />
-            <div className="hero-kpi"><div className="hk-v">{formatCurrency(pending)}</div><div className="hk-l">Pending payout</div></div>
+            <div className="hero-kpi"><div className="hk-v">{formatCurrency(pending)}</div><div className="hk-l">{t('Väntande utbetalning')}</div></div>
             <div className="hero-kpi-sep" />
-            <div className="hero-kpi"><div className="hk-v">{active.length}</div><div className="hk-l">Active campaigns</div></div>
+            <div className="hero-kpi"><div className="hk-v">{active.length}</div><div className="hk-l">{t('Aktiva kampanjer')}</div></div>
           </div>
         </div>
       </div>
@@ -111,11 +112,11 @@ export function CreatorStudioDashboard() {
       {/* TOP: performance + reputation */}
       <div className="vtop">
         <div className="card vperf">
-          <div className="vperf-head"><h3>Performance by campaign</h3><span className="vchip">{assignments.length} campaigns</span></div>
+          <div className="vperf-head"><h3>{t('Prestation per kampanj')}</h3><span className="vchip">{assignments.length} {t('kampanjer')}</span></div>
           <div className="vmetric-row" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
             <button className={`vmetric${metric === 'views' ? ' active' : ''}`} onClick={() => setMetric('views')}><span className="vm-l">Views</span><span className="vm-v">{formatNumber(totalViews)}</span></button>
-            <button className={`vmetric${metric === 'earnings' ? ' active' : ''}`} onClick={() => setMetric('earnings')}><span className="vm-l">Earnings</span><span className="vm-v">{formatCurrency(totalEarned)}</span></button>
-            <button className={`vmetric${metric === 'clicks' ? ' active' : ''}`} onClick={() => setMetric('clicks')}><span className="vm-l">Clicks</span><span className="vm-v">{formatNumber(totalClicks)}</span></button>
+            <button className={`vmetric${metric === 'earnings' ? ' active' : ''}`} onClick={() => setMetric('earnings')}><span className="vm-l">{t('Intäkter')}</span><span className="vm-v">{formatCurrency(totalEarned)}</span></button>
+            <button className={`vmetric${metric === 'clicks' ? ' active' : ''}`} onClick={() => setMetric('clicks')}><span className="vm-l">{t('Klick')}</span><span className="vm-v">{formatNumber(totalClicks)}</span></button>
           </div>
           {vals.length >= 2 ? (
             <>
@@ -136,23 +137,23 @@ export function CreatorStudioDashboard() {
                 </div>
               </div>
               <div className="vperf-foot">
-                <div className="vf-stat"><div className="vf-l">Top campaign</div><div className="vf-v">{topCamp?.campaignName ?? '—'}</div></div>
-                <div className="vf-stat"><div className="vf-l">Average</div><div className="vf-v">{mFmt(avgMetric, metric)}</div></div>
-                <div className="vf-stat"><div className="vf-l">Total</div><div className="vf-v">{mFmt(totalMetric, metric)}</div></div>
-                <Link className="vperf-link" to="/creator/assignments" style={{ margin: 0 }}>All campaigns <Arrow /></Link>
+                <div className="vf-stat"><div className="vf-l">{t('Toppkampanj')}</div><div className="vf-v">{topCamp?.campaignName ?? '—'}</div></div>
+                <div className="vf-stat"><div className="vf-l">{t('Snitt')}</div><div className="vf-v">{mFmt(avgMetric, metric)}</div></div>
+                <div className="vf-stat"><div className="vf-l">{t('Totalt')}</div><div className="vf-v">{mFmt(totalMetric, metric)}</div></div>
+                <Link className="vperf-link" to="/creator/assignments" style={{ margin: 0 }}>{t('Alla kampanjer')} <Arrow /></Link>
               </div>
             </>
           ) : (
             <div style={{ padding: '40px 10px', textAlign: 'center' }}>
-              <div style={{ fontWeight: 600 }}>Not enough data yet</div>
-              <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>Once you have a couple of campaigns running, your performance breakdown shows up here.</div>
-              <Link to="/creator/browse" className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 20px', marginTop: 16 }}>Discover campaigns</Link>
+              <div style={{ fontWeight: 600 }}>{t('Inte tillräckligt med data ännu')}</div>
+              <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>{t('När du har ett par kampanjer igång visas din prestationsöversikt här.')}</div>
+              <Link to="/creator/browse" className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 20px', marginTop: 16 }}>{t('Upptäck kampanjer')}</Link>
             </div>
           )}
         </div>
 
         <div className="card vrep">
-          <div className="vperf-head"><h3>Creator rating</h3></div>
+          <div className="vperf-head"><h3>{t('Creator-betyg')}</h3></div>
           <div className="vrep-donut">
             <svg viewBox="0 0 120 120">
               <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(183,188,200,.25)" strokeWidth="9" />
@@ -164,37 +165,37 @@ export function CreatorStudioDashboard() {
             {reviews?.reviews?.length ? reviews.reviews.slice(0, 4).map((r) => (
               <div key={r.id} className="vrep-row"><span className="vrep-ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 7" /></svg></span>{r.reviewerName}<b>{r.stars}/5</b></div>
             )) : (
-              <div style={{ padding: '14px 0', fontSize: 13, color: 'var(--muted)' }}>Brand ratings from completed campaigns will appear here.</div>
+              <div style={{ padding: '14px 0', fontSize: 13, color: 'var(--muted)' }}>{t('Betyg från företag på slutförda kampanjer visas här.')}</div>
             )}
           </div>
-          <Link className="vperf-link" to="/creator/portfolio">Build your portfolio <Arrow /></Link>
+          <Link className="vperf-link" to="/creator/portfolio">{t('Bygg din portfölj')} <Arrow /></Link>
         </div>
       </div>
 
       {/* SPLIT: active + discover */}
       <div className="vcsplit">
         <div className="card vcamps">
-          <div className="vperf-head"><h3>Active campaigns</h3></div>
+          <div className="vperf-head"><h3>{t('Aktiva kampanjer')}</h3></div>
           {active.length ? active.slice(0, 5).map((a) => (
             <div key={a.id} className="vcamp" onClick={() => navigate(`/creator/assignments/${a.id}`)}>
               <span className="vcamp-thumb" style={{ background: grad(a.campaignName) }}><span className="brand-mono">{initial(a.campaignName)}</span></span>
-              <div className="vcamp-main"><div className="vcamp-b">{a.campaignName}</div><div className="vcamp-m">Assigned {formatDate(a.assignedAt)}</div>{campTag(a.status)}</div>
+              <div className="vcamp-main"><div className="vcamp-b">{a.campaignName}</div><div className="vcamp-m">{t('Tilldelad')} {formatDate(a.assignedAt)}</div>{campTag(a.status)}</div>
               <div className="vcamp-end"><div className="vcamp-k">Views</div><div className="vcamp-v">{formatNumber(a.totalVerifiedViews)}</div></div>
-              <div className="vcamp-end"><div className="vcamp-k">Earned</div><div className="vcamp-v">{formatCurrency(a.currentPayoutAmount)}</div></div>
+              <div className="vcamp-end"><div className="vcamp-k">{t('Intjänat')}</div><div className="vcamp-v">{formatCurrency(a.currentPayoutAmount)}</div></div>
             </div>
           )) : (
             <div style={{ padding: '34px 10px', textAlign: 'center' }}>
-              <div style={{ fontWeight: 600 }}>No active campaigns yet</div>
-              <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>Browse open campaigns and apply to the ones that fit your voice.</div>
-              <Link to="/creator/browse" className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 20px', marginTop: 16 }}>Discover campaigns</Link>
+              <div style={{ fontWeight: 600 }}>{t('Inga aktiva kampanjer ännu')}</div>
+              <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>{t('Bläddra bland öppna kampanjer och ansök till de som passar din röst.')}</div>
+              <Link to="/creator/browse" className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 20px', marginTop: 16 }}>{t('Upptäck kampanjer')}</Link>
             </div>
           )}
-          {active.length > 0 && <Link className="vperf-link center" to="/creator/assignments">View all campaigns <Arrow /></Link>}
+          {active.length > 0 && <Link className="vperf-link center" to="/creator/assignments">{t('Visa alla kampanjer')} <Arrow /></Link>}
         </div>
 
         <div className="card vdisc">
-          <div className="vperf-head"><h3>Discover campaigns <span className="vdisc-ai">Open now</span></h3></div>
-          <div className="vdisc-sub">Open campaigns in your market, ready to apply.</div>
+          <div className="vperf-head"><h3>{t('Upptäck kampanjer')} <span className="vdisc-ai">{t('Öppna nu')}</span></h3></div>
+          <div className="vdisc-sub">{t('Öppna kampanjer på din marknad, redo att söka.')}</div>
           {browse.length ? browse.slice(0, 4).map((c) => {
             const filled = c.maxCreators ? Math.round(((c.maxCreators - c.spotsLeft) / c.maxCreators) * 100) : 0;
             return (
@@ -203,16 +204,16 @@ export function CreatorStudioDashboard() {
                   <svg viewBox="0 0 44 44" className="vdisc-ring"><circle className="vdisc-track" cx="22" cy="22" r="19" /><circle className="vdisc-prog" cx="22" cy="22" r="19" stroke="url(#perfLine)" /></svg>
                   <span className="vdisc-num">{c.spotsLeft}</span>
                 </span>
-                <div className="vdisc-main"><div className="vdisc-b">{c.name}</div><div className="vdisc-m">{c.brandName} · {c.category} · {c.payoutSummary}</div><div className="vdisc-why">{c.spotsLeft} of {c.maxCreators} spots left · min {formatNumber(c.minViews)} views</div></div>
+                <div className="vdisc-main"><div className="vdisc-b">{c.name}</div><div className="vdisc-m">{c.brandName} · {c.category} · {c.payoutSummary}</div><div className="vdisc-why">{c.spotsLeft} {t('av')} {c.maxCreators} {t('platser kvar')} · min {formatNumber(c.minViews)} views</div></div>
               </div>
             );
           }) : (
             <div style={{ padding: '34px 10px', textAlign: 'center' }}>
-              <div style={{ fontWeight: 600 }}>No open campaigns right now</div>
-              <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>New campaigns in your market will appear here as they go live.</div>
+              <div style={{ fontWeight: 600 }}>{t('Inga öppna kampanjer just nu')}</div>
+              <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>{t('Nya kampanjer på din marknad visas här när de går live.')}</div>
             </div>
           )}
-          {browse.length > 0 && <Link className="vperf-link center" to="/creator/browse">Explore all campaigns <Arrow /></Link>}
+          {browse.length > 0 && <Link className="vperf-link center" to="/creator/browse">{t('Utforska alla kampanjer')} <Arrow /></Link>}
         </div>
       </div>
     </section>

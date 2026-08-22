@@ -1,4 +1,5 @@
 import React, { Component, type ReactNode } from 'react';
+import { t } from '@/lib/i18n';
 
 interface Props {
   children: ReactNode;
@@ -36,15 +37,15 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="min-h-screen flex items-center justify-center bg-background p-6">
           <div className="max-w-md w-full rounded-lg border border-destructive/30 bg-destructive/5 p-8 text-center space-y-4">
-            <h2 className="text-xl font-semibold text-destructive">Något gick fel</h2>
+            <h2 className="text-xl font-semibold text-destructive">{t('Något gick fel')}</h2>
             <p className="text-sm text-muted-foreground">
-              {this.state.error?.message ?? 'Ett oväntat fel inträffade.'}
+              {this.state.error?.message ?? t('Ett oväntat fel inträffade.')}
             </p>
             <button
               onClick={this.handleReset}
               className="mt-2 px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
             >
-              Försök igen
+              {t('Försök igen')}
             </button>
           </div>
         </div>

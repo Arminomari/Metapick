@@ -1,4 +1,4 @@
-import { statusLabel } from '@/lib/i18n';
+import { statusLabel, t } from '@/lib/i18n';
 import React from 'react';
 import { cn, getStatusColor } from '@/lib/utils';
 
@@ -231,16 +231,16 @@ export function Pagination({
   return (
     <div className="mt-2 flex items-center justify-between border-t border-[hsl(var(--border))] px-2 pt-5">
       <p className="text-xs text-muted-foreground">
-        Visar <span className="font-medium text-foreground">{(page - 1) * pageSize + 1}</span>–
+        {t('Visar')} <span className="font-medium text-foreground">{(page - 1) * pageSize + 1}</span>–
         <span className="font-medium text-foreground">{Math.min(page * pageSize, totalCount)}</span>
-        {' '}av <span className="font-medium text-foreground">{totalCount}</span>
+        {' '}{t('av')} <span className="font-medium text-foreground">{totalCount}</span>
       </p>
       <div className="flex gap-2">
         <Button variant="ghost" size="sm" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
-          ← Föregående
+          ← {t('Föregående')}
         </Button>
         <Button variant="ghost" size="sm" disabled={page >= totalPages} onClick={() => onPageChange(page + 1)}>
-          Nästa →
+          {t('Nästa')} →
         </Button>
       </div>
     </div>

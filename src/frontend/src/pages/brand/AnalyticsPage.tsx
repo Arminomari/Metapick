@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useBrandAnalytics, useMarketBenchmarks } from '@/hooks/api';
 import { AreaChart, Donut, MiniBars, BLUSH } from '@/components/vyrle/Viz';
 import { formatNumber, formatCurrency } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 import type { CampaignAnalytics, CreatorPerformance, CreatorVideo } from '@/types';
 
 const GRADS = ['linear-gradient(135deg,#FFD8C7,#F1A88F)', 'linear-gradient(135deg,#cdb8f2,#9c7de0)', 'linear-gradient(135deg,#F2C58A,#e0a04e)', 'linear-gradient(135deg,#a9dcc0,#5fb98a)'];
@@ -88,7 +89,7 @@ export function BrandAnalyticsPage() {
   const maxVpd = Math.max(1, ...vpd.map((b) => b.avgViews));
 
   // ── best posting times (BPT) ──
-  const dayparts = [{ label: 'Morgon · 06–11', lo: 6, hi: 12 }, { label: 'Dag · 12–17', lo: 12, hi: 18 }, { label: 'Kväll · 18–23', lo: 18, hi: 24 }, { label: 'Natt · 00–05', lo: 0, hi: 6 }];
+  const dayparts = [{ label: t('Morgon · 06–11'), lo: 6, hi: 12 }, { label: t('Dag · 12–17'), lo: 12, hi: 18 }, { label: t('Kväll · 18–23'), lo: 18, hi: 24 }, { label: t('Natt · 00–05'), lo: 0, hi: 6 }];
   const bpt = dayparts.map((d) => {
     const vs = liveVideos.filter((v) => { if (!v.publishedAt) return false; const h = new Date(v.publishedAt).getHours(); return h >= d.lo && h < d.hi; });
     const views = sum(vs, (v) => v.views);
@@ -98,7 +99,7 @@ export function BrandAnalyticsPage() {
 
   // ── top hashtags (TPH) ──
   const tagMap = new Map<string, { count: number; views: number }>();
-  liveVideos.forEach((v) => (v.hashtags || []).forEach((t) => { const e = tagMap.get(t) ?? { count: 0, views: 0 }; e.count++; e.views += v.views; tagMap.set(t, e); }));
+  liveVideos.forEach((v) => (v.hashtags || []).forEach((tg) => { const e = tagMap.get(tg) ?? { count: 0, views: 0 }; e.count++; e.views += v.views; tagMap.set(tg, e); }));
   const topTags = [...tagMap.entries()].map(([tag, v]) => ({ tag, ...v })).sort((a, b) => b.views - a.views).slice(0, 8);
 
   // ── niche performance (NP) ──
@@ -113,7 +114,7 @@ export function BrandAnalyticsPage() {
 
   // ── virality (VR) ──
   const vrThresholds = [100_000, 500_000, 1_000_000];
-  const viral = vrThresholds.map((t) => liveVideos.filter((v) => v.views >= t).length);
+  const viral = vrThresholds.map((th) => liveVideos.filter((v) => v.views >= th).length);
   const viralRate = liveVideos.length ? (viral[0] / liveVideos.length) * 100 : 0;
 
   // ── insights ──
@@ -121,11 +122,11 @@ export function BrandAnalyticsPage() {
   const bestCpm = withViews.map((x) => ({ name: x.c.name, cpm: (x.a.budgetSpent / x.a.totalViews) * 1000 })).sort((a, b) => a.cpm - b.cpm)[0];
   const bestNiche = niches.slice().sort((a, b) => a.cpm - b.cpm)[0];
   const insights: { t: React.ReactNode }[] = [];
-  if (cei != null) insights.push({ t: <>Din CPM ligger <b>{Math.abs(cei).toFixed(0)}% {cei >= 0 ? 'under' : 'över'}</b> marknadssnittet ({kr2(marketCpm)}).</> });
-  if (bestCpm) insights.push({ t: <><b>{bestCpm.name}</b> levererar din lägsta CPM, {kr2(bestCpm.cpm)} per 1 000 visningar.</> });
-  if (vpd.length) { const best = [...vpd].sort((a, b) => b.avgViews - a.avgViews)[0]; insights.push({ t: <>Videos på <b>{best.label}</b> drar flest visningar i snitt ({short(best.avgViews)}).</> }); }
-  if (bpt.length) insights.push({ t: <>Bäst att posta på <b>{bpt[0].label.split(' · ')[0].toLowerCase()}</b>, {short(bpt[0].avgViews)} visningar i snitt.</> });
-  if (bestNiche && niches.length > 1) insights.push({ t: <>Nischen <b>{bestNiche.cat}</b> är mest kostnadseffektiv, {kr2(bestNiche.cpm)} CPM.</> });
+  if (cei != null) insights.push({ t: <>{t('Din CPM ligger')} <b>{Math.abs(cei).toFixed(0)}% {cei >= 0 ? t('under') : t('över')}</b> {t('marknadssnittet')} ({kr2(marketCpm)}).</> });
+  if (bestCpm) insights.push({ t: <><b>{bestCpm.name}</b> {t('levererar din lägsta CPM,')} {kr2(bestCpm.cpm)} {t('per 1 000 visningar.')}</> });
+  if (vpd.length) { const best = [...vpd].sort((a, b) => b.avgViews - a.avgViews)[0]; insights.push({ t: <>{t('Videos på')} <b>{best.label}</b> {t('drar flest visningar i snitt')} ({short(best.avgViews)}).</> }); }
+  if (bpt.length) insights.push({ t: <>{t('Bäst att posta på')} <b>{bpt[0].label.split(' · ')[0].toLowerCase()}</b>, {short(bpt[0].avgViews)} {t('visningar i snitt.')}</> });
+  if (bestNiche && niches.length > 1) insights.push({ t: <>{t('Nischen')} <b>{bestNiche.cat}</b> {t('är mest kostnadseffektiv,')} {kr2(bestNiche.cpm)} CPM.</> });
 
   const hasData = TV > 0;
 
@@ -133,69 +134,69 @@ export function BrandAnalyticsPage() {
     <section className="view active reveal" data-view="analytics">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Attention <em>intelligence</em></h1>
-          <p className="page-sub">Hur effektivt din spend förvandlas till uppmärksamhet. Räckvidd, engagemang, kostnadseffektivitet och marknadsjämförelse, allt från verklig kampanjdata.</p>
+          <h1 className="page-title">{t('Attention')} <em>{t('intelligence')}</em></h1>
+          <p className="page-sub">{t('Hur effektivt din spend förvandlas till uppmärksamhet. Räckvidd, engagemang, kostnadseffektivitet och marknadsjämförelse, allt från verklig kampanjdata.')}</p>
         </div>
       </div>
 
       {isLoading ? (
-        <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>Laddar analys…</div>
+        <div style={{ padding: 60, textAlign: 'center', color: 'var(--muted)' }}>{t('Laddar analys…')}</div>
       ) : campaigns.length === 0 ? (
-        <Empty title="Ingen analys än" sub="Lansera en kampanj så börjar vi mäta visningar, engagemang och CPM i realtid." />
+        <Empty title={t('Ingen analys än')} sub={t('Lansera en kampanj så börjar vi mäta visningar, engagemang och CPM i realtid.')} />
       ) : !hasData ? (
-        <Empty title="Väntar på första datan" sub="Dina kampanjer är igång men inga verifierade visningar har kommit in ännu. Analysen fylls i automatiskt så snart kreatörernas content går live." />
+        <Empty title={t('Väntar på första datan')} sub={t('Dina kampanjer är igång men inga verifierade visningar har kommit in ännu. Analysen fylls i automatiskt så snart kreatörernas content går live.')} />
       ) : (
         <>
           {/* ── Overview KPIs ── */}
           <div className="vstat-row">
-            <Kpi tint="peach" featured label="Totala visningar" val={formatNumber(TV)} sub={`${creators} kreatörer · ${TP} posts`} icon={<><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></>} />
-            <Kpi tint="green" label="Total spend" val={formatCurrency(TS)} sub={`${formatCurrency(remaining)} kvar`} icon={<><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 10h18M7 15h4" /></>} />
-            <Kpi tint="lilac" label="CPM" val={kr2(CPM)} sub={cei != null ? `${Math.abs(cei).toFixed(0)}% ${cei >= 0 ? 'under' : 'över'} marknad` : 'kostnad / 1 000 visn.'} icon={<><path d="M5 20V10M12 20V4M19 20v-6" /></>} />
-            <Kpi tint="amber" label="Snitt visningar / post" val={short(AVP)} sub={`${formatNumber(views24h)} senaste dygnet`} icon={<><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></>} />
+            <Kpi tint="peach" featured label={t('Totala visningar')} val={formatNumber(TV)} sub={`${creators} ${t('kreatörer')} · ${TP} ${t('posts')}`} icon={<><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></>} />
+            <Kpi tint="green" label={t('Total spend')} val={formatCurrency(TS)} sub={`${formatCurrency(remaining)} ${t('kvar')}`} icon={<><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 10h18M7 15h4" /></>} />
+            <Kpi tint="lilac" label="CPM" val={kr2(CPM)} sub={cei != null ? `${Math.abs(cei).toFixed(0)}% ${cei >= 0 ? t('under') : t('över')} ${t('marknad')}` : t('kostnad / 1 000 visn.')} icon={<><path d="M5 20V10M12 20V4M19 20v-6" /></>} />
+            <Kpi tint="amber" label={t('Snitt visningar / post')} val={short(AVP)} sub={`${formatNumber(views24h)} ${t('senaste dygnet')}`} icon={<><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></>} />
           </div>
           <div className="an-kpi-grid" style={{ marginBottom: 20 }}>
-            <Mini label="Engagemang" val={formatNumber(TE)} hint={`${pct(ER)} ER`} />
-            <Mini label="Klick" val={formatNumber(TC)} hint={`${pct(CTR)} CTR`} />
-            <Mini label="Kostnad / klick" val={kr2(CPC)} hint="CPC" />
-            <Mini label="Attention score" val={String(AES)} hint="VYRLE AES · 0–100" accent />
+            <Mini label={t('Engagemang')} val={formatNumber(TE)} hint={`${pct(ER)} ER`} />
+            <Mini label={t('Klick')} val={formatNumber(TC)} hint={`${pct(CTR)} CTR`} />
+            <Mini label={t('Kostnad / klick')} val={kr2(CPC)} hint="CPC" />
+            <Mini label={t('Attention score')} val={String(AES)} hint="VYRLE AES · 0–100" accent />
           </div>
 
           {/* ── ROI / Attention efficiency ── */}
           <div className="vtop">
             <div className="card vperf">
-              <div className="vperf-head"><h3>Attention efficiency score</h3><span className="vchip">VYRLE AES</span></div>
+              <div className="vperf-head"><h3>{t('Attention efficiency score')}</h3><span className="vchip">VYRLE AES</span></div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}>
                 <Donut size={150} segments={[{ value: AES, color: BLUSH[0] }, { value: 100 - AES, color: 'rgba(0,0,0,0)' }]}>
                   <div className="vrep-num" style={{ fontSize: 40 }}>{AES}</div>
-                  <div className="vrep-lbl" style={{ color: 'var(--muted)', fontWeight: 600 }}>av 100</div>
+                  <div className="vrep-lbl" style={{ color: 'var(--muted)', fontWeight: 600 }}>{t('av 100')}</div>
                 </Donut>
                 <div style={{ flex: 1, minWidth: 220 }}>
                   <MiniBars rows={[
-                    { label: 'Engagemang', pct: engScore, value: pct(ER) },
-                    { label: 'Delningar', pct: shareScore, value: pct(SHR) },
-                    { label: 'Klick', pct: ctrScore, value: pct(CTR) },
-                    { label: 'Kostnadseffektivitet', pct: effScore, value: marketCpm ? `${Math.round(effScore)}` : '—' },
+                    { label: t('Engagemang'), pct: engScore, value: pct(ER) },
+                    { label: t('Delningar'), pct: shareScore, value: pct(SHR) },
+                    { label: t('Klick'), pct: ctrScore, value: pct(CTR) },
+                    { label: t('Kostnadseffektivitet'), pct: effScore, value: marketCpm ? `${Math.round(effScore)}` : '—' },
                   ]} />
                 </div>
               </div>
               <div className="vperf-foot">
-                <div className="vf-stat"><div className="vf-l">CPM vs marknad</div><div className="vf-v" style={{ color: cei != null && cei >= 0 ? '#2f9d5b' : 'var(--ink)' }}>{cei != null ? `${cei >= 0 ? '−' : '+'}${Math.abs(cei).toFixed(0)}%` : '—'}</div></div>
-                <div className="vf-stat"><div className="vf-l">Marknads-CPM</div><div className="vf-v">{marketCpm ? kr2(marketCpm) : '—'}</div></div>
-                <div className="vf-stat"><div className="vf-l">Viral rate</div><div className="vf-v">{pct(viralRate)}</div></div>
+                <div className="vf-stat"><div className="vf-l">{t('CPM vs marknad')}</div><div className="vf-v" style={{ color: cei != null && cei >= 0 ? '#2f9d5b' : 'var(--ink)' }}>{cei != null ? `${cei >= 0 ? '−' : '+'}${Math.abs(cei).toFixed(0)}%` : '—'}</div></div>
+                <div className="vf-stat"><div className="vf-l">{t('Marknads-CPM')}</div><div className="vf-v">{marketCpm ? kr2(marketCpm) : '—'}</div></div>
+                <div className="vf-stat"><div className="vf-l">{t('Viral rate')}</div><div className="vf-v">{pct(viralRate)}</div></div>
               </div>
-              <div style={{ fontSize: 11, color: 'var(--muted-2)', marginTop: 10 }}>Vägt index av engagemang, delningar, klickfrekvens och CPM mot marknaden. Allt från verifierad data.</div>
+              <div style={{ fontSize: 11, color: 'var(--muted-2)', marginTop: 10 }}>{t('Vägt index av engagemang, delningar, klickfrekvens och CPM mot marknaden. Allt från verifierad data.')}</div>
             </div>
 
             <div className="card vrep">
-              <div className="vperf-head"><h3>Kostnad per …</h3></div>
+              <div className="vperf-head"><h3>{t('Kostnad per …')}</h3></div>
               <div className="vrep-rows" style={{ marginTop: 0 }}>
-                <CostRow label="1 000 visningar (CPM)" value={kr2(CPM)} />
-                <CostRow label="Klick (CPC)" value={kr2(CPC)} />
-                <CostRow label="Engagemang (CPE)" value={TE ? kr2(CPE) : '—'} />
-                <CostRow label="Post (CPP)" value={TP ? kr2(CPP) : '—'} />
-                <CostRow label="Delning (CPSH)" value={shares ? kr2(CPSH) : '—'} />
-                <CostRow label="Visning" value={`${costPerView.toFixed(3)} kr`} />
-                <CostRow label="Sparning (CPS)" value="—" muted note="ej från TikTok ännu" />
+                <CostRow label={t('1 000 visningar (CPM)')} value={kr2(CPM)} />
+                <CostRow label={t('Klick (CPC)')} value={kr2(CPC)} />
+                <CostRow label={t('Engagemang (CPE)')} value={TE ? kr2(CPE) : '—'} />
+                <CostRow label={t('Post (CPP)')} value={TP ? kr2(CPP) : '—'} />
+                <CostRow label={t('Delning (CPSH)')} value={shares ? kr2(CPSH) : '—'} />
+                <CostRow label={t('Visning')} value={`${costPerView.toFixed(3)} kr`} />
+                <CostRow label={t('Sparning (CPS)')} value="—" muted note={t('ej från TikTok ännu')} />
               </div>
             </div>
           </div>
@@ -203,33 +204,33 @@ export function BrandAnalyticsPage() {
           {/* ── Engagement ── */}
           <div className="vcsplit" style={{ marginTop: 18 }}>
             <div className="card">
-              <div className="vperf-head"><h3>Engagemang</h3><span className="vchip">{formatNumber(TE)} totalt</span></div>
+              <div className="vperf-head"><h3>{t('Engagemang')}</h3><span className="vchip">{formatNumber(TE)} {t('totalt')}</span></div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
                 {(likes + comments + shares) > 0 ? (
                   <Donut size={140} segments={[{ value: likes, color: BLUSH[0] }, { value: comments, color: BLUSH[1] }, { value: shares, color: BLUSH[2] }]}>
                     <div className="vrep-num" style={{ fontSize: 22 }}>{pct(ER)}</div>
                     <div className="vrep-lbl" style={{ color: 'var(--muted)', fontWeight: 600 }}>ER</div>
                   </Donut>
-                ) : <div style={{ width: 140, height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 13 }}>Inget än</div>}
+                ) : <div style={{ width: 140, height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 13 }}>{t('Inget än')}</div>}
                 <div className="an-legend" style={{ flex: 1, minWidth: 180 }}>
-                  <div className="li"><span className="dotc" style={{ background: BLUSH[0] }} />Likes<span className="lv">{formatNumber(likes)}</span></div>
-                  <div className="li"><span className="dotc" style={{ background: BLUSH[1] }} />Kommentarer<span className="lv">{formatNumber(comments)}</span></div>
-                  <div className="li"><span className="dotc" style={{ background: BLUSH[2] }} />Delningar<span className="lv">{formatNumber(shares)}</span></div>
-                  <div className="li"><span className="dotc" style={{ background: 'rgba(183,188,200,.5)' }} />Sparningar<span className="lv">0</span></div>
+                  <div className="li"><span className="dotc" style={{ background: BLUSH[0] }} />{t('Likes')}<span className="lv">{formatNumber(likes)}</span></div>
+                  <div className="li"><span className="dotc" style={{ background: BLUSH[1] }} />{t('Kommentarer')}<span className="lv">{formatNumber(comments)}</span></div>
+                  <div className="li"><span className="dotc" style={{ background: BLUSH[2] }} />{t('Delningar')}<span className="lv">{formatNumber(shares)}</span></div>
+                  <div className="li"><span className="dotc" style={{ background: 'rgba(183,188,200,.5)' }} />{t('Sparningar')}<span className="lv">0</span></div>
                 </div>
               </div>
             </div>
             <div className="card">
-              <div className="vperf-head"><h3>Kvalitetssignaler</h3></div>
+              <div className="vperf-head"><h3>{t('Kvalitetssignaler')}</h3></div>
               <MiniBars rows={[
-                { label: 'Engagement rate', pct: clamp(ER * 8), value: pct(ER) },
-                { label: 'Share rate', pct: clamp(SHR * 40), value: pct(SHR) },
-                { label: 'Klickfrekvens', pct: clamp(CTR * 20), value: pct(CTR) },
+                { label: t('Engagement rate'), pct: clamp(ER * 8), value: pct(ER) },
+                { label: t('Share rate'), pct: clamp(SHR * 40), value: pct(SHR) },
+                { label: t('Klickfrekvens'), pct: clamp(CTR * 20), value: pct(CTR) },
               ]} />
               <div style={{ borderTop: '1px solid rgba(241,168,143,.12)', marginTop: 14, paddingTop: 14, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
-                <Tile k="Save rate" v="—" note="ej tillgängligt" />
-                <Tile k="Save/like" v="—" note="ej tillgängligt" />
-                <Tile k="Delning/visn." v={pct(SHR)} />
+                <Tile k={t('Save rate')} v="—" note={t('ej tillgängligt')} />
+                <Tile k={t('Save/like')} v="—" note={t('ej tillgängligt')} />
+                <Tile k={t('Delning/visn.')} v={pct(SHR)} />
               </div>
             </div>
           </div>
@@ -237,36 +238,36 @@ export function BrandAnalyticsPage() {
           {/* ── Views by campaign + budget ── */}
           <div className="vtop" style={{ marginTop: 18 }}>
             <div className="card vperf">
-              <div className="vperf-head"><h3>Visningar per kampanj</h3><span className="vchip">{chartRows.length} kampanjer</span></div>
+              <div className="vperf-head"><h3>{t('Visningar per kampanj')}</h3><span className="vchip">{chartRows.length} {t('kampanjer')}</span></div>
               {chartRows.length >= 2 ? (
                 <AreaChart id="brAnViews" values={chartRows.map((x) => x.a.totalViews)} labels={chartRows.map((x) => x.c.name)} fmtY={short} height={260} />
-              ) : <div style={{ padding: '50px 10px', textAlign: 'center', color: 'var(--muted)' }}>Kör fler kampanjer så ritas din visningstrend här.</div>}
+              ) : <div style={{ padding: '50px 10px', textAlign: 'center', color: 'var(--muted)' }}>{t('Kör fler kampanjer så ritas din visningstrend här.')}</div>}
               <div className="vperf-foot">
-                <div className="vf-stat"><div className="vf-l">Total reach</div><div className="vf-v">{formatNumber(TV)}</div></div>
-                <div className="vf-stat"><div className="vf-l">Senaste dygnet</div><div className="vf-v">{formatNumber(views24h)}</div></div>
-                <div className="vf-stat"><div className="vf-l">Kostnad / visning</div><div className="vf-v">{costPerView.toFixed(3)} kr</div></div>
+                <div className="vf-stat"><div className="vf-l">{t('Total reach')}</div><div className="vf-v">{formatNumber(TV)}</div></div>
+                <div className="vf-stat"><div className="vf-l">{t('Senaste dygnet')}</div><div className="vf-v">{formatNumber(views24h)}</div></div>
+                <div className="vf-stat"><div className="vf-l">{t('Kostnad / visning')}</div><div className="vf-v">{costPerView.toFixed(3)} kr</div></div>
               </div>
             </div>
             <div className="card vrep">
-              <div className="vperf-head"><h3>Budget</h3></div>
+              <div className="vperf-head"><h3>{t('Budget')}</h3></div>
               {(TS + remaining) > 0 ? (
                 <Donut size={150} segments={[{ value: TS, color: BLUSH[0] }, { value: remaining, color: 'rgba(183,188,200,.4)' }]}>
                   <div className="vrep-num" style={{ fontSize: 26 }}>{Math.round((TS / (TS + remaining)) * 100)}%</div>
-                  <div className="vrep-lbl" style={{ color: 'var(--muted)', fontWeight: 600 }}>spenderat</div>
+                  <div className="vrep-lbl" style={{ color: 'var(--muted)', fontWeight: 600 }}>{t('spenderat')}</div>
                 </Donut>
-              ) : <div style={{ width: 150, height: 150, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 13 }}>Ingen budget</div>}
+              ) : <div style={{ width: 150, height: 150, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 13 }}>{t('Ingen budget')}</div>}
               <div className="vrep-rows" style={{ marginTop: 'auto' }}>
-                <div className="vrep-row"><span className="vrep-ck"><Ck d="m5 12 4 4L19 7" /></span>Spenderat<b>{formatCurrency(TS)}</b></div>
-                <div className="vrep-row"><span className="vrep-ck"><Ck d="M12 7v5l3 2" c /></span>Kvar<b>{formatCurrency(remaining)}</b></div>
+                <div className="vrep-row"><span className="vrep-ck"><Ck d="m5 12 4 4L19 7" /></span>{t('Spenderat')}<b>{formatCurrency(TS)}</b></div>
+                <div className="vrep-row"><span className="vrep-ck"><Ck d="M12 7v5l3 2" c /></span>{t('Kvar')}<b>{formatCurrency(remaining)}</b></div>
               </div>
-              <Link className="vperf-link" to="/brand/campaigns" style={{ marginTop: 18 }}>Alla kampanjer <Arrow /></Link>
+              <Link className="vperf-link" to="/brand/campaigns" style={{ marginTop: 18 }}>{t('Alla kampanjer')} <Arrow /></Link>
             </div>
           </div>
 
           {/* ── Top creators ── */}
           <div className="vcsplit" style={{ marginTop: 18 }}>
             <div className="card">
-              <div className="vperf-head"><h3>Bästa kreatörer</h3><Link to="/brand/creators" className="view-all">Hitta fler</Link></div>
+              <div className="vperf-head"><h3>{t('Bästa kreatörer')}</h3><Link to="/brand/creators" className="view-all">{t('Hitta fler')}</Link></div>
               {topCreators.length ? topCreators.map((c) => {
                 const ccpm = c.views ? (c.payout / c.views) * 1000 : 0;
                 const eff = c.payout ? c.views / (c.payout / 1000) : 0; // views per 1000 kr
@@ -277,15 +278,15 @@ export function BrandAnalyticsPage() {
                       <div className="vcamp-b">{c.name}</div>
                       <div className="progress-line" style={{ maxWidth: 200, marginTop: 6 }}><span style={{ width: `${Math.round((c.views / maxCreatorViews) * 100)}%` }} /></div>
                     </div>
-                    <div className="vcamp-end"><div className="vcamp-k">Views</div><div className="vcamp-v">{formatNumber(c.views)}</div></div>
-                    <div className="vcamp-end"><div className="vcamp-k">Kostnad/1K</div><div className="vcamp-v">{ccpm ? kr2(ccpm) : '—'}</div></div>
-                    <div className="vcamp-end"><div className="vcamp-k">Visn/1000kr</div><div className="vcamp-v">{eff ? short(eff) : '—'}</div></div>
+                    <div className="vcamp-end"><div className="vcamp-k">{t('Views')}</div><div className="vcamp-v">{formatNumber(c.views)}</div></div>
+                    <div className="vcamp-end"><div className="vcamp-k">{t('Kostnad/1K')}</div><div className="vcamp-v">{ccpm ? kr2(ccpm) : '—'}</div></div>
+                    <div className="vcamp-end"><div className="vcamp-k">{t('Visn/1000kr')}</div><div className="vcamp-v">{eff ? short(eff) : '—'}</div></div>
                   </div>
                 );
-              }) : <Muted>Inga kreatörer med data än.</Muted>}
+              }) : <Muted>{t('Inga kreatörer med data än.')}</Muted>}
             </div>
             <div className="card">
-              <div className="vperf-head"><h3>Per nisch vs marknad</h3></div>
+              <div className="vperf-head"><h3>{t('Per nisch vs marknad')}</h3></div>
               {niches.length ? niches.slice(0, 6).map((n) => {
                 const mk = marketCat.get(n.cat);
                 const diff = mk && n.cpm ? (1 - n.cpm / mk) * 100 : null;
@@ -293,30 +294,30 @@ export function BrandAnalyticsPage() {
                   <div key={n.cat} className="list-row">
                     <div className="row-main" style={{ flex: 1 }}>
                       <div className="t">{n.cat}</div>
-                      <div className="s">{formatNumber(n.views)} views · ER {pct(n.er)}</div>
+                      <div className="s">{formatNumber(n.views)} {t('views')} · ER {pct(n.er)}</div>
                     </div>
                     <div style={{ textAlign: 'right', minWidth: 80 }}><div className="t">{kr2(n.cpm)}</div><div className="s">CPM</div></div>
                     <div style={{ textAlign: 'right', minWidth: 76 }}>{diff != null ? <span className={`badge ${diff >= 0 ? 'green' : 'red'}`}>{diff >= 0 ? '−' : '+'}{Math.abs(diff).toFixed(0)}%</span> : <span className="s">—</span>}</div>
                   </div>
                 );
-              }) : <Muted>Ingen nisch-data än.</Muted>}
+              }) : <Muted>{t('Ingen nisch-data än.')}</Muted>}
             </div>
           </div>
 
           {/* ── Top content ── */}
           {topContent.length > 0 && (
             <div className="card" style={{ marginTop: 18 }}>
-              <div className="vperf-head"><h3>Bäst presterande content</h3><span className="vchip">{liveVideos.length} posts</span></div>
+              <div className="vperf-head"><h3>{t('Bäst presterande content')}</h3><span className="vchip">{liveVideos.length} {t('posts')}</span></div>
               {topContent.map((v, i) => (
                 <div key={i} className="list-row">
                   <span className="mono sq" style={{ background: grad(v.creator) }}>{initial(v.creator)}</span>
                   <div className="row-main" style={{ flex: 1 }}>
                     <div className="t">{v.creator}{v.durationSeconds ? ` · ${v.durationSeconds}s` : ''}</div>
-                    <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" className="s" style={{ color: '#C26A4A' }}>Visa video</a>
+                    <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" className="s" style={{ color: '#C26A4A' }}>{t('Visa video')}</a>
                   </div>
-                  <div style={{ textAlign: 'right', minWidth: 76 }}><div className="t">{formatNumber(v.views)}</div><div className="s">views</div></div>
-                  <div style={{ textAlign: 'right', minWidth: 64 }}><div className="t">{formatNumber(v.likes + v.comments + v.shares)}</div><div className="s">eng.</div></div>
-                  <div style={{ textAlign: 'right', minWidth: 56 }}><div className="t">{formatNumber(v.clicks)}</div><div className="s">klick</div></div>
+                  <div style={{ textAlign: 'right', minWidth: 76 }}><div className="t">{formatNumber(v.views)}</div><div className="s">{t('views')}</div></div>
+                  <div style={{ textAlign: 'right', minWidth: 64 }}><div className="t">{formatNumber(v.likes + v.comments + v.shares)}</div><div className="s">{t('eng.')}</div></div>
+                  <div style={{ textAlign: 'right', minWidth: 56 }}><div className="t">{formatNumber(v.clicks)}</div><div className="s">{t('klick')}</div></div>
                 </div>
               ))}
             </div>
@@ -325,50 +326,50 @@ export function BrandAnalyticsPage() {
           {/* ── Duration + Posting times ── */}
           <div className="vcsplit" style={{ marginTop: 18 }}>
             <div className="card">
-              <div className="vperf-head"><h3>Prestanda per videolängd</h3></div>
+              <div className="vperf-head"><h3>{t('Prestanda per videolängd')}</h3></div>
               {vpd.length ? (
                 <>
                   <MiniBars rows={vpd.map((b) => ({ label: b.label, pct: (b.avgViews / maxVpd) * 100, value: short(b.avgViews) }))} />
                   <div style={{ borderTop: '1px solid rgba(241,168,143,.12)', marginTop: 14, paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {vpd.map((b) => <div key={b.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5 }}><span style={{ color: 'var(--ink-2)', fontWeight: 600 }}>{b.label}</span><span style={{ color: 'var(--muted)' }}>{b.count} posts · ER {pct(b.er)}</span></div>)}
+                    {vpd.map((b) => <div key={b.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5 }}><span style={{ color: 'var(--ink-2)', fontWeight: 600 }}>{b.label}</span><span style={{ color: 'var(--muted)' }}>{b.count} {t('posts')} · ER {pct(b.er)}</span></div>)}
                   </div>
                 </>
-              ) : <Muted>Videolängd registreras när posts synkas från TikTok.</Muted>}
+              ) : <Muted>{t('Videolängd registreras när posts synkas från TikTok.')}</Muted>}
             </div>
             <div className="card">
-              <div className="vperf-head"><h3>Bästa publiceringstid</h3></div>
-              {bpt.length ? <MiniBars rows={bpt.map((b) => ({ label: b.label, pct: (b.avgViews / maxBpt) * 100, value: short(b.avgViews) }))} /> : <Muted>Publiceringstid registreras när posts synkas från TikTok.</Muted>}
+              <div className="vperf-head"><h3>{t('Bästa publiceringstid')}</h3></div>
+              {bpt.length ? <MiniBars rows={bpt.map((b) => ({ label: b.label, pct: (b.avgViews / maxBpt) * 100, value: short(b.avgViews) }))} /> : <Muted>{t('Publiceringstid registreras när posts synkas från TikTok.')}</Muted>}
             </div>
           </div>
 
           {/* ── Hashtags + Virality ── */}
           <div className="vcsplit" style={{ marginTop: 18 }}>
             <div className="card">
-              <div className="vperf-head"><h3>Topp-hashtags</h3></div>
+              <div className="vperf-head"><h3>{t('Topp-hashtags')}</h3></div>
               {topTags.length ? (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {topTags.map((t) => (
-                    <div key={t.tag} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 13px', borderRadius: 980, border: '1px solid rgba(241,168,143,.2)', background: 'rgba(255,255,255,.6)', fontSize: 12.5 }}>
-                      <span style={{ fontWeight: 600, color: '#C26A4A' }}>#{t.tag}</span>
-                      <span style={{ color: 'var(--muted)' }}>{short(t.views)} · {t.count}×</span>
+                  {topTags.map((tg) => (
+                    <div key={tg.tag} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 13px', borderRadius: 980, border: '1px solid rgba(241,168,143,.2)', background: 'rgba(255,255,255,.6)', fontSize: 12.5 }}>
+                      <span style={{ fontWeight: 600, color: '#C26A4A' }}>#{tg.tag}</span>
+                      <span style={{ color: 'var(--muted)' }}>{short(tg.views)} · {tg.count}×</span>
                     </div>
                   ))}
                 </div>
-              ) : <Muted>Hashtags läses ur posternas captions vid synk.</Muted>}
+              ) : <Muted>{t('Hashtags läses ur posternas captions vid synk.')}</Muted>}
             </div>
             <div className="card">
-              <div className="vperf-head"><h3>Viralitet</h3></div>
+              <div className="vperf-head"><h3>{t('Viralitet')}</h3></div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 12 }}>
                 {['100K+', '500K+', '1M+'].map((lab, i) => (
                   <div key={lab} style={{ textAlign: 'center', padding: '14px 8px', borderRadius: 14, background: 'linear-gradient(140deg,rgba(255,227,211,.5),rgba(237,225,255,.35))' }}>
                     <div style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-.02em', color: 'var(--ink)' }}>{viral[i]}</div>
-                    <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>videos {lab}</div>
+                    <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{t('videos')} {lab}</div>
                   </div>
                 ))}
               </div>
               <div className="vrep-rows" style={{ marginTop: 0 }}>
-                <CostRow label="Viral rate (100K+)" value={pct(viralRate)} />
-                <CostRow label="Visningar senaste dygnet" value={formatNumber(views24h)} />
+                <CostRow label={t('Viral rate (100K+)')} value={pct(viralRate)} />
+                <CostRow label={t('Visningar senaste dygnet')} value={formatNumber(views24h)} />
               </div>
             </div>
           </div>
@@ -376,7 +377,7 @@ export function BrandAnalyticsPage() {
           {/* ── Insights ── */}
           {insights.length > 0 && (
             <div className="card" style={{ marginTop: 18 }}>
-              <div className="vperf-head"><h3>Insikter</h3><span style={{ fontSize: 12.5, color: 'var(--muted)' }}>härlett ur din data</span></div>
+              <div className="vperf-head"><h3>{t('Insikter')}</h3><span style={{ fontSize: 12.5, color: 'var(--muted)' }}>{t('härlett ur din data')}</span></div>
               {insights.map((ins, i) => (
                 <div key={i} className="an-insight">
                   <span className="ai-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0-6 6c0 2 1 3 2 4l.5 2h7l.5-2c1-1 2-2 2-4a6 6 0 0 0-6-6zM9 21h6" /></svg></span>
@@ -387,7 +388,7 @@ export function BrandAnalyticsPage() {
           )}
 
           <div style={{ marginTop: 16, fontSize: 12.5, color: 'var(--muted-2)', textAlign: 'center', lineHeight: 1.5 }}>
-            Allt bygger på verifierad visnings, klick, engagemang och spend-data. Sparningar (saves) exponeras inte av TikTok ännu och visas därför som 0. Marknads-CPM räknas över alla kampanjer på plattformen.
+            {t('Allt bygger på verifierad visnings, klick, engagemang och spend-data. Sparningar (saves) exponeras inte av TikTok ännu och visas därför som 0. Marknads-CPM räknas över alla kampanjer på plattformen.')}
           </div>
         </>
       )}
@@ -446,7 +447,7 @@ function Empty({ title, sub }: { title: string; sub: string }) {
     <div className="card" style={{ textAlign: 'center', padding: '54px 24px' }}>
       <div style={{ fontSize: 18, fontWeight: 700 }}>{title}</div>
       <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8, maxWidth: 440, marginInline: 'auto' }}>{sub}</div>
-      <Link to="/brand/campaigns/new" className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 22px', marginTop: 18 }}>Skapa kampanj</Link>
+      <Link to="/brand/campaigns/new" className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 22px', marginTop: 18 }}>{t('Skapa kampanj')}</Link>
     </div>
   );
 }

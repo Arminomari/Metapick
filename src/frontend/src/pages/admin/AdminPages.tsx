@@ -7,6 +7,7 @@ import api from '@/lib/api';
 import { useTriggerSync } from '@/hooks/api';
 import type { ApiResponse, PagedResult, CreatorProfile } from '@/types';
 import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 interface PendingUser {
   id: string;
@@ -187,7 +188,7 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
     return (
       <div className="vy-app" style={s.page}>
         <div style={s.container}>
-          <div style={s.empty}>Laddar profil...</div>
+          <div style={s.empty}>{t('Laddar profil…')}</div>
         </div>
       </div>
     );
@@ -201,11 +202,11 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
             onClick={onBack}
             style={{ background: 'none', border: 'none', color: '#6a4ea8', cursor: 'pointer', fontSize: '.9rem', fontWeight: 600, marginBottom: '1rem' }}
           >
-            ← Tillbaka
+            ← {t('Tillbaka')}
           </button>
           <div style={s.empty as React.CSSProperties}>
-            <p style={{ fontSize: '1.25rem', marginBottom: '.5rem' }}>Kunde inte hämta profil</p>
-            <p style={{ fontSize: '.875rem' }}>{getApiErrorMessage(error, 'Okänt fel')}</p>
+            <p style={{ fontSize: '1.25rem', marginBottom: '.5rem' }}>{t('Kunde inte hämta profil')}</p>
+            <p style={{ fontSize: '.875rem' }}>{getApiErrorMessage(error, t('Okänt fel'))}</p>
           </div>
         </div>
       </div>
@@ -219,7 +220,7 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
           onClick={onBack}
           style={{ background: 'none', border: 'none', color: '#6a4ea8', cursor: 'pointer', fontSize: '.9rem', fontWeight: 600, marginBottom: '1.5rem', textDecoration: 'underline' }}
         >
-          ← Tillbaka till admin-panel
+          ← {t('Tillbaka till admin-panel')}
         </button>
 
         <div style={{ background: 'rgba(255,255,255,.82)', border: '1px solid #1e1e2e', borderRadius: '1rem', padding: 'clamp(1.5rem, 4vw, 2rem)', marginBottom: '2rem' }}>
@@ -253,14 +254,14 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
                 <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#0B0F17' }}>{profile.displayName}</h1>
                 <span style={s.badge(profile.status || 'Pending')}>
-                  {profile.status === 'Approved' ? 'Godkänd' : profile.status === 'Rejected' ? 'Avvisad' : 'Väntande'}
+                  {profile.status === 'Approved' ? t('Godkänd') : profile.status === 'Rejected' ? t('Avvisad') : t('Väntande')}
                 </span>
               </div>
               <p style={{ color: '#6E7480', fontSize: '.95rem', marginBottom: '0.5rem' }}>
                 📧 {profile.userId || 'user@hidden'}
               </p>
               <p style={{ color: '#6E7480', fontSize: '.95rem' }}>
-                📍 {profile.country || '–'} · Medlem sedan {(profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('sv-SE') : '–')}
+                📍 {profile.country || '–'} · {t('Medlem sedan')} {(profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('sv-SE') : '–')}
               </p>
             </div>
 
@@ -268,7 +269,7 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
             <div style={{ textAlign: 'right' }}>
               {profile.tikTokConnected && (
                 <div style={{ display: 'inline-block', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: 'rgba(47,157,91,.15)', color: '#2f9d5b', fontSize: '.85rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-                  ✓ TikTok kopplat
+                  {t('✓ TikTok kopplat')}
                 </div>
               )}
             </div>
@@ -284,19 +285,19 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
           {/* Stats grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
             <div style={{ background: '#FFF4EC', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.25rem' }}>Kategori</p>
+              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.25rem' }}>{t('Kategori')}</p>
               <p style={{ color: '#0B0F17', fontSize: '1.1rem', fontWeight: 600 }}>{profile.category}</p>
             </div>
             <div style={{ background: '#FFF4EC', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.25rem' }}>Följare</p>
+              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.25rem' }}>{t('Följare')}</p>
               <p style={{ color: '#0B0F17', fontSize: '1.1rem', fontWeight: 600 }}>{formatNumber(profile.followerCount)}</p>
             </div>
             <div style={{ background: '#FFF4EC', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.25rem' }}>Snitt-views</p>
+              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.25rem' }}>{t('Snitt-views')}</p>
               <p style={{ color: '#0B0F17', fontSize: '1.1rem', fontWeight: 600 }}>{profile.averageViews ? formatNumber(profile.averageViews) : '–'}</p>
             </div>
             <div style={{ background: '#FFF4EC', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.25rem' }}>Språk</p>
+              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.25rem' }}>{t('Språk')}</p>
               <p style={{ color: '#0B0F17', fontSize: '1.1rem', fontWeight: 600 }}>{profile.language || '–'}</p>
             </div>
           </div>
@@ -319,7 +320,7 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
           {/* Profile tags */}
           {profile.profileTags && profile.profileTags.length > 0 && (
             <div style={{ marginBottom: '1.5rem' }}>
-              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.75rem' }}>Experttaggar</p>
+              <p style={{ color: '#6E7480', fontSize: '.8rem', marginBottom: '0.75rem' }}>{t('Experttaggar')}</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {profile.profileTags.map((tag) => (
                   <span
@@ -345,16 +346,16 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
           {/* Additional info */}
           <div style={{ background: '#FFF4EC', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
             <div>
-              <p style={{ color: '#6E7480', fontSize: '.75rem', marginBottom: '0.25rem' }}>FÖDSELDATUM</p>
+              <p style={{ color: '#6E7480', fontSize: '.75rem', marginBottom: '0.25rem' }}>{t('FÖDSELDATUM')}</p>
               <p style={{ color: '#0B0F17', fontWeight: 600 }}>{profile.id ? '••••••••' : '–'}</p>
-              <p style={{ color: '#5a5a7a', fontSize: '.75rem', marginTop: '0.25rem' }}>Skyddat för integritet</p>
+              <p style={{ color: '#5a5a7a', fontSize: '.75rem', marginTop: '0.25rem' }}>{t('Skyddat för integritet')}</p>
             </div>
             <div>
-              <p style={{ color: '#6E7480', fontSize: '.75rem', marginBottom: '0.25rem' }}>MEDLEMSID</p>
+              <p style={{ color: '#6E7480', fontSize: '.75rem', marginBottom: '0.25rem' }}>{t('MEDLEMSID')}</p>
               <p style={{ color: '#0B0F17', fontWeight: 600, fontSize: '.85rem', fontFamily: 'monospace' }}>{profile.userId?.slice(0, 8)}...</p>
             </div>
             <div>
-              <p style={{ color: '#6E7480', fontSize: '.75rem', marginBottom: '0.25rem' }}>REGISTRERAD</p>
+              <p style={{ color: '#6E7480', fontSize: '.75rem', marginBottom: '0.25rem' }}>{t('REGISTRERAD')}</p>
               <p style={{ color: '#0B0F17', fontWeight: 600 }}>{(profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('sv-SE') : '–')}</p>
             </div>
           </div>
@@ -373,7 +374,7 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
                   opacity: approveCreator.isPending ? 0.6 : 1,
                 }}
               >
-                {approveCreator.isPending ? '✓ Godkänner...' : '✓ Godkänn denna creator'}
+                {approveCreator.isPending ? t('✓ Godkänner…') : t('✓ Godkänn denna creator')}
               </button>
 
               <div style={{ flex: 1, display: 'flex', gap: '.5rem' }}>
@@ -381,7 +382,7 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
                   type="text"
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder="Orsak till avvisning..."
+                  placeholder={t('Orsak till avvisning…')}
                   style={{ flex: 1, borderRadius: '.5rem', border: '1px solid #1e1e2e', background: '#FFF4EC', padding: '.75rem', fontSize: '.9rem', color: '#0B0F17', outline: 'none' }}
                 />
                 <button
@@ -395,7 +396,7 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
                     opacity: rejectCreator.isPending || !rejectReason.trim() ? 0.6 : 1,
                   }}
                 >
-                  {rejectCreator.isPending ? '✕ Avvisar...' : '✕ Avvisa'}
+                  {rejectCreator.isPending ? t('✕ Avvisar…') : t('✕ Avvisa')}
                 </button>
               </div>
             </div>
@@ -403,13 +404,13 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
 
           {profile.status === 'Rejected' && (
             <div style={{ background: 'rgba(207,75,75,.1)', border: '1px solid #f44336', borderRadius: '0.5rem', padding: '1rem' }}>
-              <p style={{ color: '#cf4b4b', fontSize: '.9rem', fontWeight: 600 }}>❌ Denna profil har avvisats</p>
+              <p style={{ color: '#cf4b4b', fontSize: '.9rem', fontWeight: 600 }}>{t('❌ Denna profil har avvisats')}</p>
             </div>
           )}
 
           {profile.status === 'Approved' && (
             <div style={{ background: 'rgba(47,157,91,.1)', border: '1px solid #4caf50', borderRadius: '0.5rem', padding: '1rem' }}>
-              <p style={{ color: '#2f9d5b', fontSize: '.9rem', fontWeight: 600 }}>✓ Denna profil är godkänd</p>
+              <p style={{ color: '#2f9d5b', fontSize: '.9rem', fontWeight: 600 }}>{t('✓ Denna profil är godkänd')}</p>
             </div>
           )}
         </div>
@@ -481,20 +482,20 @@ export function AdminDashboardPage() {
       <div style={s.container}>
         <div style={s.header}>
           <div>
-            <h1 style={s.title}>Admin Panel</h1>
-            <p style={{ color: '#6E7480', fontSize: '.9rem' }}>Statistik, användare, kampanjer, utbetalningar och säkerhet</p>
+            <h1 style={s.title}>{t('Adminpanel')}</h1>
+            <p style={{ color: '#6E7480', fontSize: '.9rem' }}>{t('Statistik, användare, kampanjer, utbetalningar och säkerhet')}</p>
           </div>
           <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
             <button
             onClick={() => triggerSync.mutate()}
             disabled={triggerSync.isPending}
             style={{ padding: '.5rem 1rem', borderRadius: '.5rem', border: '1px solid #7c3aed', background: '#6a4ea8', color: '#fff', cursor: 'pointer', fontSize: '.8rem', fontWeight: 600, opacity: triggerSync.isPending ? 0.6 : 1 }}>
-            {triggerSync.isPending ? '⏳ Synkar...' : triggerSync.isSuccess ? '✓ Synk startad!' : '🔄 Synka TikTok nu'}
+            {triggerSync.isPending ? t('⏳ Synkar…') : triggerSync.isSuccess ? t('✓ Synk startad!') : t('🔄 Synka TikTok nu')}
             </button>
             <button
               onClick={() => { logout(); window.location.href = '/login'; }}
               style={{ padding: '.5rem 1rem', borderRadius: 980, border: '1px solid rgba(207,75,75,.4)', background: 'rgba(255,255,255,.7)', color: '#cf4b4b', cursor: 'pointer', fontSize: '.8rem', fontWeight: 600 }}>
-              Logga ut
+              {t('Logga ut')}
             </button>
           </div>
         </div>
@@ -502,12 +503,12 @@ export function AdminDashboardPage() {
         {/* Section selector */}
         <div style={{ display: 'flex', gap: '.6rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
           {([
-            ['overview', 'Översikt', 0],
-            ['users', 'Användare', pendingUserCount],
-            ['campaigns', 'Kampanjer', pendingCampaignCount],
-            ['payouts', 'Utbetalningar', 0],
-            ['fraud', 'Säkerhet', 0],
-            ['audit', 'Logg', 0],
+            ['overview', t('Översikt'), 0],
+            ['users', t('Användare'), pendingUserCount],
+            ['campaigns', t('Kampanjer'), pendingCampaignCount],
+            ['payouts', t('Utbetalningar'), 0],
+            ['fraud', t('Säkerhet'), 0],
+            ['audit', t('Logg'), 0],
           ] as [AdminSection, string, number][]).map(([key, label, badge]) => (
             <button key={key} onClick={() => setSection(key)} style={s.tab(section === key)}>
               {label}
@@ -526,26 +527,26 @@ export function AdminDashboardPage() {
           <>
             <AdminCreateAdminCard />
             <div style={s.tabs}>
-              <button style={s.tab(filter === 'pending')} onClick={() => setFilter('pending')}>Väntande</button>
-              <button style={s.tab(filter === 'active')} onClick={() => setFilter('active')}>Godkända</button>
-              <button style={s.tab(filter === 'rejected')} onClick={() => setFilter('rejected')}>Avvisade</button>
-              <button style={s.tab(filter === 'all')} onClick={() => setFilter('all')}>Alla</button>
+              <button style={s.tab(filter === 'pending')} onClick={() => setFilter('pending')}>{t('Väntande')}</button>
+              <button style={s.tab(filter === 'active')} onClick={() => setFilter('active')}>{t('Godkända')}</button>
+              <button style={s.tab(filter === 'rejected')} onClick={() => setFilter('rejected')}>{t('Avvisade')}</button>
+              <button style={s.tab(filter === 'all')} onClick={() => setFilter('all')}>{t('Alla')}</button>
             </div>
 
-            {isLoading && <div style={s.empty}>Laddar...</div>}
+            {isLoading && <div style={s.empty}>{t('Laddar…')}</div>}
 
             {isError && (
               <div style={s.empty as React.CSSProperties}>
-                <p style={{ fontSize: '1.25rem', marginBottom: '.5rem' }}>Kunde inte hämta användare</p>
-                <p style={{ fontSize: '.875rem' }}>{getApiErrorMessage(error, 'Okänt fel')}</p>
+                <p style={{ fontSize: '1.25rem', marginBottom: '.5rem' }}>{t('Kunde inte hämta användare')}</p>
+                <p style={{ fontSize: '.875rem' }}>{getApiErrorMessage(error, t('Okänt fel'))}</p>
               </div>
             )}
 
             {!isLoading && !isError && filteredUsers.length === 0 && (
               <div style={s.empty as React.CSSProperties}>
-                <p style={{ fontSize: '1.25rem', marginBottom: '.5rem' }}>Inga användare att visa</p>
+                <p style={{ fontSize: '1.25rem', marginBottom: '.5rem' }}>{t('Inga användare att visa')}</p>
                 <p style={{ fontSize: '.875rem' }}>
-                  {filter === 'pending' ? 'Alla ansökningar har hanterats!' : 'Inga användare matchar filtret.'}
+                  {filter === 'pending' ? t('Alla ansökningar har hanterats!') : t('Inga användare matchar filtret.')}
                 </p>
               </div>
             )}
@@ -559,10 +560,10 @@ export function AdminDashboardPage() {
                         {user.role === 'Creator' ? user.displayName || user.email : user.companyName || user.email}
                       </span>
                       <span style={s.roleBadge(user.role)}>{user.role}</span>
-                      <span style={s.badge(user.status)}>{user.status === 'PendingVerification' ? 'Väntande' : user.status === 'Active' ? 'Godkänd' : 'Avvisad'}</span>
+                      <span style={s.badge(user.status)}>{user.status === 'PendingVerification' ? t('Väntande') : user.status === 'Active' ? t('Godkänd') : t('Avvisad')}</span>
                     </div>
                     <p style={{ color: '#6E7480', fontSize: '.8rem' }}>
-                      {user.email} · Registrerad {new Date(user.createdAt).toLocaleDateString('sv-SE')}
+                      {user.email} · {t('Registrerad')} {new Date(user.createdAt).toLocaleDateString('sv-SE')}
                     </p>
                   </div>
                   <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center' }}>
@@ -571,14 +572,14 @@ export function AdminDashboardPage() {
                         onClick={() => setSearchParams({ section: 'users', tab: filter, creatorId: user.id })}
                         style={{ background: 'none', border: '1px solid #7c3aed', borderRadius: '.5rem', padding: '.5rem .75rem', color: '#6a4ea8', cursor: 'pointer', fontSize: '.8rem', fontWeight: 600 }}
                       >
-                        Visa profil
+                        {t('Visa profil')}
                       </button>
                     )}
                     <button
                       onClick={() => setExpandedId(expandedId === user.id ? null : user.id)}
                       style={{ background: 'none', border: '1px solid #1e1e2e', borderRadius: '.5rem', padding: '.5rem .75rem', color: '#6E7480', cursor: 'pointer', fontSize: '.8rem' }}
                     >
-                      {expandedId === user.id ? 'Dölj' : 'Detaljer'}
+                      {expandedId === user.id ? t('Dölj') : t('Detaljer')}
                     </button>
                   </div>
                 </div>
@@ -588,32 +589,32 @@ export function AdminDashboardPage() {
                     {(user.avatarUrl || user.authProvider) && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
                         {user.avatarUrl && <img src={user.avatarUrl} alt="" style={{ width: 44, height: 44, borderRadius: user.role === 'Brand' ? 10 : '50%', objectFit: 'cover', border: '1px solid #1e1e2e' }} />}
-                        {user.authProvider && <span style={{ fontSize: '.75rem', color: '#2f9d5b', border: '1px solid rgba(47,157,91,.4)', borderRadius: 999, padding: '3px 10px' }}>E-post verifierad via {user.authProvider}</span>}
+                        {user.authProvider && <span style={{ fontSize: '.75rem', color: '#2f9d5b', border: '1px solid rgba(47,157,91,.4)', borderRadius: 999, padding: '3px 10px' }}>{t('E-post verifierad via')} {user.authProvider}</span>}
                       </div>
                     )}
                     {user.role === 'Creator' && (
                       <>
-                        <div style={s.detailRow}><span style={s.detailLabel}>Visningsnamn:</span><span style={s.detailValue}>{user.displayName || '–'}</span></div>
+                        <div style={s.detailRow}><span style={s.detailLabel}>{t('Visningsnamn:')}</span><span style={s.detailValue}>{user.displayName || '–'}</span></div>
                         <div style={s.detailRow}><span style={s.detailLabel}>TikTok:</span><span style={s.detailValue}>{user.tikTokUsername ? `@${user.tikTokUsername}` : '–'}</span></div>
-                        <div style={s.detailRow}><span style={s.detailLabel}>Följare:</span><span style={s.detailValue}>{user.followerCount ? user.followerCount.toLocaleString('sv-SE') : '–'}</span></div>
+                        <div style={s.detailRow}><span style={s.detailLabel}>{t('Följare:')}</span><span style={s.detailValue}>{user.followerCount ? user.followerCount.toLocaleString('sv-SE') : '–'}</span></div>
                         <div style={s.detailRow}><span style={s.detailLabel}>Instagram:</span><span style={s.detailValue}>{user.instagramUsername ? `@${user.instagramUsername}` : '–'}</span></div>
-                        <div style={s.detailRow}><span style={s.detailLabel}>Webbplats:</span><span style={s.detailValue}>{user.website || '–'}</span></div>
-                        <div style={s.detailRow}><span style={s.detailLabel}>Kategori:</span><span style={s.detailValue}>{user.category || '–'}</span></div>
-                        <div style={s.detailRow}><span style={s.detailLabel}>Födelsedatum:</span><span style={s.detailValue}>{user.dateOfBirth || '–'}</span></div>
+                        <div style={s.detailRow}><span style={s.detailLabel}>{t('Webbplats:')}</span><span style={s.detailValue}>{user.website || '–'}</span></div>
+                        <div style={s.detailRow}><span style={s.detailLabel}>{t('Kategori:')}</span><span style={s.detailValue}>{user.category || '–'}</span></div>
+                        <div style={s.detailRow}><span style={s.detailLabel}>{t('Födelsedatum:')}</span><span style={s.detailValue}>{user.dateOfBirth || '–'}</span></div>
                         <div style={s.detailRow}><span style={s.detailLabel}>Bio:</span><span style={s.detailValue}>{user.bio || '–'}</span></div>
                       </>
                     )}
                     {user.role === 'Brand' && (
                       <>
-                        <div style={s.detailRow}><span style={s.detailLabel}>Företagsnamn:</span><span style={s.detailValue}>{user.companyName || '–'}</span></div>
-                        <div style={s.detailRow}><span style={s.detailLabel}>Org.nummer:</span><span style={s.detailValue}>{user.organizationNumber || '–'}</span></div>
-                        <div style={s.detailRow}><span style={s.detailLabel}>Bransch:</span><span style={s.detailValue}>{user.industry || '–'}</span></div>
-                        <div style={s.detailRow}><span style={s.detailLabel}>Webbplats:</span><span style={s.detailValue}>{user.website || '–'}</span></div>
-                        <div style={s.detailRow}><span style={s.detailLabel}>Telefon:</span><span style={s.detailValue}>{user.contactPhone || '–'}</span></div>
+                        <div style={s.detailRow}><span style={s.detailLabel}>{t('Företagsnamn:')}</span><span style={s.detailValue}>{user.companyName || '–'}</span></div>
+                        <div style={s.detailRow}><span style={s.detailLabel}>{t('Org.nummer:')}</span><span style={s.detailValue}>{user.organizationNumber || '–'}</span></div>
+                        <div style={s.detailRow}><span style={s.detailLabel}>{t('Bransch:')}</span><span style={s.detailValue}>{user.industry || '–'}</span></div>
+                        <div style={s.detailRow}><span style={s.detailLabel}>{t('Webbplats:')}</span><span style={s.detailValue}>{user.website || '–'}</span></div>
+                        <div style={s.detailRow}><span style={s.detailLabel}>{t('Telefon:')}</span><span style={s.detailValue}>{user.contactPhone || '–'}</span></div>
                       </>
                     )}
                     {user.rejectionReason && (
-                      <div style={s.detailRow}><span style={s.detailLabel}>Avvisningsorsak:</span><span style={{ color: '#cf4b4b' }}>{user.rejectionReason}</span></div>
+                      <div style={s.detailRow}><span style={s.detailLabel}>{t('Avvisningsorsak:')}</span><span style={{ color: '#cf4b4b' }}>{user.rejectionReason}</span></div>
                     )}
                   </div>
                 )}
@@ -621,7 +622,7 @@ export function AdminDashboardPage() {
                 {user.status === 'PendingVerification' && (
                   <div style={{ display: 'flex', gap: '.75rem', alignItems: 'center' }}>
                     <button style={s.btnApprove} onClick={() => handleApprove(user.id)} disabled={approveUser.isPending}>
-                      ✓ Godkänn
+                      {t('✓ Godkänn')}
                     </button>
                     {rejectingId === user.id ? (
                       <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center', flex: 1 }}>
@@ -629,19 +630,19 @@ export function AdminDashboardPage() {
                           type="text"
                           value={rejectReason}
                           onChange={(e) => setRejectReason(e.target.value)}
-                          placeholder="Orsak till avvisning..."
+                          placeholder={t('Orsak till avvisning…')}
                           style={{ flex: 1, borderRadius: '.5rem', border: '1px solid #1e1e2e', background: '#FFF4EC', padding: '.5rem .75rem', fontSize: '.8rem', color: '#0B0F17', outline: 'none' }}
                         />
                         <button style={s.btnReject} onClick={() => handleReject(user.id)} disabled={rejectUser.isPending || !rejectReason.trim()}>
-                          Avvisa
+                          {t('Avvisa')}
                         </button>
                         <button onClick={() => { setRejectingId(null); setRejectReason(''); }} style={{ background: 'none', border: 'none', color: '#6E7480', cursor: 'pointer', fontSize: '.8rem' }}>
-                          Avbryt
+                          {t('Avbryt')}
                         </button>
                       </div>
                     ) : (
                       <button style={{ ...s.btnReject, background: 'transparent', border: '1px solid #f44336', color: '#cf4b4b' }} onClick={() => setRejectingId(user.id)}>
-                        ✕ Avvisa
+                        {t('✕ Avvisa')}
                       </button>
                     )}
                   </div>
@@ -655,22 +656,22 @@ export function AdminDashboardPage() {
         {section === 'campaigns' && (
           <>
             <p style={{ color: '#6E7480', fontSize: '.875rem', marginBottom: '1rem' }}>
-              Kampanjer som väntar på granskning innan de publiceras.
+              {t('Kampanjer som väntar på granskning innan de publiceras.')}
             </p>
 
-            {campaignsLoading && <div style={s.empty}>Laddar...</div>}
+            {campaignsLoading && <div style={s.empty}>{t('Laddar…')}</div>}
 
             {campaignsError && (
               <div style={s.empty as React.CSSProperties}>
-                <p style={{ fontSize: '1.25rem', marginBottom: '.5rem' }}>Kunde inte hämta kampanjer</p>
-                <p style={{ fontSize: '.875rem' }}>{getApiErrorMessage(campaignsErrorObj, 'Okänt fel')}</p>
+                <p style={{ fontSize: '1.25rem', marginBottom: '.5rem' }}>{t('Kunde inte hämta kampanjer')}</p>
+                <p style={{ fontSize: '.875rem' }}>{getApiErrorMessage(campaignsErrorObj, t('Okänt fel'))}</p>
               </div>
             )}
 
             {!campaignsLoading && !campaignsError && (campaignsData?.data || []).length === 0 && (
               <div style={s.empty as React.CSSProperties}>
-                <p style={{ fontSize: '1.25rem', marginBottom: '.5rem' }}>Inga kampanjer att granska</p>
-                <p style={{ fontSize: '.875rem' }}>Alla kampanjer är hanterade!</p>
+                <p style={{ fontSize: '1.25rem', marginBottom: '.5rem' }}>{t('Inga kampanjer att granska')}</p>
+                <p style={{ fontSize: '.875rem' }}>{t('Alla kampanjer är hanterade!')}</p>
               </div>
             )}
 
@@ -680,7 +681,7 @@ export function AdminDashboardPage() {
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginBottom: '.25rem' }}>
                       <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>{campaign.name}</span>
-                      <span style={{ display: 'inline-block', padding: '.25rem .75rem', borderRadius: 999, fontSize: '.75rem', fontWeight: 600, background: 'rgba(255,216,199,.55)', color: '#b07d1c' }}>Granskas</span>
+                      <span style={{ display: 'inline-block', padding: '.25rem .75rem', borderRadius: 999, fontSize: '.75rem', fontWeight: 600, background: 'rgba(255,216,199,.55)', color: '#b07d1c' }}>{t('Granskas')}</span>
                     </div>
                     <p style={{ color: '#6E7480', fontSize: '.8rem' }}>
                       {campaign.brandName} · {campaign.category} · {campaign.country}
@@ -689,14 +690,14 @@ export function AdminDashboardPage() {
                       Budget: {formatCurrency(campaign.budget)} · Max {campaign.maxCreators} creators · {formatDate(campaign.startDate)} – {formatDate(campaign.endDate)}
                     </p>
                     <p style={{ color: '#5a5a7a', fontSize: '.75rem', marginTop: '.25rem' }}>
-                      Skickad in {new Date(campaign.createdAt).toLocaleDateString('sv-SE')}
+                      {t('Skickad in')} {new Date(campaign.createdAt).toLocaleDateString('sv-SE')}
                     </p>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '.75rem', alignItems: 'center' }}>
                   <button style={s.btnApprove} onClick={() => approveCampaign.mutateAsync(campaign.id)} disabled={approveCampaign.isPending}>
-                    ✓ Godkänn
+                    {t('✓ Godkänn')}
                   </button>
                   {rejectingCampaignId === campaign.id ? (
                     <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center', flex: 1 }}>
@@ -704,19 +705,19 @@ export function AdminDashboardPage() {
                         type="text"
                         value={campaignRejectReason}
                         onChange={(e) => setCampaignRejectReason(e.target.value)}
-                        placeholder="Orsak till avvisning..."
+                        placeholder={t('Orsak till avvisning…')}
                         style={{ flex: 1, borderRadius: '.5rem', border: '1px solid #1e1e2e', background: '#FFF4EC', padding: '.5rem .75rem', fontSize: '.8rem', color: '#0B0F17', outline: 'none' }}
                       />
                       <button style={s.btnReject} onClick={() => handleCampaignReject(campaign.id)} disabled={rejectCampaign.isPending || !campaignRejectReason.trim()}>
-                        Neka
+                        {t('Neka')}
                       </button>
                       <button onClick={() => { setRejectingCampaignId(null); setCampaignRejectReason(''); }} style={{ background: 'none', border: 'none', color: '#6E7480', cursor: 'pointer', fontSize: '.8rem' }}>
-                        Avbryt
+                        {t('Avbryt')}
                       </button>
                     </div>
                   ) : (
                     <button style={{ ...s.btnReject, background: 'transparent', border: '1px solid #f44336', color: '#cf4b4b' }} onClick={() => setRejectingCampaignId(campaign.id)}>
-                      ✕ Neka
+                      {t('✕ Neka')}
                     </button>
                   )}
                 </div>

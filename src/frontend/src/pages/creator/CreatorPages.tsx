@@ -62,7 +62,7 @@ function TikTokAlertBanner({ compact = false }: { compact?: boolean }) {
       window.location.href = res.data.url;
     } catch {
       setConnecting(false);
-      toast.push('Kunde inte starta TikTok-anslutning.', 'error');
+      toast.push(t('Kunde inte starta TikTok-anslutning.'), 'error');
     }
   };
 
@@ -73,8 +73,8 @@ function TikTokAlertBanner({ compact = false }: { compact?: boolean }) {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12V3h4a4 4 0 0 0 4 4" /><path d="M9 12a4 4 0 1 0 4 4V3" /></svg>
         </span>
         <p style={{ flex: 1, margin: 0 }}>
-          <b>Anslut ditt TikTok-konto</b> för automatisk visningsverifiering — det krävs för att få betalt.{' '}
-          <Link to="/creator/profile" className="auth-link">Gå till profilen →</Link>
+          <b>{t('Anslut ditt TikTok-konto')}</b> {t('för automatisk visningsverifiering — det krävs för att få betalt.')}{' '}
+          <Link to="/creator/profile" className="auth-link">{t('Gå till profilen →')}</Link>
         </p>
       </div>
     );
@@ -88,14 +88,14 @@ function TikTokAlertBanner({ compact = false }: { compact?: boolean }) {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12V3h4a4 4 0 0 0 4 4"/><path d="M9 12a4 4 0 1 0 4 4V3"/></svg>
           </div>
           <div>
-            <h3 className="text-xl font-bold tracking-tight">Anslut ditt TikTok-konto</h3>
+            <h3 className="text-xl font-bold tracking-tight">{t('Anslut ditt TikTok-konto')}</h3>
             <p className="text-sm text-muted-foreground col-prose">
-              Koppla ditt konto för att automatiskt spåra views, engagement och intjäning.
+              {t('Koppla ditt konto för att automatiskt spåra views, engagement och intjäning.')}
             </p>
           </div>
         </div>
         <Button onClick={handleConnect} disabled={connecting} size="sm">
-          {connecting ? 'Ansluter…' : 'Anslut TikTok'}
+          {connecting ? t('Ansluter…') : t('Anslut TikTok')}
         </Button>
       </div>
     </Card>
@@ -117,7 +117,7 @@ function TikTokConnectBar() {
       window.location.href = res.data.url;
     } catch {
       setConnecting(false);
-      toast.push('Kunde inte starta TikTok-anslutning.', 'error');
+      toast.push(t('Kunde inte starta TikTok-anslutning.'), 'error');
     }
   };
 
@@ -132,24 +132,24 @@ function TikTokConnectBar() {
       {connected ? (
         <>
           <div>
-            <h4>TikTok ansluten <span className="tt-handle">@{status?.username}</span> <span className="badge green">Verifierad</span></h4>
-            <p>Profil, statistik och videor synkas automatiskt.</p>
+            <h4>{t('TikTok ansluten')} <span className="tt-handle">@{status?.username}</span> <span className="badge green">{t('Verifierad')}</span></h4>
+            <p>{t('Profil, statistik och videor synkas automatiskt.')}</p>
           </div>
           <div className="manage">
-            <span className="tt-live"><span className="live-dot" />Ansluten via OAuth</span>
-            <Link to="/creator/profile" className="btn-outline" style={{ textDecoration: 'none' }}>Hantera</Link>
+            <span className="tt-live"><span className="live-dot" />{t('Ansluten via OAuth')}</span>
+            <Link to="/creator/profile" className="btn-outline" style={{ textDecoration: 'none' }}>{t('Hantera')}</Link>
           </div>
         </>
       ) : (
         <>
           <div>
-            <h4>Anslut ditt TikTok-konto för automatisk tracking och verifierade resultat.</h4>
-            <p>Säker inloggning med TikTok. VYRLE läser endast din profil, statistik och videor.</p>
+            <h4>{t('Anslut ditt TikTok-konto för automatisk tracking och verifierade resultat.')}</h4>
+            <p>{t('Säker inloggning med TikTok. VYRLE läser endast din profil, statistik och videor.')}</p>
           </div>
           <div className="manage">
             <button type="button" className="tt-connect-btn" onClick={handleConnect} disabled={connecting}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d={TIKTOK_GLYPH} /></svg>
-              {connecting ? 'Ansluter…' : 'Continue with TikTok'}
+              {connecting ? t('Ansluter…') : t('Fortsätt med TikTok')}
             </button>
           </div>
         </>
@@ -175,15 +175,15 @@ export function CreatorDashboard() {
       {/* Header */}
       <header className="grid grid-cols-12 gap-x-6 items-end">
         <div className="col-span-12 md:col-span-8">
-          <p className="eyebrow">Creator studio · Dashboard</p>
+          <p className="eyebrow">{t('Creator Studio · Översikt')}</p>
           <h1 className="mt-3 text-display text-[clamp(2.25rem,5vw,3.75rem)]">
-            Din <span className="text-sunset">vibe</span>,<br />
-            i siffror.
+            {t('Din')} <span className="text-sunset">{t('vibe')}</span>,<br />
+            {t('i siffror.')}
           </h1>
         </div>
         <div className="col-span-12 md:col-span-4 md:text-right">
           <p className="text-sm text-muted-foreground col-prose md:ml-auto">
-            Aktiva uppdrag, verifierade views, och vad som faktiskt landat på kontot.
+            {t('Aktiva uppdrag, verifierade views, och vad som faktiskt landat på kontot.')}
           </p>
         </div>
       </header>
@@ -193,22 +193,22 @@ export function CreatorDashboard() {
       <div className="hairline" />
 
       <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-6 md:col-span-3"><StatCard label="Aktiva uppdrag" value={active.length} /></div>
-        <div className="col-span-6 md:col-span-3"><StatCard label="Verifierade views" value={formatNumber(totalViews)} /></div>
-        <div className="col-span-6 md:col-span-3"><StatCard label="Intjänat" value={formatCurrency(totalEarned)} /></div>
-        <div className="col-span-6 md:col-span-3"><StatCard label="Skickat till dig" value={formatCurrency(paidOut)} /></div>
+        <div className="col-span-6 md:col-span-3"><StatCard label={t('Aktiva uppdrag')} value={active.length} /></div>
+        <div className="col-span-6 md:col-span-3"><StatCard label={t('Verifierade views')} value={formatNumber(totalViews)} /></div>
+        <div className="col-span-6 md:col-span-3"><StatCard label={t('Intjänat')} value={formatCurrency(totalEarned)} /></div>
+        <div className="col-span-6 md:col-span-3"><StatCard label={t('Skickat till dig')} value={formatCurrency(paidOut)} /></div>
       </div>
 
       <Card className="!p-0 overflow-hidden">
         <div className="px-6 pt-6 pb-2 flex items-baseline justify-between">
-          <h2 className="text-2xl font-bold tracking-tight">Aktiva uppdrag</h2>
-          <span className="eyebrow">{active.length} live</span>
+          <h2 className="text-2xl font-bold tracking-tight">{t('Aktiva uppdrag')}</h2>
+          <span className="eyebrow">{active.length} {t('live')}</span>
         </div>
         <div className="px-2 pb-4">
           {active.length ? (
             <AssignmentTable assignments={active} />
           ) : (
-            <EmptyState title="Inga aktiva uppdrag" description="Utforska kampanjer och ansök till de som matchar din röst." />
+            <EmptyState title={t('Inga aktiva uppdrag')} description={t('Utforska kampanjer och ansök till de som matchar din röst.')} />
           )}
         </div>
       </Card>
@@ -237,12 +237,12 @@ export function BrowseCampaignsPage() {
   const handleApply = async (campaignId: string) => {
     setApplyingId(campaignId);
     try {
-      await apply.mutateAsync({ campaignId, message: 'Jag vill gärna delta i denna kampanj!' });
-      toast.push('Ansökan skickad!', 'success');
+      await apply.mutateAsync({ campaignId, message: t('Jag vill gärna delta i denna kampanj!') });
+      toast.push(t('Ansökan skickad!'), 'success');
     } catch (err: any) {
       const msg = err?.response?.data?.error?.message
         ?? err?.response?.data?.title
-        ?? 'Kunde inte skicka ansökan';
+        ?? t('Kunde inte skicka ansökan');
       toast.push(msg, 'error');
     }
     setApplyingId(null);
@@ -251,19 +251,19 @@ export function BrowseCampaignsPage() {
   const handleSave = (campaignId: string) => {
     const save = !savedSet.has(campaignId);
     toggleSave.mutate({ campaignId, save }, {
-      onSuccess: () => toast.push(save ? 'Sparad i Saved' : 'Borttagen från Saved', 'success'),
-      onError: () => toast.push('Kunde inte spara kampanjen', 'error'),
+      onSuccess: () => toast.push(save ? t('Sparad i Saved') : t('Borttagen från Saved'), 'success'),
+      onError: () => toast.push(t('Kunde inte spara kampanjen'), 'error'),
     });
   };
 
   const getButtonLabel = (campaignId: string, spotsRemaining: number) => {
-    if (spotsRemaining <= 0) return 'Fullbokad';
-    if (applyingId === campaignId) return 'Skickar...';
+    if (spotsRemaining <= 0) return t('Fullbokad');
+    if (applyingId === campaignId) return t('Skickar…');
     const status = appStatusMap.get(campaignId);
-    if (status === 'Approved') return '✓ Godkänd — gå till Mina uppdrag';
-    if (status === 'Pending') return '⏳ Ansökan skickad — väntar på svar';
-    if (status === 'Rejected') return '✗ Ansökan nekad';
-    return 'Ansök';
+    if (status === 'Approved') return '✓ ' + t('Godkänd — gå till Mina uppdrag');
+    if (status === 'Pending') return '⏳ ' + t('Ansökan skickad — väntar på svar');
+    if (status === 'Rejected') return '✗ ' + t('Ansökan nekad');
+    return t('Ansök');
   };
 
   const isDisabled = (campaignId: string, spotsRemaining: number) => {
@@ -275,20 +275,20 @@ export function BrowseCampaignsPage() {
     <section className="view active reveal">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Hitta din nästa <em>kampanj</em></h1>
-          <p className="page-sub">Kuraterade kampanjer som matchar din röst, ditt språk och din publik.</p>
+          <h1 className="page-title">{t('Hitta din nästa')} <em>{t('kampanj')}</em></h1>
+          <p className="page-sub">{t('Kuraterade kampanjer som matchar din röst, ditt språk och din publik.')}</p>
         </div>
       </div>
       <TikTokConnectBar />
       {isError && (
         <div className="card" style={{ textAlign: 'center', padding: '40px 24px' }}>
-          <div style={{ fontWeight: 700 }}>Kunde inte hämta kampanjer</div>
-          <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>{getApiErrorMessage(error, 'Något gick fel när kampanjer skulle hämtas.')}</div>
+          <div style={{ fontWeight: 700 }}>{t('Kunde inte hämta kampanjer')}</div>
+          <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>{getApiErrorMessage(error, t('Något gick fel när kampanjer skulle hämtas.'))}</div>
         </div>
       )}
       {myAppsError && (
         <div className="card" style={{ marginTop: 14, borderColor: 'rgba(212,155,46,.4)' }}>
-          <p style={{ color: 'var(--amber)', fontSize: 13 }}>Kunde inte hämta dina ansökningar: {getApiErrorMessage(myAppsErrorObj, 'okänt fel')}</p>
+          <p style={{ color: 'var(--amber)', fontSize: 13 }}>{t('Kunde inte hämta dina ansökningar:')} {getApiErrorMessage(myAppsErrorObj, t('okänt fel'))}</p>
         </div>
       )}
       {!isError && (isLoading ? (
@@ -299,7 +299,7 @@ export function BrowseCampaignsPage() {
         <>
           {data?.data.length ? (
             <>
-              <div className="results-meta"><div className="cnt"><span className="live-dot" />{data.totalCount} kampanj{data.totalCount === 1 ? '' : 'er'} tillgängliga</div></div>
+              <div className="results-meta"><div className="cnt"><span className="live-dot" />{data.totalCount} {data.totalCount === 1 ? t('kampanj tillgänglig') : t('kampanjer tillgängliga')}</div></div>
               <div className="grid" style={{ gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16, display: 'grid' }}>
                 {data.data.map((c) => {
                   const status = appStatusMap.get(c.id);
@@ -310,20 +310,20 @@ export function BrowseCampaignsPage() {
                       <div className="ch">
                         <span className="mono" style={{ background: grad(c.name) }}>{initial(c.brandName || c.name)}</span>
                         <div style={{ flex: 1 }}><div className="ttl">{c.name}</div><div className="brand">{c.brandName}</div></div>
-                        <button className="lt-icbtn" style={{ borderRadius: '50%' }} aria-label={saved ? 'Ta bort från sparade' : 'Spara kampanj'} aria-pressed={saved}
+                        <button className="lt-icbtn" style={{ borderRadius: '50%' }} aria-label={saved ? t('Ta bort från sparade') : t('Spara kampanj')} aria-pressed={saved}
                           onClick={() => handleSave(c.id)} disabled={toggleSave.isPending}>
                           <svg width="16" height="16" viewBox="0 0 24 24" fill={saved ? '#C26A4A' : 'none'} stroke="#C26A4A" strokeWidth="1.6" strokeLinejoin="round"><path d="M7 4h10v16l-5-3-5 3z" /></svg>
                         </button>
-                        {status === 'Approved' ? <span className="badge green">Godkänd</span> : status === 'Pending' ? <span className="badge amber">Skickad</span> : status === 'Rejected' ? <span className="badge red">Nekad</span> : null}
+                        {status === 'Approved' ? <span className="badge green">{t('Godkänd')}</span> : status === 'Pending' ? <span className="badge amber">{t('Skickad')}</span> : status === 'Rejected' ? <span className="badge red">{t('Nekad')}</span> : null}
                       </div>
                       <div className="desc">{c.description}</div>
                       <div className="tags">
                         <span className="tag g">{c.category}</span><span className="tag">{c.country}</span><span className="tag">{c.payoutModel}</span>
                       </div>
                       <div className="meta-cols">
-                        <div className="mc"><div className="k">Ersättning</div><div className="v green">{c.payoutSummary}</div></div>
-                        <div className="mc"><div className="k">Platser</div><div className="v">{c.spotsLeft} / {c.maxCreators}</div></div>
-                        <div className="mc"><div className="k">Period</div><div className="v">{formatDate(c.startDate)} – {formatDate(c.endDate)}</div></div>
+                        <div className="mc"><div className="k">{t('Ersättning')}</div><div className="v green">{c.payoutSummary}</div></div>
+                        <div className="mc"><div className="k">{t('Platser')}</div><div className="v">{c.spotsLeft} / {c.maxCreators}</div></div>
+                        <div className="mc"><div className="k">{t('Period')}</div><div className="v">{formatDate(c.startDate)} – {formatDate(c.endDate)}</div></div>
                       </div>
                       {(c.payoutRules?.length ?? 0) > 0 && (
                         <div style={{ margin: '2px 0 10px' }}>
@@ -331,7 +331,7 @@ export function BrowseCampaignsPage() {
                             aria-expanded={calcId === c.id}
                             onClick={() => setCalcId(calcId === c.id ? null : c.id)}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8M8 10h2m2 0h2m2 0h0M8 14h2m2 0h2m2 0h0M8 18h2m2 0h4" /></svg>
-                            {calcId === c.id ? 'Dölj kalkylen' : 'Räkna på din ersättning'}
+                            {calcId === c.id ? t('Dölj kalkylen') : t('Räkna på din ersättning')}
                           </button>
                           {calcId === c.id && (
                             <PayoutEstimator model={c.payoutModel} rules={c.payoutRules!} />
@@ -350,8 +350,8 @@ export function BrowseCampaignsPage() {
             </>
           ) : (
             <div className="card" style={{ textAlign: 'center', padding: '54px 24px' }}>
-              <div style={{ fontSize: 18, fontWeight: 700 }}>Inga kampanjer tillgängliga</div>
-              <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8 }}>Kom tillbaka senare — nya briefs släpps löpande.</div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>{t('Inga kampanjer tillgängliga')}</div>
+              <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8 }}>{t('Kom tillbaka senare — nya briefs släpps löpande.')}</div>
             </div>
           )}
         </>
@@ -376,26 +376,26 @@ export function CreatorAssignmentsPage() {
   const pendingApps = (myApps?.data ?? []).filter((a) => a.status === 'Pending');
 
   const tabs: { label: string; val?: string }[] = [
-    { label: 'Alla', val: undefined }, { label: 'Aktiva', val: 'Active' }, { label: 'Avslutade', val: 'Completed' }, { label: 'Pausade', val: 'Paused' },
+    { label: t('Alla'), val: undefined }, { label: t('Aktiva'), val: 'Active' }, { label: t('Avslutade'), val: 'Completed' }, { label: t('Pausade'), val: 'Paused' },
   ];
 
   return (
     <section className="view active reveal">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Mina <em>kampanjer</em></h1>
-          <p className="page-sub">Det du blivit godkänd till och kör just nu. Verifierade views, klick och intjäning per samarbete.</p>
+          <h1 className="page-title">{t('Mina')} <em>{t('kampanjer')}</em></h1>
+          <p className="page-sub">{t('Det du blivit godkänd till och kör just nu. Verifierade views, klick och intjäning per samarbete.')}</p>
         </div>
       </div>
 
       <div className="vstat-row">
         <div className="card vstat" style={{ background: 'linear-gradient(160deg,#fff,#FFF6F0)' }}>
           <div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#d7f0e0,#a9dcc0)', color: '#2f7d52' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 7" /></svg></div>
-          <div className="vstat-lbl">Godkänd &amp; aktiv</div><div className="vstat-val">{activeCount}</div><div className="vstat-sub"><span className="vmut">pågående uppdrag</span></div>
+          <div className="vstat-lbl">{t('Godkänd & aktiv')}</div><div className="vstat-val">{activeCount}</div><div className="vstat-sub"><span className="vmut">{t('pågående uppdrag')}</span></div>
         </div>
-        <div className="card vstat"><div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#FFE3D3,#FFC2A6)', color: '#9c4f31' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg></div><div className="vstat-lbl">Verifierade views</div><div className="vstat-val">{formatNumber(totalViews)}</div><div className="vstat-sub"><span className="vmut">totalt</span></div></div>
-        <div className="card vstat"><div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#EDE1FF,#cdb8f2)', color: '#6a4ea8' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="9" cy="7" rx="6" ry="3" /><path d="M3 7v5c0 1.7 2.7 3 6 3" /><ellipse cx="15" cy="14" rx="6" ry="3" /></svg></div><div className="vstat-lbl">Intjänat</div><div className="vstat-val">{formatCurrency(totalEarned)}</div><div className="vstat-sub"><span className="vmut">över alla kampanjer</span></div></div>
-        <div className="card vstat"><div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#FFE9D2,#F2C58A)', color: '#9c6b1c' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg></div><div className="vstat-lbl">Väntande ansökningar</div><div className="vstat-val">{pendingApps.length}</div><div className="vstat-sub"><span className="vmut">väntar på svar</span></div></div>
+        <div className="card vstat"><div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#FFE3D3,#FFC2A6)', color: '#9c4f31' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg></div><div className="vstat-lbl">{t('Verifierade views')}</div><div className="vstat-val">{formatNumber(totalViews)}</div><div className="vstat-sub"><span className="vmut">{t('totalt')}</span></div></div>
+        <div className="card vstat"><div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#EDE1FF,#cdb8f2)', color: '#6a4ea8' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="9" cy="7" rx="6" ry="3" /><path d="M3 7v5c0 1.7 2.7 3 6 3" /><ellipse cx="15" cy="14" rx="6" ry="3" /></svg></div><div className="vstat-lbl">{t('Intjänat')}</div><div className="vstat-val">{formatCurrency(totalEarned)}</div><div className="vstat-sub"><span className="vmut">{t('över alla kampanjer')}</span></div></div>
+        <div className="card vstat"><div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#FFE9D2,#F2C58A)', color: '#9c6b1c' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg></div><div className="vstat-lbl">{t('Väntande ansökningar')}</div><div className="vstat-val">{pendingApps.length}</div><div className="vstat-sub"><span className="vmut">{t('väntar på svar')}</span></div></div>
       </div>
 
       <div className="tabs">
@@ -405,27 +405,27 @@ export function CreatorAssignmentsPage() {
         <div className="card">
           {data?.data.length ? (
             <>
-              <div className="sec-head"><h3>{data.totalCount} uppdrag</h3></div>
+              <div className="sec-head"><h3>{data.totalCount} {t('uppdrag')}</h3></div>
               {data.data.map((a) => (
                 <div key={a.id} className="vcamp" onClick={() => navigate(`/creator/assignments/${a.id}`)}>
                   <span className="vcamp-thumb" style={{ background: grad(a.campaignName) }}><span className="brand-mono">{initial(a.campaignName)}</span></span>
                   <div className="vcamp-main">
                     <div className="vcamp-b">{a.campaignName}</div>
-                    <div className="vcamp-m">Tilldelad {formatDate(a.assignedAt)}</div>
+                    <div className="vcamp-m">{t('Tilldelad')} {formatDate(a.assignedAt)}</div>
                     <StatusBadge status={a.status} />
                   </div>
                   <div className="vcamp-end"><div className="vcamp-k">Views</div><div className="vcamp-v">{formatNumber(a.totalVerifiedViews)}</div></div>
-                  <div className="vcamp-end"><div className="vcamp-k">Klick</div><div className="vcamp-v">{formatNumber(a.totalTrackedClicks)}</div></div>
-                  <div className="vcamp-end"><div className="vcamp-k">Intjänat</div><div className="vcamp-v">{formatCurrency(a.currentPayoutAmount)}</div></div>
+                  <div className="vcamp-end"><div className="vcamp-k">{t('Klick')}</div><div className="vcamp-v">{formatNumber(a.totalTrackedClicks)}</div></div>
+                  <div className="vcamp-end"><div className="vcamp-k">{t('Intjänat')}</div><div className="vcamp-v">{formatCurrency(a.currentPayoutAmount)}</div></div>
                 </div>
               ))}
               <Pagination page={page} totalCount={data.totalCount} pageSize={data.pageSize} onPageChange={setPage} />
             </>
           ) : (
             <div style={{ textAlign: 'center', padding: '44px 24px' }}>
-              <div style={{ fontSize: 18, fontWeight: 700 }}>Inga uppdrag än</div>
-              <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8 }}>Ansök till kampanjer för att få ditt första uppdrag.</div>
-              <Link to="/creator/browse" className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 22px', marginTop: 16 }}>Hitta kampanjer</Link>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>{t('Inga uppdrag än')}</div>
+              <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8 }}>{t('Ansök till kampanjer för att få ditt första uppdrag.')}</div>
+              <Link to="/creator/browse" className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 22px', marginTop: 16 }}>{t('Hitta kampanjer')}</Link>
             </div>
           )}
         </div>
@@ -460,7 +460,7 @@ function TikTokConnectionCard() {
       window.location.href = res.data.url;
     } catch {
       setConnecting(false);
-      toast.push('Kunde inte starta TikTok-anslutning.', 'error');
+      toast.push(t('Kunde inte starta TikTok-anslutning.'), 'error');
     }
   };
 
@@ -530,12 +530,12 @@ function TikTokConnectionCard() {
 
 function AssignmentTable({ assignments, onRowClick }: { assignments: AssignmentListItem[]; onRowClick?: (a: AssignmentListItem) => void }) {
   const columns: Column<AssignmentListItem>[] = [
-    { header: 'Kampanj', accessor: 'campaignName' },
+    { header: t('Kampanj'), accessor: 'campaignName' },
     { header: 'Status', accessor: (a) => <StatusBadge status={a.status} /> },
     { header: 'Views', accessor: (a) => formatNumber(a.totalVerifiedViews) },
-    { header: 'Klick', accessor: (a) => formatNumber(a.totalTrackedClicks) },
-    { header: 'Intjänat', accessor: (a) => formatCurrency(a.currentPayoutAmount) },
-    { header: 'Tilldelad', accessor: (a) => formatDate(a.assignedAt) },
+    { header: t('Klick'), accessor: (a) => formatNumber(a.totalTrackedClicks) },
+    { header: t('Intjänat'), accessor: (a) => formatCurrency(a.currentPayoutAmount) },
+    { header: t('Tilldelad'), accessor: (a) => formatDate(a.assignedAt) },
   ];
   return <DataTable columns={columns} data={assignments} onRowClick={onRowClick} />;
 }
@@ -553,9 +553,9 @@ export function AssignmentDetailPage() {
 
   const cpmRule = campaign?.payoutRules?.[0];
   const payoutDesc = campaign ? (
-    campaign.payoutModel === 'CPM' ? `${cpmRule?.amount ?? 0} kr / 1 000 views`
-    : campaign.payoutModel === 'Tiered' ? 'Trappsteg per views'
-    : `${cpmRule?.amount ?? 0} kr vid ${formatNumber(cpmRule?.minViews ?? 0)}+ views`
+    campaign.payoutModel === 'CPM' ? `${cpmRule?.amount ?? 0} ${t('kr / 1 000 views')}`
+    : campaign.payoutModel === 'Tiered' ? t('Trappsteg per views')
+    : `${cpmRule?.amount ?? 0} ${t('kr vid')} ${formatNumber(cpmRule?.minViews ?? 0)}+ views`
   ) : '—';
   const daysLeft = campaign?.endDate ? Math.ceil((+new Date(campaign.endDate) - Date.now()) / 86400000) : null;
 
@@ -568,7 +568,7 @@ export function AssignmentDetailPage() {
   return (
     <section className="view active reveal">
       <button onClick={() => navigate('/creator/assignments')} className="view-all" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg> Mina kampanjer
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg> {t('Mina kampanjer')}
       </button>
       <div className="page-head">
         <div>
@@ -578,34 +578,34 @@ export function AssignmentDetailPage() {
       </div>
 
       <div className="stat-row">
-        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg></div><div><div className="lbl">Verifierade views</div><div className="val">{formatNumber(assignment.totalVerifiedViews)}</div></div></div></div>
-        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="9" cy="7" rx="6" ry="3" /><path d="M3 7v5c0 1.7 2.7 3 6 3" /><ellipse cx="15" cy="14" rx="6" ry="3" /></svg></div><div><div className="lbl">Estimerad ersättning</div><div className="val">{formatCurrency(assignment.currentPayoutAmount)}</div></div></div></div>
-        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 10h18" /></svg></div><div><div className="lbl">Ersättningsmodell</div><div className="val" style={{ fontSize: 18 }}>{payoutDesc}</div></div></div></div>
-        <div className="card stat"><div className="top"><div className="ico amber"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg></div><div><div className="lbl">{daysLeft != null && daysLeft >= 0 ? 'Slutar om' : 'Slutdatum'}</div><div className="val" style={{ fontSize: 20 }}>{daysLeft != null && daysLeft >= 0 ? `${daysLeft} dgr` : campaign?.endDate ? formatDate(campaign.endDate) : '—'}</div></div></div></div>
+        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg></div><div><div className="lbl">{t('Verifierade views')}</div><div className="val">{formatNumber(assignment.totalVerifiedViews)}</div></div></div></div>
+        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="9" cy="7" rx="6" ry="3" /><path d="M3 7v5c0 1.7 2.7 3 6 3" /><ellipse cx="15" cy="14" rx="6" ry="3" /></svg></div><div><div className="lbl">{t('Estimerad ersättning')}</div><div className="val">{formatCurrency(assignment.currentPayoutAmount)}</div></div></div></div>
+        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 10h18" /></svg></div><div><div className="lbl">{t('Ersättningsmodell')}</div><div className="val" style={{ fontSize: 18 }}>{payoutDesc}</div></div></div></div>
+        <div className="card stat"><div className="top"><div className="ico amber"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg></div><div><div className="lbl">{daysLeft != null && daysLeft >= 0 ? t('Slutar om') : t('Slutdatum')}</div><div className="val" style={{ fontSize: 20 }}>{daysLeft != null && daysLeft >= 0 ? `${daysLeft} ${t('dgr')}` : campaign?.endDate ? formatDate(campaign.endDate) : '—'}</div></div></div></div>
       </div>
 
       {campaign && (campaign.requirements?.length > 0 || campaign.contentInstructions || campaign.perks) && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="sec-head"><h3>Kampanjkrav &amp; brief</h3><span style={{ fontSize: 13, color: 'var(--muted)' }}>{campaign.category} · {formatDate(campaign.startDate)} – {formatDate(campaign.endDate)}</span></div>
+          <div className="sec-head"><h3>{t('Kampanjkrav & brief')}</h3><span style={{ fontSize: 13, color: 'var(--muted)' }}>{campaign.category} · {formatDate(campaign.startDate)} – {formatDate(campaign.endDate)}</span></div>
           {campaign.contentInstructions && <p style={{ fontSize: 13.5, color: 'var(--ink-2)', lineHeight: 1.6, marginBottom: 14 }}>{campaign.contentInstructions}</p>}
           {campaign.requirements?.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
               {campaign.requirements.map((r, i) => (
                 <div key={i} className="vrep-row" style={{ fontSize: 13 }}>
                   <span className="vrep-ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 7" /></svg></span>
-                  {r.value || r.requirementType}{r.isRequired && <span className="badge green" style={{ marginLeft: 8 }}>Krav</span>}
+                  {r.value || r.requirementType}{r.isRequired && <span className="badge green" style={{ marginLeft: 8 }}>{t('Krav')}</span>}
                 </div>
               ))}
             </div>
           )}
           {campaign.perks && (
             <div style={{ marginTop: 14, padding: 14, borderRadius: 14, background: 'linear-gradient(135deg,rgba(255,216,199,.5),rgba(237,225,255,.4))', fontSize: 13 }}>
-              <b style={{ color: '#9c4f31' }}>Förmåner:</b> {campaign.perks}
+              <b style={{ color: '#9c4f31' }}>{t('Förmåner:')}</b> {campaign.perks}
             </div>
           )}
           {(campaign.payoutRules?.length ?? 0) > 0 && (
             <div style={{ marginTop: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8 }}>Ersättningsvillkor</div>
+              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8 }}>{t('Ersättningsvillkor')}</div>
               <PayoutTerms rules={campaign.payoutRules} minViews={campaign.minViews} />
             </div>
           )}
@@ -643,7 +643,7 @@ export function AssignmentDetailPage() {
             {t('Videos som matchar din tracking-tag hittas automatiskt. Använd formuläret nedan om du vill lägga till en video manuellt.')}
           </p>
           <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 10 }}>
-            <input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://www.tiktok.com/@ditt-namn/video/123..." required
+            <input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder={t('https://www.tiktok.com/@ditt-namn/video/123...')} required
               style={{ flex: 1, border: '1px solid rgba(241,168,143,.22)', borderRadius: 13, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', background: 'rgba(255,255,255,.7)' }} />
             <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={submitVideo.isPending}>{submitVideo.isPending ? t('Skickar…') : t('Skicka in')}</button>
           </form>
@@ -742,53 +742,53 @@ export function EarningsPage() {
       <VizDefs />
       <div className="page-head">
         <div>
-          <h1 className="page-title">Track your <em>earnings</em></h1>
-          <p className="page-sub">Pending, approved and paid — exactly where every krona stands. Pulled straight from your verified payouts, nothing estimated.</p>
+          <h1 className="page-title">{t('Följ dina')} <em>{t('intäkter')}</em></h1>
+          <p className="page-sub">{t('Väntande, godkänt och utbetalt — exakt var varje krona står. Hämtat direkt från dina verifierade utbetalningar, inget estimerat.')}</p>
         </div>
       </div>
 
       {/* ── the three states that matter ── */}
       <div className="vstat-row" style={{ gridTemplateColumns: 'repeat(3,minmax(0,1fr))' }}>
-        <PayoutState tone="amber" label="Pending" amount={pending} count={pendingList.length} sub="awaiting brand approval"
+        <PayoutState tone="amber" label={t('Väntande')} amount={pending} count={pendingList.length} sub={t('väntar på varumärkets godkännande')}
           icon={<><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>} />
-        <PayoutState tone="lilac" label="Approved" amount={approved} count={approvedList.length} sub="cleared, on the way"
+        <PayoutState tone="lilac" label={t('Godkänt')} amount={approved} count={approvedList.length} sub={t('klart, på väg')}
           icon={<path d="m5 12 4 4L19 7" />} />
-        <PayoutState tone="green" label="Paid out" amount={paid} count={paidList.length} sub="landed in your account" featured
+        <PayoutState tone="green" label={t('Utbetalt')} amount={paid} count={paidList.length} sub={t('har landat på ditt konto')} featured
           icon={<><ellipse cx="9" cy="7" rx="6" ry="3" /><path d="M3 7v5c0 1.7 2.7 3 6 3M3 12v5c0 1.7 2.7 3 6 3" /><ellipse cx="15" cy="14" rx="6" ry="3" /></>} />
       </div>
 
       <div className="vtop">
         {/* overview + breakdown */}
         <div className="card vperf">
-          <div className="vperf-head"><h3>Earnings overview</h3><span className="vchip">{payouts.length} payout{payouts.length === 1 ? '' : 's'}</span></div>
+          <div className="vperf-head"><h3>{t('Intäktsöversikt')}</h3><span className="vchip">{payouts.length} {payouts.length === 1 ? t('utbetalning') : t('utbetalningar')}</span></div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}>
             {donutSegs.length ? (
               <Donut size={150} segments={donutSegs}>
                 <div className="vrep-num" style={{ fontSize: 26 }}>{formatCurrency(lifetime)}</div>
-                <div className="vrep-lbl" style={{ color: 'var(--muted)', fontWeight: 600 }}>lifetime</div>
+                <div className="vrep-lbl" style={{ color: 'var(--muted)', fontWeight: 600 }}>{t('totalt genom tiderna')}</div>
               </Donut>
             ) : (
-              <div style={{ width: 150, height: 150, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 13, textAlign: 'center' }}>No payouts yet</div>
+              <div style={{ width: 150, height: 150, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 13, textAlign: 'center' }}>{t('Inga utbetalningar ännu')}</div>
             )}
             <div className="an-legend" style={{ flex: 1, minWidth: 200 }}>
-              <div className="li"><span className="dotc" style={{ background: BLUSH[2] }} />Paid out<span className="lv">{formatCurrency(paid)}</span></div>
-              <div className="li"><span className="dotc" style={{ background: BLUSH[0] }} />Approved<span className="lv">{formatCurrency(approved)}</span></div>
-              <div className="li"><span className="dotc" style={{ background: BLUSH[3] }} />Pending<span className="lv">{formatCurrency(pending)}</span></div>
+              <div className="li"><span className="dotc" style={{ background: BLUSH[2] }} />{t('Utbetalt')}<span className="lv">{formatCurrency(paid)}</span></div>
+              <div className="li"><span className="dotc" style={{ background: BLUSH[0] }} />{t('Godkänt')}<span className="lv">{formatCurrency(approved)}</span></div>
+              <div className="li"><span className="dotc" style={{ background: BLUSH[3] }} />{t('Väntande')}<span className="lv">{formatCurrency(pending)}</span></div>
               {totalAccrued > paid + approved + pending && (
-                <div className="li"><span className="dotc" style={{ background: BLUSH[7] }} />Accruing<span className="lv">{formatCurrency(totalAccrued - paid - approved - pending)}</span></div>
+                <div className="li"><span className="dotc" style={{ background: BLUSH[7] }} />{t('Upplupet')}<span className="lv">{formatCurrency(totalAccrued - paid - approved - pending)}</span></div>
               )}
             </div>
           </div>
           <div className="vperf-foot">
-            <div className="vf-stat"><div className="vf-l">Lifetime earned</div><div className="vf-v">{formatCurrency(lifetime)}</div></div>
-            <div className="vf-stat"><div className="vf-l">Avg / payout</div><div className="vf-v">{formatCurrency(payouts.length ? (paid + approved + pending) / payouts.length : 0)}</div></div>
-            <div className="vf-stat"><div className="vf-l">Paid rate</div><div className="vf-v">{payouts.length ? Math.round((paidList.length / payouts.length) * 100) : 0}%</div></div>
+            <div className="vf-stat"><div className="vf-l">{t('Totalt intjänat')}</div><div className="vf-v">{formatCurrency(lifetime)}</div></div>
+            <div className="vf-stat"><div className="vf-l">{t('Snitt / utbetalning')}</div><div className="vf-v">{formatCurrency(payouts.length ? (paid + approved + pending) / payouts.length : 0)}</div></div>
+            <div className="vf-stat"><div className="vf-l">{t('Andel utbetalt')}</div><div className="vf-v">{payouts.length ? Math.round((paidList.length / payouts.length) * 100) : 0}%</div></div>
           </div>
         </div>
 
         {/* top earning brands */}
         <div className="card vrep">
-          <div className="vperf-head"><h3>Top earning brands</h3></div>
+          <div className="vperf-head"><h3>{t('Varumärken du tjänar mest på')}</h3></div>
           {topBrands.length ? (
             <div style={{ marginTop: 6 }}>
               {topBrands.map(([name, amt]) => (
@@ -796,10 +796,10 @@ export function EarningsPage() {
               ))}
             </div>
           ) : (
-            <div style={{ padding: '30px 6px', textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Your top paying partners will appear here.</div>
+            <div style={{ padding: '30px 6px', textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>{t('Dina bäst betalande partners visas här.')}</div>
           )}
           <div className="vrep-rows" style={{ marginTop: 'auto' }}>
-            <div className="vrep-row"><span className="vrep-ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg></span>Accrued (not requested)<b>{formatCurrency(Math.max(0, totalAccrued - paid - approved - pending))}</b></div>
+            <div className="vrep-row"><span className="vrep-ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg></span>{t('Upplupet (ej begärt)')}<b>{formatCurrency(Math.max(0, totalAccrued - paid - approved - pending))}</b></div>
           </div>
         </div>
       </div>
@@ -809,13 +809,13 @@ export function EarningsPage() {
 
       {/* how payouts work */}
       <div className="card" style={{ marginTop: 18 }}>
-        <div className="sec-head"><h3>Så får du betalt</h3><span style={{ fontSize: 12.5, color: 'var(--muted)' }}>Från visning till pengar på kontot</span></div>
+        <div className="sec-head"><h3>{t('Så får du betalt')}</h3><span style={{ fontSize: 12.5, color: 'var(--muted)' }}>{t('Från visning till pengar på kontot')}</span></div>
         <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 12 }}>
           {[
-            ['1. Posta & verifiera', 'Du postar med kampanjens hashtag — dina visningar verifieras automatiskt via TikTok.'],
-            ['2. Ersättning räknas', 'Varje natt räknas din intjäning om enligt kampanjens villkor (t.ex. kr per 1 000 visningar).'],
-            ['3. Begär utbetalning', 'När beloppet är verifierat begär du utbetalning med ett klick härifrån.'],
-            ['4. Pengar på kontot', 'Utbetalningen går till din valda metod ovan — Swish, bank eller PayPal.'],
+            [t('1. Posta & verifiera'), t('Du postar med kampanjens hashtag — dina visningar verifieras automatiskt via TikTok.')],
+            [t('2. Ersättning räknas'), t('Varje natt räknas din intjäning om enligt kampanjens villkor (t.ex. kr per 1 000 visningar).')],
+            [t('3. Begär utbetalning'), t('När beloppet är verifierat begär du utbetalning med ett klick härifrån.')],
+            [t('4. Pengar på kontot'), t('Utbetalningen går till din valda metod ovan — Swish, bank eller PayPal.')],
           ].map(([t, d], i) => (
             <div key={t} className="vy-alert info" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
               <div className="va-ic" aria-hidden="true" style={{ fontWeight: 800, fontSize: 14 }}>{i + 1}</div>
@@ -828,16 +828,16 @@ export function EarningsPage() {
       {/* pending detail */}
       {pendingList.length > 0 && (
         <div className="card" style={{ marginTop: 18 }}>
-          <div className="sec-head"><h3>Pending payouts <span className="badge amber">{pendingList.length}</span></h3></div>
+          <div className="sec-head"><h3>{t('Väntande utbetalningar')} <span className="badge amber">{pendingList.length}</span></h3></div>
           {pendingList.map((p) => <PayoutRow key={p.id} p={p} />)}
         </div>
       )}
 
       {/* all payouts */}
       <div className="card" style={{ marginTop: 18 }}>
-        <div className="sec-head"><h3>Payout history</h3></div>
+        <div className="sec-head"><h3>{t('Utbetalningshistorik')}</h3></div>
         {payouts.length ? payouts.map((p) => <PayoutRow key={p.id} p={p} />) : (
-          <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--muted)' }}>No payouts yet. When a campaign pays out, it shows up here.</div>
+          <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--muted)' }}>{t('Inga utbetalningar ännu. När en kampanj betalar ut dyker den upp här.')}</div>
         )}
         {data && <Pagination page={page} totalCount={data.totalCount} pageSize={data.pageSize} onPageChange={setPage} />}
       </div>
@@ -847,15 +847,15 @@ export function EarningsPage() {
 
 const METHOD_META: Record<string, { label: string; hint: string; placeholder: string; icon: React.ReactNode }> = {
   BankTransfer: {
-    label: 'Bankkonto', hint: 'Clearing + kontonummer', placeholder: 'XXXX-X XXX XXX XXX-X',
+    label: t('Bankkonto'), hint: t('Clearing + kontonummer'), placeholder: 'XXXX-X XXX XXX XXX-X',
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10h16M5 10 12 5l7 5M6 10v7M10 10v7M14 10v7M18 10v7M4 20h16" /></svg>,
   },
   Swish: {
-    label: 'Swish', hint: 'Mobilnummer kopplat till Swish', placeholder: '07X-XXX XX XX',
+    label: 'Swish', hint: t('Mobilnummer kopplat till Swish'), placeholder: '07X-XXX XX XX',
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="7" y="2" width="10" height="20" rx="2.5" /><path d="M11 18h2" /></svg>,
   },
   PayPal: {
-    label: 'PayPal', hint: 'E-postadress för ditt PayPal-konto', placeholder: 'du@exempel.se',
+    label: 'PayPal', hint: t('E-postadress för ditt PayPal-konto'), placeholder: t('du@exempel.se'),
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M7 18 9 6h5a3 3 0 0 1 0 6h-3l-.8 6z" /><path d="M10 9h4a2.5 2.5 0 0 1 0 5h-2.5" /></svg>,
   },
 };
@@ -875,11 +875,11 @@ function PayoutMethodCard() {
     e.preventDefault();
     try {
       await setMethod.mutateAsync({ method, details: details.trim(), accountHolder: holder.trim() || undefined });
-      toast.push('Utbetalningsmetod sparad', 'success');
+      toast.push(t('Utbetalningsmetod sparad'), 'success');
       setEditing(false);
       setDetails('');
     } catch (err: any) {
-      toast.push(err?.response?.data?.error?.message ?? 'Kunde inte spara utbetalningsmetoden', 'error');
+      toast.push(err?.response?.data?.error?.message ?? t('Kunde inte spara utbetalningsmetoden'), 'error');
     }
   };
 
@@ -890,8 +890,8 @@ function PayoutMethodCard() {
   return (
     <div className="card" style={!pm?.isConfigured && !editing ? { border: '1px solid rgba(212,155,46,.35)' } : undefined}>
       <div className="sec-head">
-        <h3>Utbetalningsmetod</h3>
-        {pm?.isConfigured && !editing && <button className="view-all" onClick={startEdit}>Ändra</button>}
+        <h3>{t('Utbetalningsmetod')}</h3>
+        {pm?.isConfigured && !editing && <button className="view-all" onClick={startEdit}>{t('Ändra')}</button>}
       </div>
 
       {!editing && pm?.isConfigured && activeMeta && (
@@ -901,38 +901,38 @@ function PayoutMethodCard() {
             <div className="t">{activeMeta.label}</div>
             <div className="s">{pm.maskedDetails}{pm.accountHolder ? ` · ${pm.accountHolder}` : ''}</div>
           </div>
-          <span className="badge green">Aktiv</span>
+          <span className="badge green">{t('Aktiv')}</span>
         </div>
       )}
 
       {!editing && !pm?.isConfigured && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: 240 }}>
-            <div style={{ fontWeight: 600, fontSize: 14 }}>Lägg till hur du vill få betalt</div>
-            <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 4 }}>Bankkonto, Swish eller PayPal. Detaljerna krypteras och visas aldrig i klartext.</div>
+            <div style={{ fontWeight: 600, fontSize: 14 }}>{t('Lägg till hur du vill få betalt')}</div>
+            <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 4 }}>{t('Bankkonto, Swish eller PayPal. Detaljerna krypteras och visas aldrig i klartext.')}</div>
           </div>
-          <button className="btn-apply" style={{ width: 'auto', padding: '11px 20px' }} onClick={startEdit}>Lägg till metod</button>
+          <button className="btn-apply" style={{ width: 'auto', padding: '11px 20px' }} onClick={startEdit}>{t('Lägg till metod')}</button>
         </div>
       )}
 
       {editing && (
         <form onSubmit={save}>
-          <div className="auth-role" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', marginBottom: 16 }} role="group" aria-label="Metod">
+          <div className="auth-role" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', marginBottom: 16 }} role="group" aria-label={t('Metod')}>
             {Object.entries(METHOD_META).map(([key, m]) => (
               <button key={key} type="button" aria-pressed={method === key} className={method === key ? 'on' : ''} onClick={() => setMethodType(key)}>{m.label}</button>
             ))}
           </div>
           <div className="form-grid">
             <div className="field"><label htmlFor="pm-details">{meta.hint} *</label><input id="pm-details" value={details} onChange={(e) => setDetails(e.target.value)} required minLength={4} maxLength={200} placeholder={meta.placeholder} autoComplete="off" /></div>
-            <div className="field"><label htmlFor="pm-holder">Kontoinnehavare</label><input id="pm-holder" value={holder} onChange={(e) => setHolder(e.target.value)} placeholder="För- och efternamn" /></div>
+            <div className="field"><label htmlFor="pm-holder">{t('Kontoinnehavare')}</label><input id="pm-holder" value={holder} onChange={(e) => setHolder(e.target.value)} placeholder={t('För- och efternamn')} /></div>
             <div className="field full" style={{ flexDirection: 'row', gap: 10 }}>
-              <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={setMethod.isPending}>{setMethod.isPending ? 'Sparar…' : 'Spara metod'}</button>
-              <button type="button" className="btn-outline" onClick={() => setEditing(false)}>Avbryt</button>
+              <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={setMethod.isPending}>{setMethod.isPending ? t('Sparar…') : t('Spara metod')}</button>
+              <button type="button" className="btn-outline" onClick={() => setEditing(false)}>{t('Avbryt')}</button>
             </div>
           </div>
           <div style={{ fontSize: 11.5, color: 'var(--muted-2)', marginTop: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
-            Krypteras med AES-256 innan lagring. Används vid dina utbetalningar.
+            {t('Krypteras med AES-256 innan lagring. Används vid dina utbetalningar.')}
           </div>
         </form>
       )}
@@ -950,7 +950,7 @@ function PayoutState({ tone, label, amount, count, sub, icon, featured }: { tone
       </div>
       <div className="vstat-lbl">{label}</div>
       <div className="vstat-val">{formatCurrency(amount)}</div>
-      <div className="vstat-sub"><span className="vmut">{count} payout{count === 1 ? '' : 's'} · {sub}</span></div>
+      <div className="vstat-sub"><span className="vmut">{count} {count === 1 ? t('utbetalning') : t('utbetalningar')} · {sub}</span></div>
     </div>
   );
 }
@@ -961,7 +961,7 @@ function PayoutRow({ p }: { p: import('@/types').PayoutRequest }) {
       <span className="mono sq" style={{ background: grad(p.campaignName) }}>{initial(p.campaignName)}</span>
       <div className="row-main" style={{ flex: 1 }}>
         <div className="t">{p.campaignName}</div>
-        <div className="s">Logged {formatDate(p.createdAt)}{p.paidAt ? ` · paid ${formatDate(p.paidAt)}` : ''}{p.payoutMethod ? ` · ${p.payoutMethod}` : ''}</div>
+        <div className="s">{t('Loggad')} {formatDate(p.createdAt)}{p.paidAt ? ` · ${t('utbetald')} ${formatDate(p.paidAt)}` : ''}{p.payoutMethod ? ` · ${METHOD_META[p.payoutMethod]?.label ?? p.payoutMethod}` : ''}</div>
       </div>
       <StatusBadge status={p.status} />
       <div style={{ textAlign: 'right', minWidth: 96 }}><div className="t">{formatCurrency(p.amount)}</div></div>
@@ -1032,25 +1032,25 @@ export function CreatorProfilePage() {
       });
       setEditing(false);
       setSaved(true);
-      toast.push('Profilen sparad', 'success');
+      toast.push(t('Profilen sparad'), 'success');
       setTimeout(() => setSaved(false), 3000);
     } catch {
-      toast.push('Kunde inte spara profilen', 'error');
+      toast.push(t('Kunde inte spara profilen'), 'error');
     }
   };
 
   if (isLoading) return <LoadingSpinner />;
   if (isError) {
-    return <EmptyState title="Kunde inte hämta profil" description={getApiErrorMessage(error, 'Ett oväntat fel inträffade.')} />;
+    return <EmptyState title={t('Kunde inte hämta profil')} description={getApiErrorMessage(error, t('Ett oväntat fel inträffade.'))} />;
   }
-  if (!profile) return <EmptyState title="Profil hittades inte" description="" />;
+  if (!profile) return <EmptyState title={t('Profil hittades inte')} description="" />;
 
   return (
     <section className="view active reveal" data-view="profile">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Hantera din <em>profil</em></h1>
-          <p className="page-sub">Uppdatera din profil, publik och kopplade konton så att företag lär känna dig bättre.</p>
+          <h1 className="page-title">{t('Hantera din')} <em>{t('profil')}</em></h1>
+          <p className="page-sub">{t('Uppdatera din profil, publik och kopplade konton så att företag lär känna dig bättre.')}</p>
         </div>
         <StatusBadge status={profile.status} />
       </div>
@@ -1058,67 +1058,67 @@ export function CreatorProfilePage() {
       <div style={{ marginBottom: 16 }}><TikTokConnectionCard /></div>
 
       <div className="card" style={{ maxWidth: 860 }}>
-        <div className="sec-head"><h3>Profilinformation</h3>{!editing && <button className="view-all" onClick={() => setEditing(true)}>Redigera</button>}</div>
+        <div className="sec-head"><h3>{t('Profilinformation')}</h3>{!editing && <button className="view-all" onClick={() => setEditing(true)}>{t('Redigera')}</button>}</div>
         <form onSubmit={handleSave} className="form-grid">
-          <div className="field"><label>Visningsnamn *</label><input type="text" value={form.displayName} onChange={set('displayName')} required disabled={!editing} /></div>
-          <div className="field"><label>TikTok-användarnamn</label>
+          <div className="field"><label>{t('Visningsnamn')} *</label><input type="text" value={form.displayName} onChange={set('displayName')} required disabled={!editing} /></div>
+          <div className="field"><label>{t('TikTok-användarnamn')}</label>
             {tikTokStatus?.connected ? (
               <input type="text" value={'@' + (tikTokStatus.username || '')} disabled />
             ) : (
-              <input type="text" value={form.tikTokUsername} onChange={set('tikTokUsername')} disabled={!editing} placeholder="@dittanvändarnamn" />
+              <input type="text" value={form.tikTokUsername} onChange={set('tikTokUsername')} disabled={!editing} placeholder={t('@dittanvändarnamn')} />
             )}
           </div>
-          <div className="field full"><label>Bio</label><textarea value={form.bio} onChange={set('bio')} rows={3} disabled={!editing} placeholder="Berätta om dig själv och ditt innehåll..." /></div>
-          <div className="field"><label>Kategori</label>
+          <div className="field full"><label>Bio</label><textarea value={form.bio} onChange={set('bio')} rows={3} disabled={!editing} placeholder={t('Berätta om dig själv och ditt innehåll...')} /></div>
+          <div className="field"><label>{t('Kategori')}</label>
             <select value={form.category} onChange={set('category')} disabled={!editing}>
-              {['Övrigt', 'Mode', 'Skönhet', 'Mat', 'Teknik', 'Gaming', 'Sport', 'Musik', 'Resor', 'Livsstil', 'Humor'].map(c => <option key={c} value={c}>{c}</option>)}
+              {['Övrigt', 'Mode', 'Skönhet', 'Mat', 'Teknik', 'Gaming', 'Sport', 'Musik', 'Resor', 'Livsstil', 'Humor'].map(c => <option key={c} value={c}>{t(c)}</option>)}
             </select>
           </div>
-          <div className="field"><label>Land</label>
+          <div className="field"><label>{t('Land')}</label>
             <select value={form.country} onChange={set('country')} disabled={!editing}>
-              <option value="SE">Sverige</option><option value="NO">Norge</option><option value="DK">Danmark</option><option value="FI">Finland</option>
+              <option value="SE">{t('Sverige')}</option><option value="NO">{t('Norge')}</option><option value="DK">{t('Danmark')}</option><option value="FI">{t('Finland')}</option>
             </select>
           </div>
-          <div className="field"><label>Födelsedatum</label><DateInput value={form.dateOfBirth} onChange={v => setForm({ ...form, dateOfBirth: v })} disabled={!editing} className="" /></div>
-          <div className="field"><label>Instagram-användarnamn</label><input type="text" value={form.instagramUsername} onChange={set('instagramUsername')} disabled={!editing} placeholder="@dittinstagram" /></div>
-          <div className="field"><label>Instagram-följare</label><input type="text" inputMode="numeric" value={form.instagramFollowerCount} disabled={!editing} onChange={(e) => setForm({ ...form, instagramFollowerCount: e.target.value.replace(/\D/g, '') })} /></div>
-          <div className="field"><label>Följare (TikTok/övrigt)</label><input type="text" inputMode="numeric" value={form.followerCount} disabled={!editing} onChange={(e) => setForm({ ...form, followerCount: e.target.value.replace(/\D/g, '') })} /></div>
-          <div className="field"><label>Snittvisningar</label><input type="text" inputMode="numeric" value={form.averageViews} disabled={!editing} onChange={(e) => setForm({ ...form, averageViews: e.target.value.replace(/\D/g, '') })} /></div>
-          <div className="field"><label>Webbplats / Linktree</label><input type="url" value={form.website} onChange={set('website')} disabled={!editing} placeholder="https://…" /></div>
+          <div className="field"><label>{t('Födelsedatum')}</label><DateInput value={form.dateOfBirth} onChange={v => setForm({ ...form, dateOfBirth: v })} disabled={!editing} className="" /></div>
+          <div className="field"><label>{t('Instagram-användarnamn')}</label><input type="text" value={form.instagramUsername} onChange={set('instagramUsername')} disabled={!editing} placeholder={t('@dittinstagram')} /></div>
+          <div className="field"><label>{t('Instagram-följare')}</label><input type="text" inputMode="numeric" value={form.instagramFollowerCount} disabled={!editing} onChange={(e) => setForm({ ...form, instagramFollowerCount: e.target.value.replace(/\D/g, '') })} /></div>
+          <div className="field"><label>{t('Följare (TikTok/övrigt)')}</label><input type="text" inputMode="numeric" value={form.followerCount} disabled={!editing} onChange={(e) => setForm({ ...form, followerCount: e.target.value.replace(/\D/g, '') })} /></div>
+          <div className="field"><label>{t('Snittvisningar')}</label><input type="text" inputMode="numeric" value={form.averageViews} disabled={!editing} onChange={(e) => setForm({ ...form, averageViews: e.target.value.replace(/\D/g, '') })} /></div>
+          <div className="field"><label>{t('Webbplats / Linktree')}</label><input type="url" value={form.website} onChange={set('website')} disabled={!editing} placeholder="https://…" /></div>
           <div className="field full">
             {editing ? (
-              <ImagePicker label="Profilbild" value={form.avatarUrl || null}
+              <ImagePicker label={t('Profilbild')} value={form.avatarUrl || null}
                 onChange={(v) => setForm({ ...form, avatarUrl: v ?? '' })}
-                hint="Varumärken ser den i Discover och på din publika profil." />
+                hint={t('Varumärken ser den i Discover och på din publika profil.')} />
             ) : (
               <>
-                <label>Profilbild</label>
+                <label>{t('Profilbild')}</label>
                 {form.avatarUrl
-                  ? <img src={form.avatarUrl} alt="Profilbild" className="upload-prev circle" style={{ width: 64, height: 64 }} />
-                  : <span className="auth-hint">Ingen profilbild uppladdad ännu.</span>}
+                  ? <img src={form.avatarUrl} alt={t('Profilbild')} className="upload-prev circle" style={{ width: 64, height: 64 }} />
+                  : <span className="auth-hint">{t('Ingen profilbild uppladdad ännu.')}</span>}
               </>
             )}
           </div>
           <div className="field full checkrow" style={{ flexDirection: 'row', justifyContent: 'flex-start' }}>
-            <input type="checkbox" checked={form.openToPrOffers} disabled={!editing} onChange={(e) => setForm({ ...form, openToPrOffers: e.target.checked })} /> Öppen för direkta PR-erbjudanden från företag
+            <input type="checkbox" checked={form.openToPrOffers} disabled={!editing} onChange={(e) => setForm({ ...form, openToPrOffers: e.target.checked })} /> {t('Öppen för direkta PR-erbjudanden från företag')}
           </div>
           {editing ? (
             <div className="field full">
-              <TagSelector label="Profiltaggar — vad är du expert på?" tags={ALL_TAGS} selected={form.profileTags} onChange={tags => setForm({ ...form, profileTags: tags })} max={10} />
+              <TagSelector label={t('Profiltaggar — vad är du expert på?')} tags={ALL_TAGS} selected={form.profileTags} onChange={tags => setForm({ ...form, profileTags: tags })} max={10} />
             </div>
           ) : form.profileTags.length > 0 && (
-            <div className="field full"><label>Profiltaggar</label><div className="tags">{form.profileTags.map(t => <span key={t} className="tag g">{t}</span>)}</div></div>
+            <div className="field full"><label>{t('Profiltaggar')}</label><div className="tags">{form.profileTags.map(tag => <span key={tag} className="tag g">{tag}</span>)}</div></div>
           )}
           <div className="field full">
-            {saved && <p style={{ color: '#2f9d5b', fontSize: 13, marginBottom: 8 }}>Profilen har sparats!</p>}
+            {saved && <p style={{ color: '#2f9d5b', fontSize: 13, marginBottom: 8 }}>{t('Profilen har sparats!')}</p>}
             <div style={{ display: 'flex', gap: 10 }}>
               {editing ? (
                 <>
-                  <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={update.isPending}>{update.isPending ? 'Sparar…' : 'Spara profil'}</button>
-                  <button type="button" className="btn-outline" onClick={() => setEditing(false)}>Avbryt</button>
+                  <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={update.isPending}>{update.isPending ? t('Sparar…') : t('Spara profil')}</button>
+                  <button type="button" className="btn-outline" onClick={() => setEditing(false)}>{t('Avbryt')}</button>
                 </>
               ) : (
-                <button type="button" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} onClick={() => setEditing(true)}>Redigera profil</button>
+                <button type="button" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} onClick={() => setEditing(true)}>{t('Redigera profil')}</button>
               )}
             </div>
           </div>
@@ -1126,11 +1126,11 @@ export function CreatorProfilePage() {
       </div>
 
       <div className="card" style={{ maxWidth: 860, marginTop: 16 }}>
-        <div className="sec-head"><h3>Profiluppgifter</h3></div>
+        <div className="sec-head"><h3>{t('Profiluppgifter')}</h3></div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 16 }}>
-          <div><div className="vcamp-k">Följare</div><div className="vcamp-v" style={{ fontSize: 16 }}>{formatNumber(profile.followerCount)}</div></div>
-          <div><div className="vcamp-k">Snittvisningar</div><div className="vcamp-v" style={{ fontSize: 16 }}>{profile.averageViews ? formatNumber(profile.averageViews) : '–'}</div></div>
-          <div><div className="vcamp-k">Medlem sedan</div><div className="vcamp-v" style={{ fontSize: 16 }}>{formatDate(profile.createdAt)}</div></div>
+          <div><div className="vcamp-k">{t('Följare')}</div><div className="vcamp-v" style={{ fontSize: 16 }}>{formatNumber(profile.followerCount)}</div></div>
+          <div><div className="vcamp-k">{t('Snittvisningar')}</div><div className="vcamp-v" style={{ fontSize: 16 }}>{profile.averageViews ? formatNumber(profile.averageViews) : '–'}</div></div>
+          <div><div className="vcamp-k">{t('Medlem sedan')}</div><div className="vcamp-v" style={{ fontSize: 16 }}>{formatDate(profile.createdAt)}</div></div>
           <div><div className="vcamp-k">Status</div><div style={{ marginTop: 3 }}><StatusBadge status={profile.status} /></div></div>
         </div>
       </div>
@@ -1145,7 +1145,7 @@ function CreatorReviewCard({ userId }: { userId: string }) {
   if (!data || data.totalReviews === 0) return null;
   return (
     <Card>
-      <h2 className="font-semibold mb-3">⭐ Omdömen</h2>
+      <h2 className="font-semibold mb-3">⭐ {t('Omdömen')}</h2>
       <ReviewList summary={data} />
     </Card>
   );

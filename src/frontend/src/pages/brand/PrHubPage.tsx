@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Pagination, StatusBadge } from '@/components/ui';
 import { useSentPrOffers, usePrStats, useWithdrawPrOffer } from '@/hooks/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 import type { PrOffer } from '@/types';
 import { CardSkeleton } from '@/components/vyrle/Toast';
 
@@ -35,25 +36,25 @@ export function BrandPrHubPage() {
     <section className="view active reveal" data-view="proffers">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Din <em>PR-hubb</em></h1>
-          <p className="page-sub">Skicka direkta PR-erbjudanden till kreatörer och följ varje utskick — sett, accepterat, nekat.</p>
+          <h1 className="page-title">{t('Din')} <em>{t('PR-hubb')}</em></h1>
+          <p className="page-sub">{t('Skicka direkta PR-erbjudanden till kreatörer och följ varje utskick — sett, accepterat, nekat.')}</p>
         </div>
         <button className="btn-apply" style={{ width: 'auto', padding: '12px 22px', display: 'inline-flex', alignItems: 'center', gap: 8 }} onClick={() => navigate('/brand/creators')}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3" /><circle cx="16" cy="9" r="2.5" /><path d="M3 19a6 6 0 0 1 12 0M14 18a5 5 0 0 1 7-1" /></svg> Hitta kreatörer
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3" /><circle cx="16" cy="9" r="2.5" /><path d="M3 19a6 6 0 0 1 12 0M14 18a5 5 0 0 1 7-1" /></svg> {t('Hitta kreatörer')}
         </button>
       </div>
 
       <div className="stat-row" style={{ gridTemplateColumns: 'repeat(5,minmax(0,1fr))' }}>
-        <Stat label="Totalt skickade" value={stats?.totalSent ?? 0} />
-        <Stat label="Väntar (osedda)" value={stats?.pending ?? 0} />
-        <Stat label="Sedda" value={stats?.viewed ?? 0} />
-        <Stat label="Accepterade" value={stats?.accepted ?? 0} />
-        <Stat label="Nekade" value={stats?.declined ?? 0} />
+        <Stat label={t('Totalt skickade')} value={stats?.totalSent ?? 0} />
+        <Stat label={t('Väntar (osedda)')} value={stats?.pending ?? 0} />
+        <Stat label={t('Sedda')} value={stats?.viewed ?? 0} />
+        <Stat label={t('Accepterade')} value={stats?.accepted ?? 0} />
+        <Stat label={t('Nekade')} value={stats?.declined ?? 0} />
       </div>
 
       {stats && stats.byCategory.length > 0 && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="sec-head"><h3>Per kategori</h3></div>
+          <div className="sec-head"><h3>{t('Per kategori')}</h3></div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {stats.byCategory.map((c) => (
               <button key={c.category} className={`tab${category === c.category ? ' active' : ''}`} onClick={() => { setCategory(category === c.category ? undefined : c.category); setPage(1); }}>
@@ -65,7 +66,7 @@ export function BrandPrHubPage() {
       )}
 
       <div className="tabs">
-        {tabs.map((t) => <button key={t.label} className={`tab${status === t.val ? ' active' : ''}`} onClick={() => { setStatus(t.val); setPage(1); }}>{t.label}</button>)}
+        {tabs.map((tb) => <button key={tb.label} className={`tab${status === tb.val ? ' active' : ''}`} onClick={() => { setStatus(tb.val); setPage(1); }}>{t(tb.label)}</button>)}
       </div>
 
       {isLoading ? <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16 }}><CardSkeleton rows={3} /><CardSkeleton rows={3} /><CardSkeleton rows={3} /></div> : data && data.data.length > 0 ? (
@@ -75,9 +76,9 @@ export function BrandPrHubPage() {
         </div>
       ) : (
         <div className="card" style={{ textAlign: 'center', padding: '54px 24px' }}>
-          <div style={{ fontSize: 18, fontWeight: 700 }}>Inga PR-erbjudanden skickade</div>
-          <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8 }}>Hitta kreatörer och skicka ditt första PR-erbjudande.</div>
-          <button className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 22px', marginTop: 16 }} onClick={() => navigate('/brand/creators')}>Hitta kreatörer</button>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>{t('Inga PR-erbjudanden skickade')}</div>
+          <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8 }}>{t('Hitta kreatörer och skicka ditt första PR-erbjudande.')}</div>
+          <button className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 22px', marginTop: 16 }} onClick={() => navigate('/brand/creators')}>{t('Hitta kreatörer')}</button>
         </div>
       )}
     </section>
@@ -95,7 +96,7 @@ function SentOfferRow({ offer, onWithdraw, withdrawing }: { offer: PrOffer; onWi
           : <span className="vcamp-thumb" style={{ background: grad(offer.creatorName) }}><span className="brand-mono">{offer.creatorName.charAt(0).toUpperCase()}</span></span>}
         <div className="vcamp-main">
           <div className="vcamp-b">{offer.title}</div>
-          <div className="vcamp-m">Till {offer.creatorName} · {OFFER_TYPE_LABELS[offer.offerType] ?? offer.offerType} · {offer.category}</div>
+          <div className="vcamp-m">{t('Till')} {offer.creatorName} · {t(OFFER_TYPE_LABELS[offer.offerType] ?? offer.offerType)} · {offer.category}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '0 0 auto' }}>
           <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>{formatDate(offer.createdAt)}</span>
@@ -106,14 +107,14 @@ function SentOfferRow({ offer, onWithdraw, withdrawing }: { offer: PrOffer; onWi
         <div style={{ paddingTop: 12, borderTop: '1px solid rgba(241,168,143,.12)', fontSize: 13.5 }}>
           <p style={{ whiteSpace: 'pre-line', color: 'var(--ink-2)', lineHeight: 1.5 }}>{offer.message}</p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, fontSize: 12, color: 'var(--muted)', marginTop: 8 }}>
-            {offer.compensationAmount != null && offer.compensationAmount > 0 && <span>Ersättning: {formatCurrency(offer.compensationAmount)}</span>}
-            {offer.productDescription && <span>Utbud: {offer.productDescription}</span>}
-            {offer.deadline && <span>Deadline: {formatDate(offer.deadline)}</span>}
-            {offer.viewedAt && <span>Sedd: {formatDate(offer.viewedAt)}</span>}
-            {offer.respondedAt && <span>Svar: {formatDate(offer.respondedAt)}</span>}
+            {offer.compensationAmount != null && offer.compensationAmount > 0 && <span>{t('Ersättning:')} {formatCurrency(offer.compensationAmount)}</span>}
+            {offer.productDescription && <span>{t('Utbud:')} {offer.productDescription}</span>}
+            {offer.deadline && <span>{t('Deadline:')} {formatDate(offer.deadline)}</span>}
+            {offer.viewedAt && <span>{t('Sedd:')} {formatDate(offer.viewedAt)}</span>}
+            {offer.respondedAt && <span>{t('Svar:')} {formatDate(offer.respondedAt)}</span>}
           </div>
-          {offer.responseMessage && <p style={{ marginTop: 8 }}>Kreatörens svar: <em>"{offer.responseMessage}"</em></p>}
-          {canWithdraw && <button className="btn-outline" style={{ marginTop: 10, padding: '8px 16px', fontSize: 12.5 }} onClick={onWithdraw} disabled={withdrawing}>Dra tillbaka</button>}
+          {offer.responseMessage && <p style={{ marginTop: 8 }}>{t('Kreatörens svar:')} <em>"{offer.responseMessage}"</em></p>}
+          {canWithdraw && <button className="btn-outline" style={{ marginTop: 10, padding: '8px 16px', fontSize: 12.5 }} onClick={onWithdraw} disabled={withdrawing}>{t('Dra tillbaka')}</button>}
         </div>
       )}
     </div>

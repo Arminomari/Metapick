@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTikTokCallback } from '@/hooks/api';
+import { t } from '@/lib/i18n';
 
 export function TikTokCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -14,12 +15,12 @@ export function TikTokCallbackPage() {
     const errorParam = searchParams.get('error');
 
     if (errorParam) {
-      setError(`TikTok nekade åtkomst: ${searchParams.get('error_description') || errorParam}`);
+      setError(`${t('TikTok nekade åtkomst:')} ${searchParams.get('error_description') || errorParam}`);
       return;
     }
 
     if (!code) {
-      setError('Ingen auktoriseringskod mottogs från TikTok.');
+      setError(t('Ingen auktoriseringskod mottogs från TikTok.'));
       return;
     }
 
@@ -30,7 +31,7 @@ export function TikTokCallbackPage() {
         setTimeout(() => navigate('/creator/profile'), 2000);
       },
       onError: (err: any) => {
-        const msg = err?.response?.data?.error?.message || 'Kunde inte ansluta TikTok-kontot.';
+        const msg = err?.response?.data?.error?.message || t('Kunde inte ansluta TikTok-kontot.');
         setError(msg);
       },
     });
@@ -52,26 +53,26 @@ export function TikTokCallbackPage() {
         {error ? (
           <>
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>❌</div>
-            <h2 style={{ color: '#e84393', fontSize: '1.25rem', fontWeight: 600, marginBottom: '.5rem' }}>Anslutning misslyckades</h2>
+            <h2 style={{ color: '#e84393', fontSize: '1.25rem', fontWeight: 600, marginBottom: '.5rem' }}>{t('Anslutning misslyckades')}</h2>
             <p style={{ color: '#8b8ba3', fontSize: '.875rem', marginBottom: '1.5rem' }}>{error}</p>
             <button
               onClick={() => navigate('/creator/profile')}
               style={{ padding: '.75rem 2rem', borderRadius: '.5rem', background: '#e84393', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer' }}
             >
-              Tillbaka till profil
+              {t('Tillbaka till profil')}
             </button>
           </>
         ) : done ? (
           <>
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
-            <h2 style={{ color: '#4ade80', fontSize: '1.25rem', fontWeight: 600, marginBottom: '.5rem' }}>TikTok anslutet!</h2>
-            <p style={{ color: '#8b8ba3', fontSize: '.875rem' }}>Omdirigerar till din profil...</p>
+            <h2 style={{ color: '#4ade80', fontSize: '1.25rem', fontWeight: 600, marginBottom: '.5rem' }}>{t('TikTok anslutet!')}</h2>
+            <p style={{ color: '#8b8ba3', fontSize: '.875rem' }}>{t('Omdirigerar till din profil...')}</p>
           </>
         ) : (
           <>
             <div style={{ fontSize: '3rem', marginBottom: '1rem', animation: 'spin 1s linear infinite' }}>⏳</div>
-            <h2 style={{ color: '#fafafa', fontSize: '1.25rem', fontWeight: 600, marginBottom: '.5rem' }}>Ansluter TikTok...</h2>
-            <p style={{ color: '#8b8ba3', fontSize: '.875rem' }}>Vänta medan vi kopplar ditt konto.</p>
+            <h2 style={{ color: '#fafafa', fontSize: '1.25rem', fontWeight: 600, marginBottom: '.5rem' }}>{t('Ansluter TikTok...')}</h2>
+            <p style={{ color: '#8b8ba3', fontSize: '.875rem' }}>{t('Vänta medan vi kopplar ditt konto.')}</p>
           </>
         )}
       </div>

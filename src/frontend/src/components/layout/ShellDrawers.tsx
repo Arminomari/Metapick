@@ -1,4 +1,4 @@
-import { t } from '@/lib/i18n';
+import { t, lang } from '@/lib/i18n';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import {
@@ -14,13 +14,13 @@ const initial = (s: string) => (s?.[0] || '?').toUpperCase();
 function ago(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);
-  if (m < 1) return 'nyss';
+  if (m < 1) return t('nyss');
   if (m < 60) return `${m}m`;
   const h = Math.floor(m / 60);
   if (h < 24) return `${h}h`;
   const d = Math.floor(h / 24);
   if (d < 7) return `${d}d`;
-  return new Date(iso).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' });
+  return new Date(iso).toLocaleDateString(lang === 'en' ? 'en-US' : 'sv-SE', { day: 'numeric', month: 'short' });
 }
 
 function useEsc(open: boolean, fn: () => void) {
@@ -78,7 +78,7 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
           <div className="nd-head-l"><h3>{t('Notiser')}</h3>{unread.length > 0 && <span className="nd-count">{unread.length} {t('nya')}</span>}</div>
           <div className="nd-head-r">
             {unread.length > 0 && <button className="nd-readall" onClick={() => markAll.mutate()} disabled={markAll.isPending}>{t('Markera alla lästa')}</button>}
-            <button className="nd-close" onClick={onClose} aria-label="Stäng"><XIcon /></button>
+            <button className="nd-close" onClick={onClose} aria-label={t('Stäng')}><XIcon /></button>
           </div>
         </div>
         <div className="nd-scroll">
@@ -115,7 +115,7 @@ export function MessagesDrawer({ open, onClose }: { open: boolean; onClose: () =
       <aside className={`msg-drawer${open ? ' open' : ''}`} aria-hidden={!open}>
         <div className="nd-head">
           <div className="nd-head-l"><h3>{t('Meddelanden')}</h3></div>
-          <div className="nd-head-r"><button className="nd-close" onClick={onClose} aria-label="Stäng"><XIcon /></button></div>
+          <div className="nd-head-r"><button className="nd-close" onClick={onClose} aria-label={t('Stäng')}><XIcon /></button></div>
         </div>
         {open && <ConversationList onOpen={setSel} />}
         <ChatThread sel={sel} onBack={() => setSel(null)} />
@@ -127,10 +127,10 @@ export function MessagesDrawer({ open, onClose }: { open: boolean; onClose: () =
 function ConversationList({ onOpen }: { onOpen: (c: ChatConversationDto) => void }) {
   const { data: convos = [], isLoading } = useChatConversations();
   if (isLoading) return <DrawerLoading />;
-  if (!convos.length) return <DrawerEmpty>Inga konversationer än. När ett samarbete startar kan ni chatta här.</DrawerEmpty>;
+  if (!convos.length) return <DrawerEmpty>{t('Inga konversationer än. När ett samarbete startar kan ni chatta här.')}</DrawerEmpty>;
   return (
     <div className="nd-scroll">
-      <div className="mc-group"><span className="mc-group-dot active" />Konversationer <span className="mc-group-n">{convos.length}</span></div>
+      <div className="mc-group"><span className="mc-group-dot active" />{t('Konversationer')} <span className="mc-group-n">{convos.length}</span></div>
       {convos.map((c) => (
         <div key={c.assignmentId} className="mc-item" onClick={() => onOpen(c)}>
           <ChatAvatar name={c.counterpartName} imageUrl={c.counterpartImageUrl} />
@@ -172,14 +172,14 @@ function ChatThread({ sel, onBack }: { sel: ChatConversationDto | null; onBack: 
       {sel && (
         <>
           <div className="mc-thread-head">
-            <button className="mc-back" onClick={onBack} aria-label="Tillbaka"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg></button>
+            <button className="mc-back" onClick={onBack} aria-label={t('Tillbaka')}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg></button>
             <ChatAvatar name={sel.counterpartName} imageUrl={sel.counterpartImageUrl} size={42} radius={12} />
             <div className="mc-thread-meta"><div className="mc-thread-name">{sel.counterpartName}</div><div className="mc-thread-status">{sel.campaignName}</div></div>
           </div>
           <div className="mc-thread-scroll" ref={scrollRef}>
             <div style={{ marginTop: 'auto' }} aria-hidden />
-            {isLoading ? <div className="mc-day">Laddar…</div>
-              : messages.length === 0 ? <div className="mc-day">Starta konversationen</div>
+            {isLoading ? <div className="mc-day">{t('Laddar…')}</div>
+              : messages.length === 0 ? <div className="mc-day">{t('Starta konversationen')}</div>
               : messages.map((m: ChatMessageDto) => {
                 const me = m.senderId === userId;
                 return (
@@ -192,8 +192,8 @@ function ChatThread({ sel, onBack }: { sel: ChatConversationDto | null; onBack: 
           </div>
           <form className="mc-composer" onSubmit={handleSend}>
             <div className="mc-input-wrap">
-              <input value={body} onChange={(e) => setBody(e.target.value)} placeholder="Skriv ett meddelande…" autoComplete="off" aria-label="Meddelande" />
-              <button className={`mc-send${body.trim() ? ' has-text' : ''}`} type="submit" disabled={send.isPending || !body.trim()} aria-label="Skicka">
+              <input value={body} onChange={(e) => setBody(e.target.value)} placeholder={t('Skriv ett meddelande…')} autoComplete="off" aria-label={t('Meddelande')} />
+              <button className={`mc-send${body.trim() ? ' has-text' : ''}`} type="submit" disabled={send.isPending || !body.trim()} aria-label={t('Skicka')}>
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
               </button>
             </div>
@@ -208,5 +208,5 @@ function DrawerEmpty({ children }: { children: ReactNode }) {
   return <div style={{ padding: '48px 28px', textAlign: 'center', color: 'var(--muted)', fontSize: 13.5, lineHeight: 1.55 }}>{children}</div>;
 }
 function DrawerLoading() {
-  return <div style={{ padding: '48px 28px', textAlign: 'center', color: 'var(--muted)', fontSize: 13.5 }}>Laddar…</div>;
+  return <div style={{ padding: '48px 28px', textAlign: 'center', color: 'var(--muted)', fontSize: 13.5 }}>{t('Laddar…')}</div>;
 }

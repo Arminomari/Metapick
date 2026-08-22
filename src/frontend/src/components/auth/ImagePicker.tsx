@@ -1,4 +1,5 @@
 import { useRef, useState, type DragEvent } from 'react';
+import { t } from '@/lib/i18n';
 
 /**
  * Avatar/logo picker: accepts an image, center-crops to a square, resizes to
@@ -24,14 +25,14 @@ export function ImagePicker({
 
   const processFile = async (file: File) => {
     setError('');
-    if (!file.type.startsWith('image/')) { setError('Välj en bildfil (JPG, PNG eller WebP)'); return; }
-    if (file.size > 12 * 1024 * 1024) { setError('Bilden är för stor (max 12 MB)'); return; }
+    if (!file.type.startsWith('image/')) { setError(t('Välj en bildfil (JPG, PNG eller WebP)')); return; }
+    if (file.size > 12 * 1024 * 1024) { setError(t('Bilden är för stor (max 12 MB)')); return; }
     setBusy(true);
     try {
       const dataUrl = await resizeToSquareJpeg(file, 384);
       onChange(dataUrl);
     } catch {
-      setError('Bilden kunde inte läsas — prova en annan fil');
+      setError(t('Bilden kunde inte läsas — prova en annan fil'));
     } finally {
       setBusy(false);
     }
@@ -68,14 +69,14 @@ export function ImagePicker({
           </div>
         )}
         <div className="upload-txt">
-          <strong>{busy ? 'Bearbetar…' : value ? 'Byt bild' : 'Ladda upp bild'}</strong>
-          <span>{hint ?? 'Klicka eller släpp en bild här · JPG, PNG, WebP'}</span>
+          <strong>{busy ? t('Bearbetar…') : value ? t('Byt bild') : t('Ladda upp bild')}</strong>
+          <span>{hint ?? t('Klicka eller släpp en bild här · JPG, PNG, WebP')}</span>
         </div>
         {value && (
           <button
             type="button"
             className="upload-rm"
-            aria-label="Ta bort bild"
+            aria-label={t('Ta bort bild')}
             onClick={(e) => { e.stopPropagation(); onChange(null); }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>

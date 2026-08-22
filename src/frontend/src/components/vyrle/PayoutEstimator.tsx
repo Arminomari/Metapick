@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { PayoutRule } from '@/types';
 import { formatCurrency, formatNumber } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 /**
  * Client-side mirror of the backend payout calculators — an *estimate* shown
@@ -47,15 +48,15 @@ export function estimatePayout(model: string, rules: PayoutRule[] | undefined, v
 function describeRule(r: PayoutRule): string {
   switch (r.payoutType) {
     case 'CPM':
-      return `${r.amount} kr per 1 000 visningar`;
+      return `${r.amount} ${t('kr per 1 000 visningar')}`;
     case 'FixedThreshold':
-      return `${formatCurrency(r.amount)} när du når ${formatNumber(r.minViews)} visningar`;
+      return `${formatCurrency(r.amount)} ${t('när du når')} ${formatNumber(r.minViews)} ${t('visningar')}`;
     case 'BonusAboveThreshold':
-      return `+${formatCurrency(r.amount)} bonus över ${formatNumber(r.minViews)} visningar`;
+      return `+${formatCurrency(r.amount)} ${t('bonus över')} ${formatNumber(r.minViews)} ${t('visningar')}`;
     case 'Tiered':
       return r.maxViews
-        ? `${formatCurrency(r.amount)} vid ${formatNumber(r.minViews)}–${formatNumber(r.maxViews)} visningar`
-        : `${formatCurrency(r.amount)} vid ${formatNumber(r.minViews)}+ visningar`;
+        ? `${formatCurrency(r.amount)} ${t('vid')} ${formatNumber(r.minViews)}–${formatNumber(r.maxViews)} ${t('visningar')}`
+        : `${formatCurrency(r.amount)} ${t('vid')} ${formatNumber(r.minViews)}+ ${t('visningar')}`;
     default:
       return `${formatCurrency(r.amount)}`;
   }
@@ -77,13 +78,13 @@ export function PayoutTerms({ rules, minViews }: { rules: PayoutRule[]; minViews
       ))}
       {cap != null && (
         <div className="pay-row">
-          <span className="pr-l">Maxersättning per kreatör</span>
+          <span className="pr-l">{t('Maxersättning per kreatör')}</span>
           <span className="pr-v">{formatCurrency(cap)}</span>
         </div>
       )}
       {minViews != null && minViews > 0 && (
         <div className="pay-row">
-          <span className="pr-l">Visningar krävs för utbetalning</span>
+          <span className="pr-l">{t('Visningar krävs för utbetalning')}</span>
           <span className="pr-v">{formatNumber(minViews)}+</span>
         </div>
       )}
@@ -101,17 +102,17 @@ export function PayoutEstimator({ model, rules, defaultViews = 25_000 }: {
   const amount = estimatePayout(model, rules, views);
   return (
     <div className="pay-est">
-      <div className="pe-t">Räkna på din ersättning</div>
+      <div className="pe-t">{t('Räkna på din ersättning')}</div>
       <div className="pe-row">
-        <span className="pe-views">{formatNumber(views)} visningar</span>
+        <span className="pe-views">{formatNumber(views)} {t('visningar')}</span>
         <span className="pe-amt">≈ {formatCurrency(amount)}</span>
       </div>
       <input
         type="range" min={1000} max={500_000} step={1000} value={views}
         onChange={(e) => setViews(Number(e.target.value))}
-        aria-label="Antal visningar"
+        aria-label={t('Antal visningar')}
       />
-      <div className="auth-hint">Uppskattning — den faktiska ersättningen beräknas på verifierade visningar.</div>
+      <div className="auth-hint">{t('Uppskattning — den faktiska ersättningen beräknas på verifierade visningar.')}</div>
     </div>
   );
 }

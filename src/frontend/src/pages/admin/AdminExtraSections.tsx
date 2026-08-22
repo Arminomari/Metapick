@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import api from '@/lib/api';
+import { t, statusLabel, lang } from '@/lib/i18n';
 
 /* Extra admin sections: overview stats, payouts, fraud and audit log.
    Styled to match the VYRLE light design system. */
@@ -22,7 +23,7 @@ const rowLine: React.CSSProperties = { display: 'flex', alignItems: 'center', ga
 const pill = (bg: string, color: string): React.CSSProperties => ({ display: 'inline-block', padding: '.22rem .7rem', borderRadius: 999, fontSize: '.72rem', fontWeight: 600, background: bg, color });
 const kr = (v: number) => new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK', maximumFractionDigits: 0 }).format(v);
 const num = (v: number) => new Intl.NumberFormat('sv-SE').format(v);
-const dt = (iso: string) => new Date(iso).toLocaleString('sv-SE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+const dt = (iso: string) => new Date(iso).toLocaleString(lang === 'en' ? 'en-US' : 'sv-SE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
 function statusPill(status: string) {
   const t = status.toLowerCase();
@@ -79,10 +80,10 @@ function AuditRows({ rows }: { rows: AuditRow[] }) {
         <div key={a.id} style={rowLine}>
           <span style={{ width: 9, height: 9, borderRadius: '50%', background: actionDot(a.action), flex: '0 0 9px' }} />
           <div style={{ flex: 1, minWidth: 220 }}>
-            <div style={{ fontWeight: 600, fontSize: '.88rem', color: '#0B0F17' }}>{actionLabel(a.action)}</div>
+            <div style={{ fontWeight: 600, fontSize: '.88rem', color: '#0B0F17' }}>{t(actionLabel(a.action))}</div>
             <div style={mutedTx}>
-              {a.userEmail ?? 'Okänd användare'}
-              {a.userRole && <span style={{ ...pill('rgba(183,188,200,.2)', '#5c6270'), marginLeft: 8, fontSize: '.66rem', padding: '.1rem .5rem' }}>{ROLE_LABEL[a.userRole] ?? a.userRole}</span>}
+              {a.userEmail ?? t('Okänd användare')}
+              {a.userRole && <span style={{ ...pill('rgba(183,188,200,.2)', '#5c6270'), marginLeft: 8, fontSize: '.66rem', padding: '.1rem .5rem' }}>{t(ROLE_LABEL[a.userRole] ?? a.userRole)}</span>}
             </div>
           </div>
           <span style={{ ...mutedTx, marginLeft: 'auto', whiteSpace: 'nowrap' }}>{dt(a.createdAt)}</span>
@@ -152,23 +153,23 @@ function StatTile({ label, value, sub, accent }: { label: string; value: string;
 export function AdminOverviewSection() {
   const { data: stats, isLoading } = useAdminStats();
   const { data: audit } = useAuditLog();
-  if (isLoading || !stats) return <div style={{ ...card, textAlign: 'center', color: '#6E7480' }}>Laddar statistik…</div>;
+  if (isLoading || !stats) return <div style={{ ...card, textAlign: 'center', color: '#6E7480' }}>{t('Laddar statistik…')}</div>;
   return (
     <>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: '1rem', marginBottom: '1.2rem' }}>
-        <StatTile label="Användare" value={num(stats.totalUsers)} sub={`${stats.pendingUsers} väntar på godkännande`} accent={stats.pendingUsers > 0} />
+        <StatTile label={t('Användare')} value={num(stats.totalUsers)} sub={`${stats.pendingUsers} ${t('väntar på godkännande')}`} accent={stats.pendingUsers > 0} />
         <StatTile label="Creators" value={num(stats.creators)} />
-        <StatTile label="Varumärken" value={num(stats.brands)} />
-        <StatTile label="Aktiva kampanjer" value={num(stats.activeCampaigns)} sub={`${stats.pendingCampaigns} väntar på granskning`} />
-        <StatTile label="Verifierade views" value={num(stats.totalVerifiedViews)} />
-        <StatTile label="Väntande utbetalningar" value={num(stats.pendingPayouts)} sub={kr(stats.pendingPayoutAmount)} accent={stats.pendingPayouts > 0} />
-        <StatTile label="Utbetalt totalt" value={kr(stats.totalPaidOut)} />
-        <StatTile label="Öppna säkerhetsflaggor" value={num(stats.openFraudFlags)} accent={stats.openFraudFlags > 0} />
+        <StatTile label={t('Varumärken')} value={num(stats.brands)} />
+        <StatTile label={t('Aktiva kampanjer')} value={num(stats.activeCampaigns)} sub={`${stats.pendingCampaigns} ${t('väntar på granskning')}`} />
+        <StatTile label={t('Verifierade views')} value={num(stats.totalVerifiedViews)} />
+        <StatTile label={t('Väntande utbetalningar')} value={num(stats.pendingPayouts)} sub={kr(stats.pendingPayoutAmount)} accent={stats.pendingPayouts > 0} />
+        <StatTile label={t('Utbetalt totalt')} value={kr(stats.totalPaidOut)} />
+        <StatTile label={t('Öppna säkerhetsflaggor')} value={num(stats.openFraudFlags)} accent={stats.openFraudFlags > 0} />
       </div>
       <div style={card}>
-        <h3 style={{ fontWeight: 700, marginBottom: '.4rem' }}>Senaste händelser</h3>
+        <h3 style={{ fontWeight: 700, marginBottom: '.4rem' }}>{t('Senaste händelser')}</h3>
         <AuditRows rows={(audit?.data ?? []).slice(0, 8)} />
-        {!audit?.data?.length && <div style={{ ...mutedTx, padding: '1rem 0' }}>Inga händelser än.</div>}
+        {!audit?.data?.length && <div style={{ ...mutedTx, padding: '1rem 0' }}>{t('Inga händelser än.')}</div>}
       </div>
     </>
   );
@@ -180,7 +181,7 @@ export function AdminPayoutsSection() {
   const { data, isLoading } = useAdminPayouts(status);
   const act = usePayoutAction();
   const rows = data?.data ?? [];
-  const tabs: [string, string][] = [['', 'Alla'], ['Pending', 'Väntande'], ['Approved', 'Godkända'], ['Completed', 'Utbetalda'], ['Rejected', 'Avvisade']];
+  const tabs: [string, string][] = [['', t('Alla')], ['Pending', t('Väntande')], ['Approved', t('Godkända')], ['Completed', t('Utbetalda')], ['Rejected', t('Avvisade')]];
 
   return (
     <>
@@ -193,22 +194,22 @@ export function AdminPayoutsSection() {
         ))}
       </div>
       <div style={card}>
-        {isLoading && <div style={{ ...mutedTx, padding: '1rem 0' }}>Laddar…</div>}
-        {!isLoading && rows.length === 0 && <div style={{ ...mutedTx, padding: '1rem 0' }}>Inga utbetalningar {status ? 'med den statusen' : 'än'}.</div>}
+        {isLoading && <div style={{ ...mutedTx, padding: '1rem 0' }}>{t('Laddar…')}</div>}
+        {!isLoading && rows.length === 0 && <div style={{ ...mutedTx, padding: '1rem 0' }}>{t('Inga utbetalningar')} {status ? t('med den statusen') : t('än')}.</div>}
         {rows.map((p) => (
           <div key={p.id} style={rowLine}>
             <div style={{ minWidth: 180 }}>
               <div style={{ fontWeight: 600, fontSize: '.9rem' }}>{p.campaignName}</div>
-              <div style={mutedTx}>{p.payoutMethod} · {dt(p.createdAt)}</div>
+              <div style={mutedTx}>{statusLabel(p.payoutMethod)} · {dt(p.createdAt)}</div>
             </div>
             <div style={{ fontWeight: 700 }}>{kr(p.amount)}</div>
-            <span style={statusPill(p.status)}>{p.status}</span>
+            <span style={statusPill(p.status)}>{statusLabel(p.status)}</span>
             {(p.status === 'Pending' || p.status === 'UnderReview') && (
               <div style={{ marginLeft: 'auto', display: 'flex', gap: '.5rem' }}>
                 <button style={actionBtn('#2f9d5b')} disabled={act.isPending}
-                  onClick={() => act.mutate({ id: p.id, action: 'approve' })}>Godkänn</button>
+                  onClick={() => act.mutate({ id: p.id, action: 'approve' })}>{t('Godkänn')}</button>
                 <button style={actionBtn('#cf4b4b')} disabled={act.isPending}
-                  onClick={() => { const reason = window.prompt('Anledning till avslag?'); if (reason !== null) act.mutate({ id: p.id, action: 'reject', reason: reason || 'Avvisad av admin' }); }}>Avvisa</button>
+                  onClick={() => { const reason = window.prompt(t('Anledning till avslag?')); if (reason !== null) act.mutate({ id: p.id, action: 'reject', reason: reason || 'Avvisad av admin' }); }}>{t('Avvisa')}</button>
               </div>
             )}
             {p.rejectionReason && <span style={{ ...mutedTx, marginLeft: 'auto' }}>{p.rejectionReason}</span>}
@@ -226,25 +227,25 @@ export function AdminFraudSection() {
   const rows = data?.data ?? [];
   return (
     <div style={card}>
-      <h3 style={{ fontWeight: 700, marginBottom: '.4rem' }}>Säkerhetsflaggor</h3>
-      {isLoading && <div style={{ ...mutedTx, padding: '1rem 0' }}>Laddar…</div>}
-      {!isLoading && rows.length === 0 && <div style={{ ...mutedTx, padding: '1rem 0' }}>Inga flaggor — allt ser rent ut. ✨</div>}
+      <h3 style={{ fontWeight: 700, marginBottom: '.4rem' }}>{t('Säkerhetsflaggor')}</h3>
+      {isLoading && <div style={{ ...mutedTx, padding: '1rem 0' }}>{t('Laddar…')}</div>}
+      {!isLoading && rows.length === 0 && <div style={{ ...mutedTx, padding: '1rem 0' }}>{t('Inga flaggor — allt ser rent ut. ✨')}</div>}
       {rows.map((f) => (
         <div key={f.id} style={rowLine}>
-          <span style={statusPill(f.severity)}>{f.severity}</span>
+          <span style={statusPill(f.severity)}>{statusLabel(f.severity)}</span>
           <div style={{ flex: 1, minWidth: 220 }}>
-            <div style={{ fontWeight: 600, fontSize: '.88rem' }}>{f.flagType} · {f.entityType}</div>
+            <div style={{ fontWeight: 600, fontSize: '.88rem' }}>{statusLabel(f.flagType)} · {statusLabel(f.entityType)}</div>
             <div style={mutedTx}>{f.description}</div>
           </div>
-          <span style={statusPill(f.status)}>{f.status}</span>
+          <span style={statusPill(f.status)}>{statusLabel(f.status)}</span>
           {(f.status === 'Open' || f.status === 'UnderReview') ? (
             <div style={{ display: 'flex', gap: '.4rem' }}>
               <button style={actionBtn('#2f9d5b')} disabled={resolve.isPending}
-                onClick={() => resolve.mutate({ id: f.id, action: 'Legitimate' })}>Legitim</button>
+                onClick={() => resolve.mutate({ id: f.id, action: 'Legitimate' })}>{t('Legitim')}</button>
               <button style={actionBtn('#cf4b4b')} disabled={resolve.isPending}
-                onClick={() => resolve.mutate({ id: f.id, action: 'Fraud', note: 'Bekräftat av admin' })}>Bedrägeri</button>
+                onClick={() => resolve.mutate({ id: f.id, action: 'Fraud', note: 'Bekräftat av admin' })}>{t('Bedrägeri')}</button>
               <button style={actionBtn('#8a909e')} disabled={resolve.isPending}
-                onClick={() => resolve.mutate({ id: f.id, action: 'Dismiss' })}>Avfärda</button>
+                onClick={() => resolve.mutate({ id: f.id, action: 'Dismiss' })}>{t('Avfärda')}</button>
             </div>
           ) : (
             <span style={{ ...mutedTx }}>{dt(f.createdAt)}</span>
@@ -261,9 +262,9 @@ export function AdminAuditSection() {
   const rows = data?.data ?? [];
   return (
     <div style={card}>
-      <h3 style={{ fontWeight: 700, marginBottom: '.4rem' }}>Händelselogg</h3>
-      {isLoading && <div style={{ ...mutedTx, padding: '1rem 0' }}>Laddar…</div>}
-      {!isLoading && rows.length === 0 && <div style={{ ...mutedTx, padding: '1rem 0' }}>Loggen är tom.</div>}
+      <h3 style={{ fontWeight: 700, marginBottom: '.4rem' }}>{t('Händelselogg')}</h3>
+      {isLoading && <div style={{ ...mutedTx, padding: '1rem 0' }}>{t('Laddar…')}</div>}
+      {!isLoading && rows.length === 0 && <div style={{ ...mutedTx, padding: '1rem 0' }}>{t('Loggen är tom.')}</div>}
       <AuditRows rows={rows} />
     </div>
   );
@@ -286,23 +287,23 @@ export function AdminCreateAdminCard() {
     <div style={{ ...card, padding: '1.1rem 1.3rem' }}>
       <button type="button" onClick={() => setOpen((v) => !v)}
         style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '.92rem', color: '#0B0F17', padding: 0 }}>
-        {open ? '▾' : '▸'} Lägg till admin
+        {open ? '▾' : '▸'} {t('Lägg till admin')}
       </button>
-      <div style={{ ...mutedTx, marginTop: 2 }}>Endast huvudadmin. Nya admins får full panelåtkomst men kan inte skapa fler admins.</div>
+      <div style={{ ...mutedTx, marginTop: 2 }}>{t('Endast huvudadmin. Nya admins får full panelåtkomst men kan inte skapa fler admins.')}</div>
       {open && (
         <form style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '.7rem', marginTop: '.9rem' }}
           onSubmit={(e) => { e.preventDefault(); setMessage(''); create.mutate(); }}>
-          <input style={input} type="email" required placeholder="E-post" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-          <input style={input} type="text" required placeholder="Förnamn" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
-          <input style={input} type="text" required placeholder="Efternamn" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
-          <input style={input} type="password" required minLength={12} placeholder="Lösenord (minst 12 tecken)" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} autoComplete="new-password" />
+          <input style={input} type="email" required placeholder={t('E-post')} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          <input style={input} type="text" required placeholder={t('Förnamn')} value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
+          <input style={input} type="text" required placeholder={t('Efternamn')} value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
+          <input style={input} type="password" required minLength={12} placeholder={t('Lösenord (minst 12 tecken)')} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} autoComplete="new-password" />
           <button type="submit" disabled={create.isPending}
             style={{ padding: '.6rem 1.4rem', borderRadius: 980, background: 'linear-gradient(135deg,#1A2230,#0B0F17)', color: '#fff', border: 'none', fontWeight: 600, fontSize: '.85rem', cursor: 'pointer' }}>
-            {create.isPending ? 'Skapar…' : 'Skapa admin'}
+            {create.isPending ? t('Skapar…') : t('Skapa admin')}
           </button>
         </form>
       )}
-      {message && <div style={{ marginTop: '.6rem', fontSize: '.85rem', color: message.startsWith('Admin skapad') ? '#2f9d5b' : '#cf4b4b', fontWeight: 600 }}>{message}</div>}
+      {message && <div style={{ marginTop: '.6rem', fontSize: '.85rem', color: message.startsWith('Admin skapad') ? '#2f9d5b' : '#cf4b4b', fontWeight: 600 }}>{t(message)}</div>}
     </div>
   );
 }

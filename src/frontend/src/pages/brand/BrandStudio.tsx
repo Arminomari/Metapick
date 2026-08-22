@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useBrandCampaigns, useBrandProfile, usePrStats } from '@/hooks/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { t, statusLabel } from '@/lib/i18n';
 import type { CampaignListItem } from '@/types';
 import { PageSkeleton } from '@/components/vyrle/Toast';
 
@@ -15,10 +16,10 @@ const initial = (s: string) => (s?.[0] || '?').toUpperCase();
 
 function campTag(status: string) {
   const s = (status || '').toLowerCase();
-  if (s === 'active') return <span className="vcamp-tag prog">ACTIVE</span>;
-  if (s === 'draft') return <span className="vcamp-tag up">DRAFT</span>;
-  if (s.includes('review')) return <span className="vcamp-tag rev">IN REVIEW</span>;
-  return <span className="vcamp-tag up">{status.toUpperCase()}</span>;
+  if (s === 'active') return <span className="vcamp-tag prog">{t('AKTIV')}</span>;
+  if (s === 'draft') return <span className="vcamp-tag up">{t('UTKAST')}</span>;
+  if (s.includes('review')) return <span className="vcamp-tag rev">{t('GRANSKAS')}</span>;
+  return <span className="vcamp-tag up">{statusLabel(status).toUpperCase()}</span>;
 }
 
 export function BrandStudioDashboard() {
@@ -35,7 +36,7 @@ export function BrandStudioDashboard() {
   const totalSpent = campaigns.reduce((s, c) => s + c.budgetSpent, 0);
   const totalCreators = campaigns.reduce((s, c) => s + c.approvedCreatorCount, 0);
   const spentPct = totalBudget ? Math.round((totalSpent / totalBudget) * 100) : 0;
-  const name = profile?.companyName || 'your brand';
+  const name = profile?.companyName || t('ditt varumärke');
 
   // chart: real spent per campaign, ascending
   const chartCamps: CampaignListItem[] = [...campaigns].sort((a, b) => a.budgetSpent - b.budgetSpent).slice(-8);
@@ -71,24 +72,24 @@ export function BrandStudioDashboard() {
           <path d="M110 58 C115 95 125 105 162 110 C125 115 115 125 110 162 C105 125 95 115 58 110 C95 105 105 95 110 58Z" fill="#fff" opacity=".96" />
         </svg>
         <div className="hero-inner">
-          <div className="hero-eyebrow"><span className="hero-live" /> Brand Desk · Live</div>
-          <h1 className="hero-title">Welcome back, <em>{name}</em></h1>
-          <p className="hero-sub">Active briefs, budget in motion and the creators delivering your reach, in real time.</p>
+          <div className="hero-eyebrow"><span className="hero-live" /> {t('Brand Desk · Live')}</div>
+          <h1 className="hero-title">{t('Välkommen tillbaka,')} <em>{name}</em></h1>
+          <p className="hero-sub">{t('Aktiva briefs, budget i rörelse och kreatörerna som levererar din räckvidd, i realtid.')}</p>
           <div className="hero-kpis">
-            <div className="hero-kpi"><div className="hk-v">{active.length}</div><div className="hk-l">Active campaigns</div></div>
+            <div className="hero-kpi"><div className="hk-v">{active.length}</div><div className="hk-l">{t('Aktiva kampanjer')}</div></div>
             <div className="hero-kpi-sep" />
-            <div className="hero-kpi"><div className="hk-v hk-money"><span>{formatCurrency(totalBudget)}</span></div><div className="hk-l">Total budget</div></div>
+            <div className="hero-kpi"><div className="hk-v hk-money"><span>{formatCurrency(totalBudget)}</span></div><div className="hk-l">{t('Total budget')}</div></div>
             <div className="hero-kpi-sep" />
-            <div className="hero-kpi"><div className="hk-v">{formatCurrency(totalSpent)}</div><div className="hk-l">Spent ({spentPct}%)</div></div>
+            <div className="hero-kpi"><div className="hk-v">{formatCurrency(totalSpent)}</div><div className="hk-l">{t('Spenderat')} ({spentPct}%)</div></div>
             <div className="hero-kpi-sep" />
-            <div className="hero-kpi"><div className="hk-v">{totalCreators}</div><div className="hk-l">Approved creators</div></div>
+            <div className="hero-kpi"><div className="hk-v">{totalCreators}</div><div className="hk-l">{t('Godkända creators')}</div></div>
           </div>
         </div>
       </div>
 
       <div className="vtop">
         <div className="card vperf">
-          <div className="vperf-head"><h3>Budget spent by campaign</h3><span className="vchip">{campaigns.length} campaigns</span></div>
+          <div className="vperf-head"><h3>{t('Spenderad budget per kampanj')}</h3><span className="vchip">{campaigns.length} {t('kampanjer')}</span></div>
           {vals.length >= 2 ? (
             <>
               <div className="vchart">
@@ -108,43 +109,43 @@ export function BrandStudioDashboard() {
                 </div>
               </div>
               <div className="vperf-foot">
-                <div className="vf-stat"><div className="vf-l">Total budget</div><div className="vf-v">{formatCurrency(totalBudget)}</div></div>
-                <div className="vf-stat"><div className="vf-l">Spent</div><div className="vf-v">{formatCurrency(totalSpent)}</div></div>
-                <div className="vf-stat"><div className="vf-l">Utilisation</div><div className="vf-v">{spentPct}%</div></div>
-                <Link className="vperf-link" to="/brand/campaigns" style={{ margin: 0 }}>All campaigns <Arrow /></Link>
+                <div className="vf-stat"><div className="vf-l">{t('Total budget')}</div><div className="vf-v">{formatCurrency(totalBudget)}</div></div>
+                <div className="vf-stat"><div className="vf-l">{t('Spenderat')}</div><div className="vf-v">{formatCurrency(totalSpent)}</div></div>
+                <div className="vf-stat"><div className="vf-l">{t('Utnyttjande')}</div><div className="vf-v">{spentPct}%</div></div>
+                <Link className="vperf-link" to="/brand/campaigns" style={{ margin: 0 }}>{t('Alla kampanjer')} <Arrow /></Link>
               </div>
             </>
           ) : (
             <div style={{ padding: '40px 10px', textAlign: 'center' }}>
-              <div style={{ fontWeight: 600 }}>No campaign spend yet</div>
-              <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>Launch a campaign and your budget breakdown shows up here.</div>
-              <Link to="/brand/campaigns/new" className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 20px', marginTop: 16 }}>Create campaign</Link>
+              <div style={{ fontWeight: 600 }}>{t('Ingen kampanjspend än')}</div>
+              <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>{t('Lansera en kampanj så visas din budgetfördelning här.')}</div>
+              <Link to="/brand/campaigns/new" className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 20px', marginTop: 16 }}>{t('Skapa kampanj')}</Link>
             </div>
           )}
         </div>
 
         <div className="card vrep">
-          <div className="vperf-head"><h3>PR acceptance</h3></div>
+          <div className="vperf-head"><h3>{t('PR-acceptans')}</h3></div>
           <div className="vrep-donut">
             <svg viewBox="0 0 120 120">
               <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(183,188,200,.25)" strokeWidth="9" />
               <circle cx="60" cy="60" r="50" fill="none" stroke="url(#perfLine)" strokeWidth="9" strokeLinecap="round" strokeDasharray={`${dash} ${C}`} transform="rotate(-90 60 60)" />
             </svg>
-            <div className="vrep-center"><div className="vrep-num">{sent ? acceptRate + '%' : '—'}</div><div className="vrep-lbl" style={{ color: sent ? '#2f9d5b' : 'var(--muted)' }}>{sent ? 'accepted' : 'No offers yet'}</div></div>
+            <div className="vrep-center"><div className="vrep-num">{sent ? acceptRate + '%' : '—'}</div><div className="vrep-lbl" style={{ color: sent ? '#2f9d5b' : 'var(--muted)' }}>{sent ? t('accepterat') : t('Inga erbjudanden än')}</div></div>
           </div>
           <div className="vrep-rows">
-            <div className="vrep-row"><span className="vrep-ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M5 20V10M12 20V4M19 20v-6" /></svg></span>Sent<b>{prStats?.totalSent ?? 0}</b></div>
-            <div className="vrep-row"><span className="vrep-ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 7" /></svg></span>Accepted<b>{prStats?.accepted ?? 0}</b></div>
-            <div className="vrep-row"><span className="vrep-ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg></span>Viewed<b>{prStats?.viewed ?? 0}</b></div>
-            <div className="vrep-row"><span className="vrep-ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg></span>Pending<b>{prStats?.pending ?? 0}</b></div>
+            <div className="vrep-row"><span className="vrep-ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M5 20V10M12 20V4M19 20v-6" /></svg></span>{t('Skickade')}<b>{prStats?.totalSent ?? 0}</b></div>
+            <div className="vrep-row"><span className="vrep-ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 7" /></svg></span>{t('Accepterade')}<b>{prStats?.accepted ?? 0}</b></div>
+            <div className="vrep-row"><span className="vrep-ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg></span>{t('Sedda')}<b>{prStats?.viewed ?? 0}</b></div>
+            <div className="vrep-row"><span className="vrep-ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg></span>{t('Väntar')}<b>{prStats?.pending ?? 0}</b></div>
           </div>
-          <Link className="vperf-link" to="/brand/pr">Open PR hub <Arrow /></Link>
+          <Link className="vperf-link" to="/brand/pr">{t('Öppna PR-hubben')} <Arrow /></Link>
         </div>
       </div>
 
       <div className="vcsplit">
         <div className="card vcamps">
-          <div className="vperf-head"><h3>Recent campaigns</h3><Link to="/brand/campaigns/new" className="btn-apply" style={{ width: 'auto', padding: '9px 16px', fontSize: 12.5 }}>+ New campaign</Link></div>
+          <div className="vperf-head"><h3>{t('Senaste kampanjer')}</h3><Link to="/brand/campaigns/new" className="btn-apply" style={{ width: 'auto', padding: '9px 16px', fontSize: 12.5 }}>+ {t('Ny kampanj')}</Link></div>
           {campaigns.length ? campaigns.slice(0, 5).map((c) => {
             const pct = c.budget ? Math.round((c.budgetSpent / c.budget) * 100) : 0;
             return (
@@ -155,34 +156,34 @@ export function BrandStudioDashboard() {
                   <div className="vcamp-m">{c.category} · {formatDate(c.startDate)} – {formatDate(c.endDate)}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{campTag(c.status)}<div className="progress-line" style={{ flex: 1, maxWidth: 150, marginTop: 0 }}><span style={{ width: `${pct}%` }} /></div><span style={{ fontSize: 11.5, color: 'var(--muted)', fontWeight: 600 }}>{pct}%</span></div>
                 </div>
-                <div className="vcamp-end"><div className="vcamp-k">Creators</div><div className="vcamp-v">{c.approvedCreatorCount}/{c.maxCreators}</div></div>
-                <div className="vcamp-end"><div className="vcamp-k">Spent</div><div className="vcamp-v">{formatCurrency(c.budgetSpent)}</div></div>
+                <div className="vcamp-end"><div className="vcamp-k">{t('Creators')}</div><div className="vcamp-v">{c.approvedCreatorCount}/{c.maxCreators}</div></div>
+                <div className="vcamp-end"><div className="vcamp-k">{t('Spenderat')}</div><div className="vcamp-v">{formatCurrency(c.budgetSpent)}</div></div>
               </div>
             );
           }) : (
             <div style={{ padding: '34px 10px', textAlign: 'center' }}>
-              <div style={{ fontWeight: 600 }}>No campaigns yet</div>
-              <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>Launch your first campaign and start building your creator army.</div>
-              <Link to="/brand/campaigns/new" className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 20px', marginTop: 16 }}>Create campaign</Link>
+              <div style={{ fontWeight: 600 }}>{t('Inga kampanjer än')}</div>
+              <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>{t('Lansera din första kampanj och börja bygga din creator-armé.')}</div>
+              <Link to="/brand/campaigns/new" className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 20px', marginTop: 16 }}>{t('Skapa kampanj')}</Link>
             </div>
           )}
-          {campaigns.length > 0 && <Link className="vperf-link center" to="/brand/campaigns">View all campaigns <Arrow /></Link>}
+          {campaigns.length > 0 && <Link className="vperf-link center" to="/brand/campaigns">{t('Visa alla kampanjer')} <Arrow /></Link>}
         </div>
 
         <div className="card vdisc">
-          <div className="vperf-head"><h3>Grow your reach</h3></div>
-          <div className="vdisc-sub">Find creators and send direct PR offers.</div>
+          <div className="vperf-head"><h3>{t('Väx din räckvidd')}</h3></div>
+          <div className="vdisc-sub">{t('Hitta kreatörer och skicka direkta PR-erbjudanden.')}</div>
           <div className="vdisc-item" onClick={() => navigate('/brand/creators')}>
             <span className="vcamp-thumb" style={{ background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)' }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3" /><circle cx="16" cy="9" r="2.5" /><path d="M3 19a6 6 0 0 1 12 0M14 18a5 5 0 0 1 7-1" /></svg></span>
-            <div className="vdisc-main"><div className="vdisc-b">Find creators</div><div className="vdisc-why">Search by audience, market and content style.</div></div>
+            <div className="vdisc-main"><div className="vdisc-b">{t('Hitta kreatörer')}</div><div className="vdisc-why">{t('Sök på publik, marknad och innehållsstil.')}</div></div>
           </div>
           <div className="vdisc-item" onClick={() => navigate('/brand/applications')}>
             <span className="vcamp-thumb" style={{ background: 'linear-gradient(135deg,#cdb8f2,#9c7de0)' }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3 8-8" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg></span>
-            <div className="vdisc-main"><div className="vdisc-b">Review applications</div><div className="vdisc-why">Approve creators who applied to your briefs.</div></div>
+            <div className="vdisc-main"><div className="vdisc-b">{t('Granska ansökningar')}</div><div className="vdisc-why">{t('Godkänn kreatörer som ansökt till dina briefs.')}</div></div>
           </div>
           <div className="vdisc-item" onClick={() => navigate('/brand/campaigns/new')}>
             <span className="vcamp-thumb" style={{ background: 'linear-gradient(135deg,#a9dcc0,#5fb98a)' }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="3" /><path d="M12 9v6M9 12h6" /></svg></span>
-            <div className="vdisc-main"><div className="vdisc-b">Launch a campaign</div><div className="vdisc-why">Set a CPM, budget and brief in minutes.</div></div>
+            <div className="vdisc-main"><div className="vdisc-b">{t('Lansera en kampanj')}</div><div className="vdisc-why">{t('Sätt CPM, budget och brief på några minuter.')}</div></div>
           </div>
         </div>
       </div>

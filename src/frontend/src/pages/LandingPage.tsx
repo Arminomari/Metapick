@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
+import { t } from '@/lib/i18n';
 
 /* ─────────────────────────────────────────────────────────────
    LandingPage — creator-coded edition.
@@ -48,24 +49,24 @@ export function LandingPage() {
           </a>
 
           <div className="hidden md:flex items-center gap-8 text-sm font-medium">
-            <a href="#creators" className="text-muted-foreground hover:text-foreground transition-colors">For Creators</a>
-            <a href="#brands"   className="text-muted-foreground hover:text-foreground transition-colors">For Brands</a>
-            <a href="#how"      className="text-muted-foreground hover:text-foreground transition-colors">How it works</a>
+            <a href="#creators" className="text-muted-foreground hover:text-foreground transition-colors">{t('För kreatörer')}</a>
+            <a href="#brands"   className="text-muted-foreground hover:text-foreground transition-colors">{t('För varumärken')}</a>
+            <a href="#how"      className="text-muted-foreground hover:text-foreground transition-colors">{t('Så här funkar det')}</a>
           </div>
 
           <div className="hidden md:flex items-center gap-2">
-            <button onClick={() => navigate('/login')}    className="pill h-10 px-5 text-sm text-foreground hover:bg-[hsl(var(--sand))]">Logga in</button>
+            <button onClick={() => navigate('/login')}    className="pill h-10 px-5 text-sm text-foreground hover:bg-[hsl(var(--sand))]">{t('Logga in')}</button>
             <button onClick={() => navigate('/register')} className="pill h-10 px-5 text-sm bg-foreground text-background hover:opacity-90 shadow-soft">
-              Skapa konto <span aria-hidden>→</span>
+              {t('Skapa konto')} <span aria-hidden>→</span>
             </button>
           </div>
 
           <div className="md:hidden flex items-center gap-1">
-            <button onClick={() => navigate('/login')} className="pill h-9 px-3 text-xs">Logga in</button>
+            <button onClick={() => navigate('/login')} className="pill h-9 px-3 text-xs">{t('Logga in')}</button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 text-muted-foreground hover:text-foreground"
-              aria-label="Meny"
+              aria-label={t('Meny')}
             >
               {mobileMenuOpen
                 ? <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -78,10 +79,10 @@ export function LandingPage() {
 
         {mobileMenuOpen && (
           <div className="md:hidden px-5 py-5 flex flex-col gap-3 bg-[hsl(var(--paper))]">
-            <a href="#creators" onClick={() => setMobileMenuOpen(false)} className="py-1.5 font-medium">For Creators</a>
-            <a href="#brands"   onClick={() => setMobileMenuOpen(false)} className="py-1.5 font-medium">For Brands</a>
-            <a href="#how"      onClick={() => setMobileMenuOpen(false)} className="py-1.5 font-medium">How it works</a>
-            <button onClick={() => navigate('/register')} className="pill mt-2 h-11 px-5 bg-foreground text-background self-start">Skapa konto →</button>
+            <a href="#creators" onClick={() => setMobileMenuOpen(false)} className="py-1.5 font-medium">{t('För kreatörer')}</a>
+            <a href="#brands"   onClick={() => setMobileMenuOpen(false)} className="py-1.5 font-medium">{t('För varumärken')}</a>
+            <a href="#how"      onClick={() => setMobileMenuOpen(false)} className="py-1.5 font-medium">{t('Så här funkar det')}</a>
+            <button onClick={() => navigate('/register')} className="pill mt-2 h-11 px-5 bg-foreground text-background self-start">{t('Skapa konto')} →</button>
           </div>
         )}
       </nav>
@@ -92,18 +93,17 @@ export function LandingPage() {
           <div className="flex justify-center mb-8">
             <div className="sticker">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
-              Creator marketplace
+              {t('Creator marketplace')}
             </div>
           </div>
 
           <h1 className="text-display text-center text-[clamp(3rem,10vw,8rem)]">
-            Get paid<br />
-            for your <span className="text-sunset">vibe</span>.
+            {t('Få betalt')}<br />
+            {t('för din')} <span className="text-sunset">{t('vibe')}</span>.
           </h1>
 
           <p className="mt-8 text-center mx-auto col-prose text-[1.1rem] md:text-[1.2rem] text-muted-foreground">
-            MetaPick är creator marketplace där brands och creators möts direkt.
-            Inga cold DMs, inga spreadsheets, ingen agency-mellanhand — bara content och payouts på ett ställe.
+            {t('MetaPick är creator marketplace där brands och creators möts direkt. Inga cold DMs, inga spreadsheets, ingen agency-mellanhand — bara content och payouts på ett ställe.')}
           </p>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
@@ -111,18 +111,18 @@ export function LandingPage() {
               onClick={handleJoinCreator}
               className="pill h-14 px-9 text-[1rem] bg-foreground text-background hover:opacity-95 shadow-lift"
             >
-              Bli creator <span aria-hidden>→</span>
+              {t('Bli creator')} <span aria-hidden>→</span>
             </button>
             <button
               onClick={handleForBrands}
               className="pill h-14 px-9 text-[1rem] bg-[hsl(var(--ivory))] text-foreground border border-[hsl(var(--border))] hover:bg-[hsl(var(--sand))]"
             >
-              Jag är ett brand
+              {t('Jag är ett brand')}
             </button>
           </div>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            Gratis att registrera · Kom igång på minuter
+            {t('Gratis att registrera · Kom igång på minuter')}
           </p>
 
           {/* Visual mockup — abstract gradient surfaces, no fake metrics */}
@@ -140,11 +140,11 @@ export function LandingPage() {
                       <div className="h-10 w-10 rounded-full bg-[hsl(var(--ivory))]" />
                     </div>
                     <div className="h-3 w-24 rounded-full bg-white/40" />
-                    <span className="ml-auto sticker !bg-white/20 !border-white/30 !text-white !backdrop-blur-sm">Preview</span>
+                    <span className="ml-auto sticker !bg-white/20 !border-white/30 !text-white !backdrop-blur-sm">{t('Förhandsvisning')}</span>
                   </div>
                   <div>
                     <div className="text-display text-[clamp(1.75rem,4.5vw,3rem)] leading-[0.95]">
-                      Ditt content,<br />ditt språk.
+                      {t('Ditt content,')}<br />{t('ditt språk.')}
                     </div>
                     <div className="mt-3 flex items-center gap-2">
                       <span className="h-2 w-16 rounded-full bg-white/50" />
@@ -157,12 +157,12 @@ export function LandingPage() {
               {/* Feature card — payouts */}
               <div className="col-span-7 md:col-span-5 surface aspect-[5/4] md:aspect-auto p-7 md:p-8 flex flex-col justify-between">
                 <div className="flex items-center justify-between">
-                  <span className="eyebrow">Payouts</span>
-                  <span className="sticker">Auto</span>
+                  <span className="eyebrow">{t('Utbetalningar')}</span>
+                  <span className="sticker">{t('Auto')}</span>
                 </div>
                 <div>
-                  <div className="text-display text-sunset text-[clamp(2rem,5vw,3rem)] leading-[1]">Snabba<br />utbetalningar.</div>
-                  <div className="mt-3 text-sm text-muted-foreground">Triggas automatiskt när dina mål nås.</div>
+                  <div className="text-display text-sunset text-[clamp(2rem,5vw,3rem)] leading-[1]">{t('Snabba')}<br />{t('utbetalningar.')}</div>
+                  <div className="mt-3 text-sm text-muted-foreground">{t('Triggas automatiskt när dina mål nås.')}</div>
                 </div>
                 <div className="flex items-center gap-2 -space-x-3">
                   {['linear-gradient(135deg,#FFD27A,#FF8A4C)','linear-gradient(135deg,#FF8A4C,#E8423E)','linear-gradient(135deg,#E8423E,#7C2D2D)','linear-gradient(135deg,#FFB677,#FF6B6B)','linear-gradient(135deg,#F1C27D,#E07856)'].map((g, i) => (
@@ -178,18 +178,18 @@ export function LandingPage() {
                     <div className="h-9 w-9 rounded-2xl bg-foreground" aria-hidden />
                     <div className="h-3 w-28 rounded-full bg-[hsl(var(--muted))]" aria-hidden />
                   </div>
-                  <span className="sticker">Brief</span>
+                  <span className="sticker">{t('Brief')}</span>
                 </div>
-                <div className="text-display text-[1.5rem]">Så ser en brief ut.</div>
+                <div className="text-display text-[1.5rem]">{t('Så ser en brief ut.')}</div>
                 <div className="flex flex-wrap gap-1.5">
-                  <span className="chip">Nisch</span>
-                  <span className="chip">Audience</span>
-                  <span className="chip">Marknad</span>
+                  <span className="chip">{t('Nisch')}</span>
+                  <span className="chip">{t('Publik')}</span>
+                  <span className="chip">{t('Marknad')}</span>
                 </div>
                 <div className="hairline" />
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Tydliga villkor</span>
-                  <span className="font-semibold">Per creator</span>
+                  <span className="text-muted-foreground">{t('Tydliga villkor')}</span>
+                  <span className="font-semibold">{t('Per creator')}</span>
                 </div>
               </div>
 
@@ -197,13 +197,13 @@ export function LandingPage() {
               <div className="col-span-12 md:col-span-7 surface-deep relative overflow-hidden p-7 md:p-9 flex items-center gap-7">
                 <div aria-hidden className="blob h-60 w-60 -top-10 -right-10 bg-[hsl(22_92%_60%_/_0.5)]" />
                 <div className="relative">
-                  <div className="eyebrow !text-[hsl(var(--ivory)/0.6)]">Tracking</div>
+                  <div className="eyebrow !text-[hsl(var(--ivory)/0.6)]">{t('Tracking')}</div>
                   <div className="mt-3 text-display text-[clamp(1.6rem,3.2vw,2.4rem)] text-[hsl(var(--ivory))]">
-                    Views räknas<br />
-                    <span className="text-sunset">automatiskt</span>.
+                    {t('Views räknas')}<br />
+                    <span className="text-sunset">{t('automatiskt')}</span>.
                   </div>
                   <div className="mt-4 text-sm text-[hsl(var(--ivory)/0.75)] max-w-[34ch]">
-                    Anslut ditt TikTok-konto via TikToks officiella API. Ingen screenshot-jakt, inga spreadsheets.
+                    {t('Anslut ditt TikTok-konto via TikToks officiella API. Ingen screenshot-jakt, inga spreadsheets.')}
                   </div>
                 </div>
                 <div className="hidden sm:block ml-auto relative shrink-0 w-32 h-56 rounded-[28px] bg-[hsl(var(--graphite))] ring-4 ring-[hsl(var(--ivory)/0.1)] shadow-floaty overflow-hidden">
@@ -223,58 +223,56 @@ export function LandingPage() {
       <section id="brands" className="py-20 md:py-28">
         <div className="mx-auto max-w-[1280px] px-5 md:px-10">
           <div className="max-w-2xl mb-12 md:mb-16">
-            <p className="eyebrow">Two sides, one platform</p>
+            <p className="eyebrow">{t('Två sidor, en plattform')}</p>
             <h2 className="mt-4 text-display text-[clamp(2.25rem,5.5vw,4rem)]">
-              Byggd för båda<br />sidor av <span className="text-sunset">kameran</span>.
+              {t('Byggd för båda')}<br />{t('sidor av')} <span className="text-sunset">{t('kameran')}</span>.
             </h2>
           </div>
 
           <div className="grid grid-cols-12 gap-5">
             <article className="col-span-12 md:col-span-7 surface p-8 md:p-12 relative overflow-hidden">
               <div aria-hidden className="blob h-72 w-72 -top-20 -right-20 bg-[hsl(22_92%_70%_/_0.45)]" />
-              <span className="sticker mb-5 relative">For brands</span>
+              <span className="sticker mb-5 relative">{t('För varumärken')}</span>
               <h3 className="relative text-display text-[clamp(1.85rem,4vw,2.85rem)]">
-                Hitta creators som matchar <span className="text-sunset">din ton</span>.
+                {t('Hitta creators som matchar')} <span className="text-sunset">{t('din ton')}</span>.
               </h3>
               <p className="mt-5 text-muted-foreground col-prose relative">
-                Skriv en brief, sätt målbild och budget, godkänn ansökningar.
-                Tracka leverans i realtid och betala när villkoren uppfylls.
+                {t('Skriv en brief, sätt målbild och budget, godkänn ansökningar. Tracka leverans i realtid och betala när villkoren uppfylls.')}
               </p>
               <ul className="mt-7 space-y-3 text-sm relative">
-                {['Lansera en kampanj på minuter','Filtrera på nisch, marknad och audience','Transparent tracking och payouts'].map((t) => (
-                  <li key={t} className="flex items-baseline gap-3">
+                {[t('Lansera en kampanj på minuter'), t('Filtrera på nisch, marknad och audience'), t('Transparent tracking och payouts')].map((item) => (
+                  <li key={item} className="flex items-baseline gap-3">
                     <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-primary" />
-                    <span>{t}</span>
+                    <span>{item}</span>
                   </li>
                 ))}
               </ul>
               <button onClick={handleForBrands} className="pill mt-9 h-12 px-7 bg-foreground text-background hover:opacity-90 shadow-soft relative">
-                Starta kampanj →
+                {t('Starta kampanj')} →
               </button>
             </article>
 
             <article id="creators" className="col-span-12 md:col-span-5 surface-deep p-8 md:p-12 flex flex-col justify-between relative overflow-hidden">
               <div aria-hidden className="blob h-72 w-72 -bottom-20 -left-20 bg-[hsl(8_78%_60%_/_0.55)]" />
               <div className="relative">
-                <span className="sticker !bg-white/10 !border-white/20 !text-[hsl(var(--ivory))] mb-5">For creators</span>
+                <span className="sticker !bg-white/10 !border-white/20 !text-[hsl(var(--ivory))] mb-5">{t('För kreatörer')}</span>
                 <h3 className="text-display text-[clamp(1.7rem,3.5vw,2.5rem)] text-[hsl(var(--ivory))]">
-                  Få betalt för content<br />du <span className="text-sunset">redan</span> gör.
+                  {t('Få betalt för content')}<br />{t('du')} <span className="text-sunset">{t('redan')}</span> {t('gör.')}
                 </h3>
                 <p className="mt-5 text-[hsl(var(--ivory)/0.78)] col-prose">
-                  Bläddra briefs som passar din röst, ansök på en tap, posta på TikTok,
-                  och få utbetalning när dina views är verifierade.
+                  {t('Bläddra briefs som passar din röst, ansök på en tap, posta på TikTok, och få utbetalning när dina views är verifierade.')}
                 </p>
               </div>
               <ul className="mt-8 space-y-3 text-sm text-[hsl(var(--ivory)/0.85)] relative">
-                {['Briefs anpassade efter din profil','Tydlig ersättning från start','Direkta payouts utan mellanhand'].map((t) => (
-                  <li key={t} className="flex items-baseline gap-3">
+                {[t('Briefs anpassade efter din profil'), t('Tydlig ersättning från start'), t('Direkta payouts utan mellanhand')].map((item) => (
+                  <li key={item} className="flex items-baseline gap-3">
                     <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-[hsl(22_92%_70%)]" />
-                    <span>{t}</span>
+                    <span>{item}</span>
                   </li>
                 ))}
               </ul>
               <button onClick={handleJoinCreator} className="pill mt-9 h-12 px-7 self-start bg-[hsl(var(--ivory))] text-foreground hover:bg-white shadow-soft relative">
-                Bli creator →
+                {t('Bli creator')} →
               </button>
             </article>
           </div>
@@ -285,18 +283,18 @@ export function LandingPage() {
       <section id="how" className="py-20 md:py-28 border-t border-[hsl(var(--border))]">
         <div className="mx-auto max-w-[1280px] px-5 md:px-10">
           <div className="max-w-2xl mb-12 md:mb-16">
-            <p className="eyebrow">How it works</p>
+            <p className="eyebrow">{t('Så här funkar det')}</p>
             <h2 className="mt-4 text-display text-[clamp(2.25rem,5.5vw,4rem)]">
-              Tre steg.<br />
-              <span className="text-sunset">Noll</span> ceremoni.
+              {t('Tre steg.')}<br />
+              <span className="text-sunset">{t('Noll')}</span> {t('ceremoni.')}
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
-              { step: '01', title: 'Discover', desc: 'Bläddra briefs som matchar din nisch, ditt språk och din publik.', tint: 'from-[hsl(40_92%_75%)] to-[hsl(22_92%_65%)]' },
-              { step: '02', title: 'Create',   desc: 'Posta på din plattform i din takt. Views trackas via TikToks officiella API.', tint: 'from-[hsl(22_92%_65%)] to-[hsl(8_78%_55%)]' },
-              { step: '03', title: 'Get paid', desc: 'Payouts triggas automatiskt när målen är uppfyllda och verifierade.', tint: 'from-[hsl(8_78%_55%)] to-[hsl(353_55%_38%)]' },
+              { step: '01', title: t('Upptäck'), desc: t('Bläddra briefs som matchar din nisch, ditt språk och din publik.'), tint: 'from-[hsl(40_92%_75%)] to-[hsl(22_92%_65%)]' },
+              { step: '02', title: t('Skapa'),   desc: t('Posta på din plattform i din takt. Views trackas via TikToks officiella API.'), tint: 'from-[hsl(22_92%_65%)] to-[hsl(8_78%_55%)]' },
+              { step: '03', title: t('Få betalt'), desc: t('Payouts triggas automatiskt när målen är uppfyllda och verifierade.'), tint: 'from-[hsl(8_78%_55%)] to-[hsl(353_55%_38%)]' },
             ].map((s) => (
               <div key={s.step} className="surface p-7 md:p-8 relative overflow-hidden">
                 <div className={`absolute -top-16 -right-10 h-44 w-44 rounded-full blur-2xl opacity-50 bg-gradient-to-br ${s.tint}`} aria-hidden />
@@ -315,38 +313,38 @@ export function LandingPage() {
       <section className="py-20 md:py-28 bg-[hsl(var(--paper))] border-y border-[hsl(var(--border))]">
         <div className="mx-auto max-w-[1280px] px-5 md:px-10">
           <div className="max-w-2xl mb-12 md:mb-16">
-            <p className="eyebrow">Vad du får</p>
+            <p className="eyebrow">{t('Vad du får')}</p>
             <h2 className="mt-4 text-display text-[clamp(2.25rem,5.5vw,4rem)]">
-              Inga mellanhänder.<br />
-              <span className="text-sunset">Bara verktygen.</span>
+              {t('Inga mellanhänder.')}<br />
+              <span className="text-sunset">{t('Bara verktygen.')}</span>
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
               {
-                title: 'Verifierad tracking',
-                desc: 'Views och engagement hämtas direkt från TikToks officiella API — ingen manuell rapportering.',
+                title: t('Verifierad tracking'),
+                desc: t('Views och engagement hämtas direkt från TikToks officiella API — ingen manuell rapportering.'),
               },
               {
-                title: 'Tydliga villkor',
-                desc: 'Varje brief specificerar mål, ersättning och leveranskrav innan du ansöker.',
+                title: t('Tydliga villkor'),
+                desc: t('Varje brief specificerar mål, ersättning och leveranskrav innan du ansöker.'),
               },
               {
-                title: 'Direkta payouts',
-                desc: 'Utbetalning sker automatiskt när villkoren uppfylls, utan agency-cut.',
+                title: t('Direkta payouts'),
+                desc: t('Utbetalning sker automatiskt när villkoren uppfylls, utan agency-cut.'),
               },
               {
-                title: 'Curated briefs',
-                desc: 'Filtrera på nisch, marknad och audience så att du bara ser relevanta uppdrag.',
+                title: t('Utvalda briefs'),
+                desc: t('Filtrera på nisch, marknad och audience så att du bara ser relevanta uppdrag.'),
               },
               {
-                title: 'Realtidsdashboard',
-                desc: 'Följ dina aktiva uppdrag, intjäning och leveranser samlat på ett ställe.',
+                title: t('Realtidsdashboard'),
+                desc: t('Följ dina aktiva uppdrag, intjäning och leveranser samlat på ett ställe.'),
               },
               {
-                title: 'Två sidor, en plattform',
-                desc: 'Brands och creators delar samma vy — färre missförstånd, snabbare beslut.',
+                title: t('Två sidor, en plattform'),
+                desc: t('Brands och creators delar samma vy — färre missförstånd, snabbare beslut.'),
               },
             ].map((f) => (
               <div key={f.title} className="surface p-7 flex flex-col gap-3">
@@ -365,19 +363,19 @@ export function LandingPage() {
           <div className="surface-deep relative overflow-hidden p-10 md:p-20 text-center">
             <div aria-hidden className="blob h-[420px] w-[420px] -top-32 left-1/2 -translate-x-1/2 bg-[hsl(8_78%_55%_/_0.55)]" />
             <div className="relative">
-              <span className="sticker !bg-white/10 !border-white/20 !text-[hsl(var(--ivory))] mb-7">Kom igång</span>
+              <span className="sticker !bg-white/10 !border-white/20 !text-[hsl(var(--ivory))] mb-7">{t('Kom igång')}</span>
               <h2 className="text-display text-[clamp(2.5rem,7vw,5.5rem)] text-[hsl(var(--ivory))]">
-                Redo att <span className="text-sunset">börja</span>?
+                {t('Redo att')} <span className="text-sunset">{t('börja')}</span>?
               </h2>
               <p className="mt-6 text-[hsl(var(--ivory)/0.75)] mx-auto col-prose">
-                Skapa konto gratis och utforska plattformen — som creator eller brand.
+                {t('Skapa konto gratis och utforska plattformen — som creator eller brand.')}
               </p>
               <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
                 <button onClick={handleJoinCreator} className="pill h-14 px-9 bg-[hsl(var(--ivory))] text-foreground hover:bg-white shadow-lift">
-                  Bli creator →
+                  {t('Bli creator')} →
                 </button>
                 <button onClick={handleForBrands} className="pill h-14 px-9 bg-white/10 text-[hsl(var(--ivory))] border border-white/20 hover:bg-white/20">
-                  Jag är ett brand
+                  {t('Jag är ett brand')}
                 </button>
               </div>
             </div>
@@ -391,14 +389,14 @@ export function LandingPage() {
           <div className="md:col-span-4">
             <a href="/" className="text-display text-[1.4rem]">meta<span className="text-sunset">pick</span></a>
             <p className="mt-2 text-xs text-muted-foreground max-w-[28ch]">
-              Creator marketplace för brands och creators.
+              {t('Creator marketplace för brands och creators.')}
             </p>
           </div>
           <div className="md:col-span-8 flex flex-wrap items-baseline gap-x-7 gap-y-2 md:justify-end">
-            <a href="#creators" className="text-sm text-muted-foreground hover:text-foreground">For Creators</a>
-            <a href="#brands"   className="text-sm text-muted-foreground hover:text-foreground">For Brands</a>
-            <a href="/terms"    className="text-sm text-muted-foreground hover:text-foreground">Terms</a>
-            <a href="/privacy"  className="text-sm text-muted-foreground hover:text-foreground">Privacy</a>
+            <a href="#creators" className="text-sm text-muted-foreground hover:text-foreground">{t('För kreatörer')}</a>
+            <a href="#brands"   className="text-sm text-muted-foreground hover:text-foreground">{t('För varumärken')}</a>
+            <a href="/terms"    className="text-sm text-muted-foreground hover:text-foreground">{t('Villkor')}</a>
+            <a href="/privacy"  className="text-sm text-muted-foreground hover:text-foreground">{t('Integritet')}</a>
           </div>
           <div className="md:col-span-12 hairline" />
           <p className="md:col-span-12 text-center text-[0.72rem] tracking-wider uppercase text-muted-foreground">
