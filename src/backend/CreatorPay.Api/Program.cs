@@ -499,6 +499,33 @@ app.MapHealthChecks("/health/ready",
         Log.Information("Seeded brand account nellie@vyrle.co");
     }
 
+    // Backfill: every existing collaboration qualifies into the brand's community.
+    {
+        var pairs = await db.Set<CreatorPay.Domain.Entities.CreatorCampaignAssignment>()
+            .Where(a => a.Campaign.Kind == CreatorPay.Domain.Enums.CampaignKind.Campaign)
+            .Select(a => new { a.Campaign.BrandProfileId, a.CreatorProfileId })
+            .Distinct()
+            .ToListAsync();
+        var existing = await db.Set<CreatorPay.Domain.Entities.BrandCommunityMember>()
+            .Select(m => new { m.BrandProfileId, m.CreatorProfileId })
+            .ToListAsync();
+        var have = existing.Select(e => (e.BrandProfileId, e.CreatorProfileId)).ToHashSet();
+        var added = 0;
+        foreach (var p in pairs)
+        {
+            if (have.Contains((p.BrandProfileId, p.CreatorProfileId))) continue;
+            db.Set<CreatorPay.Domain.Entities.BrandCommunityMember>().Add(new CreatorPay.Domain.Entities.BrandCommunityMember
+            {
+                BrandProfileId = p.BrandProfileId,
+                CreatorProfileId = p.CreatorProfileId,
+                Source = CreatorPay.Domain.Enums.CommunityMemberSource.AutoQualified,
+                Status = CreatorPay.Domain.Enums.CommunityMemberStatus.Active
+            });
+            added++;
+        }
+        if (added > 0) { await db.SaveChangesAsync(); Log.Information("Backfilled {Count} community memberships", added); }
+    }
+
     // Keep the Nellie showcase profile presentable: fill in branding once so
     // the public brand page has a real example (only when still bare).
     {

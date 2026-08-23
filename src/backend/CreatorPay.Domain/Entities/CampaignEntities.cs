@@ -33,6 +33,13 @@ public class Campaign : SoftDeletableEntity
     public int RowVersion { get; set; }
     /// <summary>Free-text description of perks/benefits creators receive (discount codes, PR packages, etc.)</summary>
     public string? Perks { get; set; }
+
+    // ── Tap ("kranen") — standing monthly budget ──
+    public CampaignKind Kind { get; set; } = CampaignKind.Campaign;
+    public decimal MonthlyBudget { get; set; }
+    public decimal? PayoutCapPerVideo { get; set; }
+    public decimal? MonthlyCapPerCreator { get; set; }
+    public DateTime? BriefUpdatedAt { get; set; }
     /// <summary>Content-type tags the brand is looking for, e.g. ["TikTok Video","Instagram Reels"]</summary>
     public string[] ContentTags { get; set; } = [];
 
@@ -140,4 +147,32 @@ public class SavedCampaign : BaseEntity
 
     public CreatorProfile CreatorProfile { get; set; } = null!;
     public Campaign Campaign { get; set; } = null!;
+}
+
+/// <summary>Per-assignment, per-calendar-month money and views drawn from a tap.</summary>
+public class TapAccrual : BaseEntity
+{
+    public Guid AssignmentId { get; set; }
+    public int Year { get; set; }
+    public int Month { get; set; }
+    public long Views { get; set; }
+    public decimal Amount { get; set; }
+
+    public CreatorCampaignAssignment Assignment { get; set; } = null!;
+}
+
+/// <summary>
+/// Membership in a brand's creator community — the right to draw from the tap.
+/// Previous collaborators qualify automatically; brands can invite and remove.
+/// </summary>
+public class BrandCommunityMember : BaseEntity
+{
+    public Guid BrandProfileId { get; set; }
+    public Guid CreatorProfileId { get; set; }
+    public CommunityMemberStatus Status { get; set; } = CommunityMemberStatus.Active;
+    public CommunityMemberSource Source { get; set; }
+    public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+
+    public BrandProfile BrandProfile { get; set; } = null!;
+    public CreatorProfile CreatorProfile { get; set; } = null!;
 }

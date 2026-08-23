@@ -15,6 +15,7 @@ namespace CreatorPay.Worker.Jobs;
 /// </summary>
 public class PayoutRecalculationJob
 {
+    private readonly TapAccrualService _tapAccrual;
     private readonly ILogger<PayoutRecalculationJob> _logger;
     private readonly IRepository<CreatorCampaignAssignment> _assignments;
     private readonly IRepository<PayoutCalculation> _calculations;
@@ -28,7 +29,8 @@ public class PayoutRecalculationJob
         IRepository<PayoutCalculation> calculations,
         IRepository<Campaign> campaigns,
         IUnitOfWork uow,
-        PayoutCalculatorFactory payoutFactory)
+        PayoutCalculatorFactory payoutFactory,
+        TapAccrualService tapAccrual)
     {
         _logger = logger;
         _assignments = assignments;
@@ -36,15 +38,39 @@ public class PayoutRecalculationJob
         _campaigns = campaigns;
         _uow = uow;
         _payoutFactory = payoutFactory;
+        _tapAccrual = tapAccrual;
     }
 
     public async Task ExecuteAsync(CancellationToken ct = default)
     {
         _logger.LogInformation("PayoutRecalculationJob started at {Time}", DateTime.UtcNow);
 
+        // Taps ("kranar") use monthly accounting with hard caps — handled by
+        // TapAccrualService, never by the per-assignment calculators below.
+        var taps = await _assignments.Query()
+            .Include(a => a.Campaign).ThenInclude(c => c!.PayoutRules)
+            .Where(a => a.Status == AssignmentStatus.Active && a.Campaign != null
+                && a.Campaign.Kind == CampaignKind.Tap && a.Campaign.Status == CampaignStatus.Active)
+            .Select(a => a.Campaign!)
+            .Distinct()
+            .ToListAsync(ct);
+        foreach (var tap in taps)
+        {
+            try
+            {
+                var s = await _tapAccrual.RecalculateAsync(tap, ct);
+                _logger.LogInformation("Tap {Tap}: {Spent}/{Budget} SEK this month, {Views} views", tap.Name, s.Spent, s.Budget, s.Views);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Tap accrual failed for {Tap}", tap.Id);
+            }
+        }
+
         var activeAssignments = await _assignments.Query()
             .Include(a => a.Campaign).ThenInclude(c => c!.PayoutRules)
-            .Where(a => a.Status == AssignmentStatus.Active && a.Campaign != null)
+            .Where(a => a.Status == AssignmentStatus.Active && a.Campaign != null
+                && a.Campaign.Kind == CampaignKind.Campaign)
             .ToListAsync(ct);
 
         _logger.LogInformation("Recalculating payouts for {Count} active assignments", activeAssignments.Count);

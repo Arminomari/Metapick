@@ -73,3 +73,67 @@ public class BrandPublicController : BaseController
     public async Task<IActionResult> Unfollow(Guid brandProfileId, CancellationToken ct)
         => ToActionResult(await _campaigns.SetBrandFollowAsync(GetUserId(), brandProfileId, false, ct));
 }
+
+/// <summary>Kranen — varumärkets stående månadsbudget.</summary>
+[Route("api/brand/tap")]
+[Authorize(Policy = "BrandOnly")]
+public class BrandTapController : BaseController
+{
+    private readonly ITapService _taps;
+    public BrandTapController(ITapService taps) => _taps = taps;
+
+    [HttpGet]
+    public async Task<IActionResult> Get(CancellationToken ct)
+        => ToActionResult(await _taps.GetBrandTapAsync(GetUserId(), ct));
+
+    [HttpPut]
+    public async Task<IActionResult> Upsert([FromBody] UpsertTapRequest request, CancellationToken ct)
+        => ToActionResult(await _taps.UpsertTapAsync(GetUserId(), request, ct));
+
+    [HttpPost("status")]
+    public async Task<IActionResult> SetStatus([FromQuery] bool active, CancellationToken ct)
+        => ToActionResult(await _taps.SetTapStatusAsync(GetUserId(), active, ct));
+}
+
+/// <summary>Varumärkets creator-community — medlemskap = rätten att hämta ur kranen.</summary>
+[Route("api/brand/community")]
+[Authorize(Policy = "BrandOnly")]
+public class BrandCommunityController : BaseController
+{
+    private readonly ICommunityService _community;
+    public BrandCommunityController(ICommunityService community) => _community = community;
+
+    [HttpGet("members")]
+    public async Task<IActionResult> Members(CancellationToken ct)
+        => ToActionResult(await _community.GetMembersAsync(GetUserId(), ct));
+
+    [HttpPost("invite")]
+    public async Task<IActionResult> Invite([FromBody] InviteMemberRequest request, CancellationToken ct)
+        => ToActionResult(await _community.InviteAsync(GetUserId(), request.CreatorProfileId, ct));
+
+    [HttpDelete("members/{creatorProfileId:guid}")]
+    public async Task<IActionResult> Remove(Guid creatorProfileId, CancellationToken ct)
+        => ToActionResult(await _community.RemoveAsync(GetUserId(), creatorProfileId, ct));
+}
+
+/// <summary>Creatorns kranar och communities.</summary>
+[Route("api/creator")]
+[Authorize(Policy = "CreatorOnly")]
+public class CreatorTapController : BaseController
+{
+    private readonly ITapService _taps;
+    private readonly ICommunityService _community;
+    public CreatorTapController(ITapService taps, ICommunityService community) { _taps = taps; _community = community; }
+
+    [HttpGet("taps")]
+    public async Task<IActionResult> Taps(CancellationToken ct)
+        => ToActionResult(await _taps.GetCreatorTapsAsync(GetUserId(), ct));
+
+    [HttpGet("communities")]
+    public async Task<IActionResult> Communities(CancellationToken ct)
+        => ToActionResult(await _community.GetMyCommunitiesAsync(GetUserId(), ct));
+
+    [HttpDelete("communities/{brandProfileId:guid}")]
+    public async Task<IActionResult> Leave(Guid brandProfileId, CancellationToken ct)
+        => ToActionResult(await _community.LeaveAsync(GetUserId(), brandProfileId, ct));
+}

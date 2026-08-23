@@ -354,6 +354,37 @@ public record FraudFlagDto(
 
 // ──── Common request types ────
 public record RejectReasonRequest(string Reason);
+
+// ──── Tap ("kranen") & community ────
+public record UpsertTapRequest(
+    string Name, decimal MonthlyBudget, decimal Cpm,
+    decimal? PayoutCapPerVideo, decimal? MonthlyCapPerCreator,
+    string Brief, string? ContentInstructions, string RequiredHashtag, string? Category);
+
+public record TapDto(
+    Guid Id, string Name, string Status, decimal MonthlyBudget, decimal Cpm,
+    decimal? PayoutCapPerVideo, decimal? MonthlyCapPerCreator,
+    string Brief, string? ContentInstructions, string RequiredHashtag, string Category,
+    decimal MonthSpent, decimal MonthRemaining, long MonthViews, int ActiveCreatorsThisMonth,
+    int MemberCount, DateTime? BriefUpdatedAt, DateTime CreatedAt);
+
+public record CreatorTapDto(
+    Guid TapId, Guid AssignmentId, Guid BrandProfileId, string BrandName, string? BrandLogoUrl,
+    string Name, string TapStatus, string MembershipStatus,
+    string Brief, string? ContentInstructions, string RequiredHashtag,
+    decimal Cpm, decimal? PayoutCapPerVideo, decimal? MonthlyCapPerCreator,
+    decimal MyMonthEarned, long MyMonthViews, decimal MyLifetimeEarned,
+    decimal TapMonthBudget, decimal TapMonthSpent, DateTime? BriefUpdatedAt);
+
+public record CommunityMemberDto(
+    Guid CreatorProfileId, string DisplayName, string? AvatarUrl, string? TikTokUsername, int TikTokFollowers,
+    string Status, string Source, DateTime JoinedAt,
+    decimal LifetimeEarned, long LifetimeViews, int Collaborations);
+
+public record MyCommunityDto(
+    Guid BrandProfileId, string BrandName, string? BrandLogoUrl, string Source, DateTime JoinedAt, bool HasActiveTap);
+
+public record InviteMemberRequest(Guid CreatorProfileId);
 public record CreateAdminRequest(string Email, string Password, string FirstName, string LastName);
 public record AdminStatsDto(
     int TotalUsers, int PendingUsers, int Creators, int Brands,

@@ -358,7 +358,7 @@ public class CampaignService : ICampaignService
         if (brand == null) return Errors.NotFound("Brand");
 
         var query = _campaigns.Query()
-            .Where(c => c.BrandProfileId == brand.Id && !c.IsDeleted);
+            .Where(c => c.BrandProfileId == brand.Id && !c.IsDeleted && c.Kind == CampaignKind.Campaign);
 
         if (Enum.TryParse<CampaignStatus>(status, out var s))
             query = query.Where(c => c.Status == s);
@@ -387,7 +387,7 @@ public class CampaignService : ICampaignService
     {
         var todayStart = DateTime.UtcNow.Date;
         var query = _campaigns.Query()
-            .Where(c => c.Status == CampaignStatus.Active && !c.IsDeleted && c.EndDate >= todayStart);
+            .Where(c => c.Status == CampaignStatus.Active && !c.IsDeleted && c.EndDate >= todayStart && c.Kind == CampaignKind.Campaign);
 
         if (!string.IsNullOrEmpty(category))
             query = query.Where(c => c.Category == category);
@@ -458,7 +458,7 @@ public class CampaignService : ICampaignService
 
         var todayStart = DateTime.UtcNow.Date;
         var query = _campaigns.Query()
-            .Where(c => c.Status == CampaignStatus.Active && !c.IsDeleted && c.EndDate >= todayStart);
+            .Where(c => c.Status == CampaignStatus.Active && !c.IsDeleted && c.EndDate >= todayStart && c.Kind == CampaignKind.Campaign);
 
         if (!string.IsNullOrEmpty(category))
             query = query.Where(c => c.Category == category);
@@ -822,7 +822,7 @@ public class CampaignService : ICampaignService
         var campaigns = await _campaigns.Query()
             .Include(c => c.PayoutRules)
             .Include(c => c.Assignments)
-            .Where(c => c.BrandProfileId == brandProfileId && !c.IsDeleted
+            .Where(c => c.BrandProfileId == brandProfileId && !c.IsDeleted && c.Kind == CampaignKind.Campaign
                 && (c.Status == CampaignStatus.Active || c.Status == CampaignStatus.Completed
                     || c.Status == CampaignStatus.Paused))
             .ToListAsync(ct);

@@ -75,6 +75,24 @@ public class VerifyEmailRequestValidator : AbstractValidator<VerifyEmailRequest>
     public VerifyEmailRequestValidator() => RuleFor(x => x.Token).NotEmpty().MaximumLength(300);
 }
 
+public class UpsertTapRequestValidator : AbstractValidator<UpsertTapRequest>
+{
+    public UpsertTapRequestValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(120);
+        RuleFor(x => x.MonthlyBudget).GreaterThanOrEqualTo(500)
+            .WithMessage("Månadsbudgeten måste vara minst 500 kr");
+        RuleFor(x => x.Cpm).GreaterThanOrEqualTo(PayoutRuleValidator.MinCpmSek)
+            .WithMessage($"CPM måste vara minst {PayoutRuleValidator.MinCpmSek:0} kr per 1 000 views");
+        RuleFor(x => x.PayoutCapPerVideo).GreaterThan(0).When(x => x.PayoutCapPerVideo.HasValue);
+        RuleFor(x => x.MonthlyCapPerCreator).GreaterThan(0).When(x => x.MonthlyCapPerCreator.HasValue);
+        RuleFor(x => x.Brief).NotEmpty().MaximumLength(4000);
+        RuleFor(x => x.ContentInstructions).MaximumLength(4000);
+        RuleFor(x => x.RequiredHashtag).NotEmpty().MaximumLength(60)
+            .Matches(@"^#?[A-Za-z0-9_åäöÅÄÖ]+$").WithMessage("Hashtag får bara innehålla bokstäver, siffror och _");
+    }
+}
+
 public class CreateBrandPostRequestValidator : AbstractValidator<CreateBrandPostRequest>
 {
     public CreateBrandPostRequestValidator()

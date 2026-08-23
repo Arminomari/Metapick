@@ -47,6 +47,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICampaignService, CampaignService>();
         services.AddScoped<IApplicationService, ApplicationService>();
         services.AddScoped<IAssignmentService, AssignmentService>();
+        services.AddScoped<ICommunityService, CommunityService>();
+        services.AddScoped<ITapService, TapService>();
         services.AddScoped<ITrackingLinkService, TrackingLinkService>();
         services.AddScoped<IPayoutService, PayoutService>();
         services.AddScoped<IFraudService, FraudService>();
@@ -118,6 +120,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPayoutCalculator, CpmPayoutCalculator>();
         services.AddSingleton<IPayoutCalculator, HybridPayoutCalculator>();
         services.AddSingleton<PayoutCalculatorFactory>();
+        services.AddScoped<TapAccrualService>();
         return services;
     }
 }

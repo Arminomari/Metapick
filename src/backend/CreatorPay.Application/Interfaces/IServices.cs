@@ -141,6 +141,25 @@ public interface IApplicationService
     Task<Result<PagedResult<ApplicationDto>>> GetCreatorApplicationsAsync(Guid creatorUserId, string? status, int page, int pageSize, CancellationToken ct = default);
 }
 
+public interface ICommunityService
+{
+    Task<Result<List<CommunityMemberDto>>> GetMembersAsync(Guid brandUserId, CancellationToken ct = default);
+    Task<Result<CommunityMemberDto>> InviteAsync(Guid brandUserId, Guid creatorProfileId, CancellationToken ct = default);
+    Task<Result<bool>> RemoveAsync(Guid brandUserId, Guid creatorProfileId, CancellationToken ct = default);
+    Task<Result<bool>> LeaveAsync(Guid creatorUserId, Guid brandProfileId, CancellationToken ct = default);
+    Task<Result<List<MyCommunityDto>>> GetMyCommunitiesAsync(Guid creatorUserId, CancellationToken ct = default);
+    Task<BrandCommunityMember> EnsureMemberAsync(Guid brandProfileId, Guid creatorProfileId, CommunityMemberSource source, CancellationToken ct = default);
+    Task EnsureTapAssignmentsAsync(Guid brandProfileId, Guid creatorProfileId, CancellationToken ct = default);
+}
+
+public interface ITapService
+{
+    Task<Result<TapDto?>> GetBrandTapAsync(Guid brandUserId, CancellationToken ct = default);
+    Task<Result<TapDto>> UpsertTapAsync(Guid brandUserId, UpsertTapRequest request, CancellationToken ct = default);
+    Task<Result<TapDto>> SetTapStatusAsync(Guid brandUserId, bool active, CancellationToken ct = default);
+    Task<Result<List<CreatorTapDto>>> GetCreatorTapsAsync(Guid creatorUserId, CancellationToken ct = default);
+}
+
 public interface IAssignmentService
 {
     Task<Result<AssignmentDetailDto>> GetAssignmentAsync(Guid assignmentId, Guid userId, CancellationToken ct = default);

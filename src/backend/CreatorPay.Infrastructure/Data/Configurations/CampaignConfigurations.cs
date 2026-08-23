@@ -195,3 +195,35 @@ public class SavedCampaignConfiguration : IEntityTypeConfiguration<SavedCampaign
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
+
+public class TapAccrualConfiguration : IEntityTypeConfiguration<TapAccrual>
+{
+    public void Configure(EntityTypeBuilder<TapAccrual> b)
+    {
+        b.ToTable("tap_accruals");
+        b.HasKey(e => e.Id);
+        b.HasIndex(e => new { e.AssignmentId, e.Year, e.Month }).IsUnique();
+        b.HasOne(e => e.Assignment)
+            .WithMany()
+            .HasForeignKey(e => e.AssignmentId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public class BrandCommunityMemberConfiguration : IEntityTypeConfiguration<BrandCommunityMember>
+{
+    public void Configure(EntityTypeBuilder<BrandCommunityMember> b)
+    {
+        b.ToTable("brand_community_members");
+        b.HasKey(e => e.Id);
+        b.HasIndex(e => new { e.BrandProfileId, e.CreatorProfileId }).IsUnique();
+        b.HasOne(e => e.BrandProfile)
+            .WithMany()
+            .HasForeignKey(e => e.BrandProfileId)
+            .OnDelete(DeleteBehavior.Cascade);
+        b.HasOne(e => e.CreatorProfile)
+            .WithMany()
+            .HasForeignKey(e => e.CreatorProfileId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}

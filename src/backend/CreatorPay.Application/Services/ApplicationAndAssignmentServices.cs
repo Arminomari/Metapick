@@ -26,6 +26,7 @@ public class ApplicationService : IApplicationService
     private readonly INotificationService _notifications;
     private readonly ILogger<ApplicationService> _logger;
     private readonly IRepository<User> _userAccounts;
+    private readonly ICommunityService _community;
 
     public ApplicationService(
         IUnitOfWork uow,
@@ -37,7 +38,8 @@ public class ApplicationService : IApplicationService
         IAuditService audit,
         INotificationService notifications,
         ILogger<ApplicationService> logger,
-        IRepository<User> userAccounts)
+        IRepository<User> userAccounts,
+        ICommunityService community)
     {
         _uow = uow;
         _applications = applications;
@@ -49,6 +51,7 @@ public class ApplicationService : IApplicationService
         _notifications = notifications;
         _logger = logger;
         _userAccounts = userAccounts;
+        _community = community;
     }
 
     public async Task<Result<ApplicationDto>> ApplyToCampaignAsync(Guid creatorUserId, ApplyToCampaignRequest request, CancellationToken ct = default)
@@ -192,6 +195,11 @@ public class ApplicationService : IApplicationService
             await _audit.LogAsync(brandUserId, "Application.Approved", "CampaignApplication", app.Id);
             await _notifications.SendAsync(app.CreatorProfile.UserId, NotificationType.ApplicationApproved,
                 $"Din ansökan till {app.Campaign.Name} har godkänts!");
+
+            // A collaboration qualifies the creator into the brand's community
+            // (and onto its tap) automatically.
+            await _community.EnsureMemberAsync(app.Campaign.BrandProfileId, app.CreatorProfileId, CommunityMemberSource.AutoQualified, ct);
+            await _uow.SaveChangesAsync(ct);
         }
         catch (Exception ex)
         {
@@ -733,6 +741,10 @@ public class AssignmentService : IAssignmentService
         assignment.TotalVerifiedViews = posts
             .Where(p => p.VerificationStatus == VerificationStatus.Verified)
             .Sum(p => p.LatestViewCount);
+
+        // Taps use monthly accounting (hard caps) — money for them is owned by
+        // TapAccrualService via the recalculation job, never the lifetime calculators.
+        if (assignment.Campaign?.Kind == CampaignKind.Tap) return;
 
         var rules = assignment.Campaign?.PayoutRules?.OrderBy(r => r.SortOrder).ToList();
         if (rules is { Count: > 0 })
