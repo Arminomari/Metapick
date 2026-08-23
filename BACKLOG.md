@@ -62,3 +62,11 @@ plus deras granskningstid.
 - Social-registrering hoppar över fältvalidering.
 - Ingen kontolåsning vid upprepade inloggningsförsök (rate limit finns, per IP).
 - Brandens "manuellt betald"-väg går förbi admin (by design, bör ses över).
+
+## Kranen (pivot, 2026-08-22) — löpande UGC-motor
+Beslut: Vyrle byggs om från episodisk kampanjmarknadsplats till löpande UGC-motor. Kärnprodukt = kranen (stående månadsbudget som betalar varumärkets community per verifierad view). Kampanjer = on-ramp + boost; varje avslutad kampanj konverterar till "gör detta månatligt".
+
+- [x] Fas 1 (shippad): Campaign.Kind=Tap, månadsbokföring (hårt tak, no rollover, cap/video, månadstak/creator, fast CPM ≥20), community-medlemskap (auto-kvalificering vid godkänd ansökan, inbjudan, borttagning), auto-assignment till kranen, brand-UI (Kranen + Community), creator-UI (Dina kranar + tap-banner), konverterings-CTA på avslutad kampanj.
+- [ ] Fas 2 — community-ytan: posttyper (Nyhet / Önskemål / Pinnad), pinna brief & exempelvideor, gruppkommentarer brand↔community, "kranen är öppen"-post automatiskt, kran-uppdateringar i creator-flödet.
+- [ ] Fas 3 — kran-analys: månadsrapport (kostnad/views/CPM/creators), per-creator leverans, budgetprognos, admin-vy över alla kranar (MRR).
+- [ ] Fas 4 — fakturering: månadsbudget faktureras löpande (Stripe), kranen pausas automatiskt vid utebliven betalning.
