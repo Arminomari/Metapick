@@ -131,6 +131,7 @@ public class AuthService : IAuthService
                 InstagramUsername = string.IsNullOrWhiteSpace(request.InstagramUsername)
                     ? null : request.InstagramUsername.TrimStart('@').Trim(),
                 AvatarUrl = MediaValidation.Normalize(request.AvatarUrl),
+                SelfieUrl = MediaValidation.Normalize(request.SelfieUrl),
                 FollowerCount = Math.Max(0, request.FollowerCount ?? 0),
                 AverageViews = request.AverageViews is > 0 ? request.AverageViews : null,
                 InstagramFollowerCount = Math.Max(0, request.InstagramFollowerCount ?? 0),

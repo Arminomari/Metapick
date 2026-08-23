@@ -169,6 +169,7 @@ interface AdminCreatorFull {
   followerCount: number; averageViews?: number | null; instagramUsername?: string | null; instagramFollowerCount: number;
   profileStatus: string;
   tikTokUsername?: string | null; tikTokConnected: boolean; tikTokOAuth: boolean; tikTokFollowerCount: number; tikTokLastSync?: string | null;
+  selfieUrl?: string | null;
   activeAssignments: number; completedAssignments: number; totalVerifiedViews: number; totalEarned: number; totalPaidOut: number;
   payoutMethodConfigured: boolean; payoutMethod?: string | null;
   averageRating: number; reviewCount: number; portfolioCount: number;
@@ -296,6 +297,21 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
           {apRow({ label: t('Webbplats'), value: p.website ? <a href={p.website} target="_blank" rel="noopener noreferrer" style={{ color: '#9c4f31' }}>{p.website}</a> : '–' })}
           {apRow({ label: t('Utbetalningsmetod'), value: p.payoutMethodConfigured ? (p.payoutMethod || t('Konfigurerad')) : t('Ej konfigurerad') })}
         </div>
+      </div>
+
+      {/* ── Identitetsverifiering ── */}
+      <div style={{ ...apCard, marginTop: 14 }}>
+        <h3 style={{ margin: '0 0 10px', fontSize: '.95rem', fontWeight: 800 }}>{t('Identitetsverifiering')}</h3>
+        {p.selfieUrl ? (
+          <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            <img src={p.selfieUrl} alt={t('Selfie för verifiering')} style={{ width: '100%', maxWidth: 200, borderRadius: 16, border: '1px solid rgba(241,168,143,.3)' }} />
+            <div style={{ flex: '1 1 220px', minWidth: 0, fontSize: '.85rem', color: '#5c6270', lineHeight: 1.6 }}>
+              {t('Jämför selfien med profilbilden och TikTok-kontots innehåll innan du godkänner. Selfien visas aldrig offentligt.')}
+            </div>
+          </div>
+        ) : (
+          <div style={{ fontSize: '.85rem', fontWeight: 600, color: '#c0392b' }}>⚠ {t('Ingen selfie inskickad — kontot skapades innan kravet infördes.')}</div>
+        )}
       </div>
 
       {/* ── Moderation ── */}

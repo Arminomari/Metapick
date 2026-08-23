@@ -75,6 +75,7 @@ public class CreatorProfileConfiguration : IEntityTypeConfiguration<CreatorProfi
         b.Property(e => e.Language).HasMaxLength(5);
         // Avatar can be an inline base64 data URL from the client-side resizer (capped in MediaValidation).
         b.Property(e => e.AvatarUrl).HasMaxLength(400_000);
+        b.Property(e => e.SelfieUrl).HasMaxLength(400_000);
         b.Property(e => e.Status).HasMaxLength(20).IsRequired();
         b.Property(e => e.IsDeleted).HasDefaultValue(false);
         b.Property(e => e.InstagramUsername).HasMaxLength(100);

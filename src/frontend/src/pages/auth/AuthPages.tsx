@@ -184,6 +184,7 @@ interface WizardForm {
   // creator
   displayName: string; bio: string; category: string; country: string; dateOfBirth: string;
   avatarUrl: string | null;
+  selfieUrl: string | null;
   tikTokUsername: string; followerCount: string; averageViews: string;
   instagramUsername: string; instagramFollowerCount: string; website: string;
   profileTags: string[]; openToPrOffers: boolean;
@@ -216,6 +217,7 @@ export function RegisterPage() {
     firstName: social?.firstName ?? '', lastName: social?.lastName ?? '',
     displayName: social?.firstName ?? '', bio: '', category: 'Övrigt', country: 'SE', dateOfBirth: '',
     avatarUrl: social?.pictureUrl ?? null,
+    selfieUrl: null,
     tikTokUsername: '', followerCount: '', averageViews: '',
     instagramUsername: '', instagramFollowerCount: '', website: '',
     profileTags: [], openToPrOffers: true,
@@ -290,6 +292,7 @@ export function RegisterPage() {
     if (label === 'Profil') {
       if (!form.displayName.trim()) return t('Visningsnamn krävs');
       if (form.bio.trim().length < 20) return t('Skriv minst 20 tecken i din bio — varumärken läser den först av allt');
+      if (!form.selfieUrl) return t('Selfie krävs — den används för att verifiera att du är en riktig person.');
       return null;
     }
     if (label === 'Räckvidd') {
@@ -339,6 +342,7 @@ export function RegisterPage() {
       profileTags: form.profileTags.length > 0 ? form.profileTags : null,
       instagramUsername: form.instagramUsername.trim() || null,
       avatarUrl: form.avatarUrl,
+      selfieUrl: form.selfieUrl,
       followerCount: intOrNull(form.followerCount),
       averageViews: intOrNull(form.averageViews),
       instagramFollowerCount: intOrNull(form.instagramFollowerCount),
@@ -468,6 +472,13 @@ export function RegisterPage() {
               value={form.avatarUrl}
               onChange={(v) => setForm((f) => ({ ...f, avatarUrl: v }))}
               hint={t('Varumärken ser den först — ett tydligt ansikte ökar dina chanser.')}
+            />
+            <ImagePicker
+              label={`${t('Selfie för verifiering')} *`}
+              value={form.selfieUrl}
+              onChange={(v) => setForm((f) => ({ ...f, selfieUrl: v }))}
+              capture
+              hint={t('Ta en selfie med framkameran. Visas ALDRIG offentligt — används endast av vårt team för att verifiera att du är en riktig person.')}
             />
             <div className="field"><label htmlFor="rg-name">{t('Visningsnamn')} *</label><input id="rg-name" type="text" value={form.displayName} onChange={set('displayName')} required placeholder={t('Ditt namn eller alias')} /></div>
             <div className="field"><label htmlFor="rg-bio">{t('Bio')} *</label><textarea id="rg-bio" value={form.bio} onChange={set('bio')} required rows={3} placeholder={t('Berätta om dig och ditt innehåll — varför ska varumärken samarbeta med dig?')} />

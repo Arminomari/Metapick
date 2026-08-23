@@ -16,6 +16,11 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
     {
         RuleFor(x => x.DateOfBirth).Must(DobRules.Reasonable)
             .WithMessage("Ange ett rimligt födelsedatum — du måste vara minst 13 år.");
+        RuleFor(x => x.SelfieUrl).NotEmpty()
+            .When(x => string.Equals(x.Role, "Creator", StringComparison.OrdinalIgnoreCase))
+            .WithMessage("Selfie krävs för creators — den används för identitetsverifiering.");
+        RuleFor(x => x.SelfieUrl).Must(CreatorPay.Application.Common.MediaValidation.IsValidImageRef)
+            .WithMessage("Ogiltig selfie-bild");
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(256);
         RuleFor(x => x.Password).NotEmpty().MinimumLength(8).MaximumLength(128)
             .Matches(@"[A-Z]").WithMessage("Lösenord måste innehålla minst en versal")

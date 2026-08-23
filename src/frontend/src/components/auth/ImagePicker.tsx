@@ -11,12 +11,14 @@ export function ImagePicker({
   label,
   shape = 'circle',
   hint,
+  capture,
 }: {
   value: string | null | undefined;
   onChange: (dataUrl: string | null) => void;
   label: string;
   shape?: 'circle' | 'rounded';
   hint?: string;
+  capture?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -91,6 +93,7 @@ export function ImagePicker({
         ref={inputRef}
         type="file"
         accept="image/*"
+        {...(capture ? { capture: 'user' as const } : {})}
         style={{ display: 'none' }}
         onChange={(e) => { const f = e.target.files?.[0]; if (f) void processFile(f); e.target.value = ''; }}
       />

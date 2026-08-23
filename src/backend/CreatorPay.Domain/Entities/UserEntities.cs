@@ -66,6 +66,8 @@ public class CreatorProfile : SoftDeletableEntity
     public string Country { get; set; } = null!;
     public string Language { get; set; } = "sv";
     public string? AvatarUrl { get; set; }
+    /// <summary>Identity-verification selfie — admin eyes only, never public.</summary>
+    public string? SelfieUrl { get; set; }
     public DateOnly? DateOfBirth { get; set; }
     public int FollowerCount { get; set; }
     public int? AverageViews { get; set; }

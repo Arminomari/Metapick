@@ -140,7 +140,8 @@ public class SocialAuthService : ISocialAuthService
             request.InstagramUsername,
             request.AvatarUrl ?? identity.PictureUrl, request.FollowerCount, request.AverageViews,
             request.InstagramFollowerCount, request.Website,
-            request.Industry, request.LogoUrl, request.Description);
+            request.Industry, request.LogoUrl, request.Description,
+            SelfieUrl: request.SelfieUrl);
 
         var registered = await _auth.RegisterAsync(composed);
         if (!registered.IsSuccess) return registered;

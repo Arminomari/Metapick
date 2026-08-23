@@ -29,7 +29,9 @@ public record RegisterRequest(
     string? AvatarUrl = null, int? FollowerCount = null, int? AverageViews = null,
     int? InstagramFollowerCount = null, string? Website = null,
     // Brand presence (optional)
-    string? Industry = null, string? LogoUrl = null, string? Description = null);
+    string? Industry = null, string? LogoUrl = null, string? Description = null,
+    // Identity verification (required for creators)
+    string? SelfieUrl = null);
 public record LoginRequest(string Email, string Password);
 
 // ──── Social auth ────
@@ -46,7 +48,7 @@ public record SocialRegisterRequest(
     string? AvatarUrl = null, int? FollowerCount = null, int? AverageViews = null,
     int? InstagramFollowerCount = null, string? Website = null,
     string? Industry = null, string? LogoUrl = null, string? Description = null,
-    string? Email = null);
+    string? Email = null, string? SelfieUrl = null);
 public record SocialIdentityDto(string Provider, string Email, string? FirstName, string? LastName, string? PictureUrl);
 /// <summary>Status is "LoggedIn" (Auth set) or "NeedsRegistration" (Identity set, client continues to signup).</summary>
 public record SocialLoginResponse(string Status, AuthResponse? Auth, SocialIdentityDto? Identity);
@@ -78,7 +80,8 @@ public record AdminCreatorFullDto(
     string? TikTokUsername, bool TikTokConnected, bool TikTokOAuth, int TikTokFollowerCount, DateTime? TikTokLastSync,
     int ActiveAssignments, int CompletedAssignments, long TotalVerifiedViews, decimal TotalEarned, decimal TotalPaidOut,
     bool PayoutMethodConfigured, string? PayoutMethod,
-    double AverageRating, int ReviewCount, int PortfolioCount);
+    double AverageRating, int ReviewCount, int PortfolioCount,
+    string? SelfieUrl = null);
 public record AuthResponse(string AccessToken, string RefreshToken, DateTime ExpiresAt, Guid UserId, string Email, string Role);
 public record UserProfileDto(Guid Id, string Email, string Role, string Status, string? ProfileName, string? ProfileStatus, DateTime? LastLoginAt, DateTime CreatedAt, bool EmailVerified = false);
 

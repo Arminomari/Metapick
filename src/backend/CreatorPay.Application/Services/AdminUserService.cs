@@ -472,7 +472,8 @@ public class AdminUserService : IAdminUserService
             assignmentStats?.Active ?? 0, assignmentStats?.Completed ?? 0, assignmentStats?.Views ?? 0,
             assignmentStats?.Earned ?? 0m, paidOut,
             !string.IsNullOrEmpty(creator.PayoutMethod), creator.PayoutMethod,
-            Math.Round(reviewAgg?.Avg ?? 0, 1), reviewAgg?.Count ?? 0, creator.PortfolioItems?.Count ?? 0);
+            Math.Round(reviewAgg?.Avg ?? 0, 1), reviewAgg?.Count ?? 0, creator.PortfolioItems?.Count ?? 0,
+            creator.SelfieUrl);
     }
 
     /// <summary>

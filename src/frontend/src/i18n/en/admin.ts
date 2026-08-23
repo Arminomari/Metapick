@@ -198,4 +198,7 @@ export const admin: Record<string, string> = {
   'Raderar…': 'Deleting…',
   'Mjuk radering — kontot släcks och loggas ut, kampanjhistorik bevaras för spårbarhet.': 'Soft delete — the account is disabled and signed out; campaign history is kept for auditability.',
   'Konto raderat av admin': 'Account deleted by admin',
+  'Identitetsverifiering': 'Identity verification',
+  'Jämför selfien med profilbilden och TikTok-kontots innehåll innan du godkänner. Selfien visas aldrig offentligt.': 'Compare the selfie with the profile picture and the TikTok account content before approving. The selfie is never shown publicly.',
+  'Ingen selfie inskickad — kontot skapades innan kravet infördes.': 'No selfie submitted — the account was created before the requirement.',
 };

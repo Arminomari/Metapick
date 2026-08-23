@@ -284,4 +284,7 @@ export const auth: Record<string, string> = {
   'din e-postadress': 'your email address',
   'klicka på länken i mejlet för att verifiera din adress. Hittar du det inte? Kolla skräpposten.': 'click the link in the email to verify your address. Cannot find it? Check your spam folder.',
   'Det här TikTok-kontot är redan kopplat till ett annat VYRLE-konto.': 'That TikTok account is already connected to another VYRLE account.',
+  'Selfie för verifiering': 'Verification selfie',
+  'Ta en selfie med framkameran. Visas ALDRIG offentligt — används endast av vårt team för att verifiera att du är en riktig person.': 'Take a selfie with your front camera. NEVER shown publicly — used only by our team to verify you are a real person.',
+  'Selfie krävs — den används för att verifiera att du är en riktig person.': 'A selfie is required — it is used to verify that you are a real person.',
 };
