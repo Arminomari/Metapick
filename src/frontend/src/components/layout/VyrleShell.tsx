@@ -2,7 +2,7 @@ import api from '@/lib/api';
 import { useProfile } from '@/hooks/api';
 import { t, statusLabel, LangSwitcher } from '@/lib/i18n';
 import { FEATURES } from '@/lib/features';
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { useCreatorProfile, useBrandProfile, useNotifications, usePrUnreadCount, useUnreadChatCount } from '@/hooks/api';
@@ -40,12 +40,15 @@ function ShellChrome({ group, role, nav, name, handle, sub, initial, imageUrl, b
   const isActive = (p: string) => loc.pathname === p || (p !== home && loc.pathname.startsWith(p + '/'));
   const handleLogout = () => { logout(); navigate('/login'); };
   const [drawer, setDrawer] = useState<'none' | 'notif' | 'msg'>('none');
+  const [mobileNav, setMobileNav] = useState(false);
+  useEffect(() => { setMobileNav(false); setDrawer('none'); }, [loc.pathname]);
 
   return (
     <div className="vy-app">
       <ToastProvider>
       <div className="app">
-        <aside className="sidebar">
+        {mobileNav && <div className="sidebar-backdrop mob-only" onClick={() => setMobileNav(false)} aria-hidden />}
+        <aside className={`sidebar${mobileNav ? ' open' : ''}`}>
           <Link to={home} className="brand" aria-label="VYRLE" style={{ textDecoration: 'none' }}>
             <svg className="brand-star" width="26" height="26" viewBox="0 0 24 24" fill="#0B0F17" aria-hidden="true"><path d="M12 1.5c.7 5.6 2.9 7.8 8.5 8.5 .9.1 .9 1.4 0 1.5-5.6.7-7.8 2.9-8.5 8.5-.1.9-1.4.9-1.5 0-.7-5.6-2.9-7.8-8.5-8.5-.9-.1-.9-1.4 0-1.5 5.6-.7 7.8-2.9 8.5-8.5.1-.9 1.4-.9 1.5 0z" /></svg>
             VYRLE
@@ -86,6 +89,9 @@ function ShellChrome({ group, role, nav, name, handle, sub, initial, imageUrl, b
 
         <div className="main">
           <header className="topbar">
+            <button className="icon-btn mob-only" aria-label="Meny" onClick={() => setMobileNav(true)}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+            </button>
             <div className="search">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
               <input placeholder={t('Sök kampanjer, varumärken, insikter…')} />
@@ -111,6 +117,28 @@ function ShellChrome({ group, role, nav, name, handle, sub, initial, imageUrl, b
           </header>
           <EmailVerifyBanner />
           <div className="scroll"><Outlet /></div>
+
+          <nav className="tabbar mob-only" aria-label="Mobilnavigering">
+            {nav.slice(0, 2).map((n) => (
+              <Link key={n.path} to={n.path} className={isActive(n.path) ? 'active' : ''}>
+                {ICON[n.icon]}<span>{n.label}</span>
+              </Link>
+            ))}
+            <button type="button" className={drawer === 'msg' ? 'active' : ''} onClick={() => setDrawer((d) => d === 'msg' ? 'none' : 'msg')}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
+              <span>{t('Meddelanden')}</span>
+              {chatBadge > 0 && <span className="tb-ping">{chatBadge > 9 ? '9+' : chatBadge}</span>}
+            </button>
+            <button type="button" className={drawer === 'notif' ? 'active' : ''} onClick={() => setDrawer((d) => d === 'notif' ? 'none' : 'notif')}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7" /><path d="M10.5 20a2 2 0 0 0 3 0" /></svg>
+              <span>{t('Notiser')}</span>
+              {bellBadge > 0 && <span className="tb-ping">{bellBadge > 9 ? '9+' : bellBadge}</span>}
+            </button>
+            <button type="button" onClick={() => setMobileNav(true)}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+              <span>{t('Mer')}</span>
+            </button>
+          </nav>
         </div>
       </div>
       <NotificationsDrawer open={drawer === 'notif'} onClose={() => setDrawer('none')} />
