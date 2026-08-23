@@ -62,9 +62,20 @@ function TapForm({ tap, onDone }: { tap: TapDto | null; onDone: () => void }) {
     onError: (e: any) => setErr(e?.response?.data?.error?.message ?? e?.response?.data?.error?.details?.[0] ?? t('Kunde inte spara kranen')),
   });
 
+  // Live math — everything the brand needs to judge the tap before opening it.
   const cpm = Number(form.cpm) || 0;
   const budget = Number(form.monthlyBudget) || 0;
-  const viewsPerMonth = cpm > 0 ? Math.floor(budget / cpm * 1000) : 0;
+  const capVideo = Number(form.payoutCapPerVideo) || 0;      // 0 = no cap
+  const capCreator = Number(form.monthlyCapPerCreator) || 0; // 0 = no cap
+  const viewsPerMonth = cpm > 0 ? Math.floor((budget / cpm) * 1000) : 0;
+  const payFor = (views: number) => {
+    const raw = (views * cpm) / 1000;
+    return capVideo > 0 ? Math.min(raw, capVideo) : raw;
+  };
+  const capKicksInAt = capVideo > 0 && cpm > 0 ? Math.floor((capVideo / cpm) * 1000) : 0;
+  const minCreators = capCreator > 0 && budget > 0 ? Math.ceil(budget / capCreator) : 0;
+  const minVideos = capVideo > 0 && budget > 0 ? Math.ceil(budget / capVideo) : 0;
+  const ready = budget > 0 && cpm > 0;
 
   return (
     <form className="card" onSubmit={(e) => { e.preventDefault(); setErr(''); save.mutate(); }} style={{ border: '1px solid rgba(241,168,143,.4)', minWidth: 0 }}>
@@ -82,18 +93,74 @@ function TapForm({ tap, onDone }: { tap: TapDto | null; onDone: () => void }) {
         <div>
           <span style={lbl}>{t('CPM — kr per 1 000 views')}</span>
           <input style={input} type="number" min={20} step={1} required value={form.cpm} onChange={(e) => setForm({ ...form, cpm: e.target.value })} />
-          <div style={hint}>{t('Minst 20 kr. Fast för hela kranen.')}{viewsPerMonth > 0 && <> · ≈ <strong>{formatNumber(viewsPerMonth)}</strong> {t('views/månad för budgeten')}</>}</div>
+          <div style={hint}>{t('Minst 20 kr. Fast för hela kranen.')}</div>
         </div>
         <div>
           <span style={lbl}>{t('Tak per video (SEK)')}</span>
           <input style={input} type="number" min={0} step={50} value={form.payoutCapPerVideo} onChange={(e) => setForm({ ...form, payoutCapPerVideo: e.target.value })} placeholder={t('valfritt')} />
-          <div style={hint}>{t('Bredd före viralitet — en enskild video kan max ge så här mycket.')}</div>
+          <div style={hint}>{capVideo > 0 && cpm > 0
+            ? <>{t('Taket slår in vid')} <strong>{formatNumber(capKicksInAt)}</strong> {t('views per video.')}</>
+            : t('Tomt = inget tak. Med tak kan en enskild video max ge så här mycket.')}</div>
         </div>
         <div>
           <span style={lbl}>{t('Månadstak per creator (SEK)')}</span>
           <input style={input} type="number" min={0} step={100} value={form.monthlyCapPerCreator} onChange={(e) => setForm({ ...form, monthlyCapPerCreator: e.target.value })} placeholder={t('valfritt')} />
-          <div style={hint}>{t('Sprider budgeten över fler creators.')}</div>
+          <div style={hint}>{capCreator > 0 && budget > 0
+            ? <>{t('Budgeten räcker till minst')} <strong>{minCreators}</strong> {t('creators per månad.')}</>
+            : t('Tomt = inget tak. Med tak sprids budgeten över fler creators.')}</div>
         </div>
+        <div style={{ gridColumn: '1 / -1', padding: '16px 18px', borderRadius: 16, background: ready ? 'linear-gradient(160deg,#fff,#FFF6F0)' : 'rgba(183,188,200,.10)', border: '1px solid rgba(241,168,143,.3)', minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--muted)' }}>{t('Så här räknar kranen')}</span>
+            {!ready && <span style={{ fontSize: 12.5, color: 'var(--muted)' }}>{t('Fyll i månadsbudget och CPM så räknar vi åt dig.')}</span>}
+          </div>
+
+          {ready && (
+            <>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
+                <span style={{ fontFamily: '"Fraunces",serif', fontSize: 30, fontWeight: 700, color: '#0B0F17' }}>{formatNumber(viewsPerMonth)}</span>
+                <span style={{ fontSize: 13.5, color: 'var(--muted)' }}>{t('views i månaden köper budgeten')} ({formatCurrency(budget)} ÷ {cpm} kr × 1 000)</span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 210px), 1fr))', gap: 10, marginTop: 14 }}>
+                <div style={{ padding: '10px 12px', borderRadius: 12, background: 'rgba(255,255,255,.75)', border: '1px solid rgba(241,168,143,.22)' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--muted)' }}>{t('Spridning')}</div>
+                  <div style={{ fontSize: 13.5, marginTop: 3, lineHeight: 1.5 }}>
+                    {capCreator > 0
+                      ? <>{t('Minst')} <strong>{minCreators}</strong> {t('creators kan maxa sin månad.')}</>
+                      : <span style={{ color: '#9c6b1c' }}>⚠ {t('Inget månadstak — en ensam creator kan ta hela budgeten.')}</span>}
+                  </div>
+                </div>
+                <div style={{ padding: '10px 12px', borderRadius: 12, background: 'rgba(255,255,255,.75)', border: '1px solid rgba(241,168,143,.22)' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--muted)' }}>{t('Per video')}</div>
+                  <div style={{ fontSize: 13.5, marginTop: 3, lineHeight: 1.5 }}>
+                    {capVideo > 0
+                      ? <>{t('Max')} <strong>{formatCurrency(capVideo)}</strong> {t('per video — minst')} <strong>{minVideos}</strong> {t('videos för att förbruka månaden.')}</>
+                      : <span style={{ color: '#9c6b1c' }}>⚠ {t('Inget tak per video — en viral video kan äta stora delar av månaden.')}</span>}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 14 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6 }}>{t('Så mycket tjänar en creator på en video')}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 120px), 1fr))', gap: 8 }}>
+                  {[1000, 10000, 100000, 1000000].map((v) => {
+                    const amount = payFor(v);
+                    const capped = capVideo > 0 && (v * cpm) / 1000 > capVideo;
+                    return (
+                      <div key={v} style={{ padding: '10px 12px', borderRadius: 12, textAlign: 'center', background: capped ? 'rgba(242,197,138,.22)' : 'rgba(255,244,236,.85)', border: '1px solid rgba(241,168,143,.22)' }}>
+                        <div style={{ fontSize: 11.5, color: 'var(--muted)', fontWeight: 600 }}>{formatNumber(v)} views</div>
+                        <div style={{ fontWeight: 800, fontSize: 16, color: '#0B0F17', marginTop: 2 }}>{formatCurrency(amount)}</div>
+                        {capped && <div style={{ fontSize: 10.5, fontWeight: 700, color: '#9c6b1c', marginTop: 1 }}>{t('tak nått')}</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
         <div>
           <span style={lbl}>{t('Hashtag')}</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
