@@ -70,14 +70,14 @@ export function CopyField({ icon, label, value, hint }: { icon?: string; label: 
   return (
     <div
       style={{
-        display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+        display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', minWidth: 0,
         padding: '12px 14px', borderRadius: 15,
         border: '1px solid rgba(241,168,143,.28)',
         background: 'linear-gradient(160deg,#fff,#FFF6F0)',
       }}
     >
       {icon && <span style={iconStyle} aria-hidden>{icon}</span>}
-      <div style={{ flex: 1, minWidth: 170 }}>
+      <div style={{ flex: '1 1 170px', minWidth: 0 }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--muted)' }}>{label}</div>
         <div style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontWeight: 700, fontSize: 14, color: '#0B0F17', wordBreak: 'break-word', marginTop: 2, lineHeight: 1.45 }}>{value}</div>
         {hint && <div style={{ fontSize: 11.5, color: '#9c6b1c', marginTop: 3 }}>⚠ {hint}</div>}

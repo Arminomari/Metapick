@@ -60,12 +60,12 @@ type AdminSection = 'overview' | 'users' | 'campaigns' | 'payouts' | 'fraud' | '
 
 const s = {
   page: { minHeight: '100vh', background: 'radial-gradient(1200px 600px at 12% -8%, rgba(255,216,199,.55), transparent 60%), radial-gradient(900px 500px at 105% 0%, rgba(237,225,255,.45), transparent 55%), #FFF4EC', color: '#0B0F17', padding: 'clamp(1rem, 4vw, 2rem)' } as React.CSSProperties,
-  container: { maxWidth: 1160, margin: '0 auto' } as React.CSSProperties,
+  container: { width: '100%', maxWidth: 1160, margin: '0 auto', minWidth: 0 } as React.CSSProperties,
   header: { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.6rem' } as React.CSSProperties,
   title: { fontSize: 'clamp(1.5rem, 4vw, 2.2rem)', fontWeight: 700, letterSpacing: '-0.02em' } as React.CSSProperties,
   tabs: { display: 'flex', flexWrap: 'wrap', gap: '.5rem', marginBottom: '1.6rem' } as React.CSSProperties,
   tab: (active: boolean) => ({ padding: '.5rem 1.1rem', borderRadius: 980, border: active ? '1px solid #0B0F17' : '1px solid rgba(241,168,143,.25)', background: active ? 'linear-gradient(135deg,#1A2230,#0B0F17)' : 'rgba(255,255,255,.7)', color: active ? '#fff' : '#2C333F', cursor: 'pointer', fontSize: '.85rem', fontWeight: 600 }) as React.CSSProperties,
-  card: { background: 'rgba(255,255,255,.82)', border: '1px solid rgba(255,255,255,.7)', borderRadius: 24, padding: '1.5rem', marginBottom: '1rem', boxShadow: '0 10px 34px rgba(180,120,90,.08), 0 2px 8px rgba(11,15,23,.04)' } as React.CSSProperties,
+  card: { background: 'rgba(255,255,255,.82)', border: '1px solid rgba(255,255,255,.7)', borderRadius: 24, padding: 'clamp(1rem, 3.5vw, 1.5rem)', marginBottom: '1rem', minWidth: 0, boxShadow: '0 10px 34px rgba(180,120,90,.08), 0 2px 8px rgba(11,15,23,.04)' } as React.CSSProperties,
   badge: (status: string) => {
     const colors: Record<string, { bg: string; color: string }> = {
       PendingVerification: { bg: 'rgba(255,216,199,.55)', color: '#b07d1c' },
@@ -82,8 +82,8 @@ const s = {
   btnApprove: { padding: '.55rem 1.3rem', borderRadius: 980, background: '#2f9d5b', color: '#fff', border: 'none', fontWeight: 600, fontSize: '.8rem', cursor: 'pointer' } as React.CSSProperties,
   btnReject: { padding: '.55rem 1.3rem', borderRadius: 980, background: '#cf4b4b', color: '#fff', border: 'none', fontWeight: 600, fontSize: '.8rem', cursor: 'pointer' } as React.CSSProperties,
   detailRow: { display: 'flex', flexWrap: 'wrap', gap: '.5rem', marginBottom: '.5rem', fontSize: '.875rem' } as React.CSSProperties,
-  detailLabel: { color: '#6E7480', minWidth: 160 } as React.CSSProperties,
-  detailValue: { color: '#0B0F17' } as React.CSSProperties,
+  detailLabel: { color: '#6E7480', minWidth: 160, flex: '0 0 auto' } as React.CSSProperties,
+  detailValue: { color: '#0B0F17', flex: '1 1 180px', minWidth: 0, overflowWrap: 'anywhere' } as React.CSSProperties,
   empty: { textAlign: 'center', padding: '4rem 0', color: '#6E7480' } as React.CSSProperties,
 };
 
@@ -174,7 +174,7 @@ interface AdminCreatorFull {
   averageRating: number; reviewCount: number; portfolioCount: number;
 }
 
-const apCard: React.CSSProperties = { background: '#fff', borderRadius: 18, border: '1px solid rgba(241,168,143,.25)', padding: '1.2rem 1.4rem', marginBottom: 14, boxShadow: '0 8px 24px rgba(180,120,90,.06)' };
+const apCard: React.CSSProperties = { background: '#fff', borderRadius: 18, border: '1px solid rgba(241,168,143,.25)', padding: '1.2rem clamp(.9rem, 3.5vw, 1.4rem)', marginBottom: 14, minWidth: 0, boxShadow: '0 8px 24px rgba(180,120,90,.06)' };
 const apMuted: React.CSSProperties = { fontSize: '.8rem', color: '#8a8f9c' };
 const apPill = (bg: string, color: string): React.CSSProperties => ({ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 11px', borderRadius: 980, fontSize: '.75rem', fontWeight: 700, background: bg, color, whiteSpace: 'nowrap' });
 const apStat = ({ label, value, sub }: { label: string; value: React.ReactNode; sub?: string }) => (
@@ -185,9 +185,9 @@ const apStat = ({ label, value, sub }: { label: string; value: React.ReactNode; 
   </div>
 );
 const apRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
-  <div key={label} style={{ display: 'flex', gap: 12, padding: '7px 0', borderBottom: '1px solid rgba(241,168,143,.14)', fontSize: '.86rem' }}>
-    <span style={{ color: '#8a8f9c', minWidth: 160 }}>{label}</span>
-    <span style={{ color: '#0B0F17', fontWeight: 600, wordBreak: 'break-word' }}>{value}</span>
+  <div key={label} style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px', padding: '7px 0', borderBottom: '1px solid rgba(241,168,143,.14)', fontSize: '.86rem' }}>
+    <span style={{ color: '#8a8f9c', minWidth: 160, flex: '0 0 auto' }}>{label}</span>
+    <span style={{ color: '#0B0F17', fontWeight: 600, wordBreak: 'break-word', flex: '1 1 160px', minWidth: 0 }}>{value}</span>
   </div>
 );
 
@@ -218,34 +218,34 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
 
   if (isLoading) return <div style={{ padding: '3rem', textAlign: 'center', color: '#8a8f9c' }}>{t('Laddar…')}</div>;
   if (isError || !p) return (
-    <div style={{ padding: '2rem', maxWidth: 900, margin: '0 auto' }}>
+    <div style={{ padding: 'clamp(1rem, 4vw, 2rem)', width: '100%', maxWidth: 900, margin: '0 auto' }}>
       <button onClick={onBack} style={{ background: 'none', border: 'none', color: '#9c4f31', fontWeight: 700, cursor: 'pointer', marginBottom: 14, padding: 0 }}>← {t('Tillbaka till admin-panel')}</button>
-      <div style={apCard}>{t('Kunde inte hämta profilen.')} {(error as any)?.response?.data?.error?.message ?? ''}</div>
+      <div style={{ ...apCard, overflowWrap: 'anywhere' }}>{t('Kunde inte hämta profilen.')} {(error as any)?.response?.data?.error?.message ?? ''}</div>
     </div>
   );
 
   const engagementless = p.totalVerifiedViews === 0;
 
   return (
-    <div style={{ padding: '2rem 1.5rem', maxWidth: 980, margin: '0 auto' }}>
+    <div style={{ padding: 'clamp(1.25rem, 4vw, 2rem) clamp(.85rem, 4vw, 1.5rem)', width: '100%', maxWidth: 980, margin: '0 auto', minWidth: 0 }}>
       <button onClick={onBack} style={{ background: 'none', border: 'none', color: '#9c4f31', fontWeight: 700, cursor: 'pointer', marginBottom: 14, padding: 0, fontSize: '.9rem' }}>← {t('Tillbaka till admin-panel')}</button>
 
       {/* ── Header ── */}
       <div style={apCard}>
         <div style={{ display: 'flex', gap: 18, alignItems: 'flex-start', flexWrap: 'wrap' }}>
           {p.avatarUrl
-            ? <img src={p.avatarUrl} alt="" style={{ width: 76, height: 76, borderRadius: 18, objectFit: 'cover' }} />
-            : <div style={{ width: 76, height: 76, borderRadius: 18, background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, fontWeight: 800, color: '#fff' }}>{(p.displayName[0] || '?').toUpperCase()}</div>}
-          <div style={{ flex: 1, minWidth: 240 }}>
+            ? <img src={p.avatarUrl} alt="" style={{ width: 76, height: 76, borderRadius: 18, objectFit: 'cover', flex: '0 0 76px' }} />
+            : <div style={{ width: 76, height: 76, borderRadius: 18, flex: '0 0 76px', background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, fontWeight: 800, color: '#fff' }}>{(p.displayName[0] || '?').toUpperCase()}</div>}
+          <div style={{ flex: '1 1 240px', minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: '#0B0F17' }}>{p.displayName}</h1>
+              <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: '#0B0F17', minWidth: 0, overflowWrap: 'anywhere' }}>{p.displayName}</h1>
               <span style={apPill(p.profileStatus === 'Approved' ? 'rgba(169,220,192,.4)' : 'rgba(242,197,138,.4)', p.profileStatus === 'Approved' ? '#2f7d52' : '#9c6b1c')}>{p.profileStatus === 'Approved' ? t('Godkänd') : p.profileStatus}</span>
               {p.emailVerified
                 ? <span style={apPill('rgba(169,220,192,.35)', '#2f7d52')}>✓ {t('E-post verifierad')}</span>
                 : <span style={apPill('rgba(255,90,77,.15)', '#c0392b')}>✗ {t('E-post EJ verifierad')}</span>}
               {p.tikTokConnected && <span style={apPill('rgba(183,188,200,.25)', '#3c4250')}>{p.tikTokOAuth ? '✓ TikTok OAuth' : '⚠ TikTok manuell'}</span>}
             </div>
-            <div style={{ ...apMuted, marginTop: 6 }}>{p.email} · {p.country} · {t('Medlem sedan')} {formatDate(p.registeredAt)}</div>
+            <div style={{ ...apMuted, marginTop: 6, overflowWrap: 'anywhere' }}>{p.email} · {p.country} · {t('Medlem sedan')} {formatDate(p.registeredAt)}</div>
             {p.bio && <p style={{ margin: '10px 0 0', fontSize: '.9rem', color: '#3c4250', lineHeight: 1.55 }}>{p.bio}</p>}
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
               {p.profileTags.map((tg) => <span key={tg} style={apPill('rgba(237,225,255,.7)', '#6a4ea8')}>{tg}</span>)}
@@ -269,7 +269,7 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
         {engagementless && <div style={{ ...apMuted, marginTop: 8 }}>{t('Ingen kampanjaktivitet ännu.')}</div>}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: 14, minWidth: 0 }}>
         {/* ── Konto ── */}
         <div style={{ ...apCard, marginBottom: 0 }}>
           <h3 style={{ margin: '0 0 6px', fontSize: '.95rem', fontWeight: 800 }}>{t('Konto')}</h3>
@@ -316,18 +316,18 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
             </button>
           </div>
         )}
-        <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(241,168,143,.2)' }}>
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(241,168,143,.2)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
           <button
             onClick={() => {
               if (!armedDelete) { setArmedDelete(true); setTimeout(() => setArmedDelete(false), 4000); return; }
               deleteAccount.mutate();
             }}
             disabled={deleteAccount.isPending}
-            style={{ padding: '.55rem 1.3rem', borderRadius: 980, background: armedDelete ? '#cf4b4b' : 'transparent', color: armedDelete ? '#fff' : '#cf4b4b', border: '1px solid rgba(207,75,75,.45)', fontWeight: 700, fontSize: '.8rem', cursor: 'pointer' }}
+            style={{ padding: '.55rem 1.3rem', borderRadius: 980, background: armedDelete ? '#cf4b4b' : 'transparent', color: armedDelete ? '#fff' : '#cf4b4b', border: '1px solid rgba(207,75,75,.45)', fontWeight: 700, fontSize: '.8rem', cursor: 'pointer', maxWidth: '100%' }}
           >
             {deleteAccount.isPending ? t('Raderar…') : armedDelete ? t('Säker? Klicka igen för att radera') : t('Radera konto')}
           </button>
-          <span style={{ ...apMuted, marginLeft: 10 }}>{t('Mjuk radering — kontot släcks och loggas ut, kampanjhistorik bevaras för spårbarhet.')}</span>
+          <span style={{ ...apMuted, flex: '1 1 220px', minWidth: 0 }}>{t('Mjuk radering — kontot släcks och loggas ut, kampanjhistorik bevaras för spårbarhet.')}</span>
         </div>
       </div>
     </div>
@@ -412,7 +412,7 @@ export function AdminDashboardPage() {
     <div className="vy-app" style={s.page}>
       <div style={s.container}>
         <div style={s.header}>
-          <div>
+          <div style={{ flex: '1 1 240px', minWidth: 0 }}>
             <h1 style={s.title}>{t('Adminpanel')}</h1>
             <p style={{ color: '#6E7480', fontSize: '.9rem' }}>{t('Statistik, användare, kampanjer, utbetalningar och säkerhet')}</p>
           </div>
@@ -486,19 +486,19 @@ export function AdminDashboardPage() {
             {!isError && filteredUsers.map((user) => (
               <div key={user.id} style={s.card}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '.75rem', marginBottom: '1rem' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginBottom: '.5rem' }}>
-                      <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>
+                  <div style={{ flex: '1 1 240px', minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginBottom: '.5rem', flexWrap: 'wrap' }}>
+                      <span style={{ fontWeight: 700, fontSize: '1.1rem', minWidth: 0, overflowWrap: 'anywhere' }}>
                         {user.role === 'Creator' ? user.displayName || user.email : user.companyName || user.email}
                       </span>
                       <span style={s.roleBadge(user.role)}>{user.role}</span>
                       <span style={s.badge(user.status)}>{user.status === 'PendingVerification' ? t('Väntande') : user.status === 'Active' ? t('Godkänd') : t('Avvisad')}</span>
                     </div>
-                    <p style={{ color: '#6E7480', fontSize: '.8rem' }}>
+                    <p style={{ color: '#6E7480', fontSize: '.8rem', overflowWrap: 'anywhere' }}>
                       {user.email} · {t('Registrerad')} {new Date(user.createdAt).toLocaleDateString('sv-SE')}
                     </p>
                   </div>
-                  <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                     {user.role === 'Creator' && (
                       <button
                         onClick={() => setSearchParams({ section: 'users', tab: filter, creatorId: user.id })}
@@ -519,8 +519,8 @@ export function AdminDashboardPage() {
                 {expandedId === user.id && (
                   <div style={{ borderTop: '1px solid #1e1e2e', paddingTop: '1rem', marginBottom: '1rem' }}>
                     {(user.avatarUrl || user.authProvider) && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                        {user.avatarUrl && <img src={user.avatarUrl} alt="" style={{ width: 44, height: 44, borderRadius: user.role === 'Brand' ? 10 : '50%', objectFit: 'cover', border: '1px solid #1e1e2e' }} />}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+                        {user.avatarUrl && <img src={user.avatarUrl} alt="" style={{ width: 44, height: 44, borderRadius: user.role === 'Brand' ? 10 : '50%', objectFit: 'cover', border: '1px solid #1e1e2e', flex: '0 0 44px' }} />}
                         {user.authProvider && <span style={{ fontSize: '.75rem', color: '#2f9d5b', border: '1px solid rgba(47,157,91,.4)', borderRadius: 999, padding: '3px 10px' }}>{t('E-post verifierad via')} {user.authProvider}</span>}
                       </div>
                     )}
@@ -546,24 +546,24 @@ export function AdminDashboardPage() {
                       </>
                     )}
                     {user.rejectionReason && (
-                      <div style={s.detailRow}><span style={s.detailLabel}>{t('Avvisningsorsak:')}</span><span style={{ color: '#cf4b4b' }}>{user.rejectionReason}</span></div>
+                      <div style={s.detailRow}><span style={s.detailLabel}>{t('Avvisningsorsak:')}</span><span style={{ ...s.detailValue, color: '#cf4b4b' }}>{user.rejectionReason}</span></div>
                     )}
                   </div>
                 )}
 
                 {user.status === 'PendingVerification' && (
-                  <div style={{ display: 'flex', gap: '.75rem', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
                     <button style={s.btnApprove} onClick={() => handleApprove(user.id)} disabled={approveUser.isPending}>
                       {t('✓ Godkänn')}
                     </button>
                     {rejectingId === user.id ? (
-                      <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center', flex: 1 }}>
+                      <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center', flex: '1 1 260px', minWidth: 0, flexWrap: 'wrap' }}>
                         <input
                           type="text"
                           value={rejectReason}
                           onChange={(e) => setRejectReason(e.target.value)}
                           placeholder={t('Orsak till avvisning…')}
-                          style={{ flex: 1, borderRadius: '.5rem', border: '1px solid #1e1e2e', background: '#FFF4EC', padding: '.5rem .75rem', fontSize: '.8rem', color: '#0B0F17', outline: 'none' }}
+                          style={{ flex: '1 1 160px', minWidth: 0, borderRadius: '.5rem', border: '1px solid #1e1e2e', background: '#FFF4EC', padding: '.5rem .75rem', fontSize: '.8rem', color: '#0B0F17', outline: 'none' }}
                         />
                         <button style={s.btnReject} onClick={() => handleReject(user.id)} disabled={rejectUser.isPending || !rejectReason.trim()}>
                           {t('Avvisa')}
@@ -621,15 +621,15 @@ export function AdminDashboardPage() {
             {!campaignsError && (campaignsData?.data || []).map((campaign) => (
               <div key={campaign.id} style={s.card}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '.75rem', marginBottom: '.75rem' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginBottom: '.25rem' }}>
-                      <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>{campaign.name}</span>
+                  <div style={{ flex: '1 1 240px', minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginBottom: '.25rem', flexWrap: 'wrap' }}>
+                      <span style={{ fontWeight: 700, fontSize: '1.05rem', minWidth: 0, overflowWrap: 'anywhere' }}>{campaign.name}</span>
                       <span style={{ display: 'inline-block', padding: '.25rem .75rem', borderRadius: 999, fontSize: '.75rem', fontWeight: 600, background: 'rgba(255,216,199,.55)', color: '#b07d1c' }}>{t('Granskas')}</span>
                     </div>
-                    <p style={{ color: '#6E7480', fontSize: '.8rem' }}>
+                    <p style={{ color: '#6E7480', fontSize: '.8rem', overflowWrap: 'anywhere' }}>
                       {campaign.brandName} · {campaign.category} · {campaign.country}
                     </p>
-                    <p style={{ color: '#6E7480', fontSize: '.8rem', marginTop: '.25rem' }}>
+                    <p style={{ color: '#6E7480', fontSize: '.8rem', marginTop: '.25rem', overflowWrap: 'anywhere' }}>
                       Budget: {formatCurrency(campaign.budget)} · Max {campaign.maxCreators} creators · {formatDate(campaign.startDate)} – {formatDate(campaign.endDate)}
                     </p>
                     <p style={{ color: '#5a5a7a', fontSize: '.75rem', marginTop: '.25rem' }}>
@@ -638,18 +638,18 @@ export function AdminDashboardPage() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '.75rem', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
                   <button style={s.btnApprove} onClick={() => approveCampaign.mutateAsync(campaign.id)} disabled={approveCampaign.isPending}>
                     {t('✓ Godkänn')}
                   </button>
                   {rejectingCampaignId === campaign.id ? (
-                    <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center', flex: 1 }}>
+                    <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center', flex: '1 1 260px', minWidth: 0, flexWrap: 'wrap' }}>
                       <input
                         type="text"
                         value={campaignRejectReason}
                         onChange={(e) => setCampaignRejectReason(e.target.value)}
                         placeholder={t('Orsak till avvisning…')}
-                        style={{ flex: 1, borderRadius: '.5rem', border: '1px solid #1e1e2e', background: '#FFF4EC', padding: '.5rem .75rem', fontSize: '.8rem', color: '#0B0F17', outline: 'none' }}
+                        style={{ flex: '1 1 160px', minWidth: 0, borderRadius: '.5rem', border: '1px solid #1e1e2e', background: '#FFF4EC', padding: '.5rem .75rem', fontSize: '.8rem', color: '#0B0F17', outline: 'none' }}
                       />
                       <button style={s.btnReject} onClick={() => handleCampaignReject(campaign.id)} disabled={rejectCampaign.isPending || !campaignRejectReason.trim()}>
                         {t('Neka')}

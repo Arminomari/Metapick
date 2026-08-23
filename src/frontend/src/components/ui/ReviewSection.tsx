@@ -7,10 +7,10 @@ import { formatDate } from '@/lib/utils';
 import { t } from '@/lib/i18n';
 
 const box: CSSProperties = {
-  border: '1px solid rgba(241,168,143,.25)', borderRadius: 16, padding: '16px 18px',
-  background: 'linear-gradient(160deg,#fff,#FFF9F5)',
+  border: '1px solid rgba(241,168,143,.25)', borderRadius: 16, padding: '16px clamp(12px, 4vw, 18px)',
+  background: 'linear-gradient(160deg,#fff,#FFF9F5)', minWidth: 0,
 };
-const mutedTx: CSSProperties = { fontSize: 13, color: 'var(--muted)', lineHeight: 1.55 };
+const mutedTx: CSSProperties = { fontSize: 13, color: 'var(--muted)', lineHeight: 1.55, overflowWrap: 'anywhere' };
 
 const roleLabel = (role: string) => (role === 'Brand' ? t('Varumärke') : role);
 
@@ -47,7 +47,7 @@ export function ReviewSection({ assignmentId, revieweeUserId, assignmentComplete
   const hasIncoming = Boolean(allReviews && allReviews.totalReviews > 0);
 
   return (
-    <div style={{ display: 'grid', gap: 12 }}>
+    <div style={{ display: 'grid', gap: 12, minWidth: 0 }}>
       {/* Submit form — only when completed and no review yet */}
       {assignmentCompleted && !hasOwn && (
         <form onSubmit={handleSubmit} style={box}>
@@ -72,7 +72,7 @@ export function ReviewSection({ assignmentId, revieweeUserId, assignmentComplete
             type="submit"
             disabled={submit.isPending}
             className="btn-apply"
-            style={{ width: 'auto', padding: '10px 22px', marginTop: 12 }}
+            style={{ width: 'auto', maxWidth: '100%', padding: '10px 22px', marginTop: 12 }}
           >
             {submit.isPending ? t('Skickar…') : t('Skicka omdöme')}
           </button>
@@ -117,7 +117,7 @@ interface ReviewListProps {
 
 export function ReviewList({ summary, compact = false }: ReviewListProps) {
   return (
-    <div style={{ display: 'grid', gap: 10 }}>
+    <div style={{ display: 'grid', gap: 10, minWidth: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <span style={{ fontFamily: '"Fraunces",serif', fontWeight: 700, fontSize: 26, color: '#0B0F17', lineHeight: 1 }}>
           {summary.averageStars.toFixed(1)}
@@ -131,7 +131,7 @@ export function ReviewList({ summary, compact = false }: ReviewListProps) {
         <div key={r.id} style={box}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
             <StarRating value={r.stars} readonly size="sm" />
-            <span style={{ fontSize: 13.5, fontWeight: 700, color: '#0B0F17' }}>{r.reviewerName}</span>
+            <span style={{ fontSize: 13.5, fontWeight: 700, color: '#0B0F17', minWidth: 0, overflowWrap: 'anywhere' }}>{r.reviewerName}</span>
             <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 980, background: 'rgba(183,188,200,.2)', color: '#5c6270' }}>{roleLabel(r.reviewerRole)}</span>
             <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--muted)', whiteSpace: 'nowrap' }}>{formatDate(r.createdAt)}</span>
           </div>

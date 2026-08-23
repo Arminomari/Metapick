@@ -123,11 +123,11 @@ export function CreatorPortfolioPage() {
       <div className="card" style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', gap: 22, alignItems: 'flex-start', flexWrap: 'wrap' }}>
           {profile?.avatarUrl
-            ? <img src={profile.avatarUrl} alt={name} style={{ width: 84, height: 84, borderRadius: '50%', objectFit: 'cover', border: '2.5px solid #fff', boxShadow: '0 6px 16px rgba(241,168,143,.35)' }} />
+            ? <img src={profile.avatarUrl} alt={name} style={{ width: 84, height: 84, flex: '0 0 84px', borderRadius: '50%', objectFit: 'cover', border: '2.5px solid #fff', boxShadow: '0 6px 16px rgba(241,168,143,.35)' }} />
             : <span style={{ width: 84, height: 84, borderRadius: '50%', flex: '0 0 84px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"Fraunces",serif', fontSize: 34, color: '#fff', background: grad(name), boxShadow: '0 6px 16px rgba(241,168,143,.35)' }}>{initial(name)}</span>}
-          <div style={{ flex: 1, minWidth: 240 }}>
-            <div style={{ fontSize: 26, fontWeight: 600, letterSpacing: '-.02em', color: 'var(--ink)' }}>{name}</div>
-            <div style={{ fontSize: 13, color: 'var(--muted)' }}>{handle}{handle && (profile?.category || profile?.country) ? ' · ' : ''}{profile?.category}{profile?.country ? ` · ${COUNTRY[profile.country] || profile.country}` : ''}</div>
+          <div style={{ flex: 1, minWidth: 'min(100%, 240px)' }}>
+            <div style={{ fontSize: 26, fontWeight: 600, letterSpacing: '-.02em', color: 'var(--ink)', wordBreak: 'break-word' }}>{name}</div>
+            <div style={{ fontSize: 13, color: 'var(--muted)', wordBreak: 'break-word' }}>{handle}{handle && (profile?.category || profile?.country) ? ' · ' : ''}{profile?.category}{profile?.country ? ` · ${COUNTRY[profile.country] || profile.country}` : ''}</div>
             {profile?.bio && <p style={{ fontSize: 14, marginTop: 10, color: 'var(--ink-2)', lineHeight: 1.55, maxWidth: 560 }}>{profile.bio}</p>}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 12, fontSize: 13 }}>
               {profile?.tikTokUsername && <a href={`https://www.tiktok.com/@${profile.tikTokUsername}`} target="_blank" rel="noopener noreferrer" style={{ color: '#C26A4A', fontWeight: 600 }}>TikTok</a>}
@@ -154,9 +154,9 @@ export function CreatorPortfolioPage() {
           <div className="sec-head"><h3>{t('Företag du jobbat med')}</h3><span style={{ fontSize: 13, color: 'var(--muted)' }}>{brands.length}</span></div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
             {brands.map((b) => (
-              <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 14, border: '1px solid rgba(241,168,143,.18)', background: 'rgba(255,255,255,.6)' }}>
+              <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 14, border: '1px solid rgba(241,168,143,.18)', background: 'rgba(255,255,255,.6)', maxWidth: '100%', minWidth: 0 }}>
                 <span className="mono" style={{ width: 34, height: 34, flex: '0 0 34px', fontSize: 13, background: grad(b.campaignName) }}>{initial(b.campaignName)}</span>
-                <div><div style={{ fontWeight: 600, fontSize: 13.5 }}>{b.campaignName}</div><div style={{ fontSize: 11.5, color: 'var(--muted)' }}>{formatNumber(b.totalVerifiedViews)} views</div></div>
+                <div style={{ minWidth: 0 }}><div style={{ fontWeight: 600, fontSize: 13.5, wordBreak: 'break-word' }}>{b.campaignName}</div><div style={{ fontSize: 11.5, color: 'var(--muted)' }}>{formatNumber(b.totalVerifiedViews)} views</div></div>
               </div>
             ))}
           </div>
@@ -176,7 +176,7 @@ export function CreatorPortfolioPage() {
       {showForm && (
         <div className="card" style={{ marginBottom: 16, maxWidth: 860 }}>
           <div className="sec-head"><h3>{editingId ? t('Redigera arbete') : t('Nytt arbete')}</h3></div>
-          <form onSubmit={handleSubmit} className="form-grid">
+          <form onSubmit={handleSubmit} className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))' }}>
             <div className="field full"><label>{t('Titel')} *</label><input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required placeholder={t('t.ex. Sommarkampanj för X')} /></div>
             <div className="field"><label>{t('Typ av media')}</label><select value={form.mediaType} onChange={(e) => setForm({ ...form, mediaType: e.target.value as PortfolioMediaType })}>{MEDIA_TYPES.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}</select></div>
             <div className="field"><label>{t('Kategori')}</label><input type="text" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder={t('t.ex. Mat, Mode')} /></div>
@@ -191,7 +191,7 @@ export function CreatorPortfolioPage() {
             <div className="field full checkrow" style={{ flexDirection: 'row', justifyContent: 'flex-start' }}><input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })} /> {t('Markera som utvald (visas först)')}</div>
             <div className="field full">
               {error && <p style={{ color: 'var(--red)', fontSize: 13, marginBottom: 8 }}>{error}</p>}
-              <div style={{ display: 'flex', gap: 10 }}>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={add.isPending || update.isPending}>{add.isPending || update.isPending ? t('Sparar…') : editingId ? t('Spara ändringar') : t('Lägg till')}</button>
                 <button type="button" className="btn-outline" onClick={reset}>{t('Avbryt')}</button>
               </div>
@@ -200,8 +200,8 @@ export function CreatorPortfolioPage() {
         </div>
       )}
 
-      {isLoading ? <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16 }}><CardSkeleton rows={3} /><CardSkeleton rows={3} /><CardSkeleton rows={3} /></div> : items && items.length > 0 ? (
-        <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16 }}>
+      {isLoading ? <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 260px), 1fr))', gap: 16 }}><CardSkeleton rows={3} /><CardSkeleton rows={3} /><CardSkeleton rows={3} /></div> : items && items.length > 0 ? (
+        <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 260px), 1fr))', gap: 16 }}>
           {items.map((it) => (
             <div className="pf-card" key={it.id}>
               {(it.mediaType === 'TikTok') ? (
@@ -217,8 +217,8 @@ export function CreatorPortfolioPage() {
                 </div>
               )}
               <div className="pf-body">
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-                  <div className="t">{it.title}</div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                  <div className="t" style={{ minWidth: 0, wordBreak: 'break-word' }}>{it.title}</div>
                   {it.isFeatured && it.mediaType === 'TikTok' && <span className="badge green">{t('Utvald')}</span>}
                 </div>
                 <div className="s">{[it.category, it.brandName].filter(Boolean).join(' · ')}</div>
@@ -229,9 +229,9 @@ export function CreatorPortfolioPage() {
                     {it.likes != null && <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M12 20s-7-4.3-7-9a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 4.7-7 9-7 9z" /></svg>{formatNumber(it.likes)}</span>}
                   </div>
                 )}
-                <div className="pf-actions">
-                  <button className="btn-outline" style={{ flex: 1, padding: 10 }} onClick={() => startEdit(it)}>{t('Redigera')}</button>
-                  <button className="btn-outline" style={{ flex: 1, padding: 10, ...(armedDelete === it.id ? { borderColor: 'var(--red)', color: 'var(--red)', fontWeight: 600 } : {}) }} onClick={() => handleDelete(it.id)} disabled={remove.isPending}>
+                <div className="pf-actions" style={{ flexWrap: 'wrap' }}>
+                  <button className="btn-outline" style={{ flex: '1 1 110px', padding: 10, minWidth: 0 }} onClick={() => startEdit(it)}>{t('Redigera')}</button>
+                  <button className="btn-outline" style={{ flex: '1 1 110px', padding: 10, minWidth: 0, ...(armedDelete === it.id ? { borderColor: 'var(--red)', color: 'var(--red)', fontWeight: 600 } : {}) }} onClick={() => handleDelete(it.id)} disabled={remove.isPending}>
                     {armedDelete === it.id ? t('Säker? Klicka igen') : t('Ta bort')}
                   </button>
                 </div>
@@ -262,7 +262,7 @@ export function CreatorPortfolioPage() {
           {profile?.bio
             ? <p style={{ fontSize: 13.5, color: 'var(--ink-2)', lineHeight: 1.6 }}>{profile.bio}</p>
             : <p style={{ fontSize: 13.5, color: 'var(--muted)', lineHeight: 1.6 }}>{t('Lägg till en bio i inställningarna så företag lär känna dig.')}</p>}
-          <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 14 }}>
+          <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 14 }}>
             <div><div className="vcamp-k">{t('Land')}</div><div className="vcamp-v" style={{ fontSize: 15 }}>{profile?.country ? (COUNTRY[profile.country] || profile.country) : '—'}</div></div>
             <div><div className="vcamp-k">{t('Kategori')}</div><div className="vcamp-v" style={{ fontSize: 15 }}>{profile?.category || '—'}</div></div>
             <div><div className="vcamp-k">{t('Språk')}</div><div className="vcamp-v" style={{ fontSize: 15 }}>{profile?.language === 'sv' ? t('Svenska') : profile?.language || '—'}</div></div>

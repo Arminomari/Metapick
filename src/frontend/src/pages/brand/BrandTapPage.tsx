@@ -67,9 +67,9 @@ function TapForm({ tap, onDone }: { tap: TapDto | null; onDone: () => void }) {
   const viewsPerMonth = cpm > 0 ? Math.floor(budget / cpm * 1000) : 0;
 
   return (
-    <form className="card" onSubmit={(e) => { e.preventDefault(); setErr(''); save.mutate(); }} style={{ border: '1px solid rgba(241,168,143,.4)' }}>
+    <form className="card" onSubmit={(e) => { e.preventDefault(); setErr(''); save.mutate(); }} style={{ border: '1px solid rgba(241,168,143,.4)', minWidth: 0 }}>
       <div className="sec-head"><h3>{tap ? t('Redigera kranen') : t('Öppna kranen')}</h3></div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, minWidth: 0 }}>
         <div style={{ gridColumn: '1 / -1' }}>
           <span style={lbl}>{t('Namn på kranen')}</span>
           <input style={input} required maxLength={120} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t('t.ex. Nellie Creators — löpande')} />
@@ -96,9 +96,9 @@ function TapForm({ tap, onDone }: { tap: TapDto | null; onDone: () => void }) {
         </div>
         <div>
           <span style={lbl}>{t('Hashtag')}</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontWeight: 800, color: '#9c4f31' }}>#</span>
-            <input style={input} required maxLength={60} value={form.requiredHashtag} onChange={(e) => setForm({ ...form, requiredHashtag: e.target.value.replace(/^#/, '') })} placeholder="nelliecreators" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+            <span style={{ fontWeight: 800, color: '#9c4f31', flex: '0 0 auto' }}>#</span>
+            <input style={{ ...input, flex: '1 1 auto', minWidth: 0 }} required maxLength={60} value={form.requiredHashtag} onChange={(e) => setForm({ ...form, requiredHashtag: e.target.value.replace(/^#/, '') })} placeholder="nelliecreators" />
           </div>
         </div>
         <div>
@@ -115,7 +115,7 @@ function TapForm({ tap, onDone }: { tap: TapDto | null; onDone: () => void }) {
         </div>
       </div>
       {err && <div style={{ marginTop: 12, fontSize: 13, fontWeight: 600, color: '#cf4b4b' }}>{err}</div>}
-      <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
+      <div style={{ display: 'flex', gap: 10, marginTop: 18, flexWrap: 'wrap' }}>
         <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 26px' }} disabled={save.isPending}>{save.isPending ? t('Sparar…') : tap ? t('Spara ändringar') : t('Öppna kranen')}</button>
         {tap && <button type="button" className="btn-outline" style={{ width: 'auto', padding: '12px 26px' }} onClick={onDone}>{t('Avbryt')}</button>}
       </div>
@@ -165,9 +165,9 @@ export function BrandTapPage() {
                   ['2', t('Fast CPM & brief'), t('Din community vet vad som gäller och vad det ger.')],
                   ['3', t('Creators skapar löpande'), t('Godkänt innehåll betalas per verifierad view tills budgeten är nådd.')],
                 ].map(([n, h, s]) => (
-                  <div key={n} style={{ display: 'flex', gap: 12 }}>
+                  <div key={n} style={{ display: 'flex', gap: 12, minWidth: 0 }}>
                     <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'linear-gradient(135deg,#1A2230,#0B0F17)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, flex: '0 0 30px' }}>{n}</span>
-                    <div><div style={{ fontWeight: 700, fontSize: 14 }}>{h}</div><div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 2 }}>{s}</div></div>
+                    <div style={{ minWidth: 0 }}><div style={{ fontWeight: 700, fontSize: 14 }}>{h}</div><div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 2 }}>{s}</div></div>
                   </div>
                 ))}
               </div>

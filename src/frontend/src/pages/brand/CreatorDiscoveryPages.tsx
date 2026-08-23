@@ -57,24 +57,24 @@ export function DiscoverCreatorsPage() {
       </div>
 
       <div className="card" style={{ marginBottom: 18 }}>
-        <div className="form-grid" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
+        <div className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
           <div className="field"><label>{t('Sök')}</label><input value={searchInput} onChange={(e) => setSearchInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && applySearch()} placeholder={t('Namn, bio eller kategori')} /></div>
           <div className="field"><label>{t('Kategori')}</label><select value={category} onChange={(e) => { setCategory(e.target.value); setPage(1); }}><option value="">{t('Alla')}</option>{CATEGORIES.map((c) => <option key={c} value={c}>{t(c)}</option>)}</select></div>
           <div className="field"><label>{t('Land')}</label><select value={country} onChange={(e) => { setCountry(e.target.value); setPage(1); }}><option value="">{t('Alla')}</option><option value="SE">{t('Sverige')}</option><option value="NO">{t('Norge')}</option><option value="DK">{t('Danmark')}</option><option value="FI">{t('Finland')}</option></select></div>
           <div className="field"><label>{t('Min. följare')}</label><input value={minFollowers} inputMode="numeric" onChange={(e) => { setMinFollowers(e.target.value.replace(/\D/g, '')); setPage(1); }} placeholder={t('t.ex. 5000')} /></div>
           <div className="field"><label>{t('Sortera')}</label><select value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }}><option value="followers">{t('Flest följare')}</option><option value="rating">{t('Högst betyg')}</option><option value="views">{t('Snittvisningar')}</option><option value="recent">{t('Senast tillkomna')}</option></select></div>
           <div className="field"><label>{t('Expertis-tagg')}</label><select value={tag} onChange={(e) => { setTag(e.target.value); setPage(1); }}><option value="">{t('Alla taggar')}</option>{ALL_TAGS.map((tg) => <option key={tg} value={tg}>{tg}</option>)}</select></div>
-          <div className="field full checkrow" style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <label className="checkrow" style={{ margin: 0 }}><input type="checkbox" checked={openToPrOffers} onChange={(e) => { setOpenToPrOffers(e.target.checked); setPage(1); }} /> {t('Endast öppna för PR-erbjudanden')}</label>
-            <button className="btn-apply" style={{ width: 'auto', padding: '11px 28px' }} onClick={applySearch}>{t('Sök')}</button>
+          <div className="field full checkrow" style={{ flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+            <label className="checkrow" style={{ margin: 0, minWidth: 0 }}><input type="checkbox" checked={openToPrOffers} onChange={(e) => { setOpenToPrOffers(e.target.checked); setPage(1); }} /> {t('Endast öppna för PR-erbjudanden')}</label>
+            <button className="btn-apply" style={{ width: 'auto', padding: '11px 28px', flex: '0 0 auto' }} onClick={applySearch}>{t('Sök')}</button>
           </div>
         </div>
       </div>
 
-      {isLoading ? <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16 }}><CardSkeleton rows={3} /><CardSkeleton rows={3} /><CardSkeleton rows={3} /></div> : data && data.data.length > 0 ? (
+      {isLoading ? <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}><CardSkeleton rows={3} /><CardSkeleton rows={3} /><CardSkeleton rows={3} /></div> : data && data.data.length > 0 ? (
         <>
           <div className="results-meta"><div className="cnt"><span className="live-dot" />{data.totalCount} {t('kreatörer')}</div></div>
-          <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16 }}>
+          <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
             {data.data.map((c) => <CreatorSearchCard key={c.id} creator={c} onOpen={() => navigate(`/brand/creators/${c.id}`)} />)}
           </div>
           <Pagination page={page} totalCount={data.totalCount} pageSize={data.pageSize} onPageChange={setPage} />
@@ -143,7 +143,7 @@ export function BrandCreatorDetailPage() {
             ? <img src={creator.avatarUrl} alt={creator.displayName} style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover' }} />
             : <span className="mono" style={{ width: 80, height: 80, fontSize: 30, flex: '0 0 80px', background: grad(creator.displayName) }}>{creator.displayName.charAt(0).toUpperCase()}</span>}
           <div style={{ flex: 1, minWidth: 240 }}>
-            <h1 style={{ fontSize: 28, fontWeight: 600, letterSpacing: '-.02em', color: 'var(--ink)' }}>{creator.displayName}</h1>
+            <h1 style={{ fontSize: 28, fontWeight: 600, letterSpacing: '-.02em', color: 'var(--ink)', overflowWrap: 'anywhere' }}>{creator.displayName}</h1>
             <p style={{ fontSize: 13, color: 'var(--muted)' }}>{creator.category} · {creator.country}</p>
             {creator.bio && <p style={{ fontSize: 14, marginTop: 8, color: 'var(--ink-2)', lineHeight: 1.5 }}>{creator.bio}</p>}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 12, fontSize: 13 }}>
@@ -153,7 +153,7 @@ export function BrandCreatorDetailPage() {
             </div>
             <div className="tags" style={{ marginTop: 12 }}>{creator.profileTags.map((tg) => <span key={tg} className="tag g">{tg}</span>)}</div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end', minWidth: 0, maxWidth: '100%' }}>
             <InviteToCommunityButton creatorProfileId={creator.id} />
             {creator.openToPrOffers
               ? <button className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} onClick={() => setShowPr((v) => !v)}>{showPr ? t('Stäng') : t('Skicka PR-erbjudande')}</button>
@@ -170,7 +170,7 @@ export function BrandCreatorDetailPage() {
       </div>
 
       <div className="card" style={{ marginTop: 16, background: 'linear-gradient(160deg,#fff,#FFF6F0)' }}>
-        <div className="sec-head"><h3>{t('Verifierat engagemang')}</h3><span style={{ fontSize: 12, color: 'var(--muted)' }}>{t('Uppmätt av VYRLE på kampanjvideos — inte självrapporterat')}</span></div>
+        <div className="sec-head" style={{ flexWrap: 'wrap', gap: 8 }}><h3>{t('Verifierat engagemang')}</h3><span style={{ fontSize: 12, color: 'var(--muted)', minWidth: 0 }}>{t('Uppmätt av VYRLE på kampanjvideos — inte självrapporterat')}</span></div>
         {(creator.totalVerifiedViews ?? 0) > 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
             {[
@@ -196,7 +196,7 @@ export function BrandCreatorDetailPage() {
       <div className="card" style={{ marginTop: 16 }}>
         <div className="sec-head"><h3>{t('Portfölj')} ({creator.portfolio.length})</h3></div>
         {creator.portfolio.length > 0 ? (
-          <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16 }}>
+          <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
             {creator.portfolio.map((it) => <PortfolioCard key={it.id} item={it} />)}
           </div>
         ) : (
@@ -208,8 +208,8 @@ export function BrandCreatorDetailPage() {
         <div className="card" style={{ marginTop: 16 }}>
           <div className="sec-head"><h3>{t('Omdömen')} <Stars value={creator.averageRating} /> <span style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 400 }}>({creator.averageRating.toFixed(1)} {t('av')} {creator.reviewCount})</span></h3></div>
           {creator.recentReviews.map((r) => (
-            <div key={r.id} className="list-row">
-              <div className="row-main" style={{ flex: 1 }}>
+            <div key={r.id} className="list-row" style={{ flexWrap: 'wrap' }}>
+              <div className="row-main" style={{ flex: '1 1 180px', minWidth: 0 }}>
                 <div className="t">{r.reviewerName} <span style={{ fontSize: 11.5, color: 'var(--muted)', fontWeight: 400 }}>({r.reviewerRole})</span></div>
                 {r.comment && <div className="s">{r.comment}</div>}
               </div>
@@ -297,7 +297,7 @@ function SendPrOfferForm({ creatorProfileId, onDone }: { creatorProfileId: strin
   return (
     <div className="card" style={{ marginTop: 16 }}>
       <div className="sec-head"><h3>{t('Skicka PR-erbjudande')}</h3></div>
-      <form onSubmit={handleSubmit} className="form-grid">
+      <form onSubmit={handleSubmit} className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
         <div className="field full"><label>{t('Rubrik')} *</label><input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required placeholder={t('t.ex. Prova vår nya meny')} /></div>
         <div className="field"><label>{t('Typ av erbjudande')}</label>
           <select value={form.offerType} onChange={(e) => setForm({ ...form, offerType: e.target.value })}>
@@ -312,7 +312,7 @@ function SendPrOfferForm({ creatorProfileId, onDone }: { creatorProfileId: strin
         <div className="field"><label>{t('Deadline')}</label><DateInput value={form.deadline} onChange={(v) => setForm({ ...form, deadline: v })} className="" /></div>
         <div className="field full">
           {error && <p style={{ color: 'var(--red)', fontSize: 13, marginBottom: 8 }}>{error}</p>}
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={create.isPending}>{create.isPending ? t('Skickar…') : t('Skicka erbjudande')}</button>
             <button type="button" className="btn-outline" onClick={onDone}>{t('Avbryt')}</button>
           </div>

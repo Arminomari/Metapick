@@ -7,17 +7,17 @@ const STAR_PATH = 'M12 1.5c.7 5.6 2.9 7.8 8.5 8.5 .9.1 .9 1.4 0 1.5-5.6.7-7.8 2.
 function LegalShell({ title, accent, updated, children }: { title: string; accent: string; updated: string; children: ReactNode }) {
   return (
     <div className="vy-app">
-      <div className="auth-split" style={{ display: 'block', minHeight: '100vh' }}>
-        <div style={{ maxWidth: 760, margin: '0 auto', padding: '40px 22px 70px' }}>
+      <div className="auth-split" style={{ display: 'block', minHeight: '100vh', minWidth: 0 }}>
+        <div style={{ width: '100%', maxWidth: 760, minWidth: 0, margin: '0 auto', padding: 'clamp(24px, 5vw, 40px) clamp(14px, 4vw, 22px) clamp(40px, 8vw, 70px)' }}>
           <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 9, fontWeight: 600, fontSize: 19, letterSpacing: '-.04em', color: 'var(--ink)', textDecoration: 'none', marginBottom: 30 }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="#0B0F17" aria-hidden="true"><path d={STAR_PATH} /></svg>
             VYRLE
           </Link>
-          <div className="card" style={{ padding: '40px 38px' }}>
-            <h1 className="auth-title" style={{ fontSize: 32 }}>{title} <em>{accent}</em></h1>
+          <div className="card" style={{ padding: 'clamp(22px, 5vw, 40px) clamp(16px, 5vw, 38px)', minWidth: 0, overflowWrap: 'break-word' }}>
+            <h1 className="auth-title" style={{ fontSize: 'clamp(26px, 6vw, 32px)', overflowWrap: 'anywhere' }}>{title} <em>{accent}</em></h1>
             <p className="auth-sub" style={{ marginBottom: 8 }}>{t('Senast uppdaterad:')} {updated}</p>
             {children}
-            <div style={{ marginTop: 34, paddingTop: 20, borderTop: '1px solid rgba(241,168,143,.2)', fontSize: 13, color: 'var(--muted)' }}>
+            <div style={{ marginTop: 34, paddingTop: 20, borderTop: '1px solid rgba(241,168,143,.2)', fontSize: 13, color: 'var(--muted)', lineHeight: 1.7, overflowWrap: 'anywhere' }}>
               {t('Frågor? Kontakta oss på')} <a className="auth-link" href="mailto:support@vyrle.co">support@vyrle.co</a> ·{' '}
               <Link className="auth-link" to="/terms">{t('Villkor')}</Link> · <Link className="auth-link" to="/privacy">{t('Integritetspolicy')}</Link>
             </div>
@@ -31,11 +31,11 @@ function LegalShell({ title, accent, updated, children }: { title: string; accen
 function Sec({ n, title, children }: { n: number; title: string; children: ReactNode }) {
   return (
     <section style={{ marginTop: 26 }}>
-      <h2 style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-.01em', color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 10 }}>
+      <h2 style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-.01em', color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, overflowWrap: 'anywhere' }}>
         <span aria-hidden="true" style={{ width: 26, height: 26, borderRadius: '50%', flex: '0 0 26px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)', color: '#3a1d12' }}>{n}</span>
-        {title}
+        <span style={{ minWidth: 0, flex: 1 }}>{title}</span>
       </h2>
-      <div style={{ marginTop: 9, fontSize: 13.5, lineHeight: 1.7, color: 'var(--ink-2)' }}>{children}</div>
+      <div style={{ marginTop: 9, fontSize: 13.5, lineHeight: 1.7, color: 'var(--ink-2)', overflowWrap: 'anywhere' }}>{children}</div>
     </section>
   );
 }

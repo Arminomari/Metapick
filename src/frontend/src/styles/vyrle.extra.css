@@ -281,9 +281,22 @@
 
 /* ===================== ANALYTICS bits ===================== */
 .vy-app .an-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
-@media(max-width:1100px){.vy-app .an-kpi-grid{grid-template-columns:repeat(2,1fr)}}
+.vy-app .an-kpi-grid>.card{min-width:0}
+@media(max-width:1100px){.vy-app .an-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:920px){
+  .vy-app .an-kpi-grid{gap:10px}
+  .vy-app .an-legend{min-width:0}
+  .vy-app .an-legend .li{flex-wrap:wrap}
+  .vy-app .an-insight .ai-t{min-width:0;overflow-wrap:anywhere}
+}
+@media(max-width:380px){.vy-app .an-kpi-grid{grid-template-columns:minmax(0,1fr)}}
 .vy-app .an-insight{display:flex;gap:13px;padding:14px 0;border-top:1px solid rgba(241,168,143,.12)}
 .vy-app .an-insight:first-of-type{border-top:none;padding-top:2px}
 .vy-app .an-insight .ai-ic{width:38px;height:38px;border-radius:12px;flex:0 0 38px;display:flex;align-items:center;justify-content:center;background:linear-gradient(140deg,#EDE1FF,#cdb8f2);color:#6a4ea8;box-shadow:0 4px 12px rgba(157,139,196,.22)}
 .vy-app .an-insight .ai-t{font-size:13.5px;color:var(--ink-2);line-height:1.5}
 .vy-app .an-insight .ai-t b{color:var(--ink)}
+
+/* phones: make room for the absolutely positioned language switcher */
+@media(max-width:480px){
+  .vy-app .auth-main{padding-top:64px}
+}

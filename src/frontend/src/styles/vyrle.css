@@ -1243,3 +1243,13 @@
   .vy-app input,.vy-app select,.vy-app textarea{font-size:16px} /* iOS: prevents zoom-on-focus */
   .vy-app .vstat-row{gap:8px}
 }
+
+/* sweep follow-ups */
+@media(max-width:920px){
+  .vy-app .form-grid{grid-template-columns:1fr}
+  .vy-app .vperf-foot,.vy-app .vperf-head{flex-wrap:wrap;gap:8px 14px}
+  .vy-app .auth-at{min-width:0}
+}
+@media(max-width:420px){
+  .vy-app .meta-cols{grid-template-columns:repeat(2,minmax(0,1fr))}
+}

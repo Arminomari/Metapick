@@ -59,21 +59,21 @@ export function BrandCommunityPage() {
       <div className="card">
         <div className="sec-head"><h3>{t('Medlemmar')}</h3><span style={{ fontSize: 13, color: 'var(--muted)' }}>{members.length} {t('st')}</span></div>
         {isLoading ? <CardSkeleton rows={3} /> : members.length ? members.map((m) => (
-          <div key={m.creatorProfileId} className="list-row" style={{ gap: 14 }}>
+          <div key={m.creatorProfileId} className="list-row" style={{ gap: 14, flexWrap: 'wrap' }}>
             <span role="button" tabIndex={0} onClick={() => navigate(`/brand/creators/${m.creatorProfileId}`)} style={{ cursor: 'pointer', flex: '0 0 auto' }}>
               {m.avatarUrl
                 ? <img src={m.avatarUrl} alt="" style={{ width: 42, height: 42, borderRadius: 12, objectFit: 'cover' }} />
                 : <span className="mono" style={{ background: grad(m.displayName) }}>{(m.displayName[0] || '?').toUpperCase()}</span>}
             </span>
-            <div className="row-main" style={{ flex: 1, minWidth: 0 }}>
-              <div className="t" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <div className="row-main" style={{ flex: '1 1 200px', minWidth: 0 }}>
+              <div className="t" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minWidth: 0 }}>
                 <span style={{ cursor: 'pointer' }} onClick={() => navigate(`/brand/creators/${m.creatorProfileId}`)}>{m.displayName}</span>
                 {m.tikTokUsername && <span style={{ fontSize: 12, color: '#9c4f31', fontWeight: 600 }}>@{m.tikTokUsername}</span>}
                 <span className={`badge ${m.source === 'AutoQualified' ? 'green' : 'grey'}`}>{m.source === 'AutoQualified' ? t('Auto-kvalificerad') : t('Inbjuden')}</span>
               </div>
-              <div className="s">{formatNumber(m.tikTokFollowers)} {t('följare')} · {m.collaborations} {t('samarbeten')} · {formatNumber(m.lifetimeViews)} views · {formatCurrency(m.lifetimeEarned)} {t('utbetalt')} · {t('medlem sedan')} {formatDate(m.joinedAt)}</div>
+              <div className="s" style={{ whiteSpace: 'normal' }}>{formatNumber(m.tikTokFollowers)} {t('följare')} · {m.collaborations} {t('samarbeten')} · {formatNumber(m.lifetimeViews)} views · {formatCurrency(m.lifetimeEarned)} {t('utbetalt')} · {t('medlem sedan')} {formatDate(m.joinedAt)}</div>
             </div>
-            <button className="btn-outline" style={{ padding: '8px 14px', fontSize: 12.5, ...(armed === m.creatorProfileId ? { borderColor: 'var(--red)', color: 'var(--red)', fontWeight: 600 } : {}) }} onClick={() => handleRemove(m.creatorProfileId)} disabled={remove.isPending}>
+            <button className="btn-outline" style={{ padding: '8px 14px', fontSize: 12.5, flex: '0 0 auto', ...(armed === m.creatorProfileId ? { borderColor: 'var(--red)', color: 'var(--red)', fontWeight: 600 } : {}) }} onClick={() => handleRemove(m.creatorProfileId)} disabled={remove.isPending}>
               {armed === m.creatorProfileId ? t('Säker? Klicka igen') : t('Ta bort')}
             </button>
           </div>

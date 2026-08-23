@@ -105,9 +105,9 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
             {p.logoUrl
               ? <img src={p.logoUrl} alt={p.companyName} style={{ width: 112, height: 112, borderRadius: 30, objectFit: 'cover', border: '5px solid #fff', boxShadow: '0 14px 34px rgba(11,15,23,.22)' }} />
               : <div style={{ width: 112, height: 112, borderRadius: 30, border: '5px solid #fff', background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"Fraunces",serif', fontSize: 46, color: '#fff', boxShadow: '0 14px 34px rgba(11,15,23,.22)' }}>{initial}</div>}
-            <div style={{ flex: 1, minWidth: 220, paddingBottom: 4 }}>
+            <div style={{ flex: 1, minWidth: 'min(100%, 220px)', paddingBottom: 4 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <h1 style={{ margin: 0, fontSize: 32, fontWeight: 600, letterSpacing: '-.02em', color: 'var(--ink)', fontFamily: '"Fraunces",serif' }}>{p.companyName}</h1>
+                <h1 style={{ margin: 0, fontSize: 'clamp(24px, 6vw, 32px)', fontWeight: 600, letterSpacing: '-.02em', color: 'var(--ink)', fontFamily: '"Fraunces",serif', minWidth: 0, wordBreak: 'break-word' }}>{p.companyName}</h1>
                 <span className="badge green">✓ {t('Verifierat företag')}</span>
               </div>
               <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 3 }}>
@@ -155,7 +155,7 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
           {ownView && <PostComposer logoUrl={p.logoUrl} initial={initial} onPosted={() => qc.invalidateQueries({ queryKey: ['brand-public', id] })} />}
           <div style={{ display: 'grid', gap: 12 }}>
             {(p.posts ?? []).map((post) => (
-              <div key={post.id} style={{ display: 'flex', gap: 12, padding: '16px 16px 14px', border: '1px solid rgba(241,168,143,.24)', borderRadius: 18, background: 'linear-gradient(160deg,#fff,#FFF9F5)', boxShadow: '0 6px 20px rgba(180,120,90,.06)' }}>
+              <div key={post.id} style={{ display: 'flex', gap: 12, padding: '16px 16px 14px', border: '1px solid rgba(241,168,143,.24)', borderRadius: 18, background: 'linear-gradient(160deg,#fff,#FFF9F5)', boxShadow: '0 6px 20px rgba(180,120,90,.06)', minWidth: 0 }}>
                 {p.logoUrl
                   ? <img src={p.logoUrl} style={{ width: 46, height: 46, borderRadius: '50%', objectFit: 'cover', flex: '0 0 46px', boxShadow: '0 4px 12px rgba(180,120,90,.18)' }} alt="" />
                   : <div style={{ width: 46, height: 46, borderRadius: '50%', flex: '0 0 46px', background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontFamily: '"Fraunces",serif', fontSize: 19 }}>{initial}</div>}
@@ -182,10 +182,10 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="sec-head"><h3>{t('Aktiva kampanjer')}</h3><span style={{ fontSize: 13, color: 'var(--muted)' }}>{p.activeCampaigns.length} {t('öppna just nu')}</span></div>
         {p.activeCampaigns.length ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 250px), 1fr))', gap: 14 }}>
             {p.activeCampaigns.map((c) => (
-              <div key={c.id} style={{ border: '1px solid rgba(241,168,143,.25)', borderRadius: 16, padding: 16, background: 'linear-gradient(160deg,#fff,#FFF6F0)', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{c.name}</div>
+              <div key={c.id} style={{ border: '1px solid rgba(241,168,143,.25)', borderRadius: 16, padding: 16, background: 'linear-gradient(160deg,#fff,#FFF6F0)', display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, wordBreak: 'break-word' }}>{c.name}</div>
                 <div style={{ fontSize: 12.5, color: '#9c4f31', fontWeight: 700 }}>{c.payoutSummary}</div>
                 <div style={{ fontSize: 12, color: 'var(--muted)' }}>{c.category} · {c.spotsLeft} {t('platser kvar')} · {formatDate(c.startDate)} – {formatDate(c.endDate)}</div>
                 {c.totalViews > 0 && <div style={{ fontSize: 12, fontWeight: 700, color: '#2f7d52' }}>👁 {formatNumber(c.totalViews)} {t('levererade views')}</div>}
@@ -214,11 +214,11 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
           <div className="sec-head"><h3>{t('Tidigare kampanjer')}</h3></div>
           {p.pastCampaigns.map((c) => (
             <div key={c.id} className="list-row">
-              <div className="row-main" style={{ flex: 1 }}>
+              <div className="row-main" style={{ flex: 1, minWidth: 0 }}>
                 <div className="t">{c.name}</div>
                 <div className="s">{c.category} · {formatDate(c.startDate)} – {formatDate(c.endDate)} · {statusLabel(c.status)}</div>
               </div>
-              <div style={{ textAlign: 'right' }}>
+              <div style={{ textAlign: 'right', flex: '0 0 auto' }}>
                 <div className="t">{formatNumber(c.totalViews)}</div>
                 <div className="s">views</div>
               </div>
@@ -235,8 +235,8 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
           </div>
           {p.recentReviews.map((r) => (
             <div key={r.id} className="list-row">
-              <div className="row-main" style={{ flex: 1 }}>
-                <div className="t" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{r.reviewerName} <StarRating value={r.stars} readonly size="sm" /></div>
+              <div className="row-main" style={{ flex: 1, minWidth: 0 }}>
+                <div className="t" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>{r.reviewerName} <StarRating value={r.stars} readonly size="sm" /></div>
                 {r.comment && <div className="s">{r.comment}</div>}
               </div>
               <span style={{ fontSize: 12, color: 'var(--muted)', whiteSpace: 'nowrap' }}>{formatDate(r.createdAt)}</span>
@@ -305,7 +305,7 @@ export function BrandOwnPublicProfilePage() {
             <div><span style={lbl}>{t('Bransch')}</span><input style={input} value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} /></div>
             <div><span style={lbl}>{t('Webbplats')}</span><input style={input} type="url" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="https://…" /></div>
           </div>
-          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+          <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
             <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 26px' }} disabled={update.isPending}>{update.isPending ? t('Sparar…') : t('Spara profil')}</button>
             <button type="button" className="btn-outline" style={{ width: 'auto', padding: '12px 26px' }} onClick={() => setEditing(false)}>{t('Avbryt')}</button>
           </div>
@@ -351,7 +351,7 @@ function PostComposer({ onPosted, logoUrl, initial: brandInitial }: { onPosted: 
           rows={3}
           maxLength={2000}
           placeholder={t('Vad händer hos er? Dela nyheter, kampanjsläpp eller reklam — dina följare ser det direkt…')}
-          style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 15, fontFamily: 'inherit', color: '#0B0F17', resize: 'vertical', lineHeight: 1.55, paddingTop: 8 }}
+          style={{ flex: 1, minWidth: 0, width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: 15, fontFamily: 'inherit', color: '#0B0F17', resize: 'vertical', lineHeight: 1.55, paddingTop: 8 }}
         />
       </div>
       {showImage && (
@@ -359,7 +359,7 @@ function PostComposer({ onPosted, logoUrl, initial: brandInitial }: { onPosted: 
           <ImagePicker value={image} onChange={setImage} label={t('Bild till inlägget')} shape="rounded" />
         </div>
       )}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
         <button type="button" className="btn-outline" style={{ width: 'auto', padding: '8px 14px', fontSize: 12.5 }} onClick={() => setShowImage((v) => !v)}>
           🖼 {showImage ? t('Utan bild') : t('Lägg till bild')}
         </button>

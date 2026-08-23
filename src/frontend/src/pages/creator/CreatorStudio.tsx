@@ -116,10 +116,10 @@ export function CreatorStudioDashboard() {
       <div className="vtop">
         <div className="card vperf">
           <div className="vperf-head"><h3>{t('Prestation per kampanj')}</h3><span className="vchip">{assignments.length} {t('kampanjer')}</span></div>
-          <div className="vmetric-row" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
-            <button className={`vmetric${metric === 'views' ? ' active' : ''}`} onClick={() => setMetric('views')}><span className="vm-l">Views</span><span className="vm-v">{formatNumber(totalViews)}</span></button>
-            <button className={`vmetric${metric === 'earnings' ? ' active' : ''}`} onClick={() => setMetric('earnings')}><span className="vm-l">{t('Intäkter')}</span><span className="vm-v">{formatCurrency(totalEarned)}</span></button>
-            <button className={`vmetric${metric === 'clicks' ? ' active' : ''}`} onClick={() => setMetric('clicks')}><span className="vm-l">{t('Klick')}</span><span className="vm-v">{formatNumber(totalClicks)}</span></button>
+          <div className="vmetric-row" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))' }}>
+            <button className={`vmetric${metric === 'views' ? ' active' : ''}`} style={{ minWidth: 0 }} onClick={() => setMetric('views')}><span className="vm-l">Views</span><span className="vm-v" style={{ maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{formatNumber(totalViews)}</span></button>
+            <button className={`vmetric${metric === 'earnings' ? ' active' : ''}`} style={{ minWidth: 0 }} onClick={() => setMetric('earnings')}><span className="vm-l">{t('Intäkter')}</span><span className="vm-v" style={{ maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{formatCurrency(totalEarned)}</span></button>
+            <button className={`vmetric${metric === 'clicks' ? ' active' : ''}`} style={{ minWidth: 0 }} onClick={() => setMetric('clicks')}><span className="vm-l">{t('Klick')}</span><span className="vm-v" style={{ maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{formatNumber(totalClicks)}</span></button>
           </div>
           {vals.length >= 2 ? (
             <>
@@ -139,8 +139,8 @@ export function CreatorStudioDashboard() {
                   <div className="vchart-x">{chartCamps.map((a) => <span key={a.id} style={{ maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.campaignName}</span>)}</div>
                 </div>
               </div>
-              <div className="vperf-foot">
-                <div className="vf-stat"><div className="vf-l">{t('Toppkampanj')}</div><div className="vf-v">{topCamp?.campaignName ?? '—'}</div></div>
+              <div className="vperf-foot" style={{ flexWrap: 'wrap', gap: '10px 18px' }}>
+                <div className="vf-stat" style={{ minWidth: 0, maxWidth: '100%' }}><div className="vf-l">{t('Toppkampanj')}</div><div className="vf-v" style={{ wordBreak: 'break-word' }}>{topCamp?.campaignName ?? '—'}</div></div>
                 <div className="vf-stat"><div className="vf-l">{t('Snitt')}</div><div className="vf-v">{mFmt(avgMetric, metric)}</div></div>
                 <div className="vf-stat"><div className="vf-l">{t('Totalt')}</div><div className="vf-v">{mFmt(totalMetric, metric)}</div></div>
                 <Link className="vperf-link" to="/creator/assignments" style={{ margin: 0 }}>{t('Alla kampanjer')} <Arrow /></Link>

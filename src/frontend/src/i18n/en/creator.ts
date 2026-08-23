@@ -462,4 +462,8 @@ export const creator: Record<string, string> = {
   'Stående brief': 'Standing brief',
   'uppdaterad': 'updated',
   'Se företagets uppdateringar': 'See the brand\'s updates',
+  'Kran': 'Tap',
+  'Du är medlem i företags-communities — kranarna dyker upp här när de öppnas': 'You are a member of brand communities — their taps appear here once opened',
+  'kranen öppen': 'tap open',
+  'kranen ej öppnad ännu': 'tap not opened yet',
 };

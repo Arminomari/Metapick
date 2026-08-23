@@ -38,10 +38,10 @@ export function TikTokCallbackPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const box: React.CSSProperties = { width: '100%', maxWidth: 460, background: 'rgba(255,255,255,.85)', border: '1px solid rgba(241,168,143,.3)', borderRadius: 22, padding: '2.4rem 2rem', textAlign: 'center', boxShadow: '0 14px 40px rgba(180,120,90,.12)' };
+  const box: React.CSSProperties = { width: '100%', maxWidth: 460, minWidth: 0, background: 'rgba(255,255,255,.85)', border: '1px solid rgba(241,168,143,.3)', borderRadius: 22, padding: 'clamp(1.5rem, 6vw, 2.4rem) clamp(1.1rem, 5vw, 2rem)', textAlign: 'center', boxShadow: '0 14px 40px rgba(180,120,90,.12)' };
 
   return (
-    <div className="vy-app" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(1000px 500px at 15% -5%, rgba(255,216,199,.55), transparent 60%), #FFF4EC', padding: '2rem' }}>
+    <div className="vy-app" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(1000px 500px at 15% -5%, rgba(255,216,199,.55), transparent 60%), #FFF4EC', padding: 'clamp(1rem, 4vw, 2rem)' }}>
       <div style={box}>
         <div style={{ fontFamily: '"Fraunces",serif', fontSize: '1.4rem', fontWeight: 700, color: '#0B0F17', marginBottom: '1.2rem' }}>✦ VYRLE</div>
 
@@ -49,8 +49,8 @@ export function TikTokCallbackPage() {
           <>
             <div style={{ width: 54, height: 54, margin: '0 auto 14px', borderRadius: '50%', background: 'rgba(255,90,77,.14)', color: '#c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }} aria-hidden>✕</div>
             <h2 style={{ color: '#0B0F17', fontSize: '1.15rem', fontWeight: 700, margin: '0 0 .5rem' }}>{t('Anslutning misslyckades')}</h2>
-            <p style={{ color: '#8a8f9c', fontSize: '.88rem', margin: '0 0 1.4rem', lineHeight: 1.55 }}>{error}</p>
-            <button onClick={() => navigate('/creator/profile')} className="btn-apply" style={{ width: 'auto', padding: '12px 26px' }}>
+            <p style={{ color: '#8a8f9c', fontSize: '.88rem', margin: '0 0 1.4rem', lineHeight: 1.55, overflowWrap: 'anywhere' }}>{error}</p>
+            <button onClick={() => navigate('/creator/profile')} className="btn-apply" style={{ width: 'auto', maxWidth: '100%', padding: '12px 26px' }}>
               {t('Tillbaka till profil')}
             </button>
           </>

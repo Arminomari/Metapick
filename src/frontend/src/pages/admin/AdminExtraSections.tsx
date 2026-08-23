@@ -17,7 +17,7 @@ interface FraudRow { id: string; entityType: string; entityId: string; flagType:
 interface AuditRow { id: string; userId?: string; action: string; entityType?: string; entityId?: string; ipAddress?: string; createdAt: string; userEmail?: string | null; userRole?: string | null }
 interface Paged<T> { data: T[]; totalCount: number }
 
-const card: React.CSSProperties = { background: 'rgba(255,255,255,.82)', border: '1px solid rgba(255,255,255,.7)', borderRadius: 24, padding: '1.4rem', marginBottom: '1rem', boxShadow: '0 10px 34px rgba(180,120,90,.08), 0 2px 8px rgba(11,15,23,.04)' };
+const card: React.CSSProperties = { background: 'rgba(255,255,255,.82)', border: '1px solid rgba(255,255,255,.7)', borderRadius: 24, padding: 'clamp(1rem, 3.5vw, 1.4rem)', marginBottom: '1rem', minWidth: 0, boxShadow: '0 10px 34px rgba(180,120,90,.08), 0 2px 8px rgba(11,15,23,.04)' };
 const mutedTx: React.CSSProperties = { color: '#6E7480', fontSize: '.82rem', fontWeight: 500 };
 const rowLine: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '.9rem', padding: '.8rem 0', borderTop: '1px solid rgba(241,168,143,.14)', flexWrap: 'wrap' };
 const pill = (bg: string, color: string): React.CSSProperties => ({ display: 'inline-block', padding: '.22rem .7rem', borderRadius: 999, fontSize: '.72rem', fontWeight: 600, background: bg, color });
@@ -82,14 +82,14 @@ function AuditRows({ rows }: { rows: AuditRow[] }) {
       {rows.map((a) => (
         <div key={a.id} style={rowLine}>
           <span style={{ width: 9, height: 9, borderRadius: '50%', background: actionDot(a.action), flex: '0 0 9px' }} />
-          <div style={{ flex: 1, minWidth: 220 }}>
-            <div style={{ fontWeight: 600, fontSize: '.88rem', color: '#0B0F17' }}>{t(actionLabel(a.action))}</div>
-            <div style={mutedTx}>
+          <div style={{ flex: '1 1 180px', minWidth: 0 }}>
+            <div style={{ fontWeight: 600, fontSize: '.88rem', color: '#0B0F17', overflowWrap: 'anywhere' }}>{t(actionLabel(a.action))}</div>
+            <div style={{ ...mutedTx, overflowWrap: 'anywhere' }}>
               {a.userEmail ?? t('Okänd användare')}
               {a.userRole && <span style={{ ...pill('rgba(183,188,200,.2)', '#5c6270'), marginLeft: 8, fontSize: '.66rem', padding: '.1rem .5rem' }}>{t(ROLE_LABEL[a.userRole] ?? a.userRole)}</span>}
             </div>
           </div>
-          <span style={{ ...mutedTx, marginLeft: 'auto', whiteSpace: 'nowrap' }}>{dt(a.createdAt)}</span>
+          <span style={{ ...mutedTx, marginLeft: 'auto', whiteSpace: 'nowrap', flex: '0 0 auto' }}>{dt(a.createdAt)}</span>
         </div>
       ))}
     </>
@@ -145,9 +145,9 @@ function useAuditLog() {
 /* ── Översikt ──────────────────────────────────────────── */
 function StatTile({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: boolean }) {
   return (
-    <div style={{ ...card, marginBottom: 0, padding: '1.2rem 1.3rem' }}>
+    <div style={{ ...card, marginBottom: 0, padding: 'clamp(.9rem, 3vw, 1.2rem) clamp(.9rem, 3vw, 1.3rem)', minWidth: 0 }}>
       <div style={mutedTx}>{label}</div>
-      <div style={{ fontSize: '1.7rem', fontWeight: 700, letterSpacing: '-0.02em', marginTop: 4, color: accent ? '#C26A4A' : '#0B0F17' }}>{value}</div>
+      <div style={{ fontSize: 'clamp(1.25rem, 4.5vw, 1.7rem)', fontWeight: 700, letterSpacing: '-0.02em', marginTop: 4, color: accent ? '#C26A4A' : '#0B0F17', overflowWrap: 'anywhere' }}>{value}</div>
       {sub && <div style={{ ...mutedTx, marginTop: 4 }}>{sub}</div>}
     </div>
   );
@@ -159,7 +159,7 @@ export function AdminOverviewSection() {
   if (isLoading || !stats) return <div style={{ ...card, textAlign: 'center', color: '#6E7480' }}>{t('Laddar statistik…')}</div>;
   return (
     <>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: '1rem', marginBottom: '1.2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(150px, 16vw, 190px), 1fr))', gap: '1rem', marginBottom: '1.2rem', minWidth: 0 }}>
         <StatTile label={t('Användare')} value={num(stats.totalUsers)} sub={`${stats.pendingUsers} ${t('väntar på godkännande')}`} accent={stats.pendingUsers > 0} />
         <StatTile label="Creators" value={num(stats.creators)} />
         <StatTile label={t('Varumärken')} value={num(stats.brands)} />
@@ -201,21 +201,21 @@ export function AdminPayoutsSection() {
         {!isLoading && rows.length === 0 && <div style={{ ...mutedTx, padding: '1rem 0' }}>{t('Inga utbetalningar')} {status ? t('med den statusen') : t('än')}.</div>}
         {rows.map((p) => (
           <div key={p.id} style={rowLine}>
-            <div style={{ minWidth: 180 }}>
-              <div style={{ fontWeight: 600, fontSize: '.9rem' }}>{p.campaignName}</div>
+            <div style={{ flex: '1 1 180px', minWidth: 0 }}>
+              <div style={{ fontWeight: 600, fontSize: '.9rem', overflowWrap: 'anywhere' }}>{p.campaignName}</div>
               <div style={mutedTx}>{statusLabel(p.payoutMethod)} · {dt(p.createdAt)}</div>
             </div>
-            <div style={{ fontWeight: 700 }}>{kr(p.amount)}</div>
+            <div style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>{kr(p.amount)}</div>
             <span style={statusPill(p.status)}>{statusLabel(p.status)}</span>
             {(p.status === 'Pending' || p.status === 'UnderReview') && (
-              <div style={{ marginLeft: 'auto', display: 'flex', gap: '.5rem' }}>
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: '.5rem', flexWrap: 'wrap' }}>
                 <button style={actionBtn('#2f9d5b')} disabled={act.isPending}
                   onClick={() => act.mutate({ id: p.id, action: 'approve' })}>{t('Godkänn')}</button>
                 <button style={actionBtn('#cf4b4b')} disabled={act.isPending}
                   onClick={() => { const reason = window.prompt(t('Anledning till avslag?')); if (reason !== null) act.mutate({ id: p.id, action: 'reject', reason: reason || 'Avvisad av admin' }); }}>{t('Avvisa')}</button>
               </div>
             )}
-            {p.rejectionReason && <span style={{ ...mutedTx, marginLeft: 'auto' }}>{p.rejectionReason}</span>}
+            {p.rejectionReason && <span style={{ ...mutedTx, marginLeft: 'auto', minWidth: 0, overflowWrap: 'anywhere' }}>{p.rejectionReason}</span>}
           </div>
         ))}
       </div>
@@ -236,13 +236,13 @@ export function AdminFraudSection() {
       {rows.map((f) => (
         <div key={f.id} style={rowLine}>
           <span style={statusPill(f.severity)}>{statusLabel(f.severity)}</span>
-          <div style={{ flex: 1, minWidth: 220 }}>
-            <div style={{ fontWeight: 600, fontSize: '.88rem' }}>{statusLabel(f.flagType)} · {statusLabel(f.entityType)}</div>
-            <div style={mutedTx}>{f.description}</div>
+          <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+            <div style={{ fontWeight: 600, fontSize: '.88rem', overflowWrap: 'anywhere' }}>{statusLabel(f.flagType)} · {statusLabel(f.entityType)}</div>
+            <div style={{ ...mutedTx, overflowWrap: 'anywhere' }}>{f.description}</div>
           </div>
           <span style={statusPill(f.status)}>{statusLabel(f.status)}</span>
           {(f.status === 'Open' || f.status === 'UnderReview') ? (
-            <div style={{ display: 'flex', gap: '.4rem' }}>
+            <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap' }}>
               <button style={actionBtn('#2f9d5b')} disabled={resolve.isPending}
                 onClick={() => resolve.mutate({ id: f.id, action: 'Legitimate' })}>{t('Legitim')}</button>
               <button style={actionBtn('#cf4b4b')} disabled={resolve.isPending}
@@ -284,17 +284,17 @@ export function AdminCreateAdminCard() {
     onError: (err: any) => setMessage(err?.response?.data?.error?.message ?? 'Kunde inte skapa admin.'),
   });
 
-  const input: React.CSSProperties = { width: '100%', padding: '.6rem .8rem', borderRadius: 12, border: '1px solid rgba(241,168,143,.3)', background: '#fff', fontSize: '.88rem', color: '#0B0F17' };
+  const input: React.CSSProperties = { width: '100%', minWidth: 0, padding: '.6rem .8rem', borderRadius: 12, border: '1px solid rgba(241,168,143,.3)', background: '#fff', fontSize: '.88rem', color: '#0B0F17' };
 
   return (
-    <div style={{ ...card, padding: '1.1rem 1.3rem' }}>
+    <div style={{ ...card, padding: '1.1rem clamp(.9rem, 3.5vw, 1.3rem)' }}>
       <button type="button" onClick={() => setOpen((v) => !v)}
         style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '.92rem', color: '#0B0F17', padding: 0 }}>
         {open ? '▾' : '▸'} {t('Lägg till admin')}
       </button>
       <div style={{ ...mutedTx, marginTop: 2 }}>{t('Endast huvudadmin. Nya admins får full panelåtkomst men kan inte skapa fler admins.')}</div>
       {open && (
-        <form style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '.7rem', marginTop: '.9rem' }}
+        <form style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '.7rem', marginTop: '.9rem', minWidth: 0 }}
           onSubmit={(e) => { e.preventDefault(); setMessage(''); create.mutate(); }}>
           <input style={input} type="email" required placeholder={t('E-post')} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           <input style={input} type="text" required placeholder={t('Förnamn')} value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
@@ -325,10 +325,10 @@ export function AdminBroadcastCard() {
     onError: (err: any) => setResult(err?.response?.data?.error?.message ?? t('Kunde inte skicka utskicket.')),
   });
 
-  const input: React.CSSProperties = { width: '100%', padding: '.6rem .8rem', borderRadius: 12, border: '1px solid rgba(241,168,143,.3)', background: '#fff', fontSize: '.88rem', color: '#0B0F17', fontFamily: 'inherit' };
+  const input: React.CSSProperties = { width: '100%', minWidth: 0, padding: '.6rem .8rem', borderRadius: 12, border: '1px solid rgba(241,168,143,.3)', background: '#fff', fontSize: '.88rem', color: '#0B0F17', fontFamily: 'inherit' };
 
   return (
-    <div style={{ ...card, padding: '1.1rem 1.3rem' }}>
+    <div style={{ ...card, padding: '1.1rem clamp(.9rem, 3.5vw, 1.3rem)' }}>
       <button type="button" onClick={() => setOpen((v) => !v)}
         style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '.92rem', color: '#0B0F17', padding: 0 }}>
         {open ? '▾' : '▸'} {t('Meddela alla användare')}

@@ -314,6 +314,7 @@ export interface AssignmentListItem {
   currentPayoutAmount: number;
   assignedAt: string;
   goalReached?: boolean;
+  isTap?: boolean;
 }
 
 export interface AssignmentDetail {

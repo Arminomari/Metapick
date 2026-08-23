@@ -51,13 +51,13 @@ export function TikTokSigninPage() {
   }, []);
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FFF4EC', padding: 24 }}>
-      <div style={{ textAlign: 'center', maxWidth: 420 }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FFF4EC', padding: 'clamp(16px, 4vw, 24px)' }}>
+      <div style={{ textAlign: 'center', width: '100%', maxWidth: 420, minWidth: 0 }}>
         {error ? (
           <>
             <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0B0F17' }}>{t('Hoppsan')}</h2>
-            <p style={{ color: '#6E7480', marginTop: 10, lineHeight: 1.5 }}>{error}</p>
-            <a href="/login" style={{ display: 'inline-block', marginTop: 18, background: '#0B0F17', color: '#FFF4EC', padding: '12px 26px', borderRadius: 980, textDecoration: 'none', fontWeight: 600 }}>{t('Till inloggningen')}</a>
+            <p style={{ color: '#6E7480', marginTop: 10, lineHeight: 1.5, overflowWrap: 'anywhere' }}>{error}</p>
+            <a href="/login" style={{ display: 'inline-block', maxWidth: '100%', marginTop: 18, background: '#0B0F17', color: '#FFF4EC', padding: '12px 26px', borderRadius: 980, textDecoration: 'none', fontWeight: 600 }}>{t('Till inloggningen')}</a>
           </>
         ) : (
           <>

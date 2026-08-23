@@ -85,11 +85,11 @@ function TikTokAlertBanner({ compact = false }: { compact?: boolean }) {
   return (
     <Card className="!border-[hsl(var(--warning)/0.35)] !bg-[hsl(var(--warning)/0.05)]">
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-4">
-          <div className="h-11 w-11 rounded-full bg-[hsl(var(--warning)/0.15)] flex items-center justify-center text-[hsl(var(--warning))]" aria-hidden>
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="h-11 w-11 shrink-0 rounded-full bg-[hsl(var(--warning)/0.15)] flex items-center justify-center text-[hsl(var(--warning))]" aria-hidden>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12V3h4a4 4 0 0 0 4 4"/><path d="M9 12a4 4 0 1 0 4 4V3"/></svg>
           </div>
-          <div>
+          <div className="min-w-0">
             <h3 className="text-xl font-bold tracking-tight">{t('Anslut ditt TikTok-konto')}</h3>
             <p className="text-sm text-muted-foreground col-prose">
               {t('Koppla ditt konto för att automatiskt spåra views, engagement och intjäning.')}
@@ -202,7 +202,7 @@ export function CreatorDashboard() {
       </div>
 
       <Card className="!p-0 overflow-hidden">
-        <div className="px-6 pt-6 pb-2 flex items-baseline justify-between">
+        <div className="px-6 pt-6 pb-2 flex items-baseline justify-between flex-wrap gap-2">
           <h2 className="text-2xl font-bold tracking-tight">{t('Aktiva uppdrag')}</h2>
           <span className="eyebrow">{active.length} {t('live')}</span>
         </div>
@@ -305,7 +305,7 @@ export function BrowseCampaignsPage() {
         </div>
       )}
       {!isError && (isLoading ? (
-        <div className="grid" style={{ gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16, display: 'grid' }}>
+        <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: 16, display: 'grid' }}>
           <CardSkeleton rows={3} /><CardSkeleton rows={3} /><CardSkeleton rows={3} />
         </div>
       ) : (
@@ -313,7 +313,7 @@ export function BrowseCampaignsPage() {
           {data?.data.length ? (
             <>
               <div className="results-meta"><div className="cnt"><span className="live-dot" />{data.totalCount} {data.totalCount === 1 ? t('kampanj tillgänglig') : t('kampanjer tillgängliga')}</div></div>
-              <div className="grid" style={{ gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16, display: 'grid' }}>
+              <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: 16, display: 'grid' }}>
                 {data.data.map((c) => {
                   const status = appStatusMap.get(c.id);
                   const full = c.spotsLeft <= 0;
@@ -322,7 +322,7 @@ export function BrowseCampaignsPage() {
                     <div className="camp-card" key={c.id}>
                       <div className="ch">
                         <span className="mono" style={{ background: grad(c.name) }}>{initial(c.brandName || c.name)}</span>
-                        <div style={{ flex: 1 }}><div className="ttl">{c.name}</div><div className="brand" onClick={(e) => { if (c.brandProfileId) { e.stopPropagation(); navigate(`/creator/brands/${c.brandProfileId}`); } }} style={c.brandProfileId ? { cursor: 'pointer', textDecoration: 'underline', textDecorationColor: 'rgba(156,79,49,.35)' } : undefined} title={c.brandProfileId ? t('Visa företagsprofil') : undefined}>{c.brandName}</div></div>
+                        <div style={{ flex: 1, minWidth: 0, wordBreak: 'break-word' }}><div className="ttl">{c.name}</div><div className="brand" onClick={(e) => { if (c.brandProfileId) { e.stopPropagation(); navigate(`/creator/brands/${c.brandProfileId}`); } }} style={c.brandProfileId ? { cursor: 'pointer', textDecoration: 'underline', textDecorationColor: 'rgba(156,79,49,.35)' } : undefined} title={c.brandProfileId ? t('Visa företagsprofil') : undefined}>{c.brandName}</div></div>
                         <button className="lt-icbtn" style={{ borderRadius: '50%' }} aria-label={saved ? t('Ta bort från sparade') : t('Spara kampanj')} aria-pressed={saved}
                           onClick={() => handleSave(c.id)} disabled={toggleSave.isPending}>
                           <svg width="16" height="16" viewBox="0 0 24 24" fill={saved ? '#C26A4A' : 'none'} stroke="#C26A4A" strokeWidth="1.6" strokeLinejoin="round"><path d="M7 4h10v16l-5-3-5 3z" /></svg>
@@ -423,7 +423,7 @@ export function CreatorAssignmentsPage() {
                 <div key={a.id} className="vcamp" onClick={() => navigate(`/creator/assignments/${a.id}`)}>
                   <span className="vcamp-thumb" style={{ background: grad(a.campaignName) }}><span className="brand-mono">{initial(a.campaignName)}</span></span>
                   <div className="vcamp-main">
-                    <div className="vcamp-b">{a.campaignName}</div>
+                    <div className="vcamp-b" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>{a.campaignName}{a.isTap && <span className="badge green" style={{ fontSize: 10.5 }}>💧 {t('Kran')}</span>}</div>
                     <div className="vcamp-m">{t('Tilldelad')} {formatDate(a.assignedAt)}</div>
                     <StatusBadge status={a.goalReached ? 'GoalReached' : a.status} />
                   </div>
@@ -650,8 +650,8 @@ export function AssignmentDetailPage() {
               value={`${t('Min recension av produkten!')} ${assignment.trackingTag.recommendedHashtag ?? ''} ${assignment.trackingTag.tagCode}`.replace(/\s+/g, ' ').trim()} />
           </div>
           <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'flex-start', padding: '11px 14px', borderRadius: 13, background: 'rgba(169,220,192,.22)', border: '1px solid rgba(95,185,138,.35)' }}>
-            <span style={{ fontSize: 15, lineHeight: 1 }} aria-hidden>🤖</span>
-            <p style={{ margin: 0, fontSize: 12.5, color: '#2f7d52', lineHeight: 1.55 }}>
+            <span style={{ fontSize: 15, lineHeight: 1, flexShrink: 0 }} aria-hidden>🤖</span>
+            <p style={{ margin: 0, fontSize: 12.5, color: '#2f7d52', lineHeight: 1.55, minWidth: 0 }}>
               <strong>{t('Automatisk tracking:')}</strong> {t('Vi scannar regelbundet efter nya videos. När din video hittas dyker den upp nedan av sig själv — publicera och luta dig tillbaka.')}
             </p>
           </div>
@@ -667,10 +667,10 @@ export function AssignmentDetailPage() {
           <p style={{ margin: '0 0 12px', fontSize: 12.5, color: '#2f7d52', lineHeight: 1.55, fontWeight: 600 }}>
             💡 {t('Lägger du till videon via länk behöver du inte skriva koderna i beskrivningen — videon kopplas direkt till kampanjen och verifieras när företaget godkänner den.')}
           </p>
-          <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 10 }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder={t('https://www.tiktok.com/@ditt-namn/video/123...')} required
-              style={{ flex: 1, border: '1px solid rgba(241,168,143,.22)', borderRadius: 13, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', background: 'rgba(255,255,255,.7)' }} />
-            <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={submitVideo.isPending}>{submitVideo.isPending ? t('Skickar…') : t('Lägg till')}</button>
+              style={{ flex: '1 1 220px', minWidth: 0, border: '1px solid rgba(241,168,143,.22)', borderRadius: 13, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', background: 'rgba(255,255,255,.7)' }} />
+            <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px', flex: '0 0 auto' }} disabled={submitVideo.isPending}>{submitVideo.isPending ? t('Skickar…') : t('Lägg till')}</button>
           </form>
           {submitError && (
             <p style={{ margin: '10px 0 0', fontSize: 13, fontWeight: 600, color: '#cf4b4b', lineHeight: 1.5 }}>⚠ {submitError}</p>
@@ -776,7 +776,7 @@ export function EarningsPage() {
       </div>
 
       {/* ── the three states that matter ── */}
-      <div className="vstat-row" style={{ gridTemplateColumns: 'repeat(3,minmax(0,1fr))' }}>
+      <div className="vstat-row" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
         <PayoutState tone="amber" label={t('Väntande')} amount={pending} count={pendingList.length} sub={t('väntar på varumärkets godkännande')}
           icon={<><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>} />
         <PayoutState tone="lilac" label={t('Godkänt')} amount={approved} count={approvedList.length} sub={t('klart, på väg')}
@@ -807,7 +807,7 @@ export function EarningsPage() {
               )}
             </div>
           </div>
-          <div className="vperf-foot">
+          <div className="vperf-foot" style={{ flexWrap: 'wrap', gap: '10px 18px' }}>
             <div className="vf-stat"><div className="vf-l">{t('Totalt intjänat')}</div><div className="vf-v">{formatCurrency(lifetime)}</div></div>
             <div className="vf-stat"><div className="vf-l">{t('Snitt / utbetalning')}</div><div className="vf-v">{formatCurrency(payouts.length ? (paid + approved + pending) / payouts.length : 0)}</div></div>
             <div className="vf-stat"><div className="vf-l">{t('Andel utbetalt')}</div><div className="vf-v">{payouts.length ? Math.round((paidList.length / payouts.length) * 100) : 0}%</div></div>
@@ -820,7 +820,7 @@ export function EarningsPage() {
           {topBrands.length ? (
             <div style={{ marginTop: 6 }}>
               {topBrands.map(([name, amt]) => (
-                <div className="minibar" key={name}><span className="nm" style={{ width: 110, flex: '0 0 110px' }}>{name}</span><span className="track"><span style={{ width: `${Math.round((amt / maxBrand) * 100)}%` }} /></span><span className="pct">{formatCurrency(amt)}</span></div>
+                <div className="minibar" key={name}><span className="nm" style={{ width: 110, flex: '0 1 110px', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={name}>{name}</span><span className="track"><span style={{ width: `${Math.round((amt / maxBrand) * 100)}%` }} /></span><span className="pct">{formatCurrency(amt)}</span></div>
               ))}
             </div>
           ) : (
@@ -838,7 +838,7 @@ export function EarningsPage() {
       {/* how payouts work */}
       <div className="card" style={{ marginTop: 18 }}>
         <div className="sec-head"><h3>{t('Så får du betalt')}</h3><span style={{ fontSize: 12.5, color: 'var(--muted)' }}>{t('Från visning till pengar på kontot')}</span></div>
-        <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 12 }}>
+        <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: 12 }}>
           {[
             [t('1. Posta & verifiera'), t('Du postar med kampanjens hashtag — dina visningar verifieras automatiskt via TikTok.')],
             [t('2. Ersättning räknas'), t('Varje natt räknas din intjäning om enligt kampanjens villkor (t.ex. kr per 1 000 visningar).')],
@@ -925,7 +925,7 @@ function PayoutMethodCard() {
       {!editing && pm?.isConfigured && activeMeta && (
         <div className="list-row" style={{ borderTop: 'none', paddingTop: 0 }}>
           <span className="mono sq" style={{ background: 'linear-gradient(140deg,#FFE3D3,#FFC2A6)', color: '#9c4f31' }}>{activeMeta.icon}</span>
-          <div className="row-main" style={{ flex: 1 }}>
+          <div className="row-main" style={{ flex: 1, minWidth: 0 }}>
             <div className="t">{activeMeta.label}</div>
             <div className="s">{pm.maskedDetails}{pm.accountHolder ? ` · ${pm.accountHolder}` : ''}</div>
           </div>
@@ -935,7 +935,7 @@ function PayoutMethodCard() {
 
       {!editing && !pm?.isConfigured && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-          <div style={{ flex: 1, minWidth: 240 }}>
+          <div style={{ flex: 1, minWidth: 'min(100%, 240px)' }}>
             <div style={{ fontWeight: 600, fontSize: 14 }}>{t('Lägg till hur du vill få betalt')}</div>
             <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 4 }}>{t('Bankkonto, Swish eller PayPal. Detaljerna krypteras och visas aldrig i klartext.')}</div>
           </div>
@@ -945,21 +945,21 @@ function PayoutMethodCard() {
 
       {editing && (
         <form onSubmit={save}>
-          <div className="auth-role" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', marginBottom: 16 }} role="group" aria-label={t('Metod')}>
+          <div className="auth-role" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', marginBottom: 16 }} role="group" aria-label={t('Metod')}>
             {Object.entries(METHOD_META).map(([key, m]) => (
               <button key={key} type="button" aria-pressed={method === key} className={method === key ? 'on' : ''} onClick={() => { setMethodType(key); setDetails(''); }}>{m.label}</button>
             ))}
           </div>
-          <div className="form-grid">
+          <div className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))' }}>
             <div className="field"><label htmlFor="pm-details">{meta.hint} *</label><input id="pm-details" value={details} inputMode={method === 'PayPal' ? 'email' : 'numeric'} onChange={(e) => setDetails(method === 'Swish' ? maskSwishNumber(e.target.value) : method === 'BankTransfer' ? maskBankAccount(e.target.value) : e.target.value)} required minLength={4} maxLength={200} placeholder={meta.placeholder} autoComplete="off" /></div>
             <div className="field"><label htmlFor="pm-holder">{t('Kontoinnehavare')}</label><input id="pm-holder" value={holder} onChange={(e) => setHolder(e.target.value)} placeholder={t('För- och efternamn')} /></div>
-            <div className="field full" style={{ flexDirection: 'row', gap: 10 }}>
+            <div className="field full" style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
               <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={setMethod.isPending}>{setMethod.isPending ? t('Sparar…') : t('Spara metod')}</button>
               <button type="button" className="btn-outline" onClick={() => setEditing(false)}>{t('Avbryt')}</button>
             </div>
           </div>
           <div style={{ fontSize: 11.5, color: 'var(--muted-2)', marginTop: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
             {t('Krypteras med AES-256 innan lagring. Används vid dina utbetalningar.')}
           </div>
         </form>
@@ -987,7 +987,7 @@ function PayoutRow({ p }: { p: import('@/types').PayoutRequest }) {
   return (
     <div className="list-row">
       <span className="mono sq" style={{ background: grad(p.campaignName) }}>{initial(p.campaignName)}</span>
-      <div className="row-main" style={{ flex: 1 }}>
+      <div className="row-main" style={{ flex: 1, minWidth: 0 }}>
         <div className="t">{p.campaignName}</div>
         <div className="s">{t('Loggad')} {formatDate(p.createdAt)}{p.paidAt ? ` · ${t('utbetald')} ${formatDate(p.paidAt)}` : ''}{p.payoutMethod ? ` · ${METHOD_META[p.payoutMethod]?.label ?? p.payoutMethod}` : ''}</div>
       </div>
@@ -1087,7 +1087,7 @@ export function CreatorProfilePage() {
 
       <div className="card" style={{ maxWidth: 860 }}>
         <div className="sec-head"><h3>{t('Profilinformation')}</h3>{!editing && <button className="view-all" onClick={() => setEditing(true)}>{t('Redigera')}</button>}</div>
-        <form onSubmit={handleSave} className="form-grid">
+        <form onSubmit={handleSave} className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))' }}>
           <div className="field"><label>{t('Visningsnamn')} *</label><input type="text" value={form.displayName} onChange={set('displayName')} required disabled={!editing} /></div>
           <div className="field"><label>{t('TikTok-användarnamn')}</label>
             {tikTokStatus?.connected ? (
@@ -1139,7 +1139,7 @@ export function CreatorProfilePage() {
           )}
           <div className="field full">
             {saved && <p style={{ color: '#2f9d5b', fontSize: 13, marginBottom: 8 }}>{t('Profilen har sparats!')}</p>}
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               {editing ? (
                 <>
                   <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={update.isPending}>{update.isPending ? t('Sparar…') : t('Spara profil')}</button>
@@ -1155,7 +1155,7 @@ export function CreatorProfilePage() {
 
       <div className="card" style={{ maxWidth: 860, marginTop: 16 }}>
         <div className="sec-head"><h3>{t('Profiluppgifter')}</h3></div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16 }}>
           <div><div className="vcamp-k">{t('Följare')}</div><div className="vcamp-v" style={{ fontSize: 16 }}>{formatNumber(profile.followerCount)}</div></div>
           <div><div className="vcamp-k">{t('Snittvisningar')}</div><div className="vcamp-v" style={{ fontSize: 16 }}>{profile.averageViews ? formatNumber(profile.averageViews) : '–'}</div></div>
           <div><div className="vcamp-k">{t('Medlem sedan')}</div><div className="vcamp-v" style={{ fontSize: 16 }}>{formatDate(profile.createdAt)}</div></div>

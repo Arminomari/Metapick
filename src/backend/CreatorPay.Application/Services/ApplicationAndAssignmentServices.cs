@@ -448,7 +448,8 @@ public class AssignmentService : IAssignmentService
             a.Id, a.CampaignId, a.Campaign.Name, a.Status.ToString(),
             a.TotalVerifiedViews, a.TrackingLinks.Where(tl => tl.IsActive).Sum(tl => tl.TotalClicks),
             a.CurrentPayoutAmount, a.AssignedAt,
-            IsGoalReached(a.Campaign, a.CurrentPayoutAmount))).ToList();
+            IsGoalReached(a.Campaign, a.CurrentPayoutAmount),
+            a.Campaign.Kind == CampaignKind.Tap)).ToList();
 
         return new PagedResult<AssignmentListDto>
         {

@@ -286,7 +286,7 @@ public record ApplicationDto(
 public record AssignmentListDto(
     Guid Id, Guid CampaignId, string CampaignName,
     string Status, long TotalVerifiedViews, long TotalTrackedClicks, decimal CurrentPayoutAmount, DateTime AssignedAt,
-    bool GoalReached = false);
+    bool GoalReached = false, bool IsTap = false);
 
 public record AssignmentDetailDto(
     Guid Id, Guid CampaignId, string CampaignName, Guid CreatorProfileId,

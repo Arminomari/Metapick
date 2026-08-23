@@ -105,10 +105,10 @@ export function BrandStudioDashboard() {
                     <path d={line} fill="none" stroke="url(#perfLine)" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" />
                     {pts.length > 0 && <circle cx={pts[pts.length - 1][0]} cy={pts[pts.length - 1][1]} r="5.5" fill="#fff" stroke="#F1A88F" strokeWidth="3" />}
                   </svg>
-                  <div className="vchart-x">{chartCamps.map((c) => <span key={c.id} style={{ maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>)}</div>
+                  <div className="vchart-x">{chartCamps.map((c) => <span key={c.id} style={{ maxWidth: 90, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>)}</div>
                 </div>
               </div>
-              <div className="vperf-foot">
+              <div className="vperf-foot" style={{ flexWrap: 'wrap', gap: 12 }}>
                 <div className="vf-stat"><div className="vf-l">{t('Total budget')}</div><div className="vf-v">{formatCurrency(totalBudget)}</div></div>
                 <div className="vf-stat"><div className="vf-l">{t('Spenderat')}</div><div className="vf-v">{formatCurrency(totalSpent)}</div></div>
                 <div className="vf-stat"><div className="vf-l">{t('Utnyttjande')}</div><div className="vf-v">{spentPct}%</div></div>
@@ -145,7 +145,7 @@ export function BrandStudioDashboard() {
 
       <div className="vcsplit">
         <div className="card vcamps">
-          <div className="vperf-head"><h3>{t('Senaste kampanjer')}</h3><Link to="/brand/campaigns/new" className="btn-apply" style={{ width: 'auto', padding: '9px 16px', fontSize: 12.5 }}>+ {t('Ny kampanj')}</Link></div>
+          <div className="vperf-head" style={{ flexWrap: 'wrap', gap: 8 }}><h3>{t('Senaste kampanjer')}</h3><Link to="/brand/campaigns/new" className="btn-apply" style={{ width: 'auto', padding: '9px 16px', fontSize: 12.5, whiteSpace: 'nowrap' }}>+ {t('Ny kampanj')}</Link></div>
           {campaigns.length ? campaigns.slice(0, 5).map((c) => {
             const pct = c.budget ? Math.round((c.budgetSpent / c.budget) * 100) : 0;
             return (
@@ -154,7 +154,7 @@ export function BrandStudioDashboard() {
                 <div className="vcamp-main">
                   <div className="vcamp-b">{c.name}</div>
                   <div className="vcamp-m">{c.category} · {formatDate(c.startDate)} – {formatDate(c.endDate)}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{campTag(c.status)}<div className="progress-line" style={{ flex: 1, maxWidth: 150, marginTop: 0 }}><span style={{ width: `${pct}%` }} /></div><span style={{ fontSize: 11.5, color: 'var(--muted)', fontWeight: 600 }}>{pct}%</span></div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', minWidth: 0 }}>{campTag(c.status)}<div className="progress-line" style={{ flex: '1 1 80px', maxWidth: 150, marginTop: 0, minWidth: 0 }}><span style={{ width: `${pct}%` }} /></div><span style={{ fontSize: 11.5, color: 'var(--muted)', fontWeight: 600 }}>{pct}%</span></div>
                 </div>
                 <div className="vcamp-end"><div className="vcamp-k">{t('Creators')}</div><div className="vcamp-v">{c.approvedCreatorCount}/{c.maxCreators}</div></div>
                 <div className="vcamp-end"><div className="vcamp-k">{t('Spenderat')}</div><div className="vcamp-v">{formatCurrency(c.budgetSpent)}</div></div>

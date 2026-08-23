@@ -81,7 +81,7 @@ export function CreatorAnalyticsPage() {
               ) : (
                 <div style={{ padding: '50px 10px', textAlign: 'center', color: 'var(--muted)' }}>{t('Kör ett par kampanjer så ritar din viewstrend upp sig här.')}</div>
               )}
-              <div className="vperf-foot">
+              <div className="vperf-foot" style={{ flexWrap: 'wrap', gap: '10px 18px' }}>
                 <div className="vf-stat"><div className="vf-l">{t('Total räckvidd')}</div><div className="vf-v">{formatNumber(totalViews)}</div></div>
                 <div className="vf-stat"><div className="vf-l">{t('Bästa kampanjen')}</div><div className="vf-v">{ranked[0] ? formatNumber(ranked[0].totalVerifiedViews) : '—'}</div></div>
                 <div className="vf-stat"><div className="vf-l">{t('Klickfrekvens')}</div><div className="vf-v">{ctr.toFixed(2)}%</div></div>
@@ -130,14 +130,14 @@ export function CreatorAnalyticsPage() {
               <div className="vperf-head"><h3>{t('Räckvidd & monetarisering')}</h3></div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: 'var(--muted)', marginBottom: 6 }}><span>{t('Publik')}</span><span>{formatNumber(profile?.followerCount ?? 0)} {t('följare')}</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '2px 10px', fontSize: 12.5, color: 'var(--muted)', marginBottom: 6 }}><span>{t('Publik')}</span><span>{formatNumber(profile?.followerCount ?? 0)} {t('följare')}</span></div>
                   <MiniBars rows={[
                     { label: t('Klickfrekvens'), pct: Math.min(100, ctr * 8), value: ctr.toFixed(2) + '%' },
                     { label: t('Intäkt / 1K views'), pct: Math.min(100, earningPerView * 2), value: formatCurrency(earningPerView) },
                     { label: t('Snittvisningar'), pct: Math.min(100, (avgViews / maxViews) * 100), value: shortMoney(avgViews) },
                   ]} />
                 </div>
-                <div style={{ borderTop: '1px solid rgba(241,168,143,.12)', paddingTop: 14, display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 14 }}>
+                <div style={{ borderTop: '1px solid rgba(241,168,143,.12)', paddingTop: 14, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 14 }}>
                   <div><div className="vcamp-k">{t('Totalt antal klick')}</div><div className="vcamp-v" style={{ fontSize: 18 }}>{formatNumber(totalClicks)}</div></div>
                   <div><div className="vcamp-k">{t('Genomförda kampanjer')}</div><div className="vcamp-v" style={{ fontSize: 18 }}>{assignments.length}</div></div>
                 </div>
@@ -185,8 +185,8 @@ export function CreatorLinksPage() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 300px', gap: 20, alignItems: 'start' }}>
-        <div className="card">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: 20, alignItems: 'start' }}>
+        <div className="card" style={{ minWidth: 0 }}>
           <div className="sec-head"><h3>{t('Dina kampanjlänkar')}</h3><span style={{ fontSize: 13, color: 'var(--muted)' }}>{live.length} {t('aktiva')}</span></div>
           {live.length === 0 ? (
             <div style={{ padding: '34px 6px', textAlign: 'center' }}>
@@ -204,7 +204,7 @@ export function CreatorLinksPage() {
           ))}
         </div>
 
-        <div className="lt-phone">
+        <div className="lt-phone" style={{ maxWidth: '100%' }}>
           <div className="lt-screen">
             <div className="pp">{initial(name)}</div>
             <div className="pn">{name}</div>
@@ -259,7 +259,7 @@ export function CreatorLevelsPage() {
             <svg viewBox="0 0 24 24" fill="none" stroke="#3a1d12" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="9" r="4" /><path d="M9 13l-1.5 8 4.5-2.5 4.5 2.5L15 13" /></svg>
             <span className="lv-num">{idx + 1}</span>
           </div>
-          <div style={{ flex: 1, minWidth: 240 }}>
+          <div style={{ flex: 1, minWidth: 'min(100%, 240px)' }}>
             <div className="lvl-name">{cur.name}</div>
             <div className="lvl-sub">{name} · {formatCurrency(lifetimeEarned)} {t('utbetalt')} · {completed} {completed === 1 ? t('slutförd kampanj') : t('slutförda kampanjer')}</div>
             <div className="lvl-xpbar"><span style={{ width: `${pct}%` }} /></div>
@@ -273,9 +273,9 @@ export function CreatorLevelsPage() {
 
       <div className="card" style={{ marginBottom: 20 }}>
         <div className="sec-head"><h3>{t('Stegen')}</h3></div>
-        <div className="lvl-track">
+        <div className="lvl-track" style={{ overflowX: 'auto', padding: '6px 0' }}>
           {TIERS.map((tier, i) => (
-            <div key={tier.name} className={`lvl-node${i < idx ? ' done' : ''}${i === idx ? ' now' : ''}`}>
+            <div key={tier.name} className={`lvl-node${i < idx ? ' done' : ''}${i === idx ? ' now' : ''}`} style={{ flex: '1 0 72px' }}>
               <div className="lvl-dot">{i + 1}</div>
               <div className="lvl-cap">{tier.name}</div>
               <div className="lvl-xpc">{tier.min === 0 ? 'Start' : formatCurrency(tier.min)}</div>
@@ -328,7 +328,7 @@ export function CreatorSavedPage() {
               <div className="camp-card" key={c.id}>
                 <div className="ch">
                   <span className="mono" style={{ background: grad(c.name) }}>{initial(c.brandName || c.name)}</span>
-                  <div style={{ flex: 1 }}><div className="ttl">{c.name}</div><div className="brand">{c.brandName}</div></div>
+                  <div style={{ flex: 1, minWidth: 0, wordBreak: 'break-word' }}><div className="ttl">{c.name}</div><div className="brand">{c.brandName}</div></div>
                   <button className="lt-icbtn" style={{ borderRadius: '50%' }} aria-label={t('Ta bort från sparade')}
                     onClick={() => toggleSave.mutate({ campaignId: c.id, save: false }, { onSuccess: () => toast.push(t('Borttagen från Saved'), 'success') })}
                     disabled={toggleSave.isPending}>

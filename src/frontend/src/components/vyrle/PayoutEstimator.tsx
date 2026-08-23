@@ -69,22 +69,22 @@ export function PayoutTerms({ rules, minViews }: { rules: PayoutRule[]; minViews
   return (
     <div className="pay-rows">
       {sorted.map((r, i) => (
-        <div className="pay-row" key={i}>
-          <span className="pr-l">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C26A4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 7" /></svg>
+        <div className="pay-row" key={i} style={{ flexWrap: 'wrap' }}>
+          <span className="pr-l" style={{ minWidth: 0 }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C26A4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="m5 12 4 4L19 7" /></svg>
             {describeRule(r)}
           </span>
         </div>
       ))}
       {cap != null && (
-        <div className="pay-row">
-          <span className="pr-l">{t('Maxersättning per kreatör')}</span>
+        <div className="pay-row" style={{ flexWrap: 'wrap' }}>
+          <span className="pr-l" style={{ minWidth: 0 }}>{t('Maxersättning per kreatör')}</span>
           <span className="pr-v">{formatCurrency(cap)}</span>
         </div>
       )}
       {minViews != null && minViews > 0 && (
-        <div className="pay-row">
-          <span className="pr-l">{t('Visningar krävs för utbetalning')}</span>
+        <div className="pay-row" style={{ flexWrap: 'wrap' }}>
+          <span className="pr-l" style={{ minWidth: 0 }}>{t('Visningar krävs för utbetalning')}</span>
           <span className="pr-v">{formatNumber(minViews)}+</span>
         </div>
       )}
@@ -103,7 +103,7 @@ export function PayoutEstimator({ model, rules, defaultViews = 25_000 }: {
   return (
     <div className="pay-est">
       <div className="pe-t">{t('Räkna på din ersättning')}</div>
-      <div className="pe-row">
+      <div className="pe-row" style={{ flexWrap: 'wrap' }}>
         <span className="pe-views">{formatNumber(views)} {t('visningar')}</span>
         <span className="pe-amt">≈ {formatCurrency(amount)}</span>
       </div>
@@ -111,6 +111,7 @@ export function PayoutEstimator({ model, rules, defaultViews = 25_000 }: {
         type="range" min={1000} max={500_000} step={1000} value={views}
         onChange={(e) => setViews(Number(e.target.value))}
         aria-label={t('Antal visningar')}
+        style={{ width: '100%', maxWidth: '100%', minWidth: 0 }}
       />
       <div className="auth-hint">{t('Uppskattning — den faktiska ersättningen beräknas på verifierade visningar.')}</div>
     </div>

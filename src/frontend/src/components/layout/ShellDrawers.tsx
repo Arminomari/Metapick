@@ -75,9 +75,9 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
     <>
       <div className={`nd-backdrop${open ? ' open' : ''}`} onClick={onClose} />
       <aside className={`nd-drawer${open ? ' open' : ''}`} aria-hidden={!open}>
-        <div className="nd-head">
-          <div className="nd-head-l"><h3>{t('Notiser')}</h3>{unread.length > 0 && <span className="nd-count">{unread.length} {t('nya')}</span>}</div>
-          <div className="nd-head-r">
+        <div className="nd-head" style={{ flexWrap: 'wrap', gap: 8 }}>
+          <div className="nd-head-l" style={{ minWidth: 0, flexWrap: 'wrap' }}><h3>{t('Notiser')}</h3>{unread.length > 0 && <span className="nd-count">{unread.length} {t('nya')}</span>}</div>
+          <div className="nd-head-r" style={{ marginLeft: 'auto', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {unread.length > 0 && <button className="nd-readall" onClick={() => markAll.mutate()} disabled={markAll.isPending}>{t('Markera alla lästa')}</button>}
             <button className="nd-close" onClick={onClose} aria-label={t('Stäng')}><XIcon /></button>
           </div>
@@ -90,9 +90,9 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
                 <div className="nd-ico" style={{ background: st.bg, color: st.color }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{notifIcon(n.type)}</svg>
                 </div>
-                <div className="nd-body">
-                  <div className="nd-t">{n.title}{!n.isRead && <span className="nd-unread" />}</div>
-                  <div className="nd-s">{n.message}</div>
+                <div className="nd-body" style={{ flex: 1, minWidth: 0 }}>
+                  <div className="nd-t" style={{ flexWrap: 'wrap', overflowWrap: 'anywhere' }}>{n.title}{!n.isRead && <span className="nd-unread" />}</div>
+                  <div className="nd-s" style={{ overflowWrap: 'anywhere' }}>{n.message}</div>
                   <div className="nd-time">{ago(n.createdAt)}</div>
                 </div>
               </div>
@@ -114,9 +114,9 @@ export function MessagesDrawer({ open, onClose }: { open: boolean; onClose: () =
     <>
       <div className={`mc-backdrop${open ? ' open' : ''}`} onClick={onClose} />
       <aside className={`msg-drawer${open ? ' open' : ''}`} aria-hidden={!open}>
-        <div className="nd-head">
-          <div className="nd-head-l"><h3>{t('Meddelanden')}</h3></div>
-          <div className="nd-head-r"><button className="nd-close" onClick={onClose} aria-label={t('Stäng')}><XIcon /></button></div>
+        <div className="nd-head" style={{ flexWrap: 'wrap', gap: 8 }}>
+          <div className="nd-head-l" style={{ minWidth: 0 }}><h3>{t('Meddelanden')}</h3></div>
+          <div className="nd-head-r" style={{ marginLeft: 'auto' }}><button className="nd-close" onClick={onClose} aria-label={t('Stäng')}><XIcon /></button></div>
         </div>
         {open && <ConversationList onOpen={setSel} />}
         <ChatThread sel={sel} onBack={() => setSel(null)} onCloseAll={() => { setSel(null); onClose(); }} />
@@ -133,11 +133,11 @@ function ConversationList({ onOpen }: { onOpen: (c: ChatConversationDto) => void
     <div className="nd-scroll">
       <div className="mc-group"><span className="mc-group-dot active" />{t('Konversationer')} <span className="mc-group-n">{convos.length}</span></div>
       {convos.map((c) => (
-        <div key={c.assignmentId} className="mc-item" onClick={() => onOpen(c)}>
+        <div key={c.assignmentId} className="mc-item" onClick={() => onOpen(c)} style={{ minWidth: 0 }}>
           <ChatAvatar name={c.counterpartName} imageUrl={c.counterpartImageUrl} />
-          <div className="mc-body">
-            <div className="mc-row1">
-              <span className="mc-name">{c.counterpartName}</span>
+          <div className="mc-body" style={{ flex: 1, minWidth: 0 }}>
+            <div className="mc-row1" style={{ minWidth: 0 }}>
+              <span className="mc-name" style={{ minWidth: 0 }}>{c.counterpartName}</span>
               {c.lastMessageAt && <span className="mc-time">{ago(c.lastMessageAt)}</span>}
             </div>
             <div className="mc-prev"><span style={{ color: '#9c4f31', fontWeight: 600 }}>{c.campaignName}</span>{c.lastMessage ? ` · ${c.lastMessage}` : ''}</div>
@@ -180,13 +180,13 @@ function ChatThread({ sel, onBack, onCloseAll }: { sel: ChatConversationDto | nu
     <div className={`mc-thread${sel ? ' open' : ''}`}>
       {sel && (
         <>
-          <div className="mc-thread-head">
+          <div className="mc-thread-head" style={{ minWidth: 0 }}>
             <button className="mc-back" onClick={onBack} aria-label={t('Tillbaka')}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg></button>
             <div onClick={openCounterpart} role="button" tabIndex={0} title={t('Visa profil')}
               onKeyDown={(e) => { if (e.key === 'Enter') openCounterpart(); }}
               style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', flex: 1, minWidth: 0 }}>
               <ChatAvatar name={sel.counterpartName} imageUrl={sel.counterpartImageUrl} size={42} radius={12} />
-              <div className="mc-thread-meta"><div className="mc-thread-name">{sel.counterpartName} <span style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600 }}>›</span></div><div className="mc-thread-status">{sel.campaignName}</div></div>
+              <div className="mc-thread-meta" style={{ flex: 1, minWidth: 0 }}><div className="mc-thread-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sel.counterpartName} <span style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600 }}>›</span></div><div className="mc-thread-status" style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sel.campaignName}</div></div>
             </div>
           </div>
           <div className="mc-thread-scroll" ref={scrollRef}>
@@ -196,7 +196,7 @@ function ChatThread({ sel, onBack, onCloseAll }: { sel: ChatConversationDto | nu
               : messages.map((m: ChatMessageDto) => {
                 const me = m.senderId === userId;
                 return (
-                  <div key={m.id} className={`mc-bub ${me ? 'me' : 'them'}`}>
+                  <div key={m.id} className={`mc-bub ${me ? 'me' : 'them'}`} style={{ overflowWrap: 'anywhere', minWidth: 0 }}>
                     {m.body}
                     <div className="mc-bt">{new Date(m.createdAt).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}{me && (m.isRead ? ' ✓✓' : ' ✓')}</div>
                   </div>
@@ -205,7 +205,7 @@ function ChatThread({ sel, onBack, onCloseAll }: { sel: ChatConversationDto | nu
           </div>
           <form className="mc-composer" onSubmit={handleSend}>
             <div className="mc-input-wrap">
-              <input value={body} onChange={(e) => setBody(e.target.value)} placeholder={t('Skriv ett meddelande…')} autoComplete="off" aria-label={t('Meddelande')} />
+              <input value={body} onChange={(e) => setBody(e.target.value)} placeholder={t('Skriv ett meddelande…')} autoComplete="off" aria-label={t('Meddelande')} style={{ minWidth: 0, flex: 1, width: '100%' }} />
               <button className={`mc-send${body.trim() ? ' has-text' : ''}`} type="submit" disabled={send.isPending || !body.trim()} aria-label={t('Skicka')}>
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
               </button>
@@ -218,8 +218,8 @@ function ChatThread({ sel, onBack, onCloseAll }: { sel: ChatConversationDto | nu
 }
 
 function DrawerEmpty({ children }: { children: ReactNode }) {
-  return <div style={{ padding: '48px 28px', textAlign: 'center', color: 'var(--muted)', fontSize: 13.5, lineHeight: 1.55 }}>{children}</div>;
+  return <div style={{ padding: '48px clamp(16px, 6vw, 28px)', textAlign: 'center', color: 'var(--muted)', fontSize: 13.5, lineHeight: 1.55, overflowWrap: 'anywhere' }}>{children}</div>;
 }
 function DrawerLoading() {
-  return <div style={{ padding: '48px 28px', textAlign: 'center', color: 'var(--muted)', fontSize: 13.5 }}>{t('Laddar…')}</div>;
+  return <div style={{ padding: '48px clamp(16px, 6vw, 28px)', textAlign: 'center', color: 'var(--muted)', fontSize: 13.5 }}>{t('Laddar…')}</div>;
 }

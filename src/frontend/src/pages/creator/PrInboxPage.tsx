@@ -46,7 +46,7 @@ function OfferCard({ offer }: { offer: PrOffer }) {
         {offer.brandLogoUrl
           ? <img src={offer.brandLogoUrl} alt={offer.brandName} className="mono" style={{ objectFit: 'cover' }} />
           : <span className="mono" style={{ background: grad(offer.brandName) }}>{offer.brandName.charAt(0).toUpperCase()}</span>}
-        <div style={{ flex: 1 }}><div className="ttl">{offer.title}</div><div className="brand">{offer.brandName}</div></div>
+        <div style={{ flex: 1, minWidth: 0, wordBreak: 'break-word' }}><div className="ttl">{offer.title}</div><div className="brand">{offer.brandName}</div></div>
         {offer.status === 'Sent' ? <span className="badge green">{t('Ny')}</span> : <StatusBadge status={offer.status} />}
       </div>
 
@@ -60,7 +60,7 @@ function OfferCard({ offer }: { offer: PrOffer }) {
         <button className="btn-outline" style={{ width: '100%', marginTop: 14 }} onClick={expand}>{t('Läs erbjudande')}</button>
       ) : (
         <>
-          <p style={{ fontSize: 13.5, marginTop: 12, whiteSpace: 'pre-line', color: 'var(--ink-2)', lineHeight: 1.5 }}>{offer.message}</p>
+          <p style={{ fontSize: 13.5, marginTop: 12, whiteSpace: 'pre-line', wordBreak: 'break-word', color: 'var(--ink-2)', lineHeight: 1.5 }}>{offer.message}</p>
           <div className="meta-cols" style={{ marginBottom: 14 }}>
             {offer.compensationAmount != null && offer.compensationAmount > 0 && (
               <div className="mc"><div className="k">{t('Ersättning')}</div><div className="v green">{formatCurrency(offer.compensationAmount)}</div></div>
@@ -74,9 +74,9 @@ function OfferCard({ offer }: { offer: PrOffer }) {
               <textarea value={responseMessage} onChange={(e) => setResponseMessage(e.target.value)} rows={2} placeholder={t('Meddelande till företaget (valfritt)')}
                 style={{ width: '100%', border: '1px solid rgba(241,168,143,.22)', borderRadius: 13, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', background: 'rgba(255,255,255,.7)', resize: 'vertical' }} />
               {error && <p style={{ color: 'var(--red)', fontSize: 13, marginTop: 6 }}>{error}</p>}
-              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                <button className="btn-apply" style={{ flex: 1, padding: 10 }} onClick={() => handleRespond(true)} disabled={respond.isPending}>{t('Tacka ja')}</button>
-                <button className="btn-outline" style={{ flex: 1, padding: 10 }} onClick={() => handleRespond(false)} disabled={respond.isPending}>{t('Tacka nej')}</button>
+              <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                <button className="btn-apply" style={{ flex: '1 1 110px', padding: 10, minWidth: 0 }} onClick={() => handleRespond(true)} disabled={respond.isPending}>{t('Tacka ja')}</button>
+                <button className="btn-outline" style={{ flex: '1 1 110px', padding: 10, minWidth: 0 }} onClick={() => handleRespond(false)} disabled={respond.isPending}>{t('Tacka nej')}</button>
               </div>
             </div>
           ) : (
@@ -162,8 +162,8 @@ export function CreatorPrInboxPage() {
         {tabs.map((t) => <button key={t.key} className={`tab${tab === t.key ? ' active' : ''}`} onClick={() => setTab(t.key)}>{t.label}{t.n ? ` (${t.n})` : ''}</button>)}
       </div>
 
-      {isLoading ? <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16 }}><CardSkeleton rows={3} /><CardSkeleton rows={3} /><CardSkeleton rows={3} /></div> : shown.length > 0 ? (
-        <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16 }}>
+      {isLoading ? <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: 16 }}><CardSkeleton rows={3} /><CardSkeleton rows={3} /><CardSkeleton rows={3} /></div> : shown.length > 0 ? (
+        <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: 16 }}>
           {shown.map((offer) => <OfferCard key={offer.id} offer={offer} />)}
         </div>
       ) : (

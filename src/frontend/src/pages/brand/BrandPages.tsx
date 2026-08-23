@@ -158,7 +158,7 @@ export function BrandCampaignListPage() {
                     <div className="vcamp-main">
                       <div className="vcamp-b">{c.name}</div>
                       <div className="vcamp-m">{c.category} · {formatDate(c.startDate)} – {formatDate(c.endDate)}</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><StatusBadge status={c.status} /><div className="progress-line" style={{ flex: 1, maxWidth: 160, marginTop: 0 }}><span style={{ width: `${pct}%` }} /></div><span style={{ fontSize: 11.5, color: 'var(--muted)', fontWeight: 600 }}>{pct}%</span></div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', minWidth: 0 }}><StatusBadge status={c.status} /><div className="progress-line" style={{ flex: '1 1 80px', maxWidth: 160, marginTop: 0, minWidth: 0 }}><span style={{ width: `${pct}%` }} /></div><span style={{ fontSize: 11.5, color: 'var(--muted)', fontWeight: 600 }}>{pct}%</span></div>
                     </div>
                     <div className="vcamp-end"><div className="vcamp-k">{t('Creators')}</div><div className="vcamp-v">{c.approvedCreatorCount}/{c.maxCreators}</div></div>
                     <div className="vcamp-end"><div className="vcamp-k">{t('Budget')}</div><div className="vcamp-v">{formatCurrency(c.budgetSpent)}</div></div>
@@ -346,8 +346,8 @@ export function CreateCampaignPage() {
           <p className="page-sub">{t('Sätt upp brief, budget och ersättningsmodell. Kreatörer kan ansöka så snart kampanjen är godkänd.')}</p>
         </div>
       </div>
-      <div className="card" style={{ maxWidth: 760 }}>
-        <form onSubmit={handleSubmit} className="form-grid">
+      <div className="card" style={{ maxWidth: 760, width: '100%', minWidth: 0 }}>
+        <form onSubmit={handleSubmit} className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
           <div className="field full"><label>{t('Kampanjnamn')} *</label><input type="text" value={form.name} onChange={set('name')} required /></div>
           <div className="field full"><label>{t('Beskrivning')} *</label><textarea value={form.description} onChange={set('description')} required rows={3} /></div>
           <div className="field"><label>{t('Kategori')}</label>
@@ -363,16 +363,16 @@ export function CreateCampaignPage() {
           <div className="field"><label>{t('Antal videos per creator')}</label><input type="text" inputMode="numeric" value={form.requiredVideoCount || ''} onChange={setNum('requiredVideoCount')} placeholder={t('t.ex. 1')} /><span className="hint" style={{ alignSelf: 'flex-start', color: 'var(--muted)' }}>{t('Hur många videos varje creator ska leverera')}</span></div>
 
           {/* ── Payout Configuration ── */}
-          <div className="field full" style={{ border: '1px solid rgba(241,168,143,.18)', borderRadius: 16, padding: 18, background: 'rgba(255,255,255,.4)', gap: 14 }}>
+          <div className="field full" style={{ border: '1px solid rgba(241,168,143,.18)', borderRadius: 16, padding: 18, background: 'rgba(255,255,255,.4)', gap: 14, minWidth: 0 }}>
             <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)' }}>{t('Utbetalningsmodell')}</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
               {([
                 { value: 'Fixed', label: 'Fast belopp', desc: 'En fast summa per creator som når tröskeln' },
                 { value: 'CPM', label: 'Per visning', desc: 'Betala per 1 000 visningar' },
                 { value: 'Tiered', label: 'Trappsteg', desc: 'Olika belopp vid olika visningsmål' },
               ] as const).map((opt) => (
                 <button key={opt.value} type="button"
-                  className={`vmetric${form.payoutModel === opt.value ? ' active' : ''}`} style={{ alignItems: 'flex-start' }}
+                  className={`vmetric${form.payoutModel === opt.value ? ' active' : ''}`} style={{ alignItems: 'flex-start', minWidth: 0 }}
                   onClick={() => handlePayoutModelChange(opt.value)}>
                   <span className="vm-v" style={{ fontSize: 14 }}>{t(opt.label)}</span>
                   <span className="vm-l">{t(opt.desc)}</span>
@@ -383,7 +383,7 @@ export function CreateCampaignPage() {
             {/* Fixed model */}
             {form.payoutModel === 'Fixed' && (
               <>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 14 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
                   <div className="field"><label>{t('Belopp per creator (SEK)')}</label>
                     <input type="text" inputMode="numeric" value={form.payoutRules[0]?.amount || ''}
                       onChange={(e) => updateRule(0, { amount: Number(e.target.value.replace(/\D/g, '')) || 0 })}
@@ -402,7 +402,7 @@ export function CreateCampaignPage() {
             {/* CPM model */}
             {form.payoutModel === 'CPM' && (
               <>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 14 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
                   <div className="field"><label>{t('Pris per 1 000 views (SEK, minst 20)')}</label>
                     <input type="text" inputMode="numeric" value={form.payoutRules[0]?.amount || ''}
                       onChange={(e) => updateRule(0, { amount: Number(e.target.value.replace(/\D/g, '')) || 0 })}
@@ -429,19 +429,19 @@ export function CreateCampaignPage() {
             {form.payoutModel === 'Tiered' && (
               <>
                 {form.payoutRules.map((rule, idx) => (
-                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 34px', gap: 10, alignItems: 'end' }}>
-                    <div className="field"><label>{idx === 0 ? t('Från views') : ''}</label>
-                      <input type="text" inputMode="numeric" value={rule.minViews || ''}
+                  <div key={idx} style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'flex-end' }}>
+                    <div className="field" style={{ flex: '1 1 120px', minWidth: 0 }}><label>{idx === 0 ? t('Från views') : ''}</label>
+                      <input type="text" inputMode="numeric" value={rule.minViews || ''} style={{ width: '100%', minWidth: 0 }}
                         onChange={(e) => updateRule(idx, { minViews: Number(e.target.value.replace(/\D/g, '')) || 0 })}
                         placeholder={t('t.ex. 1000')} />
                     </div>
-                    <div className="field"><label>{idx === 0 ? t('Till views') : ''}</label>
-                      <input type="text" inputMode="numeric" value={rule.maxViews ?? ''}
+                    <div className="field" style={{ flex: '1 1 120px', minWidth: 0 }}><label>{idx === 0 ? t('Till views') : ''}</label>
+                      <input type="text" inputMode="numeric" value={rule.maxViews ?? ''} style={{ width: '100%', minWidth: 0 }}
                         onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); updateRule(idx, { maxViews: v ? Number(v) : undefined }); }}
                         placeholder="∞" />
                     </div>
-                    <div className="field"><label>{idx === 0 ? t('Belopp (SEK)') : ''}</label>
-                      <input type="text" inputMode="numeric" value={rule.amount || ''}
+                    <div className="field" style={{ flex: '1 1 120px', minWidth: 0 }}><label>{idx === 0 ? t('Belopp (SEK)') : ''}</label>
+                      <input type="text" inputMode="numeric" value={rule.amount || ''} style={{ width: '100%', minWidth: 0 }}
                         onChange={(e) => updateRule(idx, { amount: Number(e.target.value.replace(/\D/g, '')) || 0 })}
                         placeholder={t('t.ex. 500')} />
                     </div>
@@ -473,23 +473,23 @@ export function CreateCampaignPage() {
           <div className="field full"><label>{t('Instruktioner till creators')}</label><textarea value={form.contentInstructions ?? ''} onChange={set('contentInstructions')} rows={2} placeholder={t('Beskriv vad creators ska göra...')} /></div>
 
           {/* ── Content Tags ── */}
-          <div className="field full" style={{ border: '1px solid rgba(241,168,143,.18)', borderRadius: 16, padding: 18, background: 'rgba(255,255,255,.4)', gap: 12 }}>
+          <div className="field full" style={{ border: '1px solid rgba(241,168,143,.18)', borderRadius: 16, padding: 18, background: 'rgba(255,255,255,.4)', gap: 12, minWidth: 0 }}>
             <h3 style={{ fontSize: 14, fontWeight: 600 }}>{t('Innehållstaggar')} <span style={{ color: 'var(--muted)', fontWeight: 400, fontSize: 12.5 }}>{t('— vilken typ av innehåll söker ni?')}</span></h3>
             <TagSelector label={t('Plattform & format')} tags={PLATFORM_TAGS} selected={form.contentTags ?? []} onChange={tags => setForm({ ...form, contentTags: tags })} />
             <TagSelector label={t('Nisch & kategori')} tags={NICHE_TAGS} selected={form.contentTags ?? []} onChange={tags => setForm({ ...form, contentTags: tags })} />
           </div>
 
           {/* ── Perks & PR ── */}
-          <div className="field full" style={{ border: '1px solid rgba(241,168,143,.18)', borderRadius: 16, padding: 18, background: 'rgba(255,255,255,.4)', gap: 8 }}>
+          <div className="field full" style={{ border: '1px solid rgba(241,168,143,.18)', borderRadius: 16, padding: 18, background: 'rgba(255,255,255,.4)', gap: 8, minWidth: 0 }}>
             <h3 style={{ fontSize: 14, fontWeight: 600 }}>{t('Förmåner & PR')} <span style={{ color: 'var(--muted)', fontWeight: 400, fontSize: 12.5 }}>{t('— valfritt')}</span></h3>
             <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>{t('Beskriv vad godkända creators får utöver ersättningen, t.ex. rabattkod, PR-utskick, gratisprodukt')}</p>
             <textarea value={form.perks ?? ''} onChange={set('perks')} rows={3} placeholder={t('Exempel: 30% rabattkod på hela sortimentet + PR-paket med produkter värda 500 kr')}
-              style={{ border: '1px solid rgba(241,168,143,.22)', borderRadius: 13, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', background: 'rgba(255,255,255,.7)', resize: 'vertical' }} />
+              style={{ width: '100%', border: '1px solid rgba(241,168,143,.22)', borderRadius: 13, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', background: 'rgba(255,255,255,.7)', resize: 'vertical' }} />
           </div>
 
           <div className="field full">
             {error && <p style={{ color: 'var(--red)', fontSize: 13, marginBottom: 8 }}>{error}</p>}
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} disabled={create.isPending}>{create.isPending ? t('Skapar…') : t('Skicka för granskning')}</button>
               <button type="button" className="btn-outline" onClick={() => navigate('/brand/campaigns')}>{t('Avbryt')}</button>
             </div>
@@ -578,15 +578,15 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
           <div className="sec-head"><h3>{t('Ansökningar')} ({applications.totalCount})</h3></div>
           {applications.data.length ? (
             applications.data.map((a: ApplicationItem) => (
-              <div key={a.id} className="list-row" style={{ gap: 14 }}>
+              <div key={a.id} className="list-row" style={{ gap: 14, flexWrap: 'wrap' }}>
                 <span className="mono" style={{ background: grad(a.creatorName) }}>{initial(a.creatorName)}</span>
-                <div className="row-main" style={{ flex: 1 }}>
-                  <div className="t" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{a.creatorName}{a.creatorCategory && <span className="badge grey">{a.creatorCategory}</span>}</div>
+                <div className="row-main" style={{ flex: '1 1 180px', minWidth: 0 }}>
+                  <div className="t" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minWidth: 0 }}>{a.creatorName}{a.creatorCategory && <span className="badge grey">{a.creatorCategory}</span>}</div>
                   {a.tikTokUsername && <a href={`https://www.tiktok.com/@${a.tikTokUsername}`} target="_blank" rel="noopener noreferrer" className="s" style={{ color: '#C26A4A' }}>@{a.tikTokUsername}</a>}
                   {a.message && <div className="s">{a.message}</div>}
                   <div className="s" style={{ color: 'var(--muted-2)' }}>{formatDate(a.createdAt)}</div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '0 0 auto' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '0 1 auto', flexWrap: 'wrap', minWidth: 0 }}>
                   <StatusBadge status={a.status} />
                   {a.status === 'Pending' && (
                     <>
@@ -609,7 +609,7 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
       </div>
 
       {(campaign.contentTags?.length > 0 || campaign.perks) && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16, marginBottom: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginBottom: 16 }}>
           {campaign.contentTags?.length > 0 && (
             <div className="card">
               <div className="sec-head"><h3>{t('Innehållstaggar')}</h3></div>
@@ -653,7 +653,7 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
 
       {!['Draft', 'PendingReview'].includes(campaign.status) && analytics && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="sec-head"><h3>{t('Creator-prestanda')}</h3><span style={{ fontSize: 12, color: '#9c6b1c', fontWeight: 600 }}>⏱ {t('Videos som inte granskas inom 48 timmar godkänns automatiskt.')}</span></div>
+          <div className="sec-head" style={{ flexWrap: 'wrap', gap: 8 }}><h3>{t('Creator-prestanda')}</h3><span style={{ fontSize: 12, color: '#9c6b1c', fontWeight: 600, minWidth: 0 }}>⏱ {t('Videos som inte granskas inom 48 timmar godkänns automatiskt.')}</span></div>
           <div className="space-y-6">
             {analytics.creatorPerformance.map((cp: CreatorPerformance) => {
               const approvedCount = cp.videos.filter(v => v.status === 'Approved').length;
@@ -664,22 +664,22 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
                 && cp.payoutStatus !== 'Processing'
                 && cp.payoutStatus !== 'Approved';
               return (
-              <div key={cp.creatorId} className="border border-border rounded-lg p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
+              <div key={cp.creatorId} className="border border-border rounded-lg p-4 space-y-3 min-w-0">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="min-w-0">
                     <p className="font-medium">{cp.displayName}</p>
                     <p className="text-sm text-muted-foreground">
                       {formatNumber(cp.views)} {t('views')} · {formatCurrency(cp.payoutAmount)}
                     </p>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-col items-end gap-2 min-w-0 max-w-full">
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
                       <span className="text-xs px-2 py-0.5 rounded bg-muted font-medium">
                         {approvedCount}/{reqCount} {t('videos godkända')}
                       </span>
                       <StatusBadge status={cp.status} />
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
                       <StatusBadge status={cp.payoutStatus} />
                       <span className="text-xs text-muted-foreground">{getPayoutStatusLabel(cp.payoutStatus)}</span>
                       {cp.paidAt && (
@@ -706,18 +706,18 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
                   </p>
                 )}
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-                  <div className="xl:col-span-2">
-                    <div className="flex items-center justify-between mb-2">
+                  <div className="xl:col-span-2 min-w-0">
+                    <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                       <span className="text-sm font-semibold">{t('Videos')}</span>
                       <RefreshViewsButton assignmentId={cp.assignmentId} />
                     </div>
                     {cp.videos && cp.videos.length > 0 ? (
                       <div className="space-y-4">
                         {cp.videos.map((v: CreatorVideo, i: number) => (
-                          <div key={i} className="bg-muted/30 rounded-lg p-3 space-y-2">
-                            <div className="flex items-center justify-between text-sm">
+                          <div key={i} className="bg-muted/30 rounded-lg p-3 space-y-2 min-w-0">
+                            <div className="flex items-center justify-between text-sm flex-wrap gap-2">
                               <span>{formatNumber(v.views)} {t('views')}</span>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <StatusBadge status={v.status} />
                                 <span className="text-xs text-muted-foreground">{formatDate(v.createdAt)}</span>
                               </div>
@@ -729,21 +729,22 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
                             {v.submissionId && v.status !== 'Approved' && v.status !== 'Rejected' && (() => {
                               const hoursLeft = Math.max(0, 48 - Math.floor((Date.now() - +new Date(v.createdAt)) / 3600000));
                               return (
-                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 980, background: 'rgba(242,197,138,.28)', color: '#7a5518', fontSize: 12, fontWeight: 700 }}>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 980, background: 'rgba(242,197,138,.28)', color: '#7a5518', fontSize: 12, fontWeight: 700, maxWidth: '100%', flexWrap: 'wrap' }}>
                                   ⏱ {hoursLeft > 0 ? `${t('Auto-godkänns om')} ${hoursLeft} ${t('tim')}` : t('Auto-godkänns inom kort')} — {t('granska nu för att behålla kontrollen')}
                                 </div>
                               );
                             })()}
                             {v.submissionId && v.status !== 'Approved' && v.status !== 'Rejected' && (
-                              <div className="flex items-center gap-2 pt-1">
+                              <div className="flex items-center gap-2 pt-1 flex-wrap">
                                 <Button size="sm" onClick={() => approveSubmission.mutateAsync(v.submissionId!)}
                                   disabled={approveSubmission.isPending}>
                                   ✓ {t('Godkänn')}
                                 </Button>
                                 {rejectingId === v.submissionId ? (
-                                  <div className="flex items-center gap-2 flex-1">
+                                  <div className="flex items-center gap-2 flex-1 flex-wrap min-w-0">
                                     <input type="text" value={rejectReason} onChange={e => setRejectReason(e.target.value)}
                                       placeholder={t('Anledning (valfritt)')}
+                                      style={{ flex: '1 1 140px', minWidth: 0 }}
                                       className="flex-1 rounded-md border border-input bg-background px-2 py-1 text-sm" />
                                     <Button size="sm" variant="destructive"
                                       onClick={() => { rejectSubmission.mutateAsync({ id: v.submissionId!, reason: rejectReason || undefined }); setRejectingId(null); setRejectReason(''); }}
@@ -819,7 +820,7 @@ function CampaignApplicationsSection({ campaignId, campaignName }: { campaignId:
         onClick={() => setExpanded(true)}>
         <span className="vcamp-thumb" style={{ background: grad(campaignName) }}><span className="brand-mono">{initial(campaignName)}</span></span>
         <div className="vcamp-main">
-          <div className="vcamp-b" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{campaignName}
+          <div className="vcamp-b" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', minWidth: 0 }}>{campaignName}
             {pendingCount > 0 && <span className="vcamp-tag prog">{pendingCount} {t('NYA')}</span>}
           </div>
           <div className="vcamp-m">{totalCount} {totalCount === 1 ? t('ansökning') : t('ansökningar')}</div>
@@ -831,28 +832,28 @@ function CampaignApplicationsSection({ campaignId, campaignName }: { campaignId:
 
   return (
     <div className="card" style={{ marginBottom: 14 }}>
-      <div className="sec-head">
-        <h3 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{campaignName}
+      <div className="sec-head" style={{ flexWrap: 'wrap', gap: 8 }}>
+        <h3 style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', minWidth: 0 }}>{campaignName}
           {pendingCount > 0 && <span className="badge green">{pendingCount} {t('väntar')}</span>}
         </h3>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button className="view-all" onClick={() => navigate(`/brand/campaigns/${campaignId}`)}>{t('Visa kampanj')}</button>
           <button className="view-all" onClick={() => setExpanded(false)}>{t('Minimera')}</button>
         </div>
       </div>
       {isLoading ? <CardSkeleton rows={2} /> : applications?.data.length ? (
         applications.data.map((a: ApplicationItem) => (
-          <div key={a.id} className="list-row" style={{ gap: 14 }}>
+          <div key={a.id} className="list-row" style={{ gap: 14, flexWrap: 'wrap' }}>
             <span className="mono" style={{ background: grad(a.creatorName) }}>{initial(a.creatorName)}</span>
-            <div className="row-main" style={{ flex: 1 }}>
-              <div className="t" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{a.creatorName}
+            <div className="row-main" style={{ flex: '1 1 180px', minWidth: 0 }}>
+              <div className="t" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minWidth: 0 }}>{a.creatorName}
                 {a.creatorCategory && <span className="badge grey">{a.creatorCategory}</span>}
               </div>
               {a.tikTokUsername && <a href={`https://www.tiktok.com/@${a.tikTokUsername}`} target="_blank" rel="noopener noreferrer" className="s" style={{ color: '#C26A4A' }}>@{a.tikTokUsername}</a>}
               {a.message && <div className="s">{a.message}</div>}
               <div className="s" style={{ color: 'var(--muted-2)' }}>{formatDate(a.createdAt)}</div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '0 0 auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '0 1 auto', flexWrap: 'wrap', minWidth: 0 }}>
               <StatusBadge status={a.status} />
               {a.status === 'Pending' && rejectingId !== a.id && (
                 <>
@@ -861,9 +862,9 @@ function CampaignApplicationsSection({ campaignId, campaignName }: { campaignId:
                 </>
               )}
               {a.status === 'Pending' && rejectingId === a.id && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minWidth: 0 }}>
                   <input type="text" autoFocus value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder={t('Anledning…')}
-                    style={{ border: '1px solid rgba(241,168,143,.3)', borderRadius: 10, padding: '8px 12px', fontSize: 13, fontFamily: 'inherit', background: 'rgba(255,255,255,.7)' }} />
+                    style={{ flex: '1 1 140px', minWidth: 0, border: '1px solid rgba(241,168,143,.3)', borderRadius: 10, padding: '8px 12px', fontSize: 13, fontFamily: 'inherit', background: 'rgba(255,255,255,.7)' }} />
                   <button className="btn-outline" style={{ padding: '9px 14px', fontSize: 12.5 }} onClick={() => handleReject(a.id)} disabled={reject.isPending || !rejectReason.trim()}>{t('Bekräfta')}</button>
                   <button className="view-all" onClick={() => { setRejectingId(null); setRejectReason(''); }}>{t('Avbryt')}</button>
                 </div>
@@ -989,9 +990,9 @@ export function BrandSettingsPage() {
       </div>
 
       {activeTab === 'profile' && (
-        <div className="card" style={{ maxWidth: 720 }}>
+        <div className="card" style={{ maxWidth: 720, width: '100%', minWidth: 0 }}>
           <div className="sec-head"><h3>{t('Företagsprofil')}</h3></div>
-          <form onSubmit={handleProfileSave} className="form-grid">
+          <form onSubmit={handleProfileSave} className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
             <div className="field full">
               <ImagePicker label={t('Logotyp')} shape="rounded" value={profileForm.logoUrl}
                 onChange={(v) => setProfileForm({ ...profileForm, logoUrl: v })}
@@ -1017,9 +1018,9 @@ export function BrandSettingsPage() {
 
       {activeTab === 'security' && <ChangeEmailCard />}
       {activeTab === 'security' && (
-        <div className="card" style={{ maxWidth: 720 }}>
+        <div className="card" style={{ maxWidth: 720, width: '100%', minWidth: 0 }}>
           <div className="sec-head"><h3>{t('Byt lösenord')}</h3></div>
-          <form onSubmit={handlePasswordChange} className="form-grid">
+          <form onSubmit={handlePasswordChange} className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
             <div className="field full"><label>{t('Nuvarande lösenord')}</label><input type="password" value={pwForm.currentPassword} required autoComplete="current-password" onChange={e => setPwForm({ ...pwForm, currentPassword: e.target.value })} /></div>
             <div className="field"><label>{t('Nytt lösenord')}</label><input type="password" value={pwForm.newPassword} required autoComplete="new-password" minLength={8} onChange={e => setPwForm({ ...pwForm, newPassword: e.target.value })} /></div>
             <div className="field"><label>{t('Bekräfta nytt lösenord')}</label><input type="password" value={pwForm.confirm} required autoComplete="new-password" onChange={e => setPwForm({ ...pwForm, confirm: e.target.value })} /></div>
@@ -1044,16 +1045,16 @@ export function BrandAssignmentDetailPage() {
   if (isLoading || !assignment) return <LoadingSpinner />;
 
   return (
-    <section className="view active reveal" style={{ maxWidth: 760 }}>
+    <section className="view active reveal" style={{ maxWidth: 760, width: '100%', minWidth: 0 }}>
       <button onClick={() => navigate(-1)} className="view-all" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg> {t('Tillbaka')}
       </button>
       <div className="page-head">
-        <div><h1 className="page-title" style={{ fontSize: 32 }}>{assignment.campaignName} — {assignment.creatorName ?? t('Creator')}</h1></div>
+        <div style={{ minWidth: 0 }}><h1 className="page-title" style={{ fontSize: 32, overflowWrap: 'anywhere' }}>{assignment.campaignName} — {assignment.creatorName ?? t('Creator')}</h1></div>
       </div>
 
       <div className="card" style={{ marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <StatusBadge status={assignment.status} />
           <span className="text-sm text-muted-foreground">{formatNumber(assignment.totalVerifiedViews)} {t('views')}</span>
           <span className="text-sm text-muted-foreground">{formatCurrency(assignment.currentPayoutAmount)}</span>
@@ -1124,7 +1125,7 @@ function DraftEditCard({ campaign, onDone }: { campaign: any; onDone: () => void
         <div><span style={lbl}>{t('Slutdatum')}</span><DateInput value={form.endDate} onChange={(v) => setForm({ ...form, endDate: v })} style={input} /></div>
       </div>
       {err && <div style={{ marginTop: 10, fontSize: 13, fontWeight: 600, color: '#cf4b4b' }}>{err}</div>}
-      <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+      <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
         <button type="submit" className="btn-apply" style={{ width: 'auto', padding: '12px 24px' }} disabled={busy}>{busy ? t('Sparar…') : t('Spara ändringar')}</button>
         <button type="button" className="btn-outline" style={{ width: 'auto', padding: '12px 24px' }} onClick={onDone}>{t('Avbryt')}</button>
       </div>

@@ -44,7 +44,7 @@ export function BrandPrHubPage() {
         </button>
       </div>
 
-      <div className="stat-row" style={{ gridTemplateColumns: 'repeat(5,minmax(0,1fr))' }}>
+      <div className="stat-row" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
         <Stat label={t('Totalt skickade')} value={stats?.totalSent ?? 0} />
         <Stat label={t('Väntar (osedda)')} value={stats?.pending ?? 0} />
         <Stat label={t('Sedda')} value={stats?.viewed ?? 0} />
@@ -69,7 +69,7 @@ export function BrandPrHubPage() {
         {tabs.map((tb) => <button key={tb.label} className={`tab${status === tb.val ? ' active' : ''}`} onClick={() => { setStatus(tb.val); setPage(1); }}>{t(tb.label)}</button>)}
       </div>
 
-      {isLoading ? <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 16 }}><CardSkeleton rows={3} /><CardSkeleton rows={3} /><CardSkeleton rows={3} /></div> : data && data.data.length > 0 ? (
+      {isLoading ? <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}><CardSkeleton rows={3} /><CardSkeleton rows={3} /><CardSkeleton rows={3} /></div> : data && data.data.length > 0 ? (
         <div className="card">
           {data.data.map((offer) => <SentOfferRow key={offer.id} offer={offer} onWithdraw={() => withdraw.mutate(offer.id)} withdrawing={withdraw.isPending} />)}
           <Pagination page={page} totalCount={data.totalCount} pageSize={data.pageSize} onPageChange={setPage} />
@@ -89,23 +89,23 @@ function SentOfferRow({ offer, onWithdraw, withdrawing }: { offer: PrOffer; onWi
   const [open, setOpen] = useState(false);
   const canWithdraw = offer.status === 'Sent' || offer.status === 'Viewed';
   return (
-    <div className="list-row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0 }}>
-      <div className="vcamp" style={{ borderTop: 'none', paddingTop: 0, paddingBottom: open ? 12 : 0 }} onClick={() => setOpen((v) => !v)}>
+    <div className="list-row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0, minWidth: 0 }}>
+      <div className="vcamp" style={{ borderTop: 'none', paddingTop: 0, paddingBottom: open ? 12 : 0, flexWrap: 'wrap' }} onClick={() => setOpen((v) => !v)}>
         {offer.creatorAvatarUrl
           ? <img src={offer.creatorAvatarUrl} alt={offer.creatorName} className="vcamp-thumb" style={{ objectFit: 'cover' }} />
           : <span className="vcamp-thumb" style={{ background: grad(offer.creatorName) }}><span className="brand-mono">{offer.creatorName.charAt(0).toUpperCase()}</span></span>}
-        <div className="vcamp-main">
+        <div className="vcamp-main" style={{ flex: '1 1 180px', minWidth: 0 }}>
           <div className="vcamp-b">{offer.title}</div>
           <div className="vcamp-m">{t('Till')} {offer.creatorName} · {t(OFFER_TYPE_LABELS[offer.offerType] ?? offer.offerType)} · {offer.category}</div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '0 0 auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '0 1 auto', flexWrap: 'wrap', minWidth: 0 }}>
           <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>{formatDate(offer.createdAt)}</span>
           <StatusBadge status={offer.status} />
         </div>
       </div>
       {open && (
-        <div style={{ paddingTop: 12, borderTop: '1px solid rgba(241,168,143,.12)', fontSize: 13.5 }}>
-          <p style={{ whiteSpace: 'pre-line', color: 'var(--ink-2)', lineHeight: 1.5 }}>{offer.message}</p>
+        <div style={{ paddingTop: 12, borderTop: '1px solid rgba(241,168,143,.12)', fontSize: 13.5, minWidth: 0 }}>
+          <p style={{ whiteSpace: 'pre-line', color: 'var(--ink-2)', lineHeight: 1.5, overflowWrap: 'anywhere' }}>{offer.message}</p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, fontSize: 12, color: 'var(--muted)', marginTop: 8 }}>
             {offer.compensationAmount != null && offer.compensationAmount > 0 && <span>{t('Ersättning:')} {formatCurrency(offer.compensationAmount)}</span>}
             {offer.productDescription && <span>{t('Utbud:')} {offer.productDescription}</span>}

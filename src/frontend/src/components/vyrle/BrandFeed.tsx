@@ -35,14 +35,14 @@ export function BrandFeedSection() {
 
   return (
     <div className="card" style={{ marginTop: 18 }}>
-      <div className="vperf-head">
+      <div className="vperf-head" style={{ flexWrap: 'wrap', gap: '4px 12px' }}>
         <h3>✦ {t('Ditt flöde')}</h3>
         <span style={{ fontSize: 13, color: 'var(--muted)' }}>{t('Senaste från företagen du följer')}</span>
       </div>
       {posts.length ? (
         <div style={{ display: 'grid', gap: 12, marginTop: 6 }}>
           {posts.map((post) => (
-            <div key={post.id} style={{ display: 'flex', gap: 12, padding: '16px 16px 14px', border: '1px solid rgba(241,168,143,.24)', borderRadius: 18, background: 'linear-gradient(160deg,#fff,#FFF9F5)', boxShadow: '0 6px 20px rgba(180,120,90,.06)' }}>
+            <div key={post.id} style={{ display: 'flex', gap: 12, padding: '16px 16px 14px', border: '1px solid rgba(241,168,143,.24)', borderRadius: 18, background: 'linear-gradient(160deg,#fff,#FFF9F5)', boxShadow: '0 6px 20px rgba(180,120,90,.06)', minWidth: 0 }}>
               <div
                 role="button"
                 tabIndex={0}
@@ -59,7 +59,7 @@ export function BrandFeedSection() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
                   <span
                     onClick={() => navigate(`/creator/brands/${post.brandProfileId}`)}
-                    style={{ fontWeight: 800, fontSize: 14.5, color: '#0B0F17', cursor: 'pointer' }}
+                    style={{ fontWeight: 800, fontSize: 14.5, color: '#0B0F17', cursor: 'pointer', minWidth: 0, wordBreak: 'break-word' }}
                   >
                     {post.brandName}
                   </span>

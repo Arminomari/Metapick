@@ -172,7 +172,7 @@ export function BrandAnalyticsPage() {
                   ]} />
                 </div>
               </div>
-              <div className="vperf-foot">
+              <div className="vperf-foot" style={{ flexWrap: 'wrap', gap: 12 }}>
                 <div className="vf-stat"><div className="vf-l">CPM</div><div className="vf-v">{kr2(CPM)}</div></div>
                 <div className="vf-stat"><div className="vf-l">{t('Viral rate')}</div><div className="vf-v">{pct(viralRate)}</div></div>
               </div>
@@ -219,7 +219,7 @@ export function BrandAnalyticsPage() {
                 { label: t('Share rate'), pct: clamp(SHR * 40), value: pct(SHR) },
                 { label: t('Klickfrekvens'), pct: clamp(CTR * 20), value: pct(CTR) },
               ]} />
-              <div style={{ borderTop: '1px solid rgba(241,168,143,.12)', marginTop: 14, paddingTop: 14, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+              <div style={{ borderTop: '1px solid rgba(241,168,143,.12)', marginTop: 14, paddingTop: 14, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 12 }}>
                 <Tile k={t('Save rate')} v="—" note={t('ej tillgängligt')} />
                 <Tile k={t('Save/like')} v="—" note={t('ej tillgängligt')} />
                 <Tile k={t('Delning/visn.')} v={pct(SHR)} />
@@ -234,7 +234,7 @@ export function BrandAnalyticsPage() {
               {chartRows.length >= 2 ? (
                 <AreaChart id="brAnViews" values={chartRows.map((x) => x.a.totalViews)} labels={chartRows.map((x) => x.c.name)} fmtY={short} height={260} />
               ) : <div style={{ padding: '50px 10px', textAlign: 'center', color: 'var(--muted)' }}>{t('Kör fler kampanjer så ritas din visningstrend här.')}</div>}
-              <div className="vperf-foot">
+              <div className="vperf-foot" style={{ flexWrap: 'wrap', gap: 12 }}>
                 <div className="vf-stat"><div className="vf-l">{t('Total reach')}</div><div className="vf-v">{formatNumber(TV)}</div></div>
                 <div className="vf-stat"><div className="vf-l">{t('Senaste dygnet')}</div><div className="vf-v">{formatNumber(views24h)}</div></div>
                 <div className="vf-stat"><div className="vf-l">{t('Kostnad / visning')}</div><div className="vf-v">{costPerView.toFixed(3)} kr</div></div>
@@ -259,14 +259,14 @@ export function BrandAnalyticsPage() {
           {/* ── Top creators ── */}
           <div className="vcsplit" style={{ marginTop: 18 }}>
             <div className="card">
-              <div className="vperf-head"><h3>{t('Bästa kreatörer')}</h3><Link to="/brand/creators" className="view-all">{t('Hitta fler')}</Link></div>
+              <div className="vperf-head" style={{ flexWrap: 'wrap', gap: 8 }}><h3>{t('Bästa kreatörer')}</h3><Link to="/brand/creators" className="view-all">{t('Hitta fler')}</Link></div>
               {topCreators.length ? topCreators.map((c) => {
                 const ccpm = c.views ? (c.payout / c.views) * 1000 : 0;
                 const eff = c.payout ? c.views / (c.payout / 1000) : 0; // views per 1000 kr
                 return (
-                  <div key={c.name} className="vcamp" style={{ cursor: 'default' }}>
+                  <div key={c.name} className="vcamp" style={{ cursor: 'default', flexWrap: 'wrap' }}>
                     <span className="vcamp-thumb" style={{ background: grad(c.name) }}><span className="brand-mono">{initial(c.name)}</span></span>
-                    <div className="vcamp-main">
+                    <div className="vcamp-main" style={{ flex: '1 1 160px', minWidth: 0 }}>
                       <div className="vcamp-b">{c.name}</div>
                       <div className="progress-line" style={{ maxWidth: 200, marginTop: 6 }}><span style={{ width: `${Math.round((c.views / maxCreatorViews) * 100)}%` }} /></div>
                     </div>
@@ -281,12 +281,12 @@ export function BrandAnalyticsPage() {
               <div className="vperf-head"><h3>{t('Per nisch')}</h3></div>
               {niches.length ? niches.slice(0, 6).map((n) => {
                 return (
-                  <div key={n.cat} className="list-row">
-                    <div className="row-main" style={{ flex: 1 }}>
+                  <div key={n.cat} className="list-row" style={{ flexWrap: 'wrap' }}>
+                    <div className="row-main" style={{ flex: '1 1 160px', minWidth: 0 }}>
                       <div className="t">{n.cat}</div>
                       <div className="s">{formatNumber(n.views)} {t('views')} · ER {pct(n.er)}</div>
                     </div>
-                    <div style={{ textAlign: 'right', minWidth: 80 }}><div className="t">{kr2(n.cpm)}</div><div className="s">CPM</div></div>
+                    <div style={{ textAlign: 'right', minWidth: 80, flex: '0 0 auto' }}><div className="t">{kr2(n.cpm)}</div><div className="s">CPM</div></div>
                   </div>
                 );
               }) : <Muted>{t('Ingen nisch-data än.')}</Muted>}
@@ -298,15 +298,15 @@ export function BrandAnalyticsPage() {
             <div className="card" style={{ marginTop: 18 }}>
               <div className="vperf-head"><h3>{t('Bäst presterande content')}</h3><span className="vchip">{liveVideos.length} {t('posts')}</span></div>
               {topContent.map((v, i) => (
-                <div key={i} className="list-row">
+                <div key={i} className="list-row" style={{ flexWrap: 'wrap' }}>
                   <span className="mono sq" style={{ background: grad(v.creator) }}>{initial(v.creator)}</span>
-                  <div className="row-main" style={{ flex: 1 }}>
+                  <div className="row-main" style={{ flex: '1 1 200px', minWidth: 0 }}>
                     <div className="t">{v.creator}{v.durationSeconds ? ` · ${v.durationSeconds}s` : ''}</div>
                     <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" className="s" style={{ color: '#C26A4A' }}>{t('Visa video')}</a>
                   </div>
-                  <div style={{ textAlign: 'right', minWidth: 76 }}><div className="t">{formatNumber(v.views)}</div><div className="s">{t('views')}</div></div>
-                  <div style={{ textAlign: 'right', minWidth: 64 }}><div className="t">{formatNumber(v.likes + v.comments + v.shares)}</div><div className="s">{t('eng.')}</div></div>
-                  <div style={{ textAlign: 'right', minWidth: 56 }}><div className="t">{formatNumber(v.clicks)}</div><div className="s">{t('klick')}</div></div>
+                  <div style={{ textAlign: 'right', minWidth: 76, flex: '0 0 auto' }}><div className="t">{formatNumber(v.views)}</div><div className="s">{t('views')}</div></div>
+                  <div style={{ textAlign: 'right', minWidth: 64, flex: '0 0 auto' }}><div className="t">{formatNumber(v.likes + v.comments + v.shares)}</div><div className="s">{t('eng.')}</div></div>
+                  <div style={{ textAlign: 'right', minWidth: 56, flex: '0 0 auto' }}><div className="t">{formatNumber(v.clicks)}</div><div className="s">{t('klick')}</div></div>
                 </div>
               ))}
             </div>
@@ -320,7 +320,7 @@ export function BrandAnalyticsPage() {
                 <>
                   <MiniBars rows={vpd.map((b) => ({ label: b.label, pct: (b.avgViews / maxVpd) * 100, value: short(b.avgViews) }))} />
                   <div style={{ borderTop: '1px solid rgba(241,168,143,.12)', marginTop: 14, paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {vpd.map((b) => <div key={b.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5 }}><span style={{ color: 'var(--ink-2)', fontWeight: 600 }}>{b.label}</span><span style={{ color: 'var(--muted)' }}>{b.count} {t('posts')} · ER {pct(b.er)}</span></div>)}
+                    {vpd.map((b) => <div key={b.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, flexWrap: 'wrap', gap: '2px 10px' }}><span style={{ color: 'var(--ink-2)', fontWeight: 600 }}>{b.label}</span><span style={{ color: 'var(--muted)' }}>{b.count} {t('posts')} · ER {pct(b.er)}</span></div>)}
                   </div>
                 </>
               ) : <Muted>{t('Videolängd registreras när posts synkas från TikTok.')}</Muted>}
@@ -348,7 +348,7 @@ export function BrandAnalyticsPage() {
             </div>
             <div className="card">
               <div className="vperf-head"><h3>{t('Viralitet')}</h3></div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', gap: 12, marginBottom: 12 }}>
                 {['100K+', '500K+', '1M+'].map((lab, i) => (
                   <div key={lab} style={{ textAlign: 'center', padding: '14px 8px', borderRadius: 14, background: 'linear-gradient(140deg,rgba(255,227,211,.5),rgba(237,225,255,.35))' }}>
                     <div style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-.02em', color: 'var(--ink)' }}>{viral[i]}</div>
@@ -402,7 +402,7 @@ function Kpi({ tint, label, val, sub, icon, featured }: { tint: 'peach' | 'lilac
 
 function Mini({ label, val, hint, accent }: { label: string; val: string; hint: string; accent?: boolean }) {
   return (
-    <div className="card" style={{ padding: '18px 20px', ...(accent ? { background: 'linear-gradient(160deg,#fff,#FFF6F0)' } : {}) }}>
+    <div className="card" style={{ padding: '18px 20px', minWidth: 0, ...(accent ? { background: 'linear-gradient(160deg,#fff,#FFF6F0)' } : {}) }}>
       <div style={{ fontSize: 12.5, color: 'var(--muted)', fontWeight: 500 }}>{label}</div>
       <div style={{ fontSize: 26, fontWeight: 600, letterSpacing: '-.03em', color: 'var(--ink)', margin: '4px 0 2px', ...(accent ? { background: 'linear-gradient(120deg,#C26A4A,#F1A88F)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' } : {}) }}>{val}</div>
       <div style={{ fontSize: 11.5, color: 'var(--muted-2)' }}>{hint}</div>

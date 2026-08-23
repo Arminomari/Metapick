@@ -33,20 +33,20 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
+    <div className="flex min-w-0 flex-col items-center justify-center px-4 py-12 text-center sm:py-16">
       <div
-        className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[hsl(var(--sand))] ring-1 ring-[hsl(var(--border))]"
+        className="mb-6 flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--sand))] ring-1 ring-[hsl(var(--border))]"
         aria-hidden
       >
         <svg className="h-7 w-7 text-[hsl(var(--muted-foreground))]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.25} d="M4 7h16M4 12h10M4 17h7" />
         </svg>
       </div>
-      <h3 className="font-display text-2xl">{title}</h3>
+      <h3 className="font-display text-2xl break-words max-w-full">{title}</h3>
       {description && (
-        <p className="mt-2 max-w-sm text-sm text-muted-foreground col-prose mx-auto">{description}</p>
+        <p className="mt-2 max-w-sm text-sm text-muted-foreground col-prose mx-auto break-words">{description}</p>
       )}
-      {action && <div className="mt-6">{action}</div>}
+      {action && <div className="mt-6 flex max-w-full flex-wrap justify-center gap-2">{action}</div>}
     </div>
   );
 }
@@ -68,7 +68,7 @@ export function Card({ children, className }: { children: React.ReactNode; class
   return (
     <div
       className={cn(
-        'relative rounded-[20px] border border-[hsl(var(--border))] bg-card text-card-foreground p-6',
+        'relative min-w-0 rounded-[20px] border border-[hsl(var(--border))] bg-card text-card-foreground p-4 sm:p-6',
         'shadow-soft transition-shadow duration-500 ease-editorial',
         'before:pointer-events-none before:absolute before:inset-0 before:rounded-[20px]',
         'before:bg-gradient-to-b before:from-[hsl(var(--ivory)/0.6)] before:to-transparent before:opacity-70',
@@ -92,10 +92,10 @@ export function StatCard({
   subValue?: string;
 }) {
   return (
-    <div className="group relative overflow-hidden rounded-[18px] border border-[hsl(var(--border))] bg-paper p-5 transition-all duration-500 ease-editorial hover:border-[hsl(var(--border-strong))] hover:shadow-soft">
-      <p className="eyebrow">{label}</p>
-      <p className="mt-3 font-display text-[2rem] leading-none tracking-tight">{value}</p>
-      {subValue && <p className="mt-2 text-xs text-muted-foreground">{subValue}</p>}
+    <div className="group relative min-w-0 overflow-hidden rounded-[18px] border border-[hsl(var(--border))] bg-paper p-4 sm:p-5 transition-all duration-500 ease-editorial hover:border-[hsl(var(--border-strong))] hover:shadow-soft">
+      <p className="eyebrow break-words">{label}</p>
+      <p className="mt-3 font-display text-[1.6rem] sm:text-[2rem] leading-none tracking-tight break-words">{value}</p>
+      {subValue && <p className="mt-2 text-xs text-muted-foreground break-words">{subValue}</p>}
       <span
         aria-hidden
         className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-[hsl(var(--primary)/0.06)] opacity-0 transition-opacity duration-500 group-hover:opacity-100"
@@ -171,7 +171,7 @@ export function DataTable<T extends { id: string }>({
   onRowClick?: (row: T) => void;
 }) {
   return (
-    <div className="overflow-x-auto -mx-2">
+    <div className="overflow-x-auto -mx-2 min-w-0 [-webkit-overflow-scrolling:touch]">
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr>
@@ -179,7 +179,7 @@ export function DataTable<T extends { id: string }>({
               <th
                 key={i}
                 className={cn(
-                  'border-b border-[hsl(var(--border))] px-4 py-3 text-left font-medium eyebrow !tracking-[0.18em]',
+                  'border-b border-[hsl(var(--border))] px-4 py-3 text-left font-medium eyebrow !tracking-[0.18em] whitespace-nowrap',
                   col.className,
                 )}
               >
@@ -229,13 +229,13 @@ export function Pagination({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="mt-2 flex items-center justify-between border-t border-[hsl(var(--border))] px-2 pt-5">
-      <p className="text-xs text-muted-foreground">
+    <div className="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-[hsl(var(--border))] px-2 pt-5">
+      <p className="min-w-0 text-xs text-muted-foreground">
         {t('Visar')} <span className="font-medium text-foreground">{(page - 1) * pageSize + 1}</span>–
         <span className="font-medium text-foreground">{Math.min(page * pageSize, totalCount)}</span>
         {' '}{t('av')} <span className="font-medium text-foreground">{totalCount}</span>
       </p>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button variant="ghost" size="sm" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
           ← {t('Föregående')}
         </Button>

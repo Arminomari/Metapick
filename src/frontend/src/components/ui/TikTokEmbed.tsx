@@ -22,7 +22,7 @@ export function TikTokEmbed({ videoUrl, videoId, compact }: { videoUrl: string; 
         rel="noopener noreferrer"
         style={{
           display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px',
-          borderRadius: 15, border: '1px solid rgba(241,168,143,.28)',
+          borderRadius: 15, border: '1px solid rgba(241,168,143,.28)', minWidth: 0, maxWidth: '100%',
           background: 'linear-gradient(160deg,#fff,#FFF6F0)', textDecoration: 'none',
         }}
       >
@@ -40,7 +40,7 @@ export function TikTokEmbed({ videoUrl, videoId, compact }: { videoUrl: string; 
   return (
     <div
       style={{
-        width: '100%', maxWidth, aspectRatio: '9 / 16',
+        width: '100%', maxWidth, minWidth: 0, aspectRatio: '9 / 16',
         borderRadius: 16, overflow: 'hidden', background: '#0B0F17',
         boxShadow: '0 10px 28px rgba(11,15,23,.18)',
       }}

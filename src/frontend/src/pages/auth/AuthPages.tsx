@@ -373,7 +373,7 @@ export function RegisterPage() {
       <h1 className="auth-title">{t('Skapa')} <em>{t('konto')}</em></h1>
       <p className="auth-sub">{step === 0 ? t('Vem är du? Vi anpassar resten efter ditt svar.') : t('Vi granskar och godkänner din profil innan du går live, oftast inom 1–2 arbetsdagar.')}</p>
 
-      <div className="wiz-track" role="list" aria-label={t('Registreringssteg')}>
+      <div className="wiz-track" role="list" aria-label={t('Registreringssteg')} style={{ flexWrap: 'wrap', rowGap: 6, minWidth: 0 }}>
         {steps.map((label, i) => (
           <React.Fragment key={label}>
             {i > 0 && <span className={`wiz-conn${i <= step ? ' done' : ''}`} aria-hidden="true" />}
@@ -452,7 +452,7 @@ export function RegisterPage() {
                 </div>
               </>
             )}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: 16, minWidth: 0 }}>
               <div className="field"><label htmlFor="rg-fn">{form.role === 'Brand' ? t('Förnamn (kontaktperson)') : t('Förnamn')}</label><input id="rg-fn" type="text" value={form.firstName} onChange={set('firstName')} autoComplete="given-name" /></div>
               <div className="field"><label htmlFor="rg-ln">{t('Efternamn')}</label><input id="rg-ln" type="text" value={form.lastName} onChange={set('lastName')} autoComplete="family-name" /></div>
             </div>
@@ -473,7 +473,7 @@ export function RegisterPage() {
             <div className="field"><label htmlFor="rg-bio">{t('Bio')} *</label><textarea id="rg-bio" value={form.bio} onChange={set('bio')} required rows={3} placeholder={t('Berätta om dig och ditt innehåll — varför ska varumärken samarbeta med dig?')} />
               <div className="auth-hint">{form.bio.trim().length}/20 {t('tecken minimum')}</div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: 16, minWidth: 0 }}>
               <div className="field"><label htmlFor="rg-cat">{t('Kategori')} *</label>
                 <select id="rg-cat" value={form.category} onChange={set('category')} required>
                   {CATEGORIES.map((c) => <option key={c} value={c}>{t(c)}</option>)}
@@ -543,7 +543,7 @@ export function RegisterPage() {
               hint={t('Visas för kreatörer på era kampanjer.')}
             />
             <div className="field"><label htmlFor="rg-co">{t('Företagsnamn')} *</label><input id="rg-co" type="text" value={form.companyName} onChange={set('companyName')} required autoComplete="organization" /></div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: 16, minWidth: 0 }}>
               <div className="field"><label htmlFor="rg-org">{t('Organisationsnummer')} *</label><input id="rg-org" type="text" inputMode="numeric" value={form.organizationNumber} onChange={(e) => setForm((f) => ({ ...f, organizationNumber: maskOrgNr(e.target.value) }))} required placeholder="556677-8899" /><span style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 4 }}>{t('10 siffror — strecket sätts automatiskt')}</span></div>
               <div className="field"><label htmlFor="rg-ind">{t('Bransch')} *</label>
                 <select id="rg-ind" value={form.industry} onChange={set('industry')} required>
@@ -558,7 +558,7 @@ export function RegisterPage() {
         {/* ── Step: Kontakt (brand, last) ── */}
         {stepLabel === 'Kontakt' && (
           <div className="wiz-pane" key="contact" style={{ display: 'flex', flexDirection: 'column', gap: 17 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: 16, minWidth: 0 }}>
               <div className="field"><label htmlFor="rg-phone">{t('Kontakttelefon')}</label><input id="rg-phone" type="tel" value={form.contactPhone} onChange={(e) => setForm((f) => ({ ...f, contactPhone: maskPhone(e.target.value) }))} placeholder="070-123 45 67" autoComplete="tel" /></div>
               <div className="field"><label htmlFor="rg-bcountry">{t('Land')} *</label>
                 <select id="rg-bcountry" value={form.country} onChange={set('country')} required>
@@ -573,9 +573,9 @@ export function RegisterPage() {
 
         {error && <p className="auth-err" role="alert">{error}</p>}
 
-        <div className="wiz-nav">
+        <div className="wiz-nav" style={{ flexWrap: 'wrap', minWidth: 0 }}>
           {step > 0 && (
-            <button type="button" className="btn-back" onClick={back} disabled={submitting}>
+            <button type="button" className="btn-back" onClick={back} disabled={submitting} style={{ maxWidth: '100%' }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M11 18l-6-6 6-6" /></svg>
               {t('Tillbaka')}
             </button>

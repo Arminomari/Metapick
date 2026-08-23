@@ -47,7 +47,8 @@ export function ChatPanel({ assignmentId }: ChatPanelProps) {
 
   return (
     <div style={{
-      display: 'flex', flexDirection: 'column', height: 460, overflow: 'hidden',
+      display: 'flex', flexDirection: 'column', height: 'min(460px, 65vh)', overflow: 'hidden',
+      width: '100%', minWidth: 0,
       background: 'rgba(255,255,255,.75)', border: '1px solid rgba(241,168,143,.2)',
       borderRadius: 20, boxShadow: '0 10px 30px rgba(180,120,90,.08)',
     }}>
@@ -56,14 +57,14 @@ export function ChatPanel({ assignmentId }: ChatPanelProps) {
         if (convo.counterpartRole === 'Creator') navigate(`/brand/creators/${convo.counterpartProfileId}`);
         else if (convo.counterpartRole === 'Brand') navigate(`/creator/brands/${convo.counterpartProfileId}`);
       }}
-        style={convo?.counterpartProfileId ? { cursor: 'pointer' } : undefined}
+        style={{ minWidth: 0, cursor: convo?.counterpartProfileId ? 'pointer' : undefined }}
         title={convo?.counterpartProfileId ? t('Visa profil') : undefined}>
         {convo?.counterpartImageUrl
           ? <img src={convo.counterpartImageUrl} alt="" style={{ width: 42, height: 42, borderRadius: 12, objectFit: 'cover', flex: '0 0 42px', boxShadow: '0 4px 12px rgba(180,120,90,.16)' }} />
           : <span className="mc-thread-av" style={{ background: grad(name) }}><span className="brand-mono">{initial(name)}</span></span>}
-        <div className="mc-thread-meta">
-          <div className="mc-thread-name">{name}</div>
-          {convo?.campaignName && <div className="mc-thread-status">{convo.campaignName}</div>}
+        <div className="mc-thread-meta" style={{ flex: 1, minWidth: 0 }}>
+          <div className="mc-thread-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+          {convo?.campaignName && <div className="mc-thread-status" style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{convo.campaignName}</div>}
         </div>
       </div>
 
@@ -74,7 +75,7 @@ export function ChatPanel({ assignmentId }: ChatPanelProps) {
           : messages.map((m: ChatMessageDto) => {
             const me = m.senderId === userId;
             return (
-              <div key={m.id} className={`mc-bub ${me ? 'me' : 'them'}`}>
+              <div key={m.id} className={`mc-bub ${me ? 'me' : 'them'}`} style={{ overflowWrap: 'anywhere', minWidth: 0 }}>
                 {m.body}
                 <div className="mc-bt">{new Date(m.createdAt).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}{me && (m.isRead ? ' ✓✓' : ' ✓')}</div>
               </div>
@@ -90,6 +91,7 @@ export function ChatPanel({ assignmentId }: ChatPanelProps) {
             placeholder={t('Skriv ett meddelande…')}
             autoComplete="off"
             aria-label="Meddelande"
+            style={{ minWidth: 0, flex: 1, width: '100%' }}
           />
           <button className={`mc-send${body.trim() ? ' has-text' : ''}`} type="submit" disabled={send.isPending || !body.trim()} aria-label="Skicka">
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
