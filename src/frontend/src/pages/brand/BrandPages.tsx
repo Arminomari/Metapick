@@ -709,10 +709,18 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
                                 <span className="text-xs text-muted-foreground">{formatDate(v.createdAt)}</span>
                               </div>
                             </div>
-                            <TikTokEmbed videoUrl={v.videoUrl} compact />
+                            <TikTokEmbed videoUrl={v.videoUrl} videoId={v.videoId ?? undefined} compact />
                             {v.rejectionReason && (
                               <p className="text-xs text-red-400">{t('Anledning:')} {v.rejectionReason}</p>
                             )}
+                            {v.submissionId && v.status !== 'Approved' && v.status !== 'Rejected' && (() => {
+                              const hoursLeft = Math.max(0, 48 - Math.floor((Date.now() - +new Date(v.createdAt)) / 3600000));
+                              return (
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 980, background: 'rgba(242,197,138,.28)', color: '#7a5518', fontSize: 12, fontWeight: 700 }}>
+                                  ⏱ {hoursLeft > 0 ? `${t('Auto-godkänns om')} ${hoursLeft} ${t('tim')}` : t('Auto-godkänns inom kort')} — {t('granska nu för att behålla kontrollen')}
+                                </div>
+                              );
+                            })()}
                             {v.submissionId && v.status !== 'Approved' && v.status !== 'Rejected' && (
                               <div className="flex items-center gap-2 pt-1">
                                 <Button size="sm" onClick={() => approveSubmission.mutateAsync(v.submissionId!)}

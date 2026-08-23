@@ -422,4 +422,8 @@ export const brand: Record<string, string> = {
   'Per nisch': 'Per niche',
   'Hur effektivt din spend förvandlas till uppmärksamhet. Räckvidd, engagemang och kostnadseffektivitet — allt från verklig kampanjdata.': 'How efficiently your spend turns into attention. Reach, engagement and cost efficiency — all from real campaign data.',
   'Videos som inte granskas inom 48 timmar godkänns automatiskt.': 'Videos not reviewed within 48 hours are approved automatically.',
+  'Auto-godkänns om': 'Auto-approves in',
+  'Auto-godkänns inom kort': 'Auto-approves shortly',
+  'granska nu för att behålla kontrollen': 'review now to stay in control',
+  'tim': 'h',
 };
