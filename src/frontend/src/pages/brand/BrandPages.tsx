@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ChangeEmailCard } from '@/components/ui/AccountCards';
 import { useState, type FormEvent as ReactFormEvent } from 'react';
 import { RefreshViewsButton } from '@/components/ui/RefreshViewsButton';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useBrandCampaigns, useCampaignDetail, useCampaignAnalytics, useCampaignApplications, usePublishCampaign, useCreateCampaign, useApproveApplication, useRejectApplication, useApproveSubmission, useRejectSubmission, useMarkManualPayoutSent, useBrandProfile, useUpdateBrandProfile, useChangePassword, useAssignmentDetail, useChatMessages } from '@/hooks/api';
 import { Button, Card, DataTable, LoadingSpinner, Pagination, StatCard, StatusBadge, type Column } from '@/components/ui';
 import { DateInput } from '@/components/ui/DateInput';
@@ -622,6 +622,19 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
               <p className="text-sm text-muted-foreground" style={{ whiteSpace: 'pre-line' }}>{campaign.perks}</p>
             </div>
           )}
+        </div>
+      )}
+
+      {campaign.status === 'Completed' && (
+        <div className="card" style={{ marginBottom: 16, background: 'linear-gradient(160deg,#fff,#FFF6F0)', border: '1px solid rgba(241,168,143,.4)' }}>
+          <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 24 }} aria-hidden>💧</span>
+            <div style={{ flex: 1, minWidth: 240 }}>
+              <div style={{ fontWeight: 800, fontSize: 15 }}>{t('Gör det här månatligt')}</div>
+              <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 2 }}>{t('Kampanjen är klar — creators som levererade är nu i ditt community. Öppna kranen så fortsätter de skapa löpande, utan nya kampanjprojekt.')}</div>
+            </div>
+            <Link to="/brand/tap" className="btn-apply" style={{ width: 'auto', padding: '12px 22px', textDecoration: 'none' }}>{t('Öppna kranen')}</Link>
+          </div>
         </div>
       )}
 

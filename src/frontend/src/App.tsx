@@ -1,6 +1,8 @@
 import React from 'react';
 import { FEATURES } from '@/lib/features';
 import { BrandProfilePage, BrandOwnPublicProfilePage } from '@/pages/creator/BrandProfilePage';
+import { BrandTapPage } from '@/pages/brand/BrandTapPage';
+import { BrandCommunityPage } from '@/pages/brand/BrandCommunityPage';
 import { Navigate, Route, BrowserRouter as Router, Routes, useParams } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
@@ -90,6 +92,8 @@ export default function App() {
             <Route path="/brand/creators/:id" element={<BrandCreatorDetailPage />} />
             <Route path="/brand/pr" element={<BrandPrHubPage />} />
             <Route path="/brand/public-profile" element={<BrandOwnPublicProfilePage />} />
+            <Route path="/brand/tap" element={<BrandTapPage />} />
+            <Route path="/brand/community" element={<BrandCommunityPage />} />
             <Route path="/brand/settings" element={<BrandSettingsPage />} />
             <Route path="/brand/assignments/:id" element={<BrandAssignmentDetailPage />} />
           </Route>

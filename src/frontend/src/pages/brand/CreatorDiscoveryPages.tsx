@@ -1,3 +1,5 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '@/lib/api';
 import { DateInput } from '@/components/ui/DateInput';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -151,10 +153,11 @@ export function BrandCreatorDetailPage() {
             </div>
             <div className="tags" style={{ marginTop: 12 }}>{creator.profileTags.map((tg) => <span key={tg} className="tag g">{tg}</span>)}</div>
           </div>
-          <div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+            <InviteToCommunityButton creatorProfileId={creator.id} />
             {creator.openToPrOffers
               ? <button className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} onClick={() => setShowPr((v) => !v)}>{showPr ? t('Stäng') : t('Skicka PR-erbjudande')}</button>
-              : <p style={{ fontSize: 12, color: 'var(--muted)' }}>{t('Tar inte emot PR-erbjudanden just nu')}</p>}
+              : <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0 }}>{t('Tar inte emot PR-erbjudanden just nu')}</p>}
           </div>
         </div>
       </div>
@@ -318,3 +321,24 @@ function SendPrOfferForm({ creatorProfileId, onDone }: { creatorProfileId: strin
     </div>
   );
 }
+
+function InviteToCommunityButton({ creatorProfileId }: { creatorProfileId: string }) {
+  const qc = useQueryClient();
+  const [done, setDone] = useState(false);
+  const [err, setErr] = useState('');
+  const invite = useMutation({
+    mutationFn: async () => (await api.post('/brand/community/invite', { creatorProfileId })).data.data,
+    onSuccess: () => { setDone(true); qc.invalidateQueries({ queryKey: ['brand-community'] }); },
+    onError: (e: any) => setErr(e?.response?.data?.error?.message ?? t('Kunde inte bjuda in')),
+  });
+  if (done) return <span className="badge green" style={{ padding: '8px 14px' }}>✓ {t('I ditt community')}</span>;
+  return (
+    <div style={{ textAlign: 'right' }}>
+      <button className="btn-outline" style={{ width: 'auto', padding: '11px 20px' }} onClick={() => invite.mutate()} disabled={invite.isPending}>
+        {invite.isPending ? t('Bjuder in…') : `＋ ${t('Bjud in till community')}`}
+      </button>
+      {err && <div style={{ fontSize: 12, color: '#cf4b4b', marginTop: 4 }}>{err}</div>}
+    </div>
+  );
+}
+

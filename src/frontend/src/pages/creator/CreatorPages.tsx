@@ -1,3 +1,4 @@
+import { TapBanner } from '@/components/vyrle/CreatorTaps';
 import { ChangeEmailCard, ChangePasswordCard } from '@/components/ui/AccountCards';
 import { maskSwishNumber, maskBankAccount } from '@/lib/masks';
 import { CopyField } from '@/components/ui/CopyButton';
@@ -617,6 +618,8 @@ export function AssignmentDetailPage() {
           )}
         </div>
       )}
+
+      <TapBanner assignmentId={assignment.id} />
 
       {assignment.goalReached && (
         <div className="card" style={{ marginBottom: 16, background: 'linear-gradient(160deg,#f2fbf5,#e2f5e9)', border: '1px solid rgba(95,185,138,.4)' }}>
