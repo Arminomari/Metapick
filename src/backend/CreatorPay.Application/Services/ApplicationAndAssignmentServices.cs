@@ -449,7 +449,8 @@ public class AssignmentService : IAssignmentService
         var query = _assignments.Query()
             .Include(a => a.Campaign).ThenInclude(c => c.PayoutRules)
             .Include(a => a.TrackingLinks)
-            .Where(a => a.CreatorProfileId == creator.Id);
+            .Where(a => a.CreatorProfileId == creator.Id
+                && a.Campaign.Kind == CampaignKind.Campaign);
 
         if (Enum.TryParse<AssignmentStatus>(status, out var s))
             query = query.Where(a => a.Status == s);
@@ -668,6 +669,7 @@ public class AssignmentService : IAssignmentService
         // creator's own to-do list.
         var awaiting = await _assignments.Query()
             .CountAsync(a => a.CreatorProfileId == creator.Id
+                && a.Campaign.Kind == CampaignKind.Campaign
                 && a.Status == AssignmentStatus.Active
                 && !a.SocialPosts.Any(p => p.IsActive), ct);
 

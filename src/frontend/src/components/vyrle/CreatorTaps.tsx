@@ -56,6 +56,7 @@ export function CreatorTapsSection() {
       <div className="vperf-head" style={{ flexWrap: 'wrap', gap: '4px 12px' }}>
         <h3>💧 {t('Dina kranar')}</h3>
         <span style={{ fontSize: 13, color: 'var(--muted)' }}>{taps.length ? t('Löpande ersättning — publicera när du vill') : t('Du är medlem i företags-communities — kranarna dyker upp här när de öppnas')}</span>
+        <Link to="/creator/taps" className="view-all" style={{ marginLeft: 'auto' }}>{t('Visa alla kranar')} →</Link>
       </div>
       {waiting.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: taps.length ? 12 : 6 }}>

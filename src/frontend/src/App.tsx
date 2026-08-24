@@ -1,6 +1,7 @@
 import React from 'react';
 import { FEATURES } from '@/lib/features';
 import { BrandProfilePage, BrandOwnPublicProfilePage } from '@/pages/creator/BrandProfilePage';
+import { CreatorTapsPage } from '@/pages/creator/CreatorTapsPage';
 import { BrandTapPage } from '@/pages/brand/BrandTapPage';
 import { BrandCommunityPage } from '@/pages/brand/BrandCommunityPage';
 import { Navigate, Route, BrowserRouter as Router, Routes, useParams } from 'react-router-dom';
@@ -109,6 +110,7 @@ export default function App() {
             <Route path="/creator/pr" element={<CreatorPrInboxPage />} />
             {FEATURES.linkTree && <Route path="/creator/links" element={<CreatorLinksPage />} />}
             <Route path="/creator/brands/:id" element={<BrandProfilePage />} />
+            <Route path="/creator/taps" element={<CreatorTapsPage />} />
             <Route path="/creator/earnings" element={<EarningsPage />} />
             <Route path="/creator/levels" element={<CreatorLevelsPage />} />
             <Route path="/creator/saved" element={<CreatorSavedPage />} />
