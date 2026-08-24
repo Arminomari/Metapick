@@ -36,19 +36,19 @@ public class ChatController : BaseController
     public ChatController(IChatService chat) => _chat = chat;
 
     /// <summary>Skicka ett meddelande i en uppdragstråd</summary>
-    [HttpPost("assignments/{assignmentId:guid}/messages")]
-    public async Task<IActionResult> Send(Guid assignmentId, [FromBody] SendMessageRequest request, CancellationToken ct)
-        => ToActionResult(await _chat.SendMessageAsync(assignmentId, GetUserId(), request, ct));
+    [HttpPost("assignments/{threadId}/messages")]
+    public async Task<IActionResult> Send(string threadId, [FromBody] SendMessageRequest request, CancellationToken ct)
+        => ToActionResult(await _chat.SendMessageAsync(threadId, GetUserId(), request, ct));
 
     /// <summary>Hämta alla meddelanden för ett uppdrag</summary>
-    [HttpGet("assignments/{assignmentId:guid}/messages")]
-    public async Task<IActionResult> GetMessages(Guid assignmentId, CancellationToken ct)
-        => ToActionResult(await _chat.GetMessagesAsync(assignmentId, GetUserId(), ct));
+    [HttpGet("assignments/{threadId}/messages")]
+    public async Task<IActionResult> GetMessages(string threadId, CancellationToken ct)
+        => ToActionResult(await _chat.GetMessagesAsync(threadId, GetUserId(), ct));
 
     /// <summary>Markera alla meddelanden i ett uppdrag som lästa</summary>
-    [HttpPost("assignments/{assignmentId:guid}/read")]
-    public async Task<IActionResult> MarkRead(Guid assignmentId, CancellationToken ct)
-        => ToActionResult(await _chat.MarkReadAsync(assignmentId, GetUserId(), ct));
+    [HttpPost("assignments/{threadId}/read")]
+    public async Task<IActionResult> MarkRead(string threadId, CancellationToken ct)
+        => ToActionResult(await _chat.MarkReadAsync(threadId, GetUserId(), ct));
 
     /// <summary>Antal olästa meddelanden totalt för inloggad användare</summary>
     [HttpGet("unread")]

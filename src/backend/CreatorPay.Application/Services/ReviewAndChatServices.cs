@@ -125,24 +125,116 @@ public class ChatService : IChatService
     private readonly IRepository<ChatMessage> _messages;
     private readonly IRepository<CreatorCampaignAssignment> _assignments;
     private readonly IRepository<User> _users;
+    private readonly IRepository<BrandProfile> _brands;
+    private readonly IRepository<CreatorProfile> _creators;
+    private readonly INotificationService _notifications;
 
     public ChatService(
         IUnitOfWork uow,
         IRepository<ChatMessage> messages,
         IRepository<CreatorCampaignAssignment> assignments,
-        IRepository<User> users)
+        IRepository<User> users,
+        IRepository<BrandProfile> brands,
+        IRepository<CreatorProfile> creators,
+        INotificationService notifications)
     {
+        _brands = brands;
+        _creators = creators;
+        _notifications = notifications;
         _uow = uow;
         _messages = messages;
         _assignments = assignments;
         _users = users;
     }
 
+    /// <summary>"d-{profileId}" = direct thread with that counterpart profile.</summary>
+    private static bool IsDirect(string threadId, out Guid otherProfileId)
+    {
+        otherProfileId = Guid.Empty;
+        return threadId.StartsWith("d-", StringComparison.OrdinalIgnoreCase)
+            && Guid.TryParse(threadId[2..], out otherProfileId);
+    }
+
+    private sealed record DirectParties(Guid BrandProfileId, Guid CreatorProfileId, Guid BrandUserId, Guid CreatorUserId, bool CallerIsBrand);
+
+    /// <summary>
+    /// Resolves a direct thread from the caller's point of view. Brands reach
+    /// creators; creators only ever see threads a brand already opened.
+    /// </summary>
+    private async Task<DirectParties?> ResolveDirectAsync(Guid otherProfileId, Guid userId, CancellationToken ct)
+    {
+        var callerBrand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == userId, ct);
+        if (callerBrand != null)
+        {
+            var creator = await _creators.Query().FirstOrDefaultAsync(c => c.Id == otherProfileId, ct);
+            if (creator == null) return null;
+            return new DirectParties(callerBrand.Id, creator.Id, userId, creator.UserId, true);
+        }
+
+        var callerCreator = await _creators.Query().FirstOrDefaultAsync(c => c.UserId == userId, ct);
+        if (callerCreator != null)
+        {
+            var brand = await _brands.Query().FirstOrDefaultAsync(b => b.Id == otherProfileId, ct);
+            if (brand == null) return null;
+            return new DirectParties(brand.Id, callerCreator.Id, brand.UserId, userId, false);
+        }
+        return null;
+    }
+
     public async Task<Result<ChatMessageDto>> SendMessageAsync(
-        Guid assignmentId, Guid senderUserId, SendMessageRequest request, CancellationToken ct = default)
+        string threadId, Guid senderUserId, SendMessageRequest request, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(request.Body))
             return Result<ChatMessageDto>.Failure(new Error("VALIDATION_ERROR", "Message body cannot be empty"));
+
+        if (IsDirect(threadId, out var otherId))
+        {
+            var parties = await ResolveDirectAsync(otherId, senderUserId, ct);
+            if (parties == null)
+                return Result<ChatMessageDto>.Failure(new Error("FORBIDDEN", "Konversationen finns inte"));
+
+            var threadExists = await _messages.Query().AnyAsync(m =>
+                m.BrandProfileId == parties.BrandProfileId && m.CreatorProfileId == parties.CreatorProfileId, ct);
+
+            // Only a brand may open a direct thread — creators cannot cold-message.
+            if (!parties.CallerIsBrand && !threadExists)
+                return Result<ChatMessageDto>.Failure(new Error("FORBIDDEN",
+                    "Du kan bara svara på meddelanden som ett företag har startat."));
+
+            var directSender = await _users.Query().FirstOrDefaultAsync(u => u.Id == senderUserId, ct);
+            if (directSender == null)
+                return Result<ChatMessageDto>.Failure(new Error("FORBIDDEN", "Sender not found"));
+
+            var direct = new ChatMessage
+            {
+                AssignmentId = null,
+                BrandProfileId = parties.BrandProfileId,
+                CreatorProfileId = parties.CreatorProfileId,
+                SenderId = senderUserId,
+                SenderRole = parties.CallerIsBrand ? "Brand" : "Creator",
+                Body = request.Body.Trim(),
+                IsRead = false,
+            };
+            _messages.Add(direct);
+            await _uow.SaveChangesAsync(ct);
+
+            if (!threadExists)
+            {
+                try
+                {
+                    var brandName = (await _brands.Query().FirstOrDefaultAsync(b => b.Id == parties.BrandProfileId, ct))?.CompanyName ?? "Ett företag";
+                    await _notifications.SendAsync(parties.CreatorUserId, NotificationType.SystemMessage,
+                        $"{brandName} har skickat dig ett meddelande på VYRLE.");
+                }
+                catch { /* the message itself is what matters */ }
+            }
+
+            var directName = $"{directSender.FirstName} {directSender.LastName}".Trim();
+            return Result<ChatMessageDto>.Success(MapToDto(direct, directName));
+        }
+
+        if (!Guid.TryParse(threadId, out var assignmentId))
+            return Result<ChatMessageDto>.Failure(new Error("VALIDATION_ERROR", "Ogiltig konversation"));
 
         var assignment = await _assignments.Query()
             .Include(a => a.Campaign).ThenInclude(c => c.BrandProfile)
@@ -184,8 +276,26 @@ public class ChatService : IChatService
     }
 
     public async Task<Result<List<ChatMessageDto>>> GetMessagesAsync(
-        Guid assignmentId, Guid userId, CancellationToken ct = default)
+        string threadId, Guid userId, CancellationToken ct = default)
     {
+        if (IsDirect(threadId, out var otherId))
+        {
+            var parties = await ResolveDirectAsync(otherId, userId, ct);
+            if (parties == null)
+                return Result<List<ChatMessageDto>>.Failure(new Error("FORBIDDEN", "Konversationen finns inte"));
+
+            var directMessages = await _messages.Query()
+                .Include(m => m.Sender)
+                .Where(m => m.BrandProfileId == parties.BrandProfileId && m.CreatorProfileId == parties.CreatorProfileId)
+                .OrderBy(m => m.CreatedAt)
+                .ToListAsync(ct);
+            return Result<List<ChatMessageDto>>.Success(directMessages
+                .Select(m => MapToDto(m, $"{m.Sender.FirstName} {m.Sender.LastName}".Trim())).ToList());
+        }
+
+        if (!Guid.TryParse(threadId, out var assignmentId))
+            return Result<List<ChatMessageDto>>.Failure(new Error("VALIDATION_ERROR", "Ogiltig konversation"));
+
         var assignment = await _assignments.Query()
             .Include(a => a.Campaign).ThenInclude(c => c.BrandProfile)
             .Include(a => a.CreatorProfile)
@@ -212,11 +322,25 @@ public class ChatService : IChatService
         return Result<List<ChatMessageDto>>.Success(dtos);
     }
 
-    public async Task<Result<bool>> MarkReadAsync(Guid assignmentId, Guid userId, CancellationToken ct = default)
+    public async Task<Result<bool>> MarkReadAsync(string threadId, Guid userId, CancellationToken ct = default)
     {
-        var unread = await _messages.Query()
-            .Where(m => m.AssignmentId == assignmentId && m.SenderId != userId && !m.IsRead)
-            .ToListAsync(ct);
+        List<ChatMessage> unread;
+        if (IsDirect(threadId, out var otherId))
+        {
+            var parties = await ResolveDirectAsync(otherId, userId, ct);
+            if (parties == null) return Result<bool>.Success(true);
+            unread = await _messages.Query()
+                .Where(m => m.BrandProfileId == parties.BrandProfileId && m.CreatorProfileId == parties.CreatorProfileId
+                    && m.SenderId != userId && !m.IsRead)
+                .ToListAsync(ct);
+        }
+        else
+        {
+            if (!Guid.TryParse(threadId, out var assignmentId)) return Result<bool>.Success(true);
+            unread = await _messages.Query()
+                .Where(m => m.AssignmentId == assignmentId && m.SenderId != userId && !m.IsRead)
+                .ToListAsync(ct);
+        }
 
         foreach (var m in unread)
         {
@@ -239,9 +363,19 @@ public class ChatService : IChatService
             .ToListAsync(ct);
 
         var count = await _messages.Query()
-            .CountAsync(m => assignments.Contains(m.AssignmentId)
+            .CountAsync(m => m.AssignmentId != null && assignments.Contains(m.AssignmentId.Value)
                 && m.SenderId != userId
                 && !m.IsRead, ct);
+
+        // Direct threads the user takes part in
+        var myBrand = await _brands.Query().Where(b => b.UserId == userId).Select(b => (Guid?)b.Id).FirstOrDefaultAsync(ct);
+        var myCreator = await _creators.Query().Where(c => c.UserId == userId).Select(c => (Guid?)c.Id).FirstOrDefaultAsync(ct);
+        if (myBrand != null || myCreator != null)
+        {
+            count += await _messages.Query().CountAsync(m => m.AssignmentId == null
+                && ((myBrand != null && m.BrandProfileId == myBrand) || (myCreator != null && m.CreatorProfileId == myCreator))
+                && m.SenderId != userId && !m.IsRead, ct);
+        }
 
         return Result<int>.Success(count);
     }
@@ -264,7 +398,7 @@ public class ChatService : IChatService
 
         var ids = assignments.Select(a => a.Id).ToList();
         var aggregates = await _messages.Query()
-            .Where(m => ids.Contains(m.AssignmentId))
+            .Where(m => m.AssignmentId != null && ids.Contains(m.AssignmentId.Value))
             .GroupBy(m => m.AssignmentId)
             .Select(g => new
             {
@@ -278,7 +412,7 @@ public class ChatService : IChatService
         // practically impossible and harmless — same thread, same instant).
         var lastAts = aggregates.Select(x => x.LastAt).ToList();
         var lastBodies = await _messages.Query()
-            .Where(m => ids.Contains(m.AssignmentId) && lastAts.Contains(m.CreatedAt))
+            .Where(m => m.AssignmentId != null && ids.Contains(m.AssignmentId.Value) && lastAts.Contains(m.CreatedAt))
             .Select(m => new { m.AssignmentId, m.CreatedAt, m.Body })
             .ToListAsync(ct);
 
@@ -300,13 +434,69 @@ public class ChatService : IChatService
                 agg?.LastAt,
                 agg?.Unread ?? 0,
                 isBrandSide ? a.CreatorProfile?.Id : a.Campaign.BrandProfile?.Id,
-                isBrandSide ? "Creator" : "Brand");
+                isBrandSide ? "Creator" : "Brand",
+                a.Id.ToString());
         })
-        .OrderByDescending(c => c.LastMessageAt ?? DateTime.MinValue)
-        .ThenBy(c => c.CounterpartName)
         .ToList();
 
-        return conversations;
+        conversations.AddRange(await GetDirectConversationsAsync(userId, ct));
+
+        return conversations
+            .OrderByDescending(c => c.LastMessageAt ?? DateTime.MinValue)
+            .ThenBy(c => c.CounterpartName)
+            .ToList();
+    }
+
+    /// <summary>Brand↔creator threads that live outside any assignment.</summary>
+    private async Task<List<ChatConversationDto>> GetDirectConversationsAsync(Guid userId, CancellationToken ct)
+    {
+        var myBrandId = await _brands.Query().Where(b => b.UserId == userId).Select(b => (Guid?)b.Id).FirstOrDefaultAsync(ct);
+        var myCreatorId = myBrandId != null ? null
+            : await _creators.Query().Where(c => c.UserId == userId).Select(c => (Guid?)c.Id).FirstOrDefaultAsync(ct);
+        if (myBrandId == null && myCreatorId == null) return new List<ChatConversationDto>();
+
+        var mine = await _messages.Query()
+            .Where(m => m.AssignmentId == null
+                && ((myBrandId != null && m.BrandProfileId == myBrandId)
+                 || (myCreatorId != null && m.CreatorProfileId == myCreatorId)))
+            .ToListAsync(ct);
+        if (mine.Count == 0) return new List<ChatConversationDto>();
+
+        var isBrandSide = myBrandId != null;
+        var counterpartIds = mine
+            .Select(m => isBrandSide ? m.CreatorProfileId : m.BrandProfileId)
+            .Where(id => id != null).Select(id => id!.Value).Distinct().ToList();
+
+        var creatorLookup = isBrandSide
+            ? await _creators.Query().Where(c => counterpartIds.Contains(c.Id))
+                .Select(c => new { c.Id, Name = c.DisplayName, Image = c.AvatarUrl }).ToListAsync(ct)
+            : new List<dynamic>().Select(_ => new { Id = Guid.Empty, Name = "", Image = (string?)null }).ToList();
+        var brandLookup = isBrandSide
+            ? new List<dynamic>().Select(_ => new { Id = Guid.Empty, Name = "", Image = (string?)null }).ToList()
+            : await _brands.Query().Where(b => counterpartIds.Contains(b.Id))
+                .Select(b => new { b.Id, Name = b.CompanyName, Image = b.LogoUrl }).ToListAsync(ct);
+        var lookup = (isBrandSide ? creatorLookup : brandLookup).ToDictionary(x => x.Id);
+
+        return mine
+            .GroupBy(m => isBrandSide ? m.CreatorProfileId!.Value : m.BrandProfileId!.Value)
+            .Select(g =>
+            {
+                var last = g.OrderByDescending(m => m.CreatedAt).First();
+                lookup.TryGetValue(g.Key, out var who);
+                return new ChatConversationDto(
+                    Guid.Empty,
+                    who?.Name ?? (isBrandSide ? "Creator" : "Varumärke"),
+                    who?.Image,
+                    "Direktmeddelande",
+                    last.Body,
+                    last.CreatedAt,
+                    g.Count(m => m.SenderId != userId && !m.IsRead),
+                    g.Key,
+                    isBrandSide ? "Creator" : "Brand",
+                    "d-" + g.Key,
+                    true);
+            })
+            .ToList();
     }
 
     private static ChatMessageDto MapToDto(ChatMessage m, string senderName) => new(

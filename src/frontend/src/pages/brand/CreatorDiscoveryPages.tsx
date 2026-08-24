@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { DateInput } from '@/components/ui/DateInput';
+import { MessageCreatorModal } from '@/components/ui/MessageCreatorModal';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Pagination } from '@/components/ui';
@@ -120,6 +121,7 @@ export function BrandCreatorDetailPage() {
   const navigate = useNavigate();
   const { data: creator, isLoading } = useCreatorPublicProfile(id!);
   const [showPr, setShowPr] = useState(false);
+  const [showMsg, setShowMsg] = useState(false);
 
   if (isLoading) return <PageSkeleton />;
   if (!creator) return (
@@ -156,7 +158,10 @@ export function BrandCreatorDetailPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end', minWidth: 0, maxWidth: '100%' }}>
             <InviteToCommunityButton creatorProfileId={creator.id} />
             {creator.openToPrOffers
-              ? <button className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} onClick={() => setShowPr((v) => !v)}>{showPr ? t('Stäng') : t('Skicka PR-erbjudande')}</button>
+              ? <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} onClick={() => setShowPr((v) => !v)}>{showPr ? t('Stäng') : t('Skicka PR-erbjudande')}</button>
+                  <button className="btn-outline" style={{ width: 'auto', padding: '12px 22px' }} onClick={() => setShowMsg(true)}>✎ {t('Skriv meddelande')}</button>
+                </div>
               : <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0 }}>{t('Tar inte emot PR-erbjudanden just nu')}</p>}
           </div>
         </div>
@@ -218,6 +223,8 @@ export function BrandCreatorDetailPage() {
           ))}
         </div>
       )}
+      {showMsg && creator && <MessageCreatorModal creatorProfileId={creator.id} creatorName={creator.displayName} onClose={() => setShowMsg(false)} />}
+
     </section>
   );
 }

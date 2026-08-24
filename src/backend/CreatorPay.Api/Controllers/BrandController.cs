@@ -111,6 +111,11 @@ public class BrandCommunityController : BaseController
     public async Task<IActionResult> Invite([FromBody] InviteMemberRequest request, CancellationToken ct)
         => ToActionResult(await _community.InviteAsync(GetUserId(), request.CreatorProfileId, ct));
 
+    /// <summary>Bjud in flera creators på en gång</summary>
+    [HttpPost("invite-many")]
+    public async Task<IActionResult> InviteMany([FromBody] InviteManyRequest request, CancellationToken ct)
+        => ToActionResult(await _community.InviteManyAsync(GetUserId(), request.CreatorProfileIds, ct));
+
     [HttpDelete("members/{creatorProfileId:guid}")]
     public async Task<IActionResult> Remove(Guid creatorProfileId, CancellationToken ct)
         => ToActionResult(await _community.RemoveAsync(GetUserId(), creatorProfileId, ct));

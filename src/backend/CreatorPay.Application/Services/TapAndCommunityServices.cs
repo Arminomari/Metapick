@@ -100,6 +100,38 @@ public class CommunityService : ICommunityService
             member.Status.ToString(), member.Source.ToString(), member.JoinedAt, 0, 0, 0);
     }
 
+    /// <summary>Invites many creators in one go — the bulk path from the community page.</summary>
+    public async Task<Result<int>> InviteManyAsync(Guid brandUserId, List<Guid> creatorProfileIds, CancellationToken ct = default)
+    {
+        var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);
+        if (brand == null) return Errors.NotFound("Brand");
+        if (creatorProfileIds == null || creatorProfileIds.Count == 0) return 0;
+
+        var creators = await _creators.Query()
+            .Where(c => creatorProfileIds.Contains(c.Id) && c.Status == CreatorStatus.Approved)
+            .ToListAsync(ct);
+
+        var invited = 0;
+        foreach (var creator in creators)
+        {
+            await EnsureMemberAsync(brand.Id, creator.Id, CommunityMemberSource.Invited, ct);
+            invited++;
+        }
+        await _uow.SaveChangesAsync(ct);
+
+        foreach (var creator in creators)
+        {
+            try
+            {
+                await _notifications.SendAsync(creator.UserId, NotificationType.SystemMessage,
+                    $"{brand.CompanyName} har bjudit in dig till sitt creator-community. Du kan nu hämta ur deras kran — kolla Mina kampanjer.");
+            }
+            catch { /* one failure must not stop the batch */ }
+        }
+        await _audit.LogAsync(brandUserId, "Community.InvitedMany", "BrandProfile", brand.Id);
+        return invited;
+    }
+
     public async Task<Result<bool>> RemoveAsync(Guid brandUserId, Guid creatorProfileId, CancellationToken ct = default)
     {
         var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);

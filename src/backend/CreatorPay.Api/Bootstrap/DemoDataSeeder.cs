@@ -331,7 +331,7 @@ public static class DemoDataSeeder
             removed += await db.Set<SocialPost>().Where(sp => postIds.Contains(sp.Id)).ExecuteDeleteAsync();
             removed += await db.Set<CreatorSubmission>().Where(s => assignmentIds.Contains(s.AssignmentId)).ExecuteDeleteAsync();
             removed += await db.Set<Review>().Where(r => assignmentIds.Contains(r.AssignmentId)).ExecuteDeleteAsync();
-            removed += await db.Set<ChatMessage>().Where(m => assignmentIds.Contains(m.AssignmentId)).ExecuteDeleteAsync();
+            removed += await db.Set<ChatMessage>().Where(m => m.AssignmentId != null && assignmentIds.Contains(m.AssignmentId.Value)).ExecuteDeleteAsync();
             removed += await db.Set<TrackingLink>().Where(t => assignmentIds.Contains(t.AssignmentId)).ExecuteDeleteAsync();
             removed += await db.Set<TrackingTag>().Where(t => assignmentIds.Contains(t.AssignmentId)).ExecuteDeleteAsync();
             removed += await db.Set<CreatorCampaignAssignment>().Where(a => assignmentIds.Contains(a.Id)).ExecuteDeleteAsync();

@@ -388,6 +388,7 @@ public record MyCommunityDto(
     Guid BrandProfileId, string BrandName, string? BrandLogoUrl, string Source, DateTime JoinedAt, bool HasActiveTap);
 
 public record InviteMemberRequest(Guid CreatorProfileId);
+public record InviteManyRequest(List<Guid> CreatorProfileIds);
 public record CreateAdminRequest(string Email, string Password, string FirstName, string LastName);
 public record AdminStatsDto(
     int TotalUsers, int PendingUsers, int Creators, int Brands,
@@ -455,9 +456,10 @@ public record UserReviewSummaryDto(
 // ──── Chat ────
 public record SendMessageRequest(string Body);
 public record ChatMessageDto(
-    Guid Id, Guid AssignmentId, Guid SenderId, string SenderRole,
+    Guid Id, Guid? AssignmentId, Guid SenderId, string SenderRole,
     string SenderName, string Body, bool IsRead, DateTime CreatedAt);
 public record ChatConversationDto(
     Guid AssignmentId, string CounterpartName, string? CounterpartImageUrl,
     string CampaignName, string? LastMessage, DateTime? LastMessageAt, int UnreadCount,
-    Guid? CounterpartProfileId = null, string? CounterpartRole = null);
+    Guid? CounterpartProfileId = null, string? CounterpartRole = null,
+    string ThreadId = "", bool IsDirect = false);

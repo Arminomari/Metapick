@@ -146,6 +146,7 @@ public interface ICommunityService
 {
     Task<Result<List<CommunityMemberDto>>> GetMembersAsync(Guid brandUserId, CancellationToken ct = default);
     Task<Result<CommunityMemberDto>> InviteAsync(Guid brandUserId, Guid creatorProfileId, CancellationToken ct = default);
+    Task<Result<int>> InviteManyAsync(Guid brandUserId, List<Guid> creatorProfileIds, CancellationToken ct = default);
     Task<Result<bool>> RemoveAsync(Guid brandUserId, Guid creatorProfileId, CancellationToken ct = default);
     Task<Result<bool>> LeaveAsync(Guid creatorUserId, Guid brandProfileId, CancellationToken ct = default);
     Task<Result<List<MyCommunityDto>>> GetMyCommunitiesAsync(Guid creatorUserId, CancellationToken ct = default);
@@ -240,9 +241,9 @@ public interface IReviewService
 
 public interface IChatService
 {
-    Task<Result<ChatMessageDto>> SendMessageAsync(Guid assignmentId, Guid senderUserId, SendMessageRequest request, CancellationToken ct = default);
-    Task<Result<List<ChatMessageDto>>> GetMessagesAsync(Guid assignmentId, Guid userId, CancellationToken ct = default);
-    Task<Result<bool>> MarkReadAsync(Guid assignmentId, Guid userId, CancellationToken ct = default);
+    Task<Result<ChatMessageDto>> SendMessageAsync(string threadId, Guid senderUserId, SendMessageRequest request, CancellationToken ct = default);
+    Task<Result<List<ChatMessageDto>>> GetMessagesAsync(string threadId, Guid userId, CancellationToken ct = default);
+    Task<Result<bool>> MarkReadAsync(string threadId, Guid userId, CancellationToken ct = default);
     Task<Result<int>> GetUnreadCountAsync(Guid userId, CancellationToken ct = default);
     Task<Result<List<ChatConversationDto>>> GetConversationsAsync(Guid userId, CancellationToken ct = default);
 }

@@ -174,7 +174,7 @@ function ConversationList({ onOpen }: { onOpen: (c: ChatConversationDto) => void
     <div className="nd-scroll">
       <div className="mc-group"><span className="mc-group-dot active" />{t('Konversationer')} <span className="mc-group-n">{convos.length}</span></div>
       {convos.map((c) => (
-        <div key={c.assignmentId} className="mc-item" onClick={() => onOpen(c)} style={{ minWidth: 0 }}>
+        <div key={c.threadId} className="mc-item" onClick={() => onOpen(c)} style={{ minWidth: 0 }}>
           <ChatAvatar name={c.counterpartName} imageUrl={c.counterpartImageUrl} />
           <div className="mc-body" style={{ flex: 1, minWidth: 0 }}>
             <div className="mc-row1" style={{ minWidth: 0 }}>
@@ -198,15 +198,15 @@ function ChatThread({ sel, onBack, onCloseAll }: { sel: ChatConversationDto | nu
     onCloseAll?.();
     if (sel.counterpartRole === 'Creator' && sel.counterpartProfileId) navigate(`/brand/creators/${sel.counterpartProfileId}`);
     else if (sel.counterpartRole === 'Brand' && sel.counterpartProfileId) navigate(`/creator/brands/${sel.counterpartProfileId}`);
-    else navigate(`/creator/assignments/${sel.assignmentId}`);
+    else if (!sel.isDirect) navigate(`/creator/assignments/${sel.assignmentId}`);
   };
-  const { data: messages = [], isLoading } = useChatMessages(sel?.assignmentId ?? '');
+  const { data: messages = [], isLoading } = useChatMessages(sel?.threadId ?? '');
   const send = useSendMessage();
   const markRead = useMarkChatRead();
   const [body, setBody] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { if (sel?.assignmentId) markRead.mutate(sel.assignmentId); /* eslint-disable-next-line */ }, [sel?.assignmentId]);
+  useEffect(() => { if (sel?.threadId) markRead.mutate(sel.threadId); /* eslint-disable-next-line */ }, [sel?.threadId]);
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }); }, [messages, sel?.assignmentId]);
 
   const handleSend = async (e: React.FormEvent) => {
@@ -214,7 +214,7 @@ function ChatThread({ sel, onBack, onCloseAll }: { sel: ChatConversationDto | nu
     const t = body.trim();
     if (!t || !sel) return;
     setBody('');
-    try { await send.mutateAsync({ assignmentId: sel.assignmentId, body: t }); } catch { setBody(t); }
+    try { await send.mutateAsync({ assignmentId: sel.threadId, body: t }); } catch { setBody(t); }
   };
 
   return (

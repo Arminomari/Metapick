@@ -22,7 +22,7 @@ export function ChatPanel({ assignmentId }: ChatPanelProps) {
   const { userId } = useAuthStore();
   const { data: messages = [], isLoading } = useChatMessages(assignmentId);
   const { data: convos = [] } = useChatConversations();
-  const convo = convos.find((c) => c.assignmentId === assignmentId);
+  const convo = convos.find((c) => c.threadId === assignmentId || c.assignmentId === assignmentId);
   const send = useSendMessage();
   const markRead = useMarkChatRead();
   const [body, setBody] = useState('');

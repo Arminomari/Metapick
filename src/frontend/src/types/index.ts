@@ -418,6 +418,8 @@ export interface ChatConversationDto {
   unreadCount: number;
   counterpartProfileId?: string | null;
   counterpartRole?: 'Creator' | 'Brand' | null;
+  threadId: string;
+  isDirect?: boolean;
 }
 
 // ── Analytics ──────────────────────────────────────────

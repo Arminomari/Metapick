@@ -25,7 +25,11 @@ public class Review : BaseEntity
 /// <summary>A single chat message within an assignment thread.</summary>
 public class ChatMessage : BaseEntity
 {
-    public Guid AssignmentId { get; set; }
+    /// <summary>Set for assignment threads; null for brand↔creator direct threads.</summary>
+    public Guid? AssignmentId { get; set; }
+    /// <summary>Direct thread participants (both set only when AssignmentId is null).</summary>
+    public Guid? BrandProfileId { get; set; }
+    public Guid? CreatorProfileId { get; set; }
     public Guid SenderId { get; set; }
     /// <summary>"Brand" or "Creator"</summary>
     public string SenderRole { get; set; } = null!;
@@ -34,6 +38,6 @@ public class ChatMessage : BaseEntity
     public DateTime? ReadAt { get; set; }
 
     // Navigation
-    public CreatorCampaignAssignment Assignment { get; set; } = null!;
+    public CreatorCampaignAssignment? Assignment { get; set; }
     public User Sender { get; set; } = null!;
 }
