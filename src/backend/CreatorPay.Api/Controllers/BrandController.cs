@@ -116,6 +116,11 @@ public class BrandCommunityController : BaseController
     public async Task<IActionResult> InviteMany([FromBody] InviteManyRequest request, CancellationToken ct)
         => ToActionResult(await _community.InviteManyAsync(GetUserId(), request.CreatorProfileIds, ct));
 
+    /// <summary>Godkänn eller neka en ansökan till communityn</summary>
+    [HttpPost("requests/{creatorProfileId:guid}")]
+    public async Task<IActionResult> RespondToRequest(Guid creatorProfileId, [FromQuery] bool approve, CancellationToken ct)
+        => ToActionResult(await _community.RespondToRequestAsync(GetUserId(), creatorProfileId, approve, ct));
+
     [HttpDelete("members/{creatorProfileId:guid}")]
     public async Task<IActionResult> Remove(Guid creatorProfileId, CancellationToken ct)
         => ToActionResult(await _community.RemoveAsync(GetUserId(), creatorProfileId, ct));
@@ -137,6 +142,11 @@ public class CreatorTapController : BaseController
     [HttpGet("communities")]
     public async Task<IActionResult> Communities(CancellationToken ct)
         => ToActionResult(await _community.GetMyCommunitiesAsync(GetUserId(), ct));
+
+    /// <summary>Ansök om att gå med i ett företags community</summary>
+    [HttpPost("communities/{brandProfileId:guid}/request")]
+    public async Task<IActionResult> RequestMembership(Guid brandProfileId, CancellationToken ct)
+        => ToActionResult(await _community.RequestMembershipAsync(GetUserId(), brandProfileId, ct));
 
     [HttpDelete("communities/{brandProfileId:guid}")]
     public async Task<IActionResult> Leave(Guid brandProfileId, CancellationToken ct)

@@ -766,7 +766,7 @@ export function useReceivedPrOffers(status?: string, page = 1) {
   });
 }
 
-export interface ActionCounts { pendingApplications: number; pendingVideoReviews: number; awaitingYourVideo: number }
+export interface ActionCounts { pendingApplications: number; pendingVideoReviews: number; awaitingYourVideo: number; pendingCommunityRequests: number }
 
 /** Red-dot counts for the sidebar — refreshed often enough to feel live. */
 export function useActionCounts(role: 'brand' | 'creator' | null) {

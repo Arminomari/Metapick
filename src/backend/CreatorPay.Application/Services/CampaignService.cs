@@ -21,6 +21,7 @@ public class CampaignService : ICampaignService
     private readonly IRepository<BrandFollower> _brandFollowers;
     private readonly IRepository<Review> _reviewRows;
     private readonly IRepository<BrandPost> _brandPosts;
+    private readonly IRepository<BrandCommunityMember> _communityMembers;
 
     public CampaignService(
         IUnitOfWork uow,
@@ -33,8 +34,10 @@ public class CampaignService : ICampaignService
         IRepository<User> userAccounts,
         IRepository<BrandFollower> brandFollowers,
         IRepository<Review> reviewRows,
-        IRepository<BrandPost> brandPosts)
+        IRepository<BrandPost> brandPosts,
+        IRepository<BrandCommunityMember> communityMembers)
     {
+        _communityMembers = communityMembers;
         _uow = uow;
         _campaigns = campaigns;
         _brands = brands;
@@ -892,6 +895,16 @@ public class CampaignService : ICampaignService
             .Select(bp => new BrandPostDto(bp.Id, bp.Body, bp.ImageUrl, bp.CreatedAt))
             .ToListAsync(ct);
 
+        // The tap as creators see it, plus where the viewer stands with it.
+        var tap = await _campaigns.Query()
+            .Include(c => c.PayoutRules)
+            .FirstOrDefaultAsync(c => c.BrandProfileId == brandProfileId && c.Kind == CampaignKind.Tap
+                && c.Status == CampaignStatus.Active && !c.IsDeleted, ct);
+        var membership = viewerCreator == null ? null : await _communityMembers.Query()
+            .Where(m => m.BrandProfileId == brandProfileId && m.CreatorProfileId == viewerCreator.Id)
+            .Select(m => m.Status.ToString())
+            .FirstOrDefaultAsync(ct);
+
         return new BrandPublicProfileDto(
             brand.Id, brand.CompanyName, brand.LogoUrl, brand.Industry, brand.Country,
             brand.Description, brand.Website, brand.CreatedAt,
@@ -900,7 +913,12 @@ public class CampaignService : ICampaignService
             campaigns.SelectMany(c => c.Assignments).Sum(a => a.TotalVerifiedViews),
             campaigns.SelectMany(c => c.Assignments).Select(a => a.CreatorProfileId).Distinct().Count(),
             avgRating, reviews.Count, recentReviews,
-            Map(active), Map(past), posts);
+            Map(active), Map(past), posts,
+            tap != null,
+            tap == null ? 0 : tap.PayoutRules.Where(r => r.PayoutType == PayoutType.CPM).Select(r => r.Amount).FirstOrDefault(),
+            tap?.Name, tap?.Description, tap?.RequiredHashtag,
+            tap?.PayoutCapPerVideo, tap?.MonthlyCapPerCreator,
+            membership);
     }
 
     public async Task<Result<bool>> SetBrandFollowAsync(Guid viewerUserId, Guid brandProfileId, bool follow, CancellationToken ct = default)

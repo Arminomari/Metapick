@@ -555,4 +555,8 @@ export const brand: Record<string, string> = {
   'creator inbjuden': 'creator invited',
   'creators inbjudna': 'creators invited',
   'Direktmeddelande': 'Direct message',
+  'Ansökningar till communityn': 'Requests to join your community',
+  'vill gå med i din community': 'wants to join your community',
+  'Creatorn är nu medlem': 'The creator is now a member',
+  'Ansökan till communityn nekad': 'Community request declined',
 };

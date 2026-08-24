@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { useApplyToCampaign, useBrandProfile, useUpdateBrandProfile } from '@/hooks/api';
 import { ImagePicker } from '@/components/auth/ImagePicker';
-import { formatNumber, formatDate } from '@/lib/utils';
+import { formatNumber, formatDate, formatCurrency } from '@/lib/utils';
 import { t, statusLabel } from '@/lib/i18n';
 import { LoadingSpinner } from '@/components/ui';
 import { StarRating } from '@/components/ui/StarRating';
@@ -27,6 +27,9 @@ interface BrandPublicProfile {
   averageRating: number; reviewCount: number; recentReviews: ReviewDto[];
   activeCampaigns: BrandPublicCampaign[]; pastCampaigns: BrandPublicCampaign[];
   posts?: BrandPost[] | null;
+  hasTap?: boolean; tapCpm?: number; tapName?: string | null; tapBrief?: string | null;
+  tapHashtag?: string | null; tapCapPerVideo?: number | null; tapMonthlyCapPerCreator?: number | null;
+  membershipStatus?: string | null;
 }
 
 const ago = (iso: string): string => {
@@ -68,6 +71,15 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
       qc.invalidateQueries({ queryKey: ['brand-public', id] });
       toast.push(next ? t('Du följer nu företaget!') : t('Du har slutat följa företaget'), 'success');
     },
+  });
+
+  const joinTap = useMutation({
+    mutationFn: async () => (await api.post(`/creator/communities/${id}/request`)).data.data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['brand-public', id] });
+      toast.push(t('Ansökan skickad! Företaget får en notis och svarar snart.'), 'success');
+    },
+    onError: (e: any) => toast.push(e?.response?.data?.error?.message ?? t('Kunde inte skicka ansökan'), 'error'),
   });
 
   const handleApply = async (campaignId: string) => {
@@ -147,6 +159,42 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
           </div>
         ))}
       </div>
+
+      {/* ── The tap: what a creator can draw, and how to get in ── */}
+      {p.hasTap && !ownView && (
+        <div className="card" style={{ marginBottom: 16, background: 'linear-gradient(160deg,#fff,#FFF6F0)', border: '1px solid rgba(241,168,143,.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 26, flexShrink: 0 }} aria-hidden>💧</span>
+            <div style={{ flex: '1 1 240px', minWidth: 0 }}>
+              <div style={{ fontWeight: 800, fontSize: 16 }}>{t('Kranen är öppen')}{p.tapName ? ` · ${p.tapName}` : ''}</div>
+              <div style={{ fontSize: 13.5, color: 'var(--ink-2)', marginTop: 3, lineHeight: 1.55 }}>
+                <strong>{p.tapCpm} kr / 1 000 views</strong> {t('löpande varje månad')}
+                {p.tapCapPerVideo ? ` · ${t('max')} ${formatCurrency(p.tapCapPerVideo)} / video` : ''}
+                {p.tapMonthlyCapPerCreator ? ` · ${t('max')} ${formatCurrency(p.tapMonthlyCapPerCreator)} / ${t('mån')}` : ''}
+                {p.tapHashtag ? ` · #${p.tapHashtag}` : ''}
+              </div>
+              {p.tapBrief && <p style={{ margin: '10px 0 0', fontSize: 13.5, lineHeight: 1.6, color: 'var(--ink-2)', whiteSpace: 'pre-line' }}>{p.tapBrief}</p>}
+            </div>
+            <div style={{ flex: '0 0 auto' }}>
+              {p.membershipStatus === 'Active' ? (
+                <span className="vy-badge pos">{t('Du är medlem — kranen är din')}</span>
+              ) : p.membershipStatus === 'Requested' ? (
+                <span className="vy-badge pend">{t('Ansökan skickad — väntar på svar')}</span>
+              ) : (
+                <button type="button" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }}
+                  onClick={() => joinTap.mutate()} disabled={joinTap.isPending}>
+                  {joinTap.isPending ? t('Skickar…') : t('Ansök till kranen')}
+                </button>
+              )}
+            </div>
+          </div>
+          {p.membershipStatus !== 'Active' && p.membershipStatus !== 'Requested' && (
+            <div style={{ marginTop: 10, fontSize: 12.5, color: 'var(--muted)' }}>
+              {t('Medlemmar i communityn kan publicera när de vill och få betalt per verifierad view — företaget godkänner din ansökan först.')}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Community feed ── */}
       {(ownView || (p.posts?.length ?? 0) > 0) && (

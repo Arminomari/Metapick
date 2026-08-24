@@ -275,7 +275,11 @@ public record BrandPublicProfileDto(
     int ActiveCampaignCount, int CompletedCampaignCount, long TotalVerifiedViews, int CreatorsWorkedWith,
     double AverageRating, int ReviewCount, List<ReviewDto> RecentReviews,
     List<BrandPublicCampaignDto> ActiveCampaigns, List<BrandPublicCampaignDto> PastCampaigns,
-    List<BrandPostDto>? Posts = null);
+    List<BrandPostDto>? Posts = null,
+    // The tap, as creators see it
+    bool HasTap = false, decimal TapCpm = 0, string? TapName = null, string? TapBrief = null,
+    string? TapHashtag = null, decimal? TapCapPerVideo = null, decimal? TapMonthlyCapPerCreator = null,
+    string? MembershipStatus = null);
 
 // ──── Application ────
 public record ApplyToCampaignRequest(Guid CampaignId, string? Message);
@@ -391,7 +395,7 @@ public record InviteMemberRequest(Guid CreatorProfileId);
 public record InviteManyRequest(List<Guid> CreatorProfileIds);
 
 /// <summary>Counts that deserve a red dot in the navigation — things waiting on you.</summary>
-public record ActionCountsDto(int PendingApplications, int PendingVideoReviews, int AwaitingYourVideo);
+public record ActionCountsDto(int PendingApplications, int PendingVideoReviews, int AwaitingYourVideo, int PendingCommunityRequests = 0);
 public record CreateAdminRequest(string Email, string Password, string FirstName, string LastName);
 public record AdminStatsDto(
     int TotalUsers, int PendingUsers, int Creators, int Brands,

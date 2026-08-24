@@ -132,6 +132,83 @@ public class CommunityService : ICommunityService
         return invited;
     }
 
+    /// <summary>
+    /// A creator knocks on the door: membership is requested, never taken. The
+    /// brand decides — community access is the right to draw from their tap.
+    /// </summary>
+    public async Task<Result<bool>> RequestMembershipAsync(Guid creatorUserId, Guid brandProfileId, CancellationToken ct = default)
+    {
+        var creator = await _creators.Query().FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
+        if (creator == null) return Errors.NotFound("Creator");
+        if (creator.Status != CreatorStatus.Approved)
+            return Errors.Forbidden("Ditt konto måste vara godkänt först.");
+
+        var brand = await _brands.Query().FirstOrDefaultAsync(b => b.Id == brandProfileId, ct);
+        if (brand == null) return Errors.NotFound("Brand", brandProfileId);
+
+        var member = await _members.Query()
+            .FirstOrDefaultAsync(m => m.BrandProfileId == brandProfileId && m.CreatorProfileId == creator.Id, ct);
+        if (member is { Status: CommunityMemberStatus.Active }) return true;
+
+        if (member == null)
+        {
+            member = new BrandCommunityMember
+            {
+                BrandProfileId = brandProfileId,
+                CreatorProfileId = creator.Id,
+                Source = CommunityMemberSource.Joined,
+                Status = CommunityMemberStatus.Requested,
+                JoinedAt = DateTime.UtcNow
+            };
+            _members.Add(member);
+        }
+        else
+        {
+            member.Status = CommunityMemberStatus.Requested;
+            member.JoinedAt = DateTime.UtcNow;
+        }
+        await _uow.SaveChangesAsync(ct);
+
+        try
+        {
+            await _notifications.SendAsync(brand.UserId, NotificationType.NewApplication,
+                $"{creator.DisplayName} vill gå med i ert creator-community.");
+        }
+        catch { /* request is stored either way */ }
+        return true;
+    }
+
+    public async Task<Result<bool>> RespondToRequestAsync(Guid brandUserId, Guid creatorProfileId, bool approve, CancellationToken ct = default)
+    {
+        var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);
+        if (brand == null) return Errors.NotFound("Brand");
+
+        var member = await _members.Query()
+            .Include(m => m.CreatorProfile)
+            .FirstOrDefaultAsync(m => m.BrandProfileId == brand.Id && m.CreatorProfileId == creatorProfileId, ct);
+        if (member == null) return Errors.NotFound("Member", creatorProfileId);
+
+        if (approve)
+        {
+            await EnsureMemberAsync(brand.Id, creatorProfileId, member.Source, ct);
+            await _uow.SaveChangesAsync(ct);
+            await _audit.LogAsync(brandUserId, "Community.RequestApproved", "CreatorProfile", creatorProfileId);
+            try
+            {
+                await _notifications.SendAsync(member.CreatorProfile.UserId, NotificationType.SystemMessage,
+                    $"{brand.CompanyName} har godkänt dig i sitt creator-community — du kan nu hämta ur deras kran.");
+            }
+            catch { }
+        }
+        else
+        {
+            member.Status = CommunityMemberStatus.Removed;
+            await _uow.SaveChangesAsync(ct);
+            await _audit.LogAsync(brandUserId, "Community.RequestRejected", "CreatorProfile", creatorProfileId);
+        }
+        return true;
+    }
+
     public async Task<Result<bool>> RemoveAsync(Guid brandUserId, Guid creatorProfileId, CancellationToken ct = default)
     {
         var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);

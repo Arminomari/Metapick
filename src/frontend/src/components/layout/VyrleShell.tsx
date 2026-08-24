@@ -191,7 +191,7 @@ export function BrandShell() {
   const nav: NavItem[] = [
     { label: t('Översikt'), path: '/brand', icon: 'dashboard' },
     { label: t('Kranen'), path: '/brand/tap', icon: 'earnings', tag: 'NY' },
-    { label: t('Community'), path: '/brand/community', icon: 'creators' },
+    { label: t('Community'), path: '/brand/community', icon: 'creators', badge: counts?.pendingCommunityRequests || undefined },
     { label: t('Statistik'), path: '/brand/analytics', icon: 'analytics' },
     { label: t('Kampanjer'), path: '/brand/campaigns', icon: 'campaigns', badge: counts?.pendingVideoReviews || undefined },
     { label: t('Ansökningar'), path: '/brand/applications', icon: 'applications', badge: counts?.pendingApplications || undefined },

@@ -39,8 +39,20 @@ export function BrandCommunityPage() {
     remove.mutate(id);
   };
 
+  const respond = useMutation({
+    mutationFn: async ({ id, approve }: { id: string; approve: boolean }) =>
+      (await api.post(`/brand/community/requests/${id}?approve=${approve}`)).data.data,
+    onSuccess: (_d, v) => {
+      qc.invalidateQueries({ queryKey: ['brand-community'] });
+      qc.invalidateQueries({ queryKey: ['action-counts'] });
+      toast.push(v.approve ? t('Creatorn är nu medlem') : t('Ansökan till communityn nekad'), 'success');
+    },
+  });
+
+  const requests = members.filter((m) => m.status === 'Requested');
   const auto = members.filter((m) => m.source === 'AutoQualified').length;
   const invited = members.filter((m) => m.source === 'Invited').length;
+  const active = members.filter((m) => m.status !== 'Requested');
   const totalEarned = members.reduce((s, m) => s + m.lifetimeEarned, 0);
 
   return (
@@ -60,9 +72,32 @@ export function BrandCommunityPage() {
         <div className="card stat"><div className="top"><div><div className="lbl">{t('Utbetalt till communityn')}</div><div className="val">{formatCurrency(totalEarned)}</div></div></div></div>
       </div>
 
+      {requests.length > 0 && (
+        <div className="card" style={{ marginBottom: 16, border: '1px solid rgba(212,155,46,.4)', background: 'linear-gradient(160deg,#fff,#FFF9F0)' }}>
+          <div className="sec-head"><h3>{t('Ansökningar till communityn')}</h3><span className="vy-badge pend">{requests.length}</span></div>
+          {requests.map((m) => (
+            <div key={m.creatorProfileId} className="list-row" style={{ gap: 14, flexWrap: 'wrap' }}>
+              <span role="button" tabIndex={0} onClick={() => navigate(`/brand/creators/${m.creatorProfileId}`)} style={{ cursor: 'pointer', flex: '0 0 auto' }}>
+                {m.avatarUrl
+                  ? <img src={m.avatarUrl} alt="" style={{ width: 42, height: 42, borderRadius: 12, objectFit: 'cover' }} />
+                  : <span className="mono" style={{ background: grad(m.displayName) }}>{(m.displayName[0] || '?').toUpperCase()}</span>}
+              </span>
+              <div className="row-main" style={{ flex: '1 1 200px', minWidth: 0 }}>
+                <div className="t">{m.displayName}{m.tikTokUsername && <span style={{ fontSize: 12, color: '#9c4f31', fontWeight: 600, marginLeft: 8 }}>@{m.tikTokUsername}</span>}</div>
+                <div className="s" style={{ whiteSpace: 'normal' }}>{formatNumber(m.tikTokFollowers)} {t('följare')} · {t('vill gå med i din community')}</div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flex: '0 0 auto' }}>
+                <button className="btn-apply" style={{ width: 'auto', padding: '8px 16px', fontSize: 12.5 }} onClick={() => respond.mutate({ id: m.creatorProfileId, approve: true })} disabled={respond.isPending}>✓ {t('Godkänn')}</button>
+                <button className="btn-outline" style={{ padding: '8px 16px', fontSize: 12.5 }} onClick={() => respond.mutate({ id: m.creatorProfileId, approve: false })} disabled={respond.isPending}>{t('Neka')}</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="card">
-        <div className="sec-head"><h3>{t('Medlemmar')}</h3><span style={{ fontSize: 13, color: 'var(--muted)' }}>{members.length} {t('st')}</span></div>
-        {isLoading ? <CardSkeleton rows={3} /> : members.length ? members.map((m) => (
+        <div className="sec-head"><h3>{t('Medlemmar')}</h3><span style={{ fontSize: 13, color: 'var(--muted)' }}>{active.length} {t('st')}</span></div>
+        {isLoading ? <CardSkeleton rows={3} /> : active.length ? active.map((m) => (
           <div key={m.creatorProfileId} className="list-row" style={{ gap: 14, flexWrap: 'wrap' }}>
             <span role="button" tabIndex={0} onClick={() => navigate(`/brand/creators/${m.creatorProfileId}`)} style={{ cursor: 'pointer', flex: '0 0 auto' }}>
               {m.avatarUrl

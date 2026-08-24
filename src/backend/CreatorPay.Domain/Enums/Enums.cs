@@ -17,7 +17,7 @@ public enum ReviewMode { AutoApprove = 0, ManualReview = 1 }
 public enum PayoutModel { Fixed = 0, Tiered = 1, CPM = 2, Hybrid = 3 }
 /// <summary>Campaign = episodic project. Tap = standing monthly budget ("kranen").</summary>
 public enum CampaignKind { Campaign = 0, Tap = 1 }
-public enum CommunityMemberStatus { Active = 0, Invited = 1, Removed = 2, Left = 3 }
+public enum CommunityMemberStatus { Active = 0, Invited = 1, Removed = 2, Left = 3, Requested = 4 }
 public enum CommunityMemberSource { AutoQualified = 0, Invited = 1, Joined = 2 }
 public enum ApplicationStatus { Pending = 0, Approved = 1, Rejected = 2, Withdrawn = 3 }
 public enum AssignmentStatus { Active = 0, Paused = 1, Completed = 2, Cancelled = 3, Disqualified = 4 }

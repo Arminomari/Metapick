@@ -374,6 +374,7 @@ public class AssignmentService : IAssignmentService
     private readonly IRepository<PayoutCalculation> _calculations;
     private readonly PayoutCalculatorFactory _payoutFactory;
     private readonly IRepository<CampaignApplication> _applicationRows;
+    private readonly IRepository<BrandCommunityMember> _communityRows;
 
     public AssignmentService(
         IUnitOfWork uow,
@@ -387,9 +388,11 @@ public class AssignmentService : IAssignmentService
         INotificationService notifications,
         IRepository<PayoutCalculation> calculations,
         PayoutCalculatorFactory payoutFactory,
-        IRepository<CampaignApplication> applicationRows)
+        IRepository<CampaignApplication> applicationRows,
+        IRepository<BrandCommunityMember> communityRows)
     {
         _applicationRows = applicationRows;
+        _communityRows = communityRows;
         _uow = uow;
         _assignments = assignments;
         _creators = creators;
@@ -633,7 +636,10 @@ public class AssignmentService : IAssignmentService
         var pendingVideos = await _submissions.Query()
             .CountAsync(s => s.Assignment.Campaign.BrandProfileId == brand.Id && s.Status == SubmissionStatus.Pending, ct);
 
-        return new ActionCountsDto(pendingApps, pendingVideos, 0);
+        var requests = await _communityRows.Query()
+            .CountAsync(m => m.BrandProfileId == brand.Id && m.Status == CommunityMemberStatus.Requested, ct);
+
+        return new ActionCountsDto(pendingApps, pendingVideos, 0, requests);
     }
 
     public async Task<Result<ActionCountsDto>> GetCreatorActionCountsAsync(Guid creatorUserId, CancellationToken ct = default)

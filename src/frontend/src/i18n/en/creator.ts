@@ -466,4 +466,10 @@ export const creator: Record<string, string> = {
   'Du är medlem i företags-communities — kranarna dyker upp här när de öppnas': 'You are a member of brand communities — their taps appear here once opened',
   'kranen öppen': 'tap open',
   'kranen ej öppnad ännu': 'tap not opened yet',
+  'Kranen är öppen': 'The tap is open',
+  'löpande varje månad': 'every month, continuously',
+  'Du är medlem — kranen är din': 'You are a member — the tap is yours',
+  'Ansök till kranen': 'Apply to the tap',
+  'Medlemmar i communityn kan publicera när de vill och få betalt per verifierad view — företaget godkänner din ansökan först.': 'Community members publish whenever they want and get paid per verified view — the brand approves your request first.',
+  'Ansökan skickad! Företaget får en notis och svarar snart.': 'Request sent! The brand gets a notification and will reply soon.',
 };
