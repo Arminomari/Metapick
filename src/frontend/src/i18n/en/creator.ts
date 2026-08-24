@@ -515,4 +515,11 @@ export const creator: Record<string, string> = {
   'Kranens månad': 'The tap this month',
   'Först till kvarn tills budgeten är slut': 'First come, first served until the budget runs out',
   'Visa alla kranar': 'View all taps',
+  'Inga avslutade uppdrag än': 'No finished assignments yet',
+  'När en kampanj når sitt slutdatum flyttas den hit automatiskt — med views och intjäning kvar.': 'When a campaign reaches its end date it moves here automatically - with views and earnings intact.',
+  'Inga pausade uppdrag': 'No paused assignments',
+  'Om ett företag pausar sin kampanj hamnar uppdraget här tills det startar igen.': 'If a brand pauses its campaign the assignment sits here until it starts again.',
+  'kampanjen är slut': 'the campaign has ended',
+  'företaget har pausat kampanjen': 'the brand paused the campaign',
+  'företaget tog bort kampanjen': 'the brand removed the campaign',
 };

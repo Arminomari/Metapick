@@ -412,12 +412,12 @@ export function useMarkManualPayoutSent() {
   });
 }
 
-export function useCreatorAssignments(status?: string, page = 1) {
+export function useCreatorAssignments(status?: string, page = 1, pageSize?: number) {
   return useQuery({
-    queryKey: ['creator-assignments', status, page],
+    queryKey: ['creator-assignments', status, page, pageSize],
     queryFn: async () => {
       const res = await api.get<ApiResponse<PagedResult<AssignmentListItem>>>('/assignments/mine', {
-        params: { status, page },
+        params: { status, page, pageSize },
       });
       return res.data.data;
     },

@@ -83,7 +83,7 @@ public class ApplicationService : IApplicationService
         if (campaign == null) return Errors.NotFound("Campaign", request.CampaignId);
         if (campaign.Kind == CampaignKind.Tap)
             return Errors.Forbidden("Kranen söker man inte till — gå till företagets profil och ansök om att gå med i deras community.");
-        if (campaign.Status != CampaignStatus.Active)
+        if (campaign.Status != CampaignStatus.Active || campaign.EndDate.Date < DateTime.UtcNow.Date)
             return Errors.Conflict("Kampanjen tar inte emot ansökningar just nu.");
 
         // ── Serializable transaction prevents TOCTOU race ────────────────────
@@ -437,7 +437,10 @@ public class AssignmentService : IAssignmentService
         if (!isCreatorOwner && !isBrandOwner)
             return Errors.Forbidden("You do not have access to this assignment");
 
-        return MapToDetail(assignment, IsGoalReached(assignment.Campaign, assignment.CurrentPayoutAmount));
+        var effective = EffectiveStatus(assignment, DateTime.UtcNow.Date);
+        return MapToDetail(assignment,
+            effective == nameof(AssignmentStatus.Active)
+                && IsGoalReached(assignment.Campaign, assignment.CurrentPayoutAmount));
     }
 
     public async Task<Result<PagedResult<AssignmentListDto>>> GetCreatorAssignmentsAsync(
@@ -446,14 +449,37 @@ public class AssignmentService : IAssignmentService
         var creator = await _creators.Query().FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
         if (creator == null) return Errors.NotFound("Creator");
 
+        var today = DateTime.UtcNow.Date;
         var query = _assignments.Query()
             .Include(a => a.Campaign).ThenInclude(c => c.PayoutRules)
             .Include(a => a.TrackingLinks)
             .Where(a => a.CreatorProfileId == creator.Id
                 && a.Campaign.Kind == CampaignKind.Campaign);
 
-        if (Enum.TryParse<AssignmentStatus>(status, out var s))
-            query = query.Where(a => a.Status == s);
+        // The tab must select exactly what the badge will say. The row's own
+        // status lags — a campaign that ended yesterday keeps its assignments
+        // "Active" until the nightly job sweeps — so the campaign's state and
+        // end date decide here, the same way EffectiveStatus decides below.
+        query = status switch
+        {
+            "Active" => query.Where(a => a.Status == AssignmentStatus.Active
+                && a.Campaign.Status != CampaignStatus.Paused
+                && a.Campaign.Status != CampaignStatus.Completed
+                && a.Campaign.Status != CampaignStatus.Cancelled
+                && a.Campaign.EndDate >= today),
+            "Paused" => query.Where(a => a.Status == AssignmentStatus.Paused
+                || (a.Status == AssignmentStatus.Active
+                    && a.Campaign.Status == CampaignStatus.Paused
+                    && a.Campaign.EndDate >= today)),
+            "Completed" => query.Where(a => a.Status == AssignmentStatus.Completed
+                || a.Status == AssignmentStatus.Cancelled
+                || a.Status == AssignmentStatus.Disqualified
+                || (a.Status == AssignmentStatus.Active
+                    && (a.Campaign.Status == CampaignStatus.Completed
+                        || a.Campaign.Status == CampaignStatus.Cancelled
+                        || a.Campaign.EndDate < today))),
+            _ => query,
+        };
 
         var totalCount = await query.CountAsync(ct);
         var items = await query
@@ -462,12 +488,16 @@ public class AssignmentService : IAssignmentService
             .Take(pageSize)
             .ToListAsync(ct);
 
-        var dtos = items.Select(a => new AssignmentListDto(
-            a.Id, a.CampaignId, a.Campaign.Name, a.Status.ToString(),
-            a.TotalVerifiedViews, a.TrackingLinks.Where(tl => tl.IsActive).Sum(tl => tl.TotalClicks),
-            a.CurrentPayoutAmount, a.AssignedAt,
-            IsGoalReached(a.Campaign, a.CurrentPayoutAmount),
-            a.Campaign.Kind == CampaignKind.Tap)).ToList();
+        var dtos = items.Select(a =>
+        {
+            var eff = EffectiveStatus(a, today);
+            return new AssignmentListDto(
+                a.Id, a.CampaignId, a.Campaign.Name, eff,
+                a.TotalVerifiedViews, a.TrackingLinks.Where(tl => tl.IsActive).Sum(tl => tl.TotalClicks),
+                a.CurrentPayoutAmount, a.AssignedAt,
+                eff == nameof(AssignmentStatus.Active) && IsGoalReached(a.Campaign, a.CurrentPayoutAmount),
+                a.Campaign.Kind == CampaignKind.Tap);
+        }).ToList();
 
         return new PagedResult<AssignmentListDto>
         {
@@ -488,7 +518,15 @@ public class AssignmentService : IAssignmentService
         if (assignment == null) return Errors.NotFound("Assignment", assignmentId);
 
         if (assignment.Status != AssignmentStatus.Active)
-            return Errors.Conflict("Assignment is not active");
+            return Errors.Conflict("Uppdraget är inte aktivt längre.");
+        if (assignment.Campaign.Kind == CampaignKind.Campaign)
+        {
+            if (assignment.Campaign.Status is CampaignStatus.Completed or CampaignStatus.Cancelled
+                || assignment.Campaign.EndDate.Date < DateTime.UtcNow.Date)
+                return Errors.Conflict("Kampanjen är avslutad och tar inte emot fler videos.");
+            if (assignment.Campaign.Status == CampaignStatus.Paused)
+                return Errors.Conflict("Företaget har pausat kampanjen — du kan lägga till videon när den startar igen.");
+        }
 
         // ── Ownership gate: the video must belong to the creator's own
         //    connected TikTok account — otherwise anyone could submit someone
@@ -667,10 +705,13 @@ public class AssignmentService : IAssignmentService
 
         // Assignments that are live but have no tracked video yet — the
         // creator's own to-do list.
+        var today = DateTime.UtcNow.Date;
         var awaiting = await _assignments.Query()
             .CountAsync(a => a.CreatorProfileId == creator.Id
                 && a.Campaign.Kind == CampaignKind.Campaign
                 && a.Status == AssignmentStatus.Active
+                && a.Campaign.Status == CampaignStatus.Active
+                && a.Campaign.EndDate >= today
                 && !a.SocialPosts.Any(p => p.IsActive), ct);
 
         return new ActionCountsDto(0, 0, awaiting);
@@ -771,9 +812,30 @@ public class AssignmentService : IAssignmentService
         }
     }
 
+    /// <summary>
+    /// What this assignment actually is for the creator right now. The row's
+    /// own status is the base, but a campaign that ended, got paused or was
+    /// removed overrides it — otherwise the assignment reads "Aktiv" for hours
+    /// after its campaign closed and lands under the wrong tab.
+    /// </summary>
+    private static string EffectiveStatus(CreatorCampaignAssignment a, DateTime today)
+    {
+        if (a.Status != AssignmentStatus.Active) return a.Status.ToString();
+        if (a.Campaign == null || a.Campaign.Kind != CampaignKind.Campaign)
+            return nameof(AssignmentStatus.Active);
+
+        if (a.Campaign.Status is CampaignStatus.Completed or CampaignStatus.Cancelled
+            || a.Campaign.EndDate.Date < today)
+            return nameof(AssignmentStatus.Completed);
+        if (a.Campaign.Status == CampaignStatus.Paused)
+            return nameof(AssignmentStatus.Paused);
+
+        return nameof(AssignmentStatus.Active);
+    }
+
     private static AssignmentDetailDto MapToDetail(CreatorCampaignAssignment a, bool goalReached) =>
         new(a.Id, a.CampaignId, a.Campaign.Name, a.CreatorProfileId,
-            a.CreatorProfile.DisplayName, a.Status.ToString(),
+            a.CreatorProfile.DisplayName, EffectiveStatus(a, DateTime.UtcNow.Date),
             a.TotalVerifiedViews, a.TrackingLinks.Where(tl => tl.IsActive).Sum(tl => tl.TotalClicks), a.CurrentPayoutAmount,
             a.TrackingTag != null ? new TrackingTagDto(a.TrackingTag.Id, a.TrackingTag.TagCode,
                 a.TrackingTag.RecommendedHashtag, a.TrackingTag.IsActive) : null,

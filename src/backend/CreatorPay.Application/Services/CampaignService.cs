@@ -389,24 +389,42 @@ public class CampaignService : ICampaignService
         var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);
         if (brand == null) return Errors.NotFound("Brand");
 
+        var today = DateTime.UtcNow.Date;
         var query = _campaigns.Query()
             .Where(c => c.BrandProfileId == brand.Id && !c.IsDeleted && c.Kind == CampaignKind.Campaign);
 
+        // Same rule as the label below: a campaign whose end date has passed is
+        // finished the moment the date turns, not when the nightly job runs.
         if (Enum.TryParse<CampaignStatus>(status, out var s))
-            query = query.Where(c => c.Status == s);
+            query = s switch
+            {
+                CampaignStatus.Active => query.Where(c => c.Status == CampaignStatus.Active && c.EndDate >= today),
+                CampaignStatus.Paused => query.Where(c => c.Status == CampaignStatus.Paused && c.EndDate >= today),
+                CampaignStatus.Completed => query.Where(c => c.Status == CampaignStatus.Completed
+                    || ((c.Status == CampaignStatus.Active || c.Status == CampaignStatus.Paused) && c.EndDate < today)),
+                _ => query.Where(c => c.Status == s),
+            };
 
         var totalCount = await query.CountAsync(ct);
-        var items = await query
+        var rows = await query
             .Include(c => c.Assignments)
             .OrderByDescending(c => c.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(c => new CampaignListDto(
-                c.Id, c.Name, c.Category, c.Country, c.Status.ToString(),
+            .Select(c => new
+            {
+                c.Id, c.Name, c.Category, c.Country, c.Status,
                 c.Budget, c.BudgetSpent, c.MaxCreators,
-                c.Assignments.Count(a => a.Status == AssignmentStatus.Active),
-                c.StartDate, c.EndDate, c.CreatedAt))
+                ActiveCreators = c.Assignments.Count(a => a.Status == AssignmentStatus.Active),
+                c.StartDate, c.EndDate, c.CreatedAt
+            })
             .ToListAsync(ct);
+
+        var items = rows.Select(c => new CampaignListDto(
+            c.Id, c.Name, c.Category, c.Country,
+            EffectiveCampaignStatus(c.Status, c.EndDate, today),
+            c.Budget, c.BudgetSpent, c.MaxCreators, c.ActiveCreators,
+            c.StartDate, c.EndDate, c.CreatedAt)).ToList();
 
         return new PagedResult<CampaignListDto>
         {
@@ -818,6 +836,16 @@ public class CampaignService : ICampaignService
         };
     }
 
+    /// <summary>
+    /// What the campaign really is right now. The stored status only catches up
+    /// when the nightly job sweeps, so an end date in the past reads as finished
+    /// immediately — in the list, in the detail view and in the filter alike.
+    /// </summary>
+    private static string EffectiveCampaignStatus(CampaignStatus status, DateTime endDate, DateTime today)
+        => (status == CampaignStatus.Active || status == CampaignStatus.Paused) && endDate.Date < today
+            ? nameof(CampaignStatus.Completed)
+            : status.ToString();
+
     private static CampaignDetailDto MapToDetail(Campaign c, int approvedCount, long totalViews) =>
         new(c.Id, c.Name, c.Description, c.TargetAudience,
             c.Country, c.Region, c.Category, c.RequiredHashtag,
@@ -825,7 +853,7 @@ public class CampaignService : ICampaignService
             c.MinViews, c.MaxViews, c.PayoutModel.ToString(),
             c.Budget, c.BudgetSpent, c.BudgetReserved,
             c.MaxCreators, c.RequiredVideoCount, approvedCount, totalViews,
-            c.StartDate, c.EndDate, c.Status.ToString(),
+            c.StartDate, c.EndDate, EffectiveCampaignStatus(c.Status, c.EndDate, DateTime.UtcNow.Date),
             c.Requirements?.Select(r => new CampaignRequirementDto(r.RequirementType.ToString(), r.Value, r.IsRequired)).ToList() ?? [],
             c.Rules?.Select(r => new CampaignRuleDto(r.RuleType.ToString(), r.Description, r.IsMandatory)).ToList() ?? [],
             c.PayoutRules?.Select(r => new PayoutRuleDto(

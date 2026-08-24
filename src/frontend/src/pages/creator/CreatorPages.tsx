@@ -381,18 +381,31 @@ export function CreatorAssignmentsPage() {
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
   const { data, isLoading } = useCreatorAssignments(status, page);
-  const { data: allAssignments } = useCreatorAssignments(undefined, 1);
+  const { data: allAssignments } = useCreatorAssignments(undefined, 1, 100);
+  const { data: activeSlice } = useCreatorAssignments('Active', 1, 1);
+  const { data: doneSlice } = useCreatorAssignments('Completed', 1, 1);
+  const { data: pausedSlice } = useCreatorAssignments('Paused', 1, 1);
   const { data: myApps } = useMyApplications();
 
   const all = allAssignments?.data ?? [];
-  const activeCount = all.filter((a) => ['Active', 'InProgress', 'Submitted', 'Approved'].includes(a.status)).length;
+  const activeCount = activeSlice?.totalCount ?? 0;
   const totalViews = all.reduce((s, a) => s + (a.totalVerifiedViews || 0), 0);
   const totalEarned = all.reduce((s, a) => s + (a.currentPayoutAmount || 0), 0);
   const pendingApps = (myApps?.data ?? []).filter((a) => a.status === 'Pending');
 
-  const tabs: { label: string; val?: string }[] = [
-    { label: t('Alla'), val: undefined }, { label: t('Aktiva'), val: 'Active' }, { label: t('Avslutade'), val: 'Completed' }, { label: t('Pausade'), val: 'Paused' },
+  // Counts on the tabs so nothing can hide: if an assignment left "Aktiva" it
+  // is visibly somewhere else, and the totals always add up.
+  const tabs: { label: string; val?: string; n?: number }[] = [
+    { label: t('Alla'), val: undefined, n: allAssignments?.totalCount },
+    { label: t('Aktiva'), val: 'Active', n: activeSlice?.totalCount },
+    { label: t('Avslutade'), val: 'Completed', n: doneSlice?.totalCount },
+    { label: t('Pausade'), val: 'Paused', n: pausedSlice?.totalCount },
   ];
+  const emptyCopy = status === 'Completed'
+    ? { title: t('Inga avslutade uppdrag än'), sub: t('När en kampanj når sitt slutdatum flyttas den hit automatiskt — med views och intjäning kvar.') }
+    : status === 'Paused'
+      ? { title: t('Inga pausade uppdrag'), sub: t('Om ett företag pausar sin kampanj hamnar uppdraget här tills det startar igen.') }
+      : { title: t('Inga uppdrag än'), sub: t('Ansök till kampanjer för att få ditt första uppdrag.') };
 
   return (
     <section className="view active reveal">
@@ -414,7 +427,11 @@ export function CreatorAssignmentsPage() {
       </div>
 
       <div className="tabs">
-        {tabs.map((t) => <button key={t.label} className={`tab${status === t.val ? ' active' : ''}`} onClick={() => { setStatus(t.val); setPage(1); }}>{t.label}</button>)}
+        {tabs.map((tb) => (
+          <button key={tb.label} className={`tab${status === tb.val ? ' active' : ''}`} onClick={() => { setStatus(tb.val); setPage(1); }}>
+            {tb.label}{typeof tb.n === 'number' && tb.n > 0 ? ` (${tb.n})` : ''}
+          </button>
+        ))}
       </div>
       {isLoading ? <CardSkeleton rows={4} /> : (
         <div className="card">
@@ -426,7 +443,12 @@ export function CreatorAssignmentsPage() {
                   <span className="vcamp-thumb" style={{ background: grad(a.campaignName) }}><span className="brand-mono">{initial(a.campaignName)}</span></span>
                   <div className="vcamp-main">
                     <div className="vcamp-b" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>{a.campaignName}{a.isTap && <span className="badge green" style={{ fontSize: 10.5 }}>💧 {t('Kran')}</span>}</div>
-                    <div className="vcamp-m">{t('Tilldelad')} {formatDate(a.assignedAt)}</div>
+                    <div className="vcamp-m">
+                      {t('Tilldelad')} {formatDate(a.assignedAt)}
+                      {a.status === 'Completed' && ` · ${t('kampanjen är slut')}`}
+                      {a.status === 'Paused' && ` · ${t('företaget har pausat kampanjen')}`}
+                      {a.status === 'Cancelled' && ` · ${t('företaget tog bort kampanjen')}`}
+                    </div>
                     <StatusBadge status={a.goalReached ? 'GoalReached' : a.status} />
                   </div>
                   <div className="vcamp-end"><div className="vcamp-k">Views</div><div className="vcamp-v">{formatNumber(a.totalVerifiedViews)}</div></div>
@@ -438,8 +460,8 @@ export function CreatorAssignmentsPage() {
             </>
           ) : (
             <div style={{ textAlign: 'center', padding: '44px 24px' }}>
-              <div style={{ fontSize: 18, fontWeight: 700 }}>{t('Inga uppdrag än')}</div>
-              <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8 }}>{t('Ansök till kampanjer för att få ditt första uppdrag.')}</div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>{emptyCopy.title}</div>
+              <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8, maxWidth: 420, marginInline: 'auto', lineHeight: 1.6 }}>{emptyCopy.sub}</div>
               <Link to="/creator/browse" className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 22px', marginTop: 16 }}>{t('Hitta kampanjer')}</Link>
             </div>
           )}
