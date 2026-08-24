@@ -168,6 +168,8 @@ public interface IAssignmentService
     Task<Result<PagedResult<AssignmentListDto>>> GetCreatorAssignmentsAsync(Guid creatorUserId, string? status, int page, int pageSize, CancellationToken ct = default);
     Task<Result<SubmissionDto>> SubmitVideoAsync(Guid assignmentId, Guid creatorUserId, SubmitVideoRequest request, CancellationToken ct = default);
     Task<int> AutoApprovePendingSubmissionsAsync(int olderThanHours, CancellationToken ct = default);
+    Task<Result<ActionCountsDto>> GetBrandActionCountsAsync(Guid brandUserId, CancellationToken ct = default);
+    Task<Result<ActionCountsDto>> GetCreatorActionCountsAsync(Guid creatorUserId, CancellationToken ct = default);
     Task<Result<TrackingTagDto>> GetTrackingTagAsync(Guid assignmentId, Guid creatorUserId, CancellationToken ct = default);
     Task<Result<SubmissionDto>> ApproveSubmissionAsync(Guid submissionId, Guid brandUserId, CancellationToken ct = default);
     Task<Result<SubmissionDto>> RejectSubmissionAsync(Guid submissionId, Guid brandUserId, string? reason, CancellationToken ct = default);

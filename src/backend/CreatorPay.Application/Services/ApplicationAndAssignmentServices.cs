@@ -373,6 +373,7 @@ public class AssignmentService : IAssignmentService
     private readonly INotificationService _notifications;
     private readonly IRepository<PayoutCalculation> _calculations;
     private readonly PayoutCalculatorFactory _payoutFactory;
+    private readonly IRepository<CampaignApplication> _applicationRows;
 
     public AssignmentService(
         IUnitOfWork uow,
@@ -385,8 +386,10 @@ public class AssignmentService : IAssignmentService
         IAuditService audit,
         INotificationService notifications,
         IRepository<PayoutCalculation> calculations,
-        PayoutCalculatorFactory payoutFactory)
+        PayoutCalculatorFactory payoutFactory,
+        IRepository<CampaignApplication> applicationRows)
     {
+        _applicationRows = applicationRows;
         _uow = uow;
         _assignments = assignments;
         _creators = creators;
@@ -618,6 +621,34 @@ public class AssignmentService : IAssignmentService
                 $"En video i {campaignName} godkändes automatiskt eftersom den inte granskades inom {olderThanHours} timmar. Granska nya videos i tid för att behålla kontrollen.");
         }
         return pending.Count;
+    }
+
+    public async Task<Result<ActionCountsDto>> GetBrandActionCountsAsync(Guid brandUserId, CancellationToken ct = default)
+    {
+        var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);
+        if (brand == null) return new ActionCountsDto(0, 0, 0);
+
+        var pendingApps = await _applicationRows.Query()
+            .CountAsync(a => a.Campaign.BrandProfileId == brand.Id && a.Status == ApplicationStatus.Pending, ct);
+        var pendingVideos = await _submissions.Query()
+            .CountAsync(s => s.Assignment.Campaign.BrandProfileId == brand.Id && s.Status == SubmissionStatus.Pending, ct);
+
+        return new ActionCountsDto(pendingApps, pendingVideos, 0);
+    }
+
+    public async Task<Result<ActionCountsDto>> GetCreatorActionCountsAsync(Guid creatorUserId, CancellationToken ct = default)
+    {
+        var creator = await _creators.Query().FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
+        if (creator == null) return new ActionCountsDto(0, 0, 0);
+
+        // Assignments that are live but have no tracked video yet — the
+        // creator's own to-do list.
+        var awaiting = await _assignments.Query()
+            .CountAsync(a => a.CreatorProfileId == creator.Id
+                && a.Status == AssignmentStatus.Active
+                && !a.SocialPosts.Any(p => p.IsActive), ct);
+
+        return new ActionCountsDto(0, 0, awaiting);
     }
 
     public async Task<Result<TrackingTagDto>> GetTrackingTagAsync(Guid assignmentId, Guid creatorUserId, CancellationToken ct = default)

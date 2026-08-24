@@ -766,6 +766,18 @@ export function useReceivedPrOffers(status?: string, page = 1) {
   });
 }
 
+export interface ActionCounts { pendingApplications: number; pendingVideoReviews: number; awaitingYourVideo: number }
+
+/** Red-dot counts for the sidebar — refreshed often enough to feel live. */
+export function useActionCounts(role: 'brand' | 'creator' | null) {
+  return useQuery({
+    queryKey: ['action-counts', role],
+    queryFn: async () => (await api.get<ApiResponse<ActionCounts>>(`/action-counts/${role}`)).data.data,
+    enabled: !!role,
+    refetchInterval: 30000,
+  });
+}
+
 export function usePrUnreadCount() {
   return useQuery({
     queryKey: ['pr-unread'],

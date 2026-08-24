@@ -114,3 +114,22 @@ public class AssignmentController : BaseController
     public async Task<IActionResult> RejectSubmission(Guid id, [FromBody] ReviewSubmissionRequest request, CancellationToken ct)
         => ToActionResult(await _assignments.RejectSubmissionAsync(id, GetUserId(), request.Reason, ct));
 }
+
+/// <summary>Räknare för navigationens röda prickar — det som väntar på dig.</summary>
+[Route("api/action-counts")]
+[Authorize]
+public class ActionCountsController : BaseController
+{
+    private readonly IAssignmentService _assignments;
+    public ActionCountsController(IAssignmentService assignments) => _assignments = assignments;
+
+    [HttpGet("brand")]
+    [Authorize(Policy = "BrandOnly")]
+    public async Task<IActionResult> Brand(CancellationToken ct)
+        => ToActionResult(await _assignments.GetBrandActionCountsAsync(GetUserId(), ct));
+
+    [HttpGet("creator")]
+    [Authorize(Policy = "CreatorOnly")]
+    public async Task<IActionResult> Creator(CancellationToken ct)
+        => ToActionResult(await _assignments.GetCreatorActionCountsAsync(GetUserId(), ct));
+}

@@ -389,6 +389,9 @@ public record MyCommunityDto(
 
 public record InviteMemberRequest(Guid CreatorProfileId);
 public record InviteManyRequest(List<Guid> CreatorProfileIds);
+
+/// <summary>Counts that deserve a red dot in the navigation — things waiting on you.</summary>
+public record ActionCountsDto(int PendingApplications, int PendingVideoReviews, int AwaitingYourVideo);
 public record CreateAdminRequest(string Email, string Password, string FirstName, string LastName);
 public record AdminStatsDto(
     int TotalUsers, int PendingUsers, int Creators, int Brands,

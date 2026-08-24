@@ -5,7 +5,7 @@ import { FEATURES } from '@/lib/features';
 import { ReactNode, useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
-import { useCreatorProfile, useBrandProfile, useNotifications, usePrUnreadCount, useUnreadChatCount } from '@/hooks/api';
+import { useCreatorProfile, useBrandProfile, useNotifications, usePrUnreadCount, useUnreadChatCount, useActionCounts } from '@/hooks/api';
 import { formatNumber } from '@/lib/utils';
 import { NotificationsDrawer, MessagesDrawer } from './ShellDrawers';
 import { ToastProvider } from '@/components/vyrle/Toast';
@@ -155,13 +155,14 @@ export function CreatorShell() {
   const { data: notifs } = useNotifications(true);
   const { data: prUnread } = usePrUnreadCount();
   const { data: chatUnread } = useUnreadChatCount();
+  const { data: counts } = useActionCounts('creator');
 
   const name = profile?.displayName || 'Creator';
   const handle = profile?.tikTokUsername ? '@' + profile.tikTokUsername : (email || '');
   const nav: NavItem[] = [
     { label: t('Översikt'), path: '/creator', icon: 'dashboard' },
     { label: t('Upptäck'), path: '/creator/browse', icon: 'discover' },
-    { label: t('Mina kampanjer'), path: '/creator/assignments', icon: 'campaigns' },
+    { label: t('Mina kampanjer'), path: '/creator/assignments', icon: 'campaigns', badge: counts?.awaitingYourVideo || undefined },
     { label: t('Portfolio'), path: '/creator/portfolio', icon: 'portfolio' },
     { label: t('Statistik'), path: '/creator/analytics', icon: 'analytics' },
     { label: t('PR-hubb'), path: '/creator/pr', icon: 'pr', badge: prUnread || undefined },
@@ -184,6 +185,7 @@ export function BrandShell() {
   const { data: profile } = useBrandProfile();
   const { data: notifs } = useNotifications(true);
   const { data: chatUnread } = useUnreadChatCount();
+  const { data: counts } = useActionCounts('brand');
 
   const name = profile?.companyName || 'Brand';
   const nav: NavItem[] = [
@@ -191,8 +193,8 @@ export function BrandShell() {
     { label: t('Kranen'), path: '/brand/tap', icon: 'earnings', tag: 'NY' },
     { label: t('Community'), path: '/brand/community', icon: 'creators' },
     { label: t('Statistik'), path: '/brand/analytics', icon: 'analytics' },
-    { label: t('Kampanjer'), path: '/brand/campaigns', icon: 'campaigns' },
-    { label: t('Ansökningar'), path: '/brand/applications', icon: 'applications' },
+    { label: t('Kampanjer'), path: '/brand/campaigns', icon: 'campaigns', badge: counts?.pendingVideoReviews || undefined },
+    { label: t('Ansökningar'), path: '/brand/applications', icon: 'applications', badge: counts?.pendingApplications || undefined },
     { label: t('Hitta creators'), path: '/brand/creators', icon: 'creators' },
     { label: t('PR-utskick'), path: '/brand/pr', icon: 'pr' },
     { label: t('Min profil'), path: '/brand/public-profile', icon: 'portfolio' },
