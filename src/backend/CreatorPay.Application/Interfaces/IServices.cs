@@ -172,6 +172,7 @@ public interface IAssignmentService
     Task<int> AutoApprovePendingSubmissionsAsync(int olderThanHours, CancellationToken ct = default);
     Task<Result<ActionCountsDto>> GetBrandActionCountsAsync(Guid brandUserId, CancellationToken ct = default);
     Task<Result<ActionCountsDto>> GetCreatorActionCountsAsync(Guid creatorUserId, CancellationToken ct = default);
+    Task<Result<List<MyTikTokVideoDto>>> GetMyTikTokVideosAsync(Guid creatorUserId, CancellationToken ct = default);
     Task<Result<TrackingTagDto>> GetTrackingTagAsync(Guid assignmentId, Guid creatorUserId, CancellationToken ct = default);
     Task<Result<SubmissionDto>> ApproveSubmissionAsync(Guid submissionId, Guid brandUserId, CancellationToken ct = default);
     Task<Result<SubmissionDto>> RejectSubmissionAsync(Guid submissionId, Guid brandUserId, string? reason, CancellationToken ct = default);

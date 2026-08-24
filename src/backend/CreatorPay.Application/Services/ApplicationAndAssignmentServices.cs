@@ -81,6 +81,8 @@ public class ApplicationService : IApplicationService
             .Include(c => c.BrandProfile)
             .FirstOrDefaultAsync(c => c.Id == request.CampaignId, ct);
         if (campaign == null) return Errors.NotFound("Campaign", request.CampaignId);
+        if (campaign.Kind == CampaignKind.Tap)
+            return Errors.Forbidden("Kranen söker man inte till — gå till företagets profil och ansök om att gå med i deras community.");
         if (campaign.Status != CampaignStatus.Active)
             return Errors.Conflict("Kampanjen tar inte emot ansökningar just nu.");
 
@@ -375,6 +377,8 @@ public class AssignmentService : IAssignmentService
     private readonly PayoutCalculatorFactory _payoutFactory;
     private readonly IRepository<CampaignApplication> _applicationRows;
     private readonly IRepository<BrandCommunityMember> _communityRows;
+    private readonly ITikTokApiClient _tikTok;
+    private readonly IEncryptionService _encryption;
 
     public AssignmentService(
         IUnitOfWork uow,
@@ -389,10 +393,14 @@ public class AssignmentService : IAssignmentService
         IRepository<PayoutCalculation> calculations,
         PayoutCalculatorFactory payoutFactory,
         IRepository<CampaignApplication> applicationRows,
-        IRepository<BrandCommunityMember> communityRows)
+        IRepository<BrandCommunityMember> communityRows,
+        ITikTokApiClient tikTok,
+        IEncryptionService encryption)
     {
         _applicationRows = applicationRows;
         _communityRows = communityRows;
+        _tikTok = tikTok;
+        _encryption = encryption;
         _uow = uow;
         _assignments = assignments;
         _creators = creators;
@@ -657,6 +665,45 @@ public class AssignmentService : IAssignmentService
         return new ActionCountsDto(0, 0, awaiting);
     }
 
+    /// <summary>
+    /// The creator's own recent TikTok videos, so content can be attached by
+    /// picking it — no hashtag or tracking code in the caption required.
+    /// </summary>
+    public async Task<Result<List<MyTikTokVideoDto>>> GetMyTikTokVideosAsync(Guid creatorUserId, CancellationToken ct = default)
+    {
+        var creator = await _creators.Query()
+            .Include(c => c.TikTokAccount)
+            .FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
+        if (creator == null) return Errors.NotFound("Creator");
+
+        var account = creator.TikTokAccount;
+        if (account == null || !account.IsActive || account.Scopes == "manual" || string.IsNullOrEmpty(account.AccessTokenEncrypted))
+            return Errors.Validation("Logga in med TikTok för att kunna välja bland dina videos.");
+
+        string token;
+        try { token = _encryption.Decrypt(account.AccessTokenEncrypted); }
+        catch { return Errors.Validation("TikTok-kopplingen behöver förnyas — koppla om ditt konto."); }
+
+        List<TikTokVideo> videos;
+        try { videos = await _tikTok.GetUserVideosAsync(token, DateTime.UtcNow.AddDays(-90)); }
+        catch { return Errors.Validation("Kunde inte hämta dina videos från TikTok just nu. Försök igen om en stund."); }
+
+        var ids = videos.Select(v => v.Id).ToList();
+        var tracked = await _socialPosts.Query()
+            .Include(p => p.Assignment).ThenInclude(a => a.Campaign)
+            .Where(p => ids.Contains(p.TikTokVideoId))
+            .Select(p => new { p.TikTokVideoId, CampaignName = p.Assignment.Campaign.Name })
+            .ToListAsync(ct);
+        var trackedBy = tracked.ToDictionary(x => x.TikTokVideoId, x => x.CampaignName);
+
+        return videos
+            .OrderByDescending(v => v.CreateTime)
+            .Select(v => new MyTikTokVideoDto(
+                v.Id, v.Title, v.CoverImageUrl, v.ShareUrl, v.CreateTime, v.ViewCount, v.LikeCount,
+                trackedBy.ContainsKey(v.Id), trackedBy.TryGetValue(v.Id, out var name) ? name : null))
+            .ToList();
+    }
+
     public async Task<Result<TrackingTagDto>> GetTrackingTagAsync(Guid assignmentId, Guid creatorUserId, CancellationToken ct = default)
     {
         var creator = await _creators.Query().FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
@@ -697,6 +744,8 @@ public class AssignmentService : IAssignmentService
     /// </summary>
     private bool IsGoalReached(Campaign campaign, decimal currentPayout)
     {
+        // Taps run month after month — they are never "done".
+        if (campaign.Kind == CampaignKind.Tap) return false;
         if (currentPayout <= 0) return false;
         var rules = campaign.PayoutRules?.OrderBy(r => r.SortOrder).ToList();
         if (rules is not { Count: > 0 }) return false;
@@ -819,6 +868,18 @@ public class AssignmentService : IAssignmentService
         {
             var result = _payoutFactory.Create(assignment.Campaign!.PayoutModel)
                 .Calculate(assignment.TotalVerifiedViews, rules);
+
+            // A campaign can never pay out more than its budget: what other
+            // creators already earned is reserved before this one is topped up.
+            if (assignment.Campaign.Budget > 0)
+            {
+                var others = await _assignments.Query()
+                    .Where(a => a.CampaignId == assignment.CampaignId && a.Id != assignment.Id)
+                    .SumAsync(a => (decimal?)a.CurrentPayoutAmount, ct) ?? 0m;
+                var room = Math.Max(0, assignment.Campaign.Budget - others);
+                if (result.Amount > room)
+                    result = result with { Amount = room };
+            }
             if (result.Amount != assignment.CurrentPayoutAmount)
             {
                 assignment.CurrentPayoutAmount = result.Amount;

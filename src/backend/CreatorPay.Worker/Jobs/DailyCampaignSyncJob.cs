@@ -283,6 +283,15 @@ public class DailyCampaignSyncJob : ICampaignSyncTrigger
         foreach (var post in existingPosts)
         {
             var video = videos.FirstOrDefault(v => v.Id == post.TikTokVideoId);
+            if (video != null)
+            {
+                // Manually attached posts start with the submission time; once TikTok
+                // answers we store the real publish time (the tap counts by month).
+                if (post.PublishedAt != video.CreateTime) post.PublishedAt = video.CreateTime;
+                if (string.IsNullOrEmpty(post.Caption)) post.Caption = $"{video.Title} {video.Description}".Trim();
+                post.Duration ??= video.Duration;
+            }
+
             if (video == null)
             {
                 _logger.LogWarning("Could not find video for post {PostId}", post.TikTokVideoId);

@@ -86,6 +86,11 @@ public class AssignmentController : BaseController
     public async Task<IActionResult> SubmitVideo(Guid id, [FromBody] SubmitVideoRequest request, CancellationToken ct)
         => ToActionResult(await _assignments.SubmitVideoAsync(id, GetUserId(), request, ct));
 
+    /// <summary>Mina egna TikTok-videos — välj innehåll utan hashtag</summary>
+    [HttpGet("my-tiktok-videos")]
+    public async Task<IActionResult> MyTikTokVideos(CancellationToken ct)
+        => ToActionResult(await _assignments.GetMyTikTokVideosAsync(GetUserId(), ct));
+
     /// <summary>Hämta tracking-tag (Creator)</summary>
     [HttpGet("{id:guid}/tracking-tag")]
     [Authorize(Policy = "CreatorOnly")]

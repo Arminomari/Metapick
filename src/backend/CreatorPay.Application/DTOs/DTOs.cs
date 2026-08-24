@@ -398,6 +398,11 @@ public record InviteManyRequest(List<Guid> CreatorProfileIds);
 public record ActionCountsDto(int PendingApplications, int PendingVideoReviews, int AwaitingYourVideo, int PendingCommunityRequests = 0);
 
 /// <summary>One cashable line per assignment, campaigns and taps alike.</summary>
+/// <summary>A video straight from the creator's own TikTok account.</summary>
+public record MyTikTokVideoDto(
+    string VideoId, string Title, string? CoverImageUrl, string ShareUrl,
+    DateTime PublishedAt, long Views, long Likes, bool AlreadyTracked, string? TrackedFor);
+
 public record PayableDto(
     Guid AssignmentId, Guid CalculationId, string CampaignName, bool IsTap,
     decimal Earned, decimal AlreadyClaimed, decimal Available, bool HasPendingRequest,

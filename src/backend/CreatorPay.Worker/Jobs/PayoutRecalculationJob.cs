@@ -91,6 +91,16 @@ public class PayoutRecalculationJob
                 var calculator = _payoutFactory.Create(campaign.PayoutModel);
                 var result = calculator.Calculate(assignment.TotalVerifiedViews, payoutRules);
 
+                // Never pay past the campaign budget — earlier creators keep theirs.
+                if (campaign.Budget > 0)
+                {
+                    var others = await _assignments.Query()
+                        .Where(a => a.CampaignId == campaign.Id && a.Id != assignment.Id)
+                        .SumAsync(a => (decimal?)a.CurrentPayoutAmount, ct) ?? 0m;
+                    var room = Math.Max(0, campaign.Budget - others);
+                    if (result.Amount > room) result = result with { Amount = room };
+                }
+
                 // Only update + create calculation record if amount changed
                 if (result.Amount == assignment.CurrentPayoutAmount) continue;
 
