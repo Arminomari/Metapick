@@ -500,4 +500,5 @@ export const creator: Record<string, string> = {
   'Automatisk spårning': 'Automatic tracking',
   'Frivilligt': 'Optional',
   'Vill du slippa lägga till videon själv? Ta med hashtagen eller din tracking-tag i beskrivningen så hittas videon automatiskt. Du kan lika gärna hoppa över det och välja videon manuellt ovan.': 'Rather not attach videos yourself? Include the hashtag or your tracking tag in the caption and the video is found automatically. You can just as well skip it and pick the video above.',
+  'Månadsbudgeten är slut — öppnar den 1:a': 'Monthly budget spent — reopens on the 1st',
 };

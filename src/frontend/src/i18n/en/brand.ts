@@ -560,4 +560,12 @@ export const brand: Record<string, string> = {
   'Creatorn är nu medlem': 'The creator is now a member',
   'Ansökan till communityn nekad': 'Community request declined',
   'Månadsbudgeten är slut — kranen öppnar igen den 1:a': 'The monthly budget is spent — the tap reopens on the 1st',
+  'Videos att granska': 'Videos to review',
+  'Godkänns automatiskt efter 48 timmar': 'Auto-approved after 48 hours',
+  'inskickad': 'submitted',
+  'auto om': 'auto in',
+  'auto inom kort': 'auto shortly',
+  'Videon godkänd — views räknas nu': 'Video approved — views now count',
+  'Videon nekad': 'Video rejected',
+  'Kunde inte spara beslutet': 'Could not save the decision',
 };
