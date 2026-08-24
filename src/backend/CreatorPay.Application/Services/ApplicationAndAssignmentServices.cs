@@ -379,6 +379,7 @@ public class AssignmentService : IAssignmentService
     private readonly IRepository<BrandCommunityMember> _communityRows;
     private readonly ITikTokApiClient _tikTok;
     private readonly IEncryptionService _encryption;
+    private readonly TapAccrualService _tapAccrual;
 
     public AssignmentService(
         IUnitOfWork uow,
@@ -395,8 +396,10 @@ public class AssignmentService : IAssignmentService
         IRepository<CampaignApplication> applicationRows,
         IRepository<BrandCommunityMember> communityRows,
         ITikTokApiClient tikTok,
-        IEncryptionService encryption)
+        IEncryptionService encryption,
+        TapAccrualService tapAccrual)
     {
+        _tapAccrual = tapAccrual;
         _applicationRows = applicationRows;
         _communityRows = communityRows;
         _tikTok = tikTok;
@@ -642,12 +645,18 @@ public class AssignmentService : IAssignmentService
         var pendingApps = await _applicationRows.Query()
             .CountAsync(a => a.Campaign.BrandProfileId == brand.Id && a.Status == ApplicationStatus.Pending, ct);
         var pendingVideos = await _submissions.Query()
-            .CountAsync(s => s.Assignment.Campaign.BrandProfileId == brand.Id && s.Status == SubmissionStatus.Pending, ct);
+            .CountAsync(s => s.Assignment.Campaign.BrandProfileId == brand.Id
+                && s.Assignment.Campaign.Kind == CampaignKind.Campaign
+                && s.Status == SubmissionStatus.Pending, ct);
+        var pendingTapVideos = await _submissions.Query()
+            .CountAsync(s => s.Assignment.Campaign.BrandProfileId == brand.Id
+                && s.Assignment.Campaign.Kind == CampaignKind.Tap
+                && s.Status == SubmissionStatus.Pending, ct);
 
         var requests = await _communityRows.Query()
             .CountAsync(m => m.BrandProfileId == brand.Id && m.Status == CommunityMemberStatus.Requested, ct);
 
-        return new ActionCountsDto(pendingApps, pendingVideos, 0, requests);
+        return new ActionCountsDto(pendingApps, pendingVideos, 0, requests, pendingTapVideos);
     }
 
     public async Task<Result<ActionCountsDto>> GetCreatorActionCountsAsync(Guid creatorUserId, CancellationToken ct = default)
@@ -860,9 +869,15 @@ public class AssignmentService : IAssignmentService
             .Where(p => p.VerificationStatus == VerificationStatus.Verified)
             .Sum(p => p.LatestViewCount);
 
-        // Taps use monthly accounting (hard caps) — money for them is owned by
-        // TapAccrualService via the recalculation job, never the lifetime calculators.
-        if (assignment.Campaign?.Kind == CampaignKind.Tap) return;
+        // Taps use monthly accounting (hard caps): run the accrual right away so
+        // the creator sees the money move on approval, not 15 minutes later.
+        if (assignment.Campaign?.Kind == CampaignKind.Tap)
+        {
+            await _uow.SaveChangesAsync(ct);
+            try { await _tapAccrual.RecalculateAsync(assignment.Campaign, ct); }
+            catch { /* the scheduled recalculation is the safety net */ }
+            return;
+        }
 
         var rules = assignment.Campaign?.PayoutRules?.OrderBy(r => r.SortOrder).ToList();
         if (rules is { Count: > 0 })

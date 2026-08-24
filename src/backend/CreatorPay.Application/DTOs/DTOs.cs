@@ -401,7 +401,7 @@ public record TapSubmissionDto(
 public record InviteManyRequest(List<Guid> CreatorProfileIds);
 
 /// <summary>Counts that deserve a red dot in the navigation — things waiting on you.</summary>
-public record ActionCountsDto(int PendingApplications, int PendingVideoReviews, int AwaitingYourVideo, int PendingCommunityRequests = 0);
+public record ActionCountsDto(int PendingApplications, int PendingVideoReviews, int AwaitingYourVideo, int PendingCommunityRequests = 0, int PendingTapReviews = 0);
 
 /// <summary>One cashable line per assignment, campaigns and taps alike.</summary>
 /// <summary>A video straight from the creator's own TikTok account.</summary>
