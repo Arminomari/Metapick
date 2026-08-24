@@ -107,4 +107,5 @@ export const common: Record<string, string> = {
   'omdöme': 'review',
   'Omdömen låses upp när samarbetet är markerat som slutfört.': 'Reviews unlock once the collaboration is marked as completed.',
   'Mer': 'More',
+  'Öppna': 'Open',
 };

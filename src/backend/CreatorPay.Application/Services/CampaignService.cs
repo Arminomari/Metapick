@@ -351,6 +351,35 @@ public class CampaignService : ICampaignService
         return MapToDetail(campaign, approvedCount, totalViews);
     }
 
+    /// <summary>
+    /// Soft-deletes a campaign. Money already earned is never hidden: a campaign
+    /// that has paid out anything can only be paused, not removed.
+    /// </summary>
+    public async Task<Result<bool>> DeleteCampaignAsync(Guid campaignId, Guid brandUserId, CancellationToken ct = default)
+    {
+        var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);
+        if (brand == null) return Errors.NotFound("Brand");
+
+        var campaign = await _campaigns.Query()
+            .Include(c => c.Assignments)
+            .FirstOrDefaultAsync(c => c.Id == campaignId && c.BrandProfileId == brand.Id && !c.IsDeleted, ct);
+        if (campaign == null) return Errors.NotFound("Campaign", campaignId);
+        if (campaign.Kind == CampaignKind.Tap)
+            return Errors.Validation("Kranen hanteras från Kranen-sidan, inte här.");
+
+        if (campaign.Assignments.Any(a => a.CurrentPayoutAmount > 0))
+            return Errors.Conflict("Kampanjen har intjänad ersättning och kan inte tas bort — pausa den i stället så att historiken finns kvar.");
+
+        campaign.IsDeleted = true;
+        campaign.Status = CampaignStatus.Cancelled;
+        foreach (var a in campaign.Assignments.Where(a => a.Status == AssignmentStatus.Active))
+            a.Status = AssignmentStatus.Cancelled;
+
+        await _uow.SaveChangesAsync(ct);
+        await _audit.LogAsync(brandUserId, "Campaign.Deleted", "Campaign", campaign.Id);
+        return true;
+    }
+
     public async Task<Result<PagedResult<CampaignListDto>>> ListBrandCampaignsAsync(
         Guid brandUserId, string? status, int page, int pageSize, CancellationToken ct = default)
     {

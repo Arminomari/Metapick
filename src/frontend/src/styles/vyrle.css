@@ -1253,3 +1253,64 @@
 @media(max-width:420px){
   .vy-app .meta-cols{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   BADGE SYSTEM — every small state pill in the product, one look.
+   Tones: pos (done/live) · pend (waiting) · neg (stopped) · neu · info.
+   Unscoped on purpose: the admin panel renders outside .vy-app.
+   ═══════════════════════════════════════════════════════════════ */
+.vy-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 11px 4px 9px;border-radius:980px;
+  font-size:11.5px;font-weight:650;line-height:1.55;letter-spacing:.005em;
+  white-space:nowrap;border:1px solid transparent;vertical-align:middle;
+}
+.vy-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:0 0 6px;opacity:.9}
+.vy-badge.pos {background:rgba(169,220,192,.30);color:#2c7a51;border-color:rgba(95,185,138,.38)}
+.vy-badge.pend{background:rgba(242,197,138,.28);color:#8a5c14;border-color:rgba(212,155,46,.34)}
+.vy-badge.neg {background:rgba(255,138,122,.20);color:#b3402f;border-color:rgba(207,75,75,.30)}
+.vy-badge.neu {background:rgba(183,188,200,.22);color:#5a606d;border-color:rgba(140,146,160,.28)}
+.vy-badge.info{background:rgba(237,225,255,.80);color:#6a4ea8;border-color:rgba(157,139,196,.38)}
+
+/* legacy .badge keeps its icons/emoji, gains the same shape and palette */
+.vy-app .badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 11px;border-radius:980px;
+  font-size:11.5px;font-weight:650;line-height:1.55;letter-spacing:.005em;
+  white-space:nowrap;border:1px solid transparent;
+}
+.vy-app .badge.green{background:rgba(169,220,192,.30);color:#2c7a51;border-color:rgba(95,185,138,.38)}
+.vy-app .badge.amber{background:rgba(242,197,138,.28);color:#8a5c14;border-color:rgba(212,155,46,.34)}
+.vy-app .badge.red  {background:rgba(255,138,122,.20);color:#b3402f;border-color:rgba(207,75,75,.30)}
+.vy-app .badge.grey {background:rgba(183,188,200,.22);color:#5a606d;border-color:rgba(140,146,160,.28)}
+.vy-app .badge.blue {background:rgba(237,225,255,.80);color:#6a4ea8;border-color:rgba(157,139,196,.38)}
+
+/* content chips (category, country, payout model …) */
+.vy-app .tag{
+  display:inline-flex;align-items:center;
+  background:rgba(255,255,255,.75);color:#5a606d;
+  border:1px solid rgba(183,188,200,.35);
+  font-size:11.5px;font-weight:600;padding:4px 11px;border-radius:980px;white-space:nowrap;
+}
+.vy-app .tag.g{background:rgba(255,227,211,.7);color:#9c4f31;border-color:rgba(241,168,143,.45)}
+
+/* campaign micro-labels on dashboard rows */
+.vy-app .vcamp-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10px;font-weight:750;letter-spacing:.05em;text-transform:uppercase;
+  padding:3px 9px;border-radius:980px;border:1px solid transparent;
+}
+.vy-app .vcamp-tag.prog{background:rgba(255,227,211,.8);color:#9c4f31;border-color:rgba(241,168,143,.45)}
+.vy-app .vcamp-tag.rev {background:rgba(237,225,255,.8);color:#6a4ea8;border-color:rgba(157,139,196,.38)}
+.vy-app .vcamp-tag.up  {background:rgba(183,188,200,.22);color:#5a606d;border-color:rgba(140,146,160,.28)}
+
+/* "Utvald" flag on portfolio cards */
+.vy-app .pf-flag{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(255,255,255,.94);backdrop-filter:blur(8px);
+  border:1px solid rgba(241,168,143,.5);color:#9c4f31;
+  font-size:11px;font-weight:700;padding:4px 11px;border-radius:980px;
+  box-shadow:0 4px 12px rgba(180,120,90,.16);
+}
+.vy-app .pf-flag::before{content:"★";font-size:10px;line-height:1}

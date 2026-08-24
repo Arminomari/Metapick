@@ -1,5 +1,5 @@
 import api from '@/lib/api';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChangeEmailCard } from '@/components/ui/AccountCards';
 import { useState, type FormEvent as ReactFormEvent } from 'react';
 import { RefreshViewsButton } from '@/components/ui/RefreshViewsButton';
@@ -14,7 +14,7 @@ import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
 import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
 import { t, statusLabel } from '@/lib/i18n';
 import { PLATFORM_TAGS, NICHE_TAGS } from '@/lib/tags';
-import { CardSkeleton } from '@/components/vyrle/Toast';
+import { CardSkeleton, useToast } from '@/components/vyrle/Toast';
 import { ImagePicker } from '@/components/auth/ImagePicker';
 import type { CampaignListItem, ApplicationItem, CreateCampaignRequest, CreatorPerformance, CreatorVideo } from '@/types';
 
@@ -122,6 +122,7 @@ export function BrandCampaignListPage() {
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
   const { data, isLoading } = useBrandCampaigns(status, page);
+  const [preview, setPreview] = useState<CampaignListItem | null>(null);
 
   const tabs: { label: string; val?: string }[] = [
     { label: 'Alla', val: undefined }, { label: 'Utkast', val: 'Draft' }, { label: 'Aktiva', val: 'Active' }, { label: 'Pausade', val: 'Paused' }, { label: 'Avslutade', val: 'Completed' },
@@ -153,7 +154,7 @@ export function BrandCampaignListPage() {
               {data.data.map((c) => {
                 const pct = c.budget ? Math.round((c.budgetSpent / c.budget) * 100) : 0;
                 return (
-                  <div key={c.id} className="vcamp" onClick={() => navigate(`/brand/campaigns/${c.id}`)}>
+                  <div key={c.id} className="vcamp" onClick={() => setPreview(c)} title={t('Snabbvy')}>
                     <span className="vcamp-thumb" style={{ background: grad(c.name) }}><span className="brand-mono">{initial(c.name)}</span></span>
                     <div className="vcamp-main">
                       <div className="vcamp-b">{c.name}</div>
@@ -176,7 +177,85 @@ export function BrandCampaignListPage() {
           )}
         </div>
       )}
+
+      {preview && <CampaignQuickView campaign={preview} onClose={() => setPreview(null)} />}
     </section>
+  );
+}
+
+// ── Campaign quick view: the overview window from the list ─────────
+function CampaignQuickView({ campaign, onClose }: { campaign: CampaignListItem; onClose: () => void }) {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const toast = useToast();
+  const [armed, setArmed] = useState(false);
+  const [err, setErr] = useState('');
+  const remove = useMutation({
+    mutationFn: async () => (await api.delete(`/campaigns/${campaign.id}`)).data.data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['brand-campaigns'] });
+      toast.push(t('Kampanjen är borttagen'), 'success');
+      onClose();
+    },
+    onError: (e: any) => setErr(e?.response?.data?.error?.message ?? t('Kunde inte ta bort kampanjen')),
+  });
+
+  const pct = campaign.budget ? Math.round((campaign.budgetSpent / campaign.budget) * 100) : 0;
+  const days = Math.ceil((+new Date(campaign.endDate) - Date.now()) / 86400000);
+  const facts: [string, React.ReactNode][] = [
+    [t('Status'), <StatusBadge key="s" status={campaign.status} />],
+    [t('Kategori'), campaign.category],
+    [t('Period'), formatDate(campaign.startDate) + ' – ' + formatDate(campaign.endDate)],
+    [t('Creators'), campaign.approvedCreatorCount + ' / ' + campaign.maxCreators],
+    [t('Budget'), formatCurrency(campaign.budgetSpent) + ' ' + t('av') + ' ' + formatCurrency(campaign.budget)],
+    [t('Tid kvar'), days > 0 ? days + ' ' + t('dagar') : t('Avslutad')],
+  ];
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(11,15,23,.45)', backdropFilter: 'blur(3px)', zIndex: 80 }} aria-hidden />
+      <div role="dialog" aria-modal="true" style={{ position: 'fixed', zIndex: 81, top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(560px, calc(100vw - 28px))', maxHeight: 'calc(100dvh - 40px)', overflowY: 'auto', background: 'linear-gradient(160deg,#fff,#FFF9F5)', borderRadius: 24, border: '1px solid rgba(241,168,143,.35)', boxShadow: '0 30px 80px rgba(11,15,23,.28)', padding: 'clamp(18px, 5vw, 26px)' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, flexWrap: 'wrap' }}>
+          <span className="vcamp-thumb" style={{ background: grad(campaign.name), flex: '0 0 auto' }}><span className="brand-mono">{initial(campaign.name)}</span></span>
+          <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+            <h2 style={{ margin: 0, fontSize: 21, fontWeight: 700, letterSpacing: '-.01em', wordBreak: 'break-word' }}>{campaign.name}</h2>
+            <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 3 }}>{t('Snabbvy')}</div>
+          </div>
+          <button type="button" onClick={onClose} aria-label={t('Stäng')} style={{ border: 'none', background: 'rgba(183,188,200,.2)', width: 34, height: 34, borderRadius: '50%', cursor: 'pointer', fontSize: 16, color: '#5a606d', flex: '0 0 auto' }}>×</button>
+        </div>
+
+        <div style={{ height: 10, borderRadius: 980, background: 'rgba(241,168,143,.18)', margin: '16px 0 6px', overflow: 'hidden' }}>
+          <div style={{ width: Math.min(100, pct) + '%', height: '100%', borderRadius: 980, background: 'linear-gradient(90deg,#FFD8C7,#F1A88F)' }} />
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--muted)' }}>{pct}% {t('av budgeten använd')}</div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: 10, marginTop: 16 }}>
+          {facts.map(([k, v]) => (
+            <div key={k} style={{ padding: '10px 12px', borderRadius: 13, background: 'rgba(255,255,255,.8)', border: '1px solid rgba(241,168,143,.22)', minWidth: 0 }}>
+              <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--muted)' }}>{k}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#0B0F17', marginTop: 3, wordBreak: 'break-word' }}>{v}</div>
+            </div>
+          ))}
+        </div>
+
+        {err && <div style={{ marginTop: 12, fontSize: 13, fontWeight: 600, color: '#cf4b4b' }}>{err}</div>}
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 18, flexWrap: 'wrap' }}>
+          <button type="button" className="btn-apply" style={{ width: 'auto', padding: '12px 24px' }} onClick={() => navigate('/brand/campaigns/' + campaign.id)}>
+            {t('Öppna kampanjen')} →
+          </button>
+          <button
+            type="button"
+            className="btn-outline"
+            style={{ width: 'auto', padding: '12px 24px', marginLeft: 'auto', ...(armed ? { borderColor: 'var(--red)', color: 'var(--red)', fontWeight: 600 } : {}) }}
+            onClick={() => { if (!armed) { setArmed(true); setTimeout(() => setArmed(false), 4000); return; } remove.mutate(); }}
+            disabled={remove.isPending}
+          >
+            {remove.isPending ? t('Tar bort…') : armed ? t('Säker? Klicka igen') : t('Ta bort kampanj')}
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
 

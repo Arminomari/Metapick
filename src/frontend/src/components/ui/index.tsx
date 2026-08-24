@@ -1,6 +1,6 @@
 import { statusLabel, t } from '@/lib/i18n';
 import React from 'react';
-import { cn, getStatusColor } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 /* ─────────────────────────────────────────────────────────────
    Editorial UI primitives.
@@ -9,17 +9,22 @@ import { cn, getStatusColor } from '@/lib/utils';
    ───────────────────────────────────────────────────────────── */
 
 // ── StatusBadge ────────────────────────────────────────
+/** Every state in the product reads as one of four tones. */
+const STATUS_TONE: Record<string, string> = {
+  Active: 'pos', Approved: 'pos', Verified: 'pos', Completed: 'pos', Paid: 'pos',
+  ReadyForManualPayment: 'pos', GoalReached: 'pos', Matched: 'pos', Accepted: 'pos',
+  Pending: 'pend', PendingApproval: 'pend', PendingReview: 'pend', PendingVerification: 'pend',
+  UnderReview: 'pend', ManualReview: 'pend', AwaitingThreshold: 'pend', Processing: 'pend',
+  Requested: 'pend', Submitted: 'pend', Preliminary: 'pend', InProgress: 'pend',
+  Sent: 'pend', Viewed: 'pend',
+  Rejected: 'neg', Failed: 'neg', Cancelled: 'neg', Suspended: 'neg', Expired: 'neg',
+  Flagged: 'neg', Disqualified: 'neg', Declined: 'neg', Deactivated: 'neg',
+  Draft: 'neu', Paused: 'neu', Inactive: 'neu', Closed: 'neu', Locked: 'neu', Withdrawn: 'neu',
+  Open: 'info',
+};
+
 export function StatusBadge({ status }: { status: string }) {
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-[0.72rem] font-medium tracking-wide whitespace-nowrap',
-        getStatusColor(status),
-      )}
-    >
-      {statusLabel(status)}
-    </span>
-  );
+  return <span className={`vy-badge ${STATUS_TONE[status] ?? 'neu'}`}>{statusLabel(status)}</span>;
 }
 
 // ── EmptyState ─────────────────────────────────────────

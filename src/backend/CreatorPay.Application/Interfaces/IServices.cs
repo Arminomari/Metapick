@@ -118,6 +118,7 @@ public interface ICampaignService
     Task<Result<CampaignAnalyticsDto>> GetCampaignAnalyticsAsync(Guid campaignId, Guid brandUserId, CancellationToken ct = default);
     Task<Result<MarketBenchmarkDto>> GetMarketBenchmarksAsync(CancellationToken ct = default);
     Task<Result<bool>> SaveCampaignAsync(Guid creatorUserId, Guid campaignId, CancellationToken ct = default);
+    Task<Result<bool>> DeleteCampaignAsync(Guid campaignId, Guid brandUserId, CancellationToken ct = default);
     Task<Result<BrandPublicProfileDto>> GetBrandPublicProfileAsync(Guid brandProfileId, Guid viewerUserId, CancellationToken ct = default);
     Task<Result<bool>> SetBrandFollowAsync(Guid viewerUserId, Guid brandProfileId, bool follow, CancellationToken ct = default);
     Task<Result<BrandPostDto>> CreateBrandPostAsync(Guid brandUserId, CreateBrandPostRequest request, CancellationToken ct = default);

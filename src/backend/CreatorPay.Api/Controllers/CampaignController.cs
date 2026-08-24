@@ -99,6 +99,12 @@ public class CampaignController : BaseController
         => ToActionResult(await _campaigns.SaveCampaignAsync(GetUserId(), id, ct));
 
     /// <summary>Ta bort sparad kampanj (Creator)</summary>
+    /// <summary>Ta bort en kampanj (mjuk radering — kampanjer med utbetalningar kan bara pausas)</summary>
+    [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "BrandOnly")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+        => ToActionResult(await _campaigns.DeleteCampaignAsync(id, GetUserId(), ct));
+
     [HttpDelete("{id:guid}/save")]
     [Authorize(Policy = "CreatorOnly")]
     public async Task<IActionResult> Unsave(Guid id, CancellationToken ct)

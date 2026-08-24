@@ -148,7 +148,31 @@ export function CreatorPortfolioPage() {
         <div className="card vstat"><div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#FFE9D2,#F2C58A)', color: '#9c6b1c' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m12 4 2.3 4.8 5.2.7-3.8 3.6.9 5.1L12 16l-4.6 2.8.9-5.1L4.5 9.5l5.2-.7z" /></svg></div><div className="vstat-lbl">{t('Omdöme')}</div><div className="vstat-val">{reviews && reviews.totalReviews > 0 ? reviews.averageStars.toFixed(1) : '—'}</div><div className="vstat-sub"><span className="vmut">{reviews && reviews.totalReviews > 0 ? `${reviews.totalReviews} ${t('omdömen')}` : t('inga omdömen än')}</span></div></div>
       </div>
 
-      {/* ── 2. Företag du jobbat med ── */}
+      {/* ── 2. Omdömen & om mig ── */}
+      <div className="vcsplit" style={{ marginTop: 18 }}>
+        <div className="card">
+          <div className="sec-head"><h3>{t('Omdömen')}</h3>{reviews && reviews.totalReviews > 0 && <span style={{ fontSize: 13, color: 'var(--muted)' }}>{reviews.averageStars.toFixed(1)} {t('av')} {reviews.totalReviews}</span>}</div>
+          {reviews && reviews.totalReviews > 0 ? (
+            <ReviewList summary={reviews} />
+          ) : (
+            <div style={{ padding: '30px 6px', textAlign: 'center', color: 'var(--muted)', fontSize: 13.5 }}>{t('Inga omdömen än. Slutför kampanjer så samlar du betyg från företagen.')}</div>
+          )}
+        </div>
+        <div className="card">
+          <div className="sec-head"><h3>{t('Om mig')}</h3><Link to="/creator/profile" className="view-all">{t('Redigera')}</Link></div>
+          {profile?.bio
+            ? <p style={{ fontSize: 13.5, color: 'var(--ink-2)', lineHeight: 1.6 }}>{profile.bio}</p>
+            : <p style={{ fontSize: 13.5, color: 'var(--muted)', lineHeight: 1.6 }}>{t('Lägg till en bio i inställningarna så företag lär känna dig.')}</p>}
+          <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 14 }}>
+            <div><div className="vcamp-k">{t('Land')}</div><div className="vcamp-v" style={{ fontSize: 15 }}>{profile?.country ? (COUNTRY[profile.country] || profile.country) : '—'}</div></div>
+            <div><div className="vcamp-k">{t('Kategori')}</div><div className="vcamp-v" style={{ fontSize: 15 }}>{profile?.category || '—'}</div></div>
+            <div><div className="vcamp-k">{t('Språk')}</div><div className="vcamp-v" style={{ fontSize: 15 }}>{profile?.language === 'sv' ? t('Svenska') : profile?.language || '—'}</div></div>
+            <div><div className="vcamp-k">{t('Medlem sedan')}</div><div className="vcamp-v" style={{ fontSize: 15 }}>{profile?.createdAt ? formatDate(profile.createdAt) : '—'}</div></div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 3. Företag du jobbat med ── */}
       {brands.length > 0 && (
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="sec-head"><h3>{t('Företag du jobbat med')}</h3><span style={{ fontSize: 13, color: 'var(--muted)' }}>{brands.length}</span></div>
@@ -163,7 +187,7 @@ export function CreatorPortfolioPage() {
         </div>
       )}
 
-      {/* ── 3. Best content ── */}
+      {/* ── 4. Best content ── */}
       <div className="sec-head" style={{ marginBottom: 14 }}>
         <h3 style={{ fontSize: 17, fontWeight: 600 }}>{t('Bästa content')}</h3>
         {!showForm && (
@@ -247,29 +271,6 @@ export function CreatorPortfolioPage() {
         </div>
       )}
 
-      {/* ── 5. Omdömen & om mig ── */}
-      <div className="vcsplit" style={{ marginTop: 18 }}>
-        <div className="card">
-          <div className="sec-head"><h3>{t('Omdömen')}</h3>{reviews && reviews.totalReviews > 0 && <span style={{ fontSize: 13, color: 'var(--muted)' }}>{reviews.averageStars.toFixed(1)} {t('av')} {reviews.totalReviews}</span>}</div>
-          {reviews && reviews.totalReviews > 0 ? (
-            <ReviewList summary={reviews} />
-          ) : (
-            <div style={{ padding: '30px 6px', textAlign: 'center', color: 'var(--muted)', fontSize: 13.5 }}>{t('Inga omdömen än. Slutför kampanjer så samlar du betyg från företagen.')}</div>
-          )}
-        </div>
-        <div className="card">
-          <div className="sec-head"><h3>{t('Om mig')}</h3><Link to="/creator/profile" className="view-all">{t('Redigera')}</Link></div>
-          {profile?.bio
-            ? <p style={{ fontSize: 13.5, color: 'var(--ink-2)', lineHeight: 1.6 }}>{profile.bio}</p>
-            : <p style={{ fontSize: 13.5, color: 'var(--muted)', lineHeight: 1.6 }}>{t('Lägg till en bio i inställningarna så företag lär känna dig.')}</p>}
-          <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 14 }}>
-            <div><div className="vcamp-k">{t('Land')}</div><div className="vcamp-v" style={{ fontSize: 15 }}>{profile?.country ? (COUNTRY[profile.country] || profile.country) : '—'}</div></div>
-            <div><div className="vcamp-k">{t('Kategori')}</div><div className="vcamp-v" style={{ fontSize: 15 }}>{profile?.category || '—'}</div></div>
-            <div><div className="vcamp-k">{t('Språk')}</div><div className="vcamp-v" style={{ fontSize: 15 }}>{profile?.language === 'sv' ? t('Svenska') : profile?.language || '—'}</div></div>
-            <div><div className="vcamp-k">{t('Medlem sedan')}</div><div className="vcamp-v" style={{ fontSize: 15 }}>{profile?.createdAt ? formatDate(profile.createdAt) : '—'}</div></div>
-          </div>
-        </div>
-      </div>
     </section>
   );
 }

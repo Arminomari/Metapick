@@ -63,8 +63,34 @@ function notifIcon(type: string) {
   return <><path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7" /><path d="M10.5 20a2 2 0 0 0 3 0" /></>;
 }
 
+/** Where a notification takes you when tapped — by type, per role. */
+function notifTarget(type: string, role: string | null): string | null {
+  const brand = role === 'Brand';
+  switch (type) {
+    case 'NewApplication': return '/brand/applications';
+    case 'ApplicationApproved':
+    case 'ApplicationRejected': return '/creator/assignments';
+    case 'SubmissionApproved':
+    case 'SubmissionRejected':
+    case 'VideoVerified': return brand ? '/brand/campaigns' : '/creator/assignments';
+    case 'CampaignStarted':
+    case 'CampaignCompleted': return brand ? '/brand/campaigns' : '/creator/assignments';
+    case 'PayoutReady':
+    case 'PayoutCompleted': return brand ? '/brand/campaigns' : '/creator/earnings';
+    case 'PrOfferReceived': return '/creator/pr';
+    case 'PrOfferAccepted':
+    case 'PrOfferDeclined': return '/brand/pr';
+    case 'BrandApproved': return '/brand';
+    case 'CreatorApproved': return '/creator';
+    case 'FraudAlert': return brand ? '/brand/campaigns' : null;
+    default: return null;
+  }
+}
+
 export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { data } = useNotifications(false);
+  const navigate = useNavigate();
+  const { role } = useAuthStore();
   const markRead = useMarkNotificationRead();
   const markAll = useMarkAllNotificationsRead();
   useEsc(open, onClose);
@@ -86,14 +112,29 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
           {items.length ? items.map((n) => {
             const st = notifStyle(n.type);
             return (
-              <div key={n.id} className={`nd-item${n.isRead ? '' : ' unread'}`} onClick={() => { if (!n.isRead) markRead.mutate(n.id); }}>
+              <div
+                key={n.id}
+                className={`nd-item${n.isRead ? '' : ' unread'}`}
+                role="button"
+                tabIndex={0}
+                style={notifTarget(n.type, role) ? { cursor: 'pointer' } : undefined}
+                onKeyDown={(e) => { if (e.key === 'Enter') (e.currentTarget as HTMLElement).click(); }}
+                onClick={() => {
+                  if (!n.isRead) markRead.mutate(n.id);
+                  const to = notifTarget(n.type, role);
+                  if (to) { onClose(); navigate(to); }
+                }}
+              >
                 <div className="nd-ico" style={{ background: st.bg, color: st.color }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{notifIcon(n.type)}</svg>
                 </div>
                 <div className="nd-body" style={{ flex: 1, minWidth: 0 }}>
                   <div className="nd-t" style={{ flexWrap: 'wrap', overflowWrap: 'anywhere' }}>{n.title}{!n.isRead && <span className="nd-unread" />}</div>
                   <div className="nd-s" style={{ overflowWrap: 'anywhere' }}>{n.message}</div>
-                  <div className="nd-time">{ago(n.createdAt)}</div>
+                  <div className="nd-time" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {ago(n.createdAt)}
+                    {notifTarget(n.type, role) && <span style={{ color: '#9c4f31', fontWeight: 700 }}>{t('Öppna')} ›</span>}
+                  </div>
                 </div>
               </div>
             );
