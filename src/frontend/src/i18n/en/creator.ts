@@ -482,4 +482,5 @@ export const creator: Record<string, string> = {
   'Kunde inte begära utbetalning': 'Could not request payout',
   'En begäran i taget per uppdrag — nästa kan skickas när den pågående är utbetald.': 'One request at a time per assignment — the next can be sent once the current one is paid.',
   'Du begär ut det som är verifierat. Vi granskar och betalar till din valda utbetalningsmetod.': 'You cash out what has been verified. We review it and pay to your chosen payout method.',
+  'Begär utbetalning': 'Request payout',
 };
