@@ -103,17 +103,30 @@ public class PayoutService : IPayoutService
         if (calc.Status is PayoutCalculationStatus.Disputed or PayoutCalculationStatus.Overridden)
             return Errors.Conflict("Calculation is disputed or overridden and must be resolved by an admin");
 
-        // Check no existing pending/approved request for same calculation
-        var duplicate = await _requests.Query()
-            .AnyAsync(r => r.PayoutCalculationId == calc.Id && r.Status != PayoutStatus.Rejected, ct);
-        if (duplicate)
-            return Errors.Conflict("A payout request already exists for this calculation");
+        // Money is claimed per assignment, not per calculation: every recalculation
+        // produces a new row, so paying the full amount each time would pay the
+        // same earnings twice. Only the unclaimed remainder can be requested.
+        var alreadyClaimed = await _requests.Query()
+            .Where(r => r.Status != PayoutStatus.Rejected
+                && r.PayoutCalculation.AssignmentId == calc.AssignmentId)
+            .SumAsync(r => (decimal?)r.RequestedAmount, ct) ?? 0m;
+
+        var available = calc.CalculatedAmount - alreadyClaimed;
+        if (available <= 0)
+            return Errors.Conflict("Du har redan begärt utbetalning för allt du tjänat på det här uppdraget.");
+
+        var pending = await _requests.Query()
+            .AnyAsync(r => r.PayoutCalculation.AssignmentId == calc.AssignmentId
+                && (r.Status == PayoutStatus.Pending || r.Status == PayoutStatus.UnderReview
+                    || r.Status == PayoutStatus.Approved || r.Status == PayoutStatus.Processing), ct);
+        if (pending)
+            return Errors.Conflict("Du har redan en utbetalning på gång för det här uppdraget — vänta tills den är klar.");
 
         var payRequest = new PayoutRequest
         {
             CreatorProfileId = creator.Id,
             PayoutCalculationId = calc.Id,
-            RequestedAmount = calc.CalculatedAmount,
+            RequestedAmount = available,
             Currency = "SEK",
             PayoutMethod = creator.PayoutMethod ?? "BankTransfer",
             PayoutDetailsEncrypted = creator.PayoutDetailsEncrypted ?? "",
@@ -125,6 +138,47 @@ public class PayoutService : IPayoutService
         await _audit.LogAsync(creatorUserId, "Payout.Requested", "PayoutRequest", payRequest.Id);
 
         return await LoadPayoutRequestDtoAsync(payRequest.Id, ct);
+    }
+
+    /// <summary>
+    /// Everything the creator can cash out right now: the current calculation
+    /// per assignment minus what has already been requested or paid.
+    /// </summary>
+    public async Task<Result<List<PayableDto>>> GetPayablesAsync(Guid creatorUserId, CancellationToken ct = default)
+    {
+        var creator = await _creators.Query().FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
+        if (creator == null) return new List<PayableDto>();
+
+        var calcs = await _calculations.Query()
+            .Include(c => c.Assignment).ThenInclude(a => a!.Campaign)
+            .Where(c => c.IsLatest && c.Assignment != null && c.Assignment.CreatorProfileId == creator.Id
+                && c.CalculatedAmount > 0)
+            .ToListAsync(ct);
+        if (calcs.Count == 0) return new List<PayableDto>();
+
+        var assignmentIds = calcs.Select(c => c.AssignmentId).ToList();
+        var requests = await _requests.Query()
+            .Where(r => r.Status != PayoutStatus.Rejected
+                && assignmentIds.Contains(r.PayoutCalculation.AssignmentId))
+            .Select(r => new { r.PayoutCalculation.AssignmentId, r.RequestedAmount, r.Status })
+            .ToListAsync(ct);
+
+        return calcs
+            .Select(c =>
+            {
+                var mine = requests.Where(r => r.AssignmentId == c.AssignmentId).ToList();
+                var claimed = mine.Sum(r => r.RequestedAmount);
+                var open = mine.Any(r => r.Status is PayoutStatus.Pending or PayoutStatus.UnderReview
+                    or PayoutStatus.Approved or PayoutStatus.Processing);
+                return new PayableDto(
+                    c.AssignmentId, c.Id,
+                    c.Assignment!.Campaign?.Name ?? "Uppdrag",
+                    c.Assignment.Campaign?.Kind == CampaignKind.Tap,
+                    c.CalculatedAmount, claimed, Math.Max(0, c.CalculatedAmount - claimed), open,
+                    c.VerifiedViews, c.CalculatedAt);
+            })
+            .OrderByDescending(x => x.Available)
+            .ToList();
     }
 
     public async Task<Result<PayoutRequestDto>> ApprovePayoutAsync(Guid payoutRequestId, Guid adminUserId, CancellationToken ct = default)

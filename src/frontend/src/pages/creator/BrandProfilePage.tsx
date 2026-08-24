@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
-import { useApplyToCampaign, useBrandProfile, useUpdateBrandProfile } from '@/hooks/api';
+import { useApplyToCampaign, useBrandProfile, useUpdateBrandProfile, useMyApplications } from '@/hooks/api';
 import { ImagePicker } from '@/components/auth/ImagePicker';
 import { formatNumber, formatDate, formatCurrency } from '@/lib/utils';
 import { t, statusLabel } from '@/lib/i18n';
@@ -81,6 +81,10 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
     },
     onError: (e: any) => toast.push(e?.response?.data?.error?.message ?? t('Kunde inte skicka ansökan'), 'error'),
   });
+
+  const { data: myApps } = useMyApplications();
+  const appStatus = new Map<string, string>();
+  (myApps?.data ?? []).forEach((a) => appStatus.set(a.campaignId, a.status));
 
   const handleApply = async (campaignId: string) => {
     setApplyingId(campaignId);
@@ -237,17 +241,32 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
                 <div style={{ fontSize: 12.5, color: '#9c4f31', fontWeight: 700 }}>{c.payoutSummary}</div>
                 <div style={{ fontSize: 12, color: 'var(--muted)' }}>{c.category} · {c.spotsLeft} {t('platser kvar')} · {formatDate(c.startDate)} – {formatDate(c.endDate)}</div>
                 {c.totalViews > 0 && <div style={{ fontSize: 12, fontWeight: 700, color: '#2f7d52' }}>👁 {formatNumber(c.totalViews)} {t('levererade views')}</div>}
-                {!ownView && (
-                  <button
-                    type="button"
-                    className="btn-apply"
-                    style={{ width: '100%', padding: 10, marginTop: 'auto' }}
-                    onClick={() => handleApply(c.id)}
-                    disabled={applyingId === c.id || c.spotsLeft <= 0}
-                  >
-                    {applyingId === c.id ? t('Skickar…') : c.spotsLeft <= 0 ? t('Fullbokad') : t('Ansök')}
-                  </button>
-                )}
+                {!ownView && (() => {
+                  const mine = appStatus.get(c.id);
+                  if (mine === 'Approved') return (
+                    <button type="button" className="btn-outline" style={{ width: '100%', padding: 10, marginTop: 'auto' }}
+                      onClick={() => navigate('/creator/assignments')}>
+                      ✓ {t('Godkänd — gå till Mina uppdrag')}
+                    </button>
+                  );
+                  if (mine === 'Pending') return (
+                    <div style={{ marginTop: 'auto', textAlign: 'center', padding: '10px 0' }}><span className="vy-badge pend">{t('Ansökan skickad — väntar på svar')}</span></div>
+                  );
+                  if (mine === 'Rejected') return (
+                    <div style={{ marginTop: 'auto', textAlign: 'center', padding: '10px 0' }}><span className="vy-badge neg">{t('Ansökan nekad')}</span></div>
+                  );
+                  return (
+                    <button
+                      type="button"
+                      className="btn-apply"
+                      style={{ width: '100%', padding: 10, marginTop: 'auto' }}
+                      onClick={() => handleApply(c.id)}
+                      disabled={applyingId === c.id || c.spotsLeft <= 0}
+                    >
+                      {applyingId === c.id ? t('Skickar…') : c.spotsLeft <= 0 ? t('Fullbokad') : t('Ansök')}
+                    </button>
+                  );
+                })()}
               </div>
             ))}
           </div>

@@ -96,6 +96,10 @@ public class PayoutRecalculationJob
 
                 assignment.CurrentPayoutAmount = result.Amount;
 
+                foreach (var stale in await _calculations.Query()
+                    .Where(c => c.AssignmentId == assignment.Id && c.IsLatest).ToListAsync(ct))
+                    stale.IsLatest = false;
+
                 _calculations.Add(new PayoutCalculation
                 {
                     AssignmentId = assignment.Id,

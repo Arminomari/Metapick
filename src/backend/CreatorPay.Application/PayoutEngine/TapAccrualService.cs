@@ -114,6 +114,13 @@ public sealed class TapAccrualService
             if (lifetime != a.CurrentPayoutAmount)
             {
                 a.CurrentPayoutAmount = lifetime;
+
+                // Exactly one calculation per assignment may be current — the
+                // payout request path pays against it.
+                foreach (var stale in await _calculations.Query()
+                    .Where(c => c.AssignmentId == a.Id && c.IsLatest).ToListAsync(ct))
+                    stale.IsLatest = false;
+
                 _calculations.Add(new PayoutCalculation
                 {
                     AssignmentId = a.Id,

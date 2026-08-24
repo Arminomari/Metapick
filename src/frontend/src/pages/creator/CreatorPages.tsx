@@ -1,3 +1,4 @@
+import { PayoutRequestCard } from '@/components/vyrle/PayoutRequestCard';
 import { TapBanner } from '@/components/vyrle/CreatorTaps';
 import { ChangeEmailCard, ChangePasswordCard } from '@/components/ui/AccountCards';
 import { maskSwishNumber, maskBankAccount } from '@/lib/masks';
@@ -833,6 +834,7 @@ export function EarningsPage() {
       </div>
 
       {/* payout method */}
+      <PayoutRequestCard />
       <div style={{ marginTop: 18 }}><PayoutMethodCard /></div>
 
       {/* how payouts work */}

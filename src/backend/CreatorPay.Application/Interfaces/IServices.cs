@@ -203,6 +203,7 @@ public interface IPayoutService
 {
     Task<Result<PayoutCalculationDto>> GetLatestCalculationAsync(Guid assignmentId, Guid userId, CancellationToken ct = default);
     Task<Result<PayoutRequestDto>> RequestPayoutAsync(Guid creatorUserId, RequestPayoutRequest request, CancellationToken ct = default);
+    Task<Result<List<PayableDto>>> GetPayablesAsync(Guid creatorUserId, CancellationToken ct = default);
     Task<Result<PayoutRequestDto>> ApprovePayoutAsync(Guid payoutRequestId, Guid adminUserId, CancellationToken ct = default);
     Task<Result<PayoutRequestDto>> RejectPayoutAsync(Guid payoutRequestId, Guid adminUserId, string reason, CancellationToken ct = default);
     Task<Result<PayoutRequestDto>> MarkManualPayoutSentAsync(Guid assignmentId, Guid brandUserId, CancellationToken ct = default);

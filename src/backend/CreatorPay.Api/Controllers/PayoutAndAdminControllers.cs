@@ -15,6 +15,11 @@ public class PayoutController : BaseController
     public PayoutController(IPayoutService payouts) => _payouts = payouts;
 
     /// <summary>Begär utbetalning (Creator)</summary>
+    /// <summary>Vad kan jag begära ut just nu?</summary>
+    [HttpGet("payable")]
+    public async Task<IActionResult> Payable(CancellationToken ct)
+        => ToActionResult(await _payouts.GetPayablesAsync(GetUserId(), ct));
+
     [HttpPost("request")]
     [Authorize(Policy = "CreatorOnly")]
     public async Task<IActionResult> RequestPayout([FromBody] RequestPayoutRequest request, CancellationToken ct)

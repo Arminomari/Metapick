@@ -82,7 +82,7 @@ public class ApplicationService : IApplicationService
             .FirstOrDefaultAsync(c => c.Id == request.CampaignId, ct);
         if (campaign == null) return Errors.NotFound("Campaign", request.CampaignId);
         if (campaign.Status != CampaignStatus.Active)
-            return Errors.Conflict("Campaign is not accepting applications");
+            return Errors.Conflict("Kampanjen tar inte emot ansökningar just nu.");
 
         // ── Serializable transaction prevents TOCTOU race ────────────────────
         // Without this, two concurrent requests can both pass the duplicate/max-creator
@@ -822,6 +822,11 @@ public class AssignmentService : IAssignmentService
             if (result.Amount != assignment.CurrentPayoutAmount)
             {
                 assignment.CurrentPayoutAmount = result.Amount;
+
+                foreach (var stale in await _calculations.Query()
+                    .Where(c => c.AssignmentId == assignment.Id && c.IsLatest).ToListAsync(ct))
+                    stale.IsLatest = false;
+
                 _calculations.Add(new PayoutCalculation
                 {
                     AssignmentId = assignment.Id,

@@ -396,6 +396,12 @@ public record InviteManyRequest(List<Guid> CreatorProfileIds);
 
 /// <summary>Counts that deserve a red dot in the navigation — things waiting on you.</summary>
 public record ActionCountsDto(int PendingApplications, int PendingVideoReviews, int AwaitingYourVideo, int PendingCommunityRequests = 0);
+
+/// <summary>One cashable line per assignment, campaigns and taps alike.</summary>
+public record PayableDto(
+    Guid AssignmentId, Guid CalculationId, string CampaignName, bool IsTap,
+    decimal Earned, decimal AlreadyClaimed, decimal Available, bool HasPendingRequest,
+    long VerifiedViews, DateTime CalculatedAt);
 public record CreateAdminRequest(string Email, string Password, string FirstName, string LastName);
 public record AdminStatsDto(
     int TotalUsers, int PendingUsers, int Creators, int Brands,
