@@ -302,7 +302,7 @@ public record AssignmentDetailDto(
     decimal CurrentPayoutAmount, TrackingTagDto? TrackingTag,
     List<SubmissionDto> Submissions, List<SocialPostInfoDto> SocialPosts,
     DateTime AssignedAt, DateTime? CompletedAt,
-    Guid BrandUserId, Guid CreatorUserId, bool GoalReached = false);
+    Guid BrandUserId, Guid CreatorUserId, bool GoalReached = false, bool IsTap = false);
 
 public record SocialPostInfoDto(
     Guid Id, string TikTokUrl, string TikTokVideoId, long Views,

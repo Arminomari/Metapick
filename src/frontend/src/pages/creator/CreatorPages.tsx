@@ -1,3 +1,4 @@
+import { VideoPicker } from '@/components/vyrle/VideoPicker';
 import { PayoutRequestCard } from '@/components/vyrle/PayoutRequestCard';
 import { TapBanner } from '@/components/vyrle/CreatorTaps';
 import { ChangeEmailCard, ChangePasswordCard } from '@/components/ui/AccountCards';
@@ -560,7 +561,8 @@ export function AssignmentDetailPage() {
     : campaign.payoutModel === 'Tiered' ? t('Trappsteg per views')
     : `${cpmRule?.amount ?? 0} ${t('kr vid')} ${formatNumber(cpmRule?.minViews ?? 0)}+ views`
   ) : '—';
-  const daysLeft = campaign?.endDate ? Math.ceil((+new Date(campaign.endDate) - Date.now()) / 86400000) : null;
+  const isTapAssignment = assignment.isTap === true;
+  const daysLeft = !isTapAssignment && campaign?.endDate ? Math.ceil((+new Date(campaign.endDate) - Date.now()) / 86400000) : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -637,9 +639,9 @@ export function AssignmentDetailPage() {
 
       {assignment.trackingTag && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="sec-head"><h3>{t('Så här funkar det')}</h3></div>
+          <div className="sec-head"><h3>{t('Automatisk spårning')}</h3><span className="vy-badge neu">{t('Frivilligt')}</span></div>
           <p style={{ margin: '0 0 14px', fontSize: 13.5, color: 'var(--muted)', lineHeight: 1.55 }}>
-            {t('Kopiera med ett tryck och klistra in i din videobeskrivning på TikTok — så hittar vi videon automatiskt.')}
+            {t('Vill du slippa lägga till videon själv? Ta med hashtagen eller din tracking-tag i beskrivningen så hittas videon automatiskt. Du kan lika gärna hoppa över det och välja videon manuellt ovan.')}
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {assignment.trackingTag.recommendedHashtag && (
@@ -661,12 +663,15 @@ export function AssignmentDetailPage() {
 
       {assignment.status === 'Active' && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="sec-head"><h3>{t('Lägg till video')}</h3></div>
-          <p style={{ margin: '0 0 8px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.55 }}>
-            {t('Videos med din tracking-tag hittas automatiskt — klistra in länken här om du vill lägga till din video direkt.')}
+          <div className="sec-head"><h3>{t('Lägg till din video')}</h3></div>
+          <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.6 }}>
+            {t('Enklast: välj videon direkt från ditt TikTok-konto. Då behövs varken hashtag eller kod i beskrivningen — inget i videon behöver se ut som en annons.')}
           </p>
-          <p style={{ margin: '0 0 12px', fontSize: 12.5, color: '#2f7d52', lineHeight: 1.55, fontWeight: 600 }}>
-            💡 {t('Lägger du till videon via länk behöver du inte skriva koderna i beskrivningen — videon kopplas direkt till kampanjen och verifieras när företaget godkänner den.')}
+          <div style={{ marginBottom: 14 }}>
+            <VideoPicker assignmentId={assignment.id} />
+          </div>
+          <p style={{ margin: '0 0 8px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.55 }}>
+            {t('Eller klistra in länken till videon:')}
           </p>
           <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder={t('https://www.tiktok.com/@ditt-namn/video/123...')} required

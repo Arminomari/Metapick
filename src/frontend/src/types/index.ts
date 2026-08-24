@@ -333,6 +333,7 @@ export interface AssignmentDetail {
   assignedAt: string;
   completedAt?: string;
   goalReached?: boolean;
+  isTap?: boolean;
   brandUserId: string;
   creatorUserId: string;
 }
