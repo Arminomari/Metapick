@@ -503,7 +503,18 @@ public class AssignmentService : IAssignmentService
         var videoId = urlMatch.Groups[2].Value;
         var duplicate = await _submissions.Query()
             .AnyAsync(s => s.TikTokVideoUrl == canonicalUrl || s.TikTokVideoId == videoId, ct);
-        if (duplicate) return Errors.Conflict("Den här videon är redan inskickad");
+        if (duplicate) return Errors.Conflict("Den här videon är redan inskickad.");
+
+        // A TikTok video exists as at most ONE tracked post (unique index), so a
+        // video already claimed elsewhere must be reported in plain language
+        // instead of blowing up on the database constraint.
+        var existingPost = await _socialPosts.Query()
+            .Include(p => p.Assignment).ThenInclude(a => a.Campaign)
+            .FirstOrDefaultAsync(p => p.TikTokVideoId == videoId, ct);
+        if (existingPost != null && existingPost.AssignmentId != assignmentId)
+            return Errors.Conflict(
+                $"Videon är redan kopplad till uppdraget \"{existingPost.Assignment?.Campaign?.Name ?? "ett annat uppdrag"}\". " +
+                "En video kan bara räknas för ett uppdrag — publicera en ny video för den här kampanjen.");
 
         var submission = new CreatorSubmission
         {
@@ -513,23 +524,38 @@ public class AssignmentService : IAssignmentService
             Notes = request.Notes,
             Status = SubmissionStatus.Pending
         };
-
-        // Create a SocialPost linked to this submission so the daily sync job can track views
-        var socialPost = new SocialPost
-        {
-            AssignmentId = assignmentId,
-            SubmissionId = submission.Id,
-            TikTokVideoId = submission.TikTokVideoId ?? "",
-            TikTokUrl = submission.TikTokVideoUrl,
-            Caption = request.Notes,
-            PublishedAt = DateTime.UtcNow,
-            VerificationStatus = VerificationStatus.Pending,
-            DiscoveredAt = DateTime.UtcNow
-        };
-
         _submissions.Add(submission);
-        _socialPosts.Add(socialPost);
-        await _uow.SaveChangesAsync(ct);
+
+        if (existingPost != null)
+        {
+            // The sync job already found this video for this assignment — attach
+            // the submission to it rather than inserting a duplicate post.
+            existingPost.SubmissionId = submission.Id;
+            existingPost.IsActive = true;
+        }
+        else
+        {
+            _socialPosts.Add(new SocialPost
+            {
+                AssignmentId = assignmentId,
+                SubmissionId = submission.Id,
+                TikTokVideoId = videoId,
+                TikTokUrl = canonicalUrl,
+                Caption = request.Notes,
+                PublishedAt = DateTime.UtcNow,
+                VerificationStatus = VerificationStatus.Pending,
+                DiscoveredAt = DateTime.UtcNow
+            });
+        }
+
+        try
+        {
+            await _uow.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex) when (IsUniqueViolation(ex))
+        {
+            return Errors.Conflict("Videon är redan registrerad i systemet. Ladda om sidan — den bör synas under Spårade videos.");
+        }
 
         await _audit.LogAsync(creatorUserId, "Submission.Created", "CreatorSubmission", submission.Id);
 
@@ -537,6 +563,10 @@ public class AssignmentService : IAssignmentService
             submission.TikTokVideoId, submission.Notes, submission.Status.ToString(),
             submission.RejectionReason, submission.CreatedAt);
     }
+
+    private static bool IsUniqueViolation(DbUpdateException ex)
+        => ex.InnerException?.Message.Contains("unique", StringComparison.OrdinalIgnoreCase) == true
+        || ex.InnerException?.Message.Contains("duplicate", StringComparison.OrdinalIgnoreCase) == true;
 
     // Shared handler: short links (vm.tiktok.com) only reveal the canonical
     // @user/video URL via their redirect — one hop, no follow, short timeout.

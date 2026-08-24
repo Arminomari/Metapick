@@ -78,7 +78,10 @@ public class DailyCampaignSyncJob : ICampaignSyncTrigger
                 .Include(c => c.Assignments).ThenInclude(a => a.Submissions)
                 .Include(c => c.Assignments).ThenInclude(a => a.TrackingTag)
                 .Where(c => c.Status == CampaignStatus.Active && !c.IsDeleted)
-                .OrderBy(c => c.Id)
+                // Campaigns are claimed before taps: a time-boxed campaign is the
+                // explicit brief, the tap is the always-on baseline underneath it.
+                .OrderBy(c => c.Kind)
+                .ThenBy(c => c.Id)
                 .Skip(skip)
                 .Take(batchSize)
                 .ToListAsync();
@@ -136,6 +139,10 @@ public class DailyCampaignSyncJob : ICampaignSyncTrigger
                 _logger.LogError(ex, "Failed to process assignment {AssignmentId}", assignment.Id);
             }
         }
+
+        // Taps are accounted per calendar month by TapAccrualService — their
+        // lifetime spend must never be compared to a MONTHLY budget here.
+        if (campaign.Kind == CampaignKind.Tap) return;
 
         // Update campaign budget spent
         campaign.BudgetSpent = campaign.Assignments
@@ -199,6 +206,22 @@ public class DailyCampaignSyncJob : ICampaignSyncTrigger
 
         var existingVideoIds = existingPosts.Select(p => p.TikTokVideoId).ToHashSet();
 
+        // A video belongs to exactly one assignment (unique index on the video id).
+        // Claiming one twice would roll back this campaign's entire sync, so skip
+        // anything already owned elsewhere, and skip videos explicitly tagged for
+        // another assignment of the same creator — an exact tracking tag always
+        // beats a shared hashtag.
+        var fetchedIds = videos.Select(v => v.Id).ToList();
+        var claimedElsewhere = (await _socialPosts.Query()
+            .Where(p => fetchedIds.Contains(p.TikTokVideoId) && p.AssignmentId != assignment.Id)
+            .Select(p => p.TikTokVideoId)
+            .ToListAsync()).ToHashSet();
+        var otherTagCodes = await _assignments.Query()
+            .Where(a => a.CreatorProfileId == assignment.CreatorProfileId
+                && a.Id != assignment.Id && a.TrackingTag != null)
+            .Select(a => a.TrackingTag!.TagCode)
+            .ToListAsync();
+
         // Brand review decisions override the confidence heuristic below.
         var reviewBySubmission = await _submissions.Query()
             .Where(s => s.AssignmentId == assignment.Id)
@@ -208,7 +231,7 @@ public class DailyCampaignSyncJob : ICampaignSyncTrigger
         // Step 3: Discover new videos that match the campaign
         foreach (var video in videos)
         {
-            if (existingVideoIds.Contains(video.Id))
+            if (existingVideoIds.Contains(video.Id) || claimedElsewhere.Contains(video.Id))
                 continue;
 
             // Check if video matches: must be within campaign period
@@ -225,6 +248,11 @@ public class DailyCampaignSyncJob : ICampaignSyncTrigger
                                   caption.Contains(trackingTag.TagCode, StringComparison.OrdinalIgnoreCase);
 
             if (!hasHashtag && !hasTrackingTag)
+                continue;
+
+            // Shared hashtag only, but the caption carries another assignment's
+            // tracking tag — that assignment is the creator's intent, not this one.
+            if (!hasTrackingTag && otherTagCodes.Any(code => caption.Contains(code, StringComparison.OrdinalIgnoreCase)))
                 continue;
 
             _logger.LogInformation("Discovered new matching video {VideoId} for assignment {AssignmentId}",
