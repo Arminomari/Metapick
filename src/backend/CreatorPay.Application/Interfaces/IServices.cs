@@ -162,6 +162,7 @@ public interface ITapService
     Task<Result<TapDto>> UpsertTapAsync(Guid brandUserId, UpsertTapRequest request, CancellationToken ct = default);
     Task<Result<TapDto>> SetTapStatusAsync(Guid brandUserId, bool active, CancellationToken ct = default);
     Task<Result<List<CreatorTapDto>>> GetCreatorTapsAsync(Guid creatorUserId, CancellationToken ct = default);
+    Task<Result<List<TapSubmissionDto>>> GetTapSubmissionsAsync(Guid brandUserId, CancellationToken ct = default);
 }
 
 public interface IAssignmentService

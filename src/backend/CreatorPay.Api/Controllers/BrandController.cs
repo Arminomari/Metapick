@@ -90,6 +90,11 @@ public class BrandTapController : BaseController
     public async Task<IActionResult> Upsert([FromBody] UpsertTapRequest request, CancellationToken ct)
         => ToActionResult(await _taps.UpsertTapAsync(GetUserId(), request, ct));
 
+    /// <summary>Videos i kranen som väntar på granskning</summary>
+    [HttpGet("submissions")]
+    public async Task<IActionResult> Submissions(CancellationToken ct)
+        => ToActionResult(await _taps.GetTapSubmissionsAsync(GetUserId(), ct));
+
     [HttpPost("status")]
     public async Task<IActionResult> SetStatus([FromQuery] bool active, CancellationToken ct)
         => ToActionResult(await _taps.SetTapStatusAsync(GetUserId(), active, ct));

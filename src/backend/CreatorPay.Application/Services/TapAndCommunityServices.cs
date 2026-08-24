@@ -373,6 +373,7 @@ public class TapService : ITapService
     private readonly IRepository<BrandCommunityMember> _members;
     private readonly IRepository<CreatorCampaignAssignment> _assignments;
     private readonly IRepository<TapAccrual> _accruals;
+    private readonly IRepository<CreatorSubmission> _submissions;
     private readonly TapAccrualService _tapAccrual;
     private readonly ICommunityService _community;
     private readonly INotificationService _notifications;
@@ -386,6 +387,7 @@ public class TapService : ITapService
         IRepository<BrandCommunityMember> members,
         IRepository<CreatorCampaignAssignment> assignments,
         IRepository<TapAccrual> accruals,
+        IRepository<CreatorSubmission> submissions,
         TapAccrualService tapAccrual,
         ICommunityService community,
         INotificationService notifications,
@@ -398,6 +400,7 @@ public class TapService : ITapService
         _members = members;
         _assignments = assignments;
         _accruals = accruals;
+        _submissions = submissions;
         _tapAccrual = tapAccrual;
         _community = community;
         _notifications = notifications;
@@ -538,6 +541,34 @@ public class TapService : ITapService
             tap.PayoutCapPerVideo, tap.MonthlyCapPerCreator,
             tap.Description, tap.ContentInstructions, tap.RequiredHashtag, tap.Category,
             s.Spent, s.Remaining, s.Views, s.ActiveCreators, memberCount, tap.BriefUpdatedAt, tap.CreatedAt);
+    }
+
+    /// <summary>
+    /// Videos from the tap waiting for the brand — the tap never appears in the
+    /// campaigns list, so this is the only place these can be reviewed.
+    /// </summary>
+    public async Task<Result<List<TapSubmissionDto>>> GetTapSubmissionsAsync(Guid brandUserId, CancellationToken ct = default)
+    {
+        var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);
+        if (brand == null) return Errors.NotFound("Brand");
+        var tap = await FindTapAsync(brand.Id, ct);
+        if (tap == null) return new List<TapSubmissionDto>();
+
+        var pending = await _submissions.Query()
+            .Include(s => s.Assignment).ThenInclude(a => a.CreatorProfile)
+            .Include(s => s.SocialPost)
+            .Where(s => s.Assignment.CampaignId == tap.Id && s.Status == SubmissionStatus.Pending)
+            .OrderBy(s => s.CreatedAt)
+            .ToListAsync(ct);
+
+        return pending.Select(s => new TapSubmissionDto(
+            s.Id, s.AssignmentId,
+            s.Assignment.CreatorProfile.DisplayName, s.Assignment.CreatorProfile.AvatarUrl,
+            s.Assignment.CreatorProfileId,
+            s.TikTokVideoUrl, s.TikTokVideoId,
+            s.SocialPost?.LatestViewCount ?? 0,
+            s.CreatedAt,
+            Math.Max(0, 48 - (int)(DateTime.UtcNow - s.CreatedAt).TotalHours))).ToList();
     }
 
     public async Task<Result<List<CreatorTapDto>>> GetCreatorTapsAsync(Guid creatorUserId, CancellationToken ct = default)

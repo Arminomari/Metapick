@@ -559,4 +559,5 @@ export const brand: Record<string, string> = {
   'vill gå med i din community': 'wants to join your community',
   'Creatorn är nu medlem': 'The creator is now a member',
   'Ansökan till communityn nekad': 'Community request declined',
+  'Månadsbudgeten är slut — kranen öppnar igen den 1:a': 'The monthly budget is spent — the tap reopens on the 1st',
 };

@@ -6,6 +6,7 @@ import api from '@/lib/api';
 import { t } from '@/lib/i18n';
 import { formatCurrency, formatNumber, formatDate } from '@/lib/utils';
 import { useToast, CardSkeleton } from '@/components/vyrle/Toast';
+import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
 import type { ApiResponse } from '@/types';
 
 export interface TapDto {
@@ -18,6 +19,9 @@ export interface TapDto {
 
 const input: CSSProperties = { width: '100%', border: '1px solid rgba(241,168,143,.28)', borderRadius: 13, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', background: 'rgba(255,255,255,.8)', color: '#0B0F17' };
 const lbl: CSSProperties = { fontSize: 12, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6, display: 'block' };
+const GRADS = ['linear-gradient(135deg,#FFD8C7,#F1A88F)', 'linear-gradient(135deg,#cdb8f2,#9c7de0)', 'linear-gradient(135deg,#F2C58A,#e0a04e)', 'linear-gradient(135deg,#a9dcc0,#5fb98a)'];
+const grad = (s: string) => GRADS[((s || '').charCodeAt(0) || 0) % GRADS.length];
+
 const hint: CSSProperties = { fontSize: 11.5, color: 'var(--muted)', marginTop: 5, lineHeight: 1.45 };
 
 export function useBrandTap() {
@@ -244,6 +248,8 @@ export function BrandTapPage() {
         </>
       ) : (
         <>
+          <TapReviewSection />
+
           {/* ── Month meter ── */}
           <div className="card" style={{ marginBottom: 16, background: isActive ? 'linear-gradient(160deg,#fff,#FFF6F0)' : 'rgba(183,188,200,.12)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 10 }}>
@@ -254,7 +260,7 @@ export function BrandTapPage() {
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
               <span style={{ fontFamily: '"Fraunces",serif', fontSize: 34, fontWeight: 700, color: '#0B0F17' }}>{formatCurrency(tap.monthSpent)}</span>
               <span style={{ fontSize: 14, color: 'var(--muted)' }}>{t('av')} {formatCurrency(tap.monthlyBudget)} · {pct}%</span>
-              <span style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 700, color: pct >= 100 ? '#cf4b4b' : '#2f7d52' }}>{pct >= 100 ? t('Månaden är full — öppnar igen den 1:a') : `${formatCurrency(tap.monthRemaining)} ${t('kvar')}`}</span>
+              <span style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 700, color: pct >= 100 ? '#cf4b4b' : '#2f7d52' }}>{pct >= 100 ? t('Månadsbudgeten är slut — kranen öppnar igen den 1:a') : `${formatCurrency(tap.monthRemaining)} ${t('kvar')}`}</span>
             </div>
             <div style={{ height: 12, borderRadius: 980, background: 'rgba(241,168,143,.18)', marginTop: 12, overflow: 'hidden' }}>
               <div style={{ width: `${pct}%`, height: '100%', borderRadius: 980, background: pct >= 100 ? 'linear-gradient(90deg,#ff8a7a,#cf4b4b)' : 'linear-gradient(90deg,#FFD8C7,#F1A88F)', transition: 'width .6s' }} />
@@ -292,5 +298,100 @@ export function BrandTapPage() {
         </>
       )}
     </section>
+  );
+}
+
+// ── Videos from the tap waiting for a decision ─────────────────────
+interface TapSubmission {
+  submissionId: string; assignmentId: string; creatorName: string; creatorAvatarUrl?: string | null;
+  creatorProfileId: string; videoUrl: string; videoId?: string | null; views: number;
+  submittedAt: string; hoursUntilAutoApprove: number;
+}
+
+function TapReviewSection() {
+  const qc = useQueryClient();
+  const toast = useToast();
+  const [rejecting, setRejecting] = useState<string | null>(null);
+  const [reason, setReason] = useState('');
+
+  const { data: subs = [], isLoading } = useQuery({
+    queryKey: ['tap-submissions'],
+    queryFn: async () => (await api.get<ApiResponse<TapSubmission[]>>('/brand/tap/submissions')).data.data,
+    refetchInterval: 60000,
+  });
+
+  const decide = useMutation({
+    mutationFn: async ({ id, approve, why }: { id: string; approve: boolean; why?: string }) =>
+      approve
+        ? (await api.post(`/assignments/submissions/${id}/approve`)).data.data
+        : (await api.post(`/assignments/submissions/${id}/reject`, { reason: why || undefined })).data.data,
+    onSuccess: (_d, v) => {
+      qc.invalidateQueries({ queryKey: ['tap-submissions'] });
+      qc.invalidateQueries({ queryKey: ['brand-tap'] });
+      qc.invalidateQueries({ queryKey: ['action-counts'] });
+      toast.push(v.approve ? t('Videon godkänd — views räknas nu') : t('Videon nekad'), 'success');
+      setRejecting(null); setReason('');
+    },
+    onError: (e: any) => toast.push(e?.response?.data?.error?.message ?? t('Kunde inte spara beslutet'), 'error'),
+  });
+
+  if (isLoading || subs.length === 0) return null;
+
+  return (
+    <div className="card" style={{ marginBottom: 16, border: '1px solid rgba(212,155,46,.45)', background: 'linear-gradient(160deg,#fff,#FFF9F0)' }}>
+      <div className="sec-head" style={{ flexWrap: 'wrap', gap: '4px 10px' }}>
+        <h3>{t('Videos att granska')}</h3>
+        <span className="vy-badge pend">{subs.length}</span>
+        <span style={{ fontSize: 12, color: '#9c6b1c', fontWeight: 600, marginLeft: 'auto' }}>
+          ⏱ {t('Godkänns automatiskt efter 48 timmar')}
+        </span>
+      </div>
+
+      <div style={{ display: 'grid', gap: 12 }}>
+        {subs.map((s) => (
+          <div key={s.submissionId} style={{ display: 'flex', gap: 14, flexWrap: 'wrap', padding: '14px 16px', borderRadius: 16, background: 'rgba(255,255,255,.85)', border: '1px solid rgba(241,168,143,.24)', minWidth: 0 }}>
+            <div style={{ flex: '0 0 auto' }}>
+              {s.creatorAvatarUrl
+                ? <img src={s.creatorAvatarUrl} alt="" style={{ width: 42, height: 42, borderRadius: 12, objectFit: 'cover' }} />
+                : <span className="mono" style={{ background: grad(s.creatorName) }}>{(s.creatorName[0] || '?').toUpperCase()}</span>}
+            </div>
+
+            <div style={{ flex: '1 1 220px', minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 14, wordBreak: 'break-word' }}>{s.creatorName}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 2 }}>
+                {formatNumber(s.views)} views · {t('inskickad')} {formatDate(s.submittedAt)} ·{' '}
+                <span style={{ color: '#9c6b1c', fontWeight: 700 }}>
+                  {s.hoursUntilAutoApprove > 0 ? `${t('auto om')} ${s.hoursUntilAutoApprove} ${t('tim')}` : t('auto inom kort')}
+                </span>
+              </div>
+              <div style={{ marginTop: 10, maxWidth: 260 }}>
+                <TikTokEmbed videoUrl={s.videoUrl} videoId={s.videoId ?? undefined} compact />
+              </div>
+            </div>
+
+            <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 }}>
+              <button type="button" className="btn-apply" style={{ width: 'auto', padding: '9px 18px', fontSize: 13 }}
+                onClick={() => decide.mutate({ id: s.submissionId, approve: true })} disabled={decide.isPending}>
+                ✓ {t('Godkänn')}
+              </button>
+              {rejecting === s.submissionId ? (
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', minWidth: 0 }}>
+                  <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t('Anledning (valfritt)')}
+                    style={{ flex: '1 1 130px', minWidth: 0, borderRadius: 11, border: '1px solid rgba(241,168,143,.3)', padding: '8px 10px', fontSize: 12.5, fontFamily: 'inherit' }} />
+                  <button type="button" className="btn-outline" style={{ padding: '8px 14px', fontSize: 12.5, borderColor: 'var(--red)', color: 'var(--red)' }}
+                    onClick={() => decide.mutate({ id: s.submissionId, approve: false, why: reason })} disabled={decide.isPending}>
+                    {t('Neka')}
+                  </button>
+                </div>
+              ) : (
+                <button type="button" className="btn-outline" style={{ padding: '9px 18px', fontSize: 13 }} onClick={() => setRejecting(s.submissionId)}>
+                  {t('Neka')}
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

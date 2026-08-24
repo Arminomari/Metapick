@@ -392,6 +392,12 @@ public record MyCommunityDto(
     Guid BrandProfileId, string BrandName, string? BrandLogoUrl, string Source, DateTime JoinedAt, bool HasActiveTap);
 
 public record InviteMemberRequest(Guid CreatorProfileId);
+
+/// <summary>A video waiting for the brand's decision inside the tap.</summary>
+public record TapSubmissionDto(
+    Guid SubmissionId, Guid AssignmentId, string CreatorName, string? CreatorAvatarUrl,
+    Guid CreatorProfileId, string VideoUrl, string? VideoId, long Views,
+    DateTime SubmittedAt, int HoursUntilAutoApprove);
 public record InviteManyRequest(List<Guid> CreatorProfileIds);
 
 /// <summary>Counts that deserve a red dot in the navigation — things waiting on you.</summary>
