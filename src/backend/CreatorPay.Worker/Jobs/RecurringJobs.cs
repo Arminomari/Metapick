@@ -17,20 +17,26 @@ public class CampaignExpirationJob
     private readonly ILogger<CampaignExpirationJob> _logger;
     private readonly IRepository<Campaign> _campaigns;
     private readonly IUnitOfWork _uow;
+    private readonly INotificationService _notifications;
 
     public CampaignExpirationJob(ILogger<CampaignExpirationJob> logger,
-        IRepository<Campaign> campaigns, IUnitOfWork uow)
+        IRepository<Campaign> campaigns, IUnitOfWork uow,
+        INotificationService notifications)
     {
         _logger = logger;
         _campaigns = campaigns;
         _uow = uow;
+        _notifications = notifications;
     }
 
     public async Task ExecuteAsync()
     {
         var todayStart = DateTime.UtcNow.Date;
         var expired = await _campaigns.Query()
+            .Include(c => c.Assignments)
+            .Include(c => c.BrandProfile)
             .Where(c => (c.Status == CampaignStatus.Active || c.Status == CampaignStatus.Paused)
+                && c.Kind == CampaignKind.Campaign   // taps run continuously
                 && c.EndDate < todayStart)
             .ToListAsync();
 
@@ -39,10 +45,40 @@ public class CampaignExpirationJob
         foreach (var campaign in expired)
         {
             campaign.Status = CampaignStatus.Completed;
-            _logger.LogInformation("Campaign {Id} ({Name}) expired", campaign.Id, campaign.Name);
+
+            // Closing the campaign closes its work: statuses stop reading
+            // "Pågår" forever and reviews unlock for both sides.
+            foreach (var assignment in campaign.Assignments.Where(a => a.Status == AssignmentStatus.Active))
+            {
+                assignment.Status = AssignmentStatus.Completed;
+                assignment.CompletedAt = DateTime.UtcNow;
+            }
+            _logger.LogInformation("Campaign {Id} ({Name}) expired with {Count} assignments closed",
+                campaign.Id, campaign.Name, campaign.Assignments.Count(a => a.Status == AssignmentStatus.Completed));
         }
 
         await _uow.SaveChangesAsync();
+
+        // Tell both sides it is over — the creator can now request payout and
+        // both can leave a review.
+        foreach (var campaign in expired)
+        {
+            foreach (var assignment in campaign.Assignments.Where(a => a.Status == AssignmentStatus.Completed))
+            {
+                try
+                {
+                    var creatorUserId = await _campaigns.Query()
+                        .Where(c => c.Id == campaign.Id)
+                        .SelectMany(c => c.Assignments.Where(a => a.Id == assignment.Id))
+                        .Select(a => a.CreatorProfile.UserId)
+                        .FirstOrDefaultAsync();
+                    if (creatorUserId != Guid.Empty)
+                        await _notifications.SendAsync(creatorUserId, NotificationType.CampaignCompleted,
+                            $"Kampanjen {campaign.Name} är avslutad. Din ersättning är klar att begära ut under Intäkter — och du kan lämna ett omdöme.");
+                }
+                catch { /* the status change is what matters */ }
+            }
+        }
     }
 }
 
