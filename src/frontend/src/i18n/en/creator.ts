@@ -522,4 +522,10 @@ export const creator: Record<string, string> = {
   'kampanjen är slut': 'the campaign has ended',
   'företaget har pausat kampanjen': 'the brand paused the campaign',
   'företaget tog bort kampanjen': 'the brand removed the campaign',
+  'Ansök till': 'Apply to',
+  'Det du skriver här är det första företaget läser om dig.': 'What you write here is the first thing the brand reads about you.',
+  'Varför passar just du för den här kampanjen?': 'Why are you the right fit for this campaign?',
+  'Berätta kort: vad du skapar, vem som följer dig och varför den här produkten känns rätt för din publik…': 'Briefly: what you create, who follows you and why this product feels right for your audience…',
+  'Bra — konkret slår långt.': 'Nice - concrete beats generic.',
+  'Minst 10 tecken.': 'At least 10 characters.',
 };

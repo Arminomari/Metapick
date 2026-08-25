@@ -287,7 +287,8 @@ public record ApplicationDto(
     Guid Id, Guid CampaignId, string CampaignName, Guid CreatorProfileId,
     string CreatorName, string? Message, string Status,
     string? ReviewNote, DateTime? ReviewedAt, DateTime CreatedAt,
-    string? TikTokUsername, string? CreatorCategory, string? CreatorBio);
+    string? TikTokUsername, string? CreatorCategory, string? CreatorBio,
+    string? CreatorAvatarUrl = null, long FollowerCount = 0);
 
 // ──── Assignment ────
 public record AssignmentListDto(
@@ -401,7 +402,18 @@ public record TapSubmissionDto(
 public record InviteManyRequest(List<Guid> CreatorProfileIds);
 
 /// <summary>Counts that deserve a red dot in the navigation — things waiting on you.</summary>
-public record ActionCountsDto(int PendingApplications, int PendingVideoReviews, int AwaitingYourVideo, int PendingCommunityRequests = 0, int PendingTapReviews = 0);
+public record ActionCountsDto(int PendingApplications, int PendingVideoReviews, int AwaitingYourVideo, int PendingCommunityRequests = 0, int PendingTapReviews = 0, int UnreadSupport = 0);
+
+// ── Admin ↔ user messages ──────────────────────────────────────────
+public record SupportMessageDto(
+    Guid Id, string Body, bool FromAdmin, string SenderName, bool IsRead, DateTime CreatedAt);
+
+/// <summary>One user's thread, as the admin list sees it.</summary>
+public record SupportThreadDto(
+    Guid UserId, string Name, string Email, string Role, string Status,
+    string LastMessage, bool LastFromAdmin, DateTime LastAt, int UnreadFromUser, int MessageCount);
+
+public record SendSupportMessageRequest(string Body, bool SendEmail = true);
 
 /// <summary>One cashable line per assignment, campaigns and taps alike.</summary>
 /// <summary>A video straight from the creator's own TikTok account.</summary>

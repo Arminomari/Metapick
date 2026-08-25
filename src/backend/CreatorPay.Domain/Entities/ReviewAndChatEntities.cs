@@ -41,3 +41,24 @@ public class ChatMessage : BaseEntity
     public CreatorCampaignAssignment? Assignment { get; set; }
     public User Sender { get; set; } = null!;
 }
+
+/// <summary>
+/// One message in the conversation between VYRLE's admins and a single user.
+/// There is exactly one thread per user, so whichever admin picks it up sees
+/// the whole history and the user only ever has one place to answer.
+/// </summary>
+public class SupportMessage : BaseEntity
+{
+    /// <summary>The user this thread belongs to — never an admin.</summary>
+    public Guid UserId { get; set; }
+    /// <summary>Who wrote it: the admin's user id, or UserId when the user replies.</summary>
+    public Guid SenderId { get; set; }
+    public bool FromAdmin { get; set; }
+    public string Body { get; set; } = null!;
+    /// <summary>Read by the other side.</summary>
+    public bool IsRead { get; set; }
+    public DateTime? ReadAt { get; set; }
+
+    // Navigation
+    public User User { get; set; } = null!;
+}

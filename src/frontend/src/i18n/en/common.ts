@@ -108,4 +108,12 @@ export const common: Record<string, string> = {
   'Omdömen låses upp när samarbetet är markerat som slutfört.': 'Reviews unlock once the collaboration is marked as completed.',
   'Mer': 'More',
   'Öppna': 'Open',
+  'Meddelanden från': 'Messages from',
+  'Din direktlinje till teamet bakom plattformen. Vi ser ditt svar direkt — och du får våra meddelanden både här och på mejlen.': 'Your direct line to the team behind the platform. We see your reply instantly - and you get our messages both here and by email.',
+  'Inga meddelanden än': 'No messages yet',
+  'Har du en fråga om ditt konto, en utbetalning eller något annat? Skriv nedan så svarar teamet så fort de kan.': 'A question about your account, a payout or anything else? Write below and the team replies as soon as they can.',
+  'Skriv till VYRLE-teamet…': 'Write to the VYRLE team…',
+  'Skickat! VYRLE-teamet får en notis direkt.': 'Sent! The VYRLE team is notified instantly.',
+  'Kunde inte skicka meddelandet': 'Could not send the message',
+  'Skicka': 'Send',
 };

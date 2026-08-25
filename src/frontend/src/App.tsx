@@ -6,6 +6,7 @@ import { BrandTapPage } from '@/pages/brand/BrandTapPage';
 import { BrandCommunityPage } from '@/pages/brand/BrandCommunityPage';
 import { Navigate, Route, BrowserRouter as Router, Routes, useParams } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SupportThreadPage } from '@/pages/shared/SupportThreadPage';
 import { useAuthStore } from '@/stores/authStore';
 import { CreatorShell, BrandShell } from '@/components/layout/VyrleShell';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -97,6 +98,7 @@ export default function App() {
             <Route path="/brand/community" element={<BrandCommunityPage />} />
             <Route path="/brand/settings" element={<BrandSettingsPage />} />
             <Route path="/brand/assignments/:id" element={<BrandAssignmentDetailPage />} />
+            <Route path="/brand/messages" element={<SupportThreadPage />} />
           </Route>
 
           {/* Creator area — VYRLE shell */}
@@ -115,16 +117,30 @@ export default function App() {
             <Route path="/creator/levels" element={<CreatorLevelsPage />} />
             <Route path="/creator/saved" element={<CreatorSavedPage />} />
             <Route path="/creator/profile" element={<CreatorProfilePage />} />
+            <Route path="/creator/messages" element={<SupportThreadPage />} />
           </Route>
 
           {/* Redirect dashboard based on role */}
           <Route path="/dashboard" element={<RoleRedirect />} />
+          {/* Mail CTAs land here and bounce to the right shell */}
+          <Route path="/messages" element={<MessagesRedirect />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </QueryClientProvider>
     </ErrorBoundary>
   );
+}
+
+function MessagesRedirect() {
+  const { isAuthenticated, role } = useAuthStore();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  switch (role) {
+    case 'Brand': return <Navigate to="/brand/messages" replace />;
+    case 'Creator': return <Navigate to="/creator/messages" replace />;
+    case 'Admin': return <Navigate to="/admin?section=users" replace />;
+    default: return <Navigate to="/" replace />;
+  }
 }
 
 function RoleRedirect() {

@@ -201,4 +201,13 @@ export const admin: Record<string, string> = {
   'Identitetsverifiering': 'Identity verification',
   'Jämför selfien med profilbilden och TikTok-kontots innehåll innan du godkänner. Selfien visas aldrig offentligt.': 'Compare the selfie with the profile picture and the TikTok account content before approving. The selfie is never shown publicly.',
   'Ingen selfie inskickad — kontot skapades innan kravet infördes.': 'No selfie submitted — the account was created before the requirement.',
+  'Inkorg — svar från användare': 'Inbox - replies from users',
+  'Alla konversationer med enskilda användare. Svara härifrån eller från användarens rad nedan.': 'Every conversation with individual users. Reply from here or from the user’s row below.',
+  'Inga konversationer än — skriv till en användare via ✉️ på deras rad.': 'No conversations yet - write to a user via ✉️ on their row.',
+  'nya': 'new',
+  'Du': 'You',
+  'Meddela': 'Message',
+  'Användaren får en notis i appen och (valfritt) ett mejl — svaret kommer tillbaka hit.': 'The user gets an in-app notification and (optionally) an email - the reply lands back here.',
+  'Ingen konversation än — skriv det första meddelandet nedan.': 'No conversation yet - write the first message below.',
+  'Skriv till användaren…': 'Write to the user…',
 };

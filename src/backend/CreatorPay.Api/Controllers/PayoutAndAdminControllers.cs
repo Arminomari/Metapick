@@ -122,11 +122,13 @@ public class AdminUserController : BaseController
 {
     private readonly IAdminUserService _adminUsers;
     private readonly ICreatorService _creators;
+    private readonly ISupportMessageService _support;
 
-    public AdminUserController(IAdminUserService adminUsers, ICreatorService creators)
+    public AdminUserController(IAdminUserService adminUsers, ICreatorService creators, ISupportMessageService support)
     {
         _adminUsers = adminUsers;
         _creators = creators;
+        _support = support;
     }
 
     [HttpGet]
@@ -159,6 +161,21 @@ public class AdminUserController : BaseController
     [HttpPost("{id:guid}/reject")]
     public async Task<IActionResult> RejectUser(Guid id, [FromBody] RejectReasonRequest request)
         => ToActionResult(await _adminUsers.RejectUserAsync(id, GetUserId(), request.Reason));
+
+    /// <summary>Tråden mellan VYRLE och en användare (Admin)</summary>
+    [HttpGet("{id:guid}/messages")]
+    public async Task<IActionResult> GetUserMessages(Guid id, CancellationToken ct)
+        => ToActionResult(await _support.GetThreadForAdminAsync(id, ct));
+
+    /// <summary>Skriv till en användare — notis, mejl och tråd i appen (Admin)</summary>
+    [HttpPost("{id:guid}/messages")]
+    public async Task<IActionResult> SendUserMessage(Guid id, [FromBody] SendSupportMessageRequest request, CancellationToken ct)
+        => ToActionResult(await _support.SendFromAdminAsync(GetUserId(), id, request, ct));
+
+    /// <summary>Alla trådar med användare, olästa svar först (Admin)</summary>
+    [HttpGet("/api/admin/messages")]
+    public async Task<IActionResult> GetThreads([FromQuery] bool unreadOnly = false, CancellationToken ct = default)
+        => ToActionResult(await _support.GetThreadsAsync(unreadOnly, ct));
 
     /// <summary>Radera ett konto (mjuk radering — historik bevaras för spårbarhet)</summary>
     [HttpDelete("{id:guid}")]
@@ -229,4 +246,22 @@ public class AuditController : BaseController
         [FromQuery] string? entityType, [FromQuery] Guid? entityId, [FromQuery] Guid? userId,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         => ToActionResult(await _audit.GetAuditLogsAsync(entityType, entityId, userId, page, pageSize));
+}
+
+/// <summary>The user's own thread with VYRLE — read it, answer it.</summary>
+[Route("api/messages")]
+[Authorize]
+public class SupportMessageController : BaseController
+{
+    private readonly ISupportMessageService _support;
+
+    public SupportMessageController(ISupportMessageService support) => _support = support;
+
+    [HttpGet]
+    public async Task<IActionResult> GetThread(CancellationToken ct)
+        => ToActionResult(await _support.GetMyThreadAsync(GetUserId(), ct));
+
+    [HttpPost]
+    public async Task<IActionResult> Reply([FromBody] SendSupportMessageRequest request, CancellationToken ct)
+        => ToActionResult(await _support.ReplyAsync(GetUserId(), request, ct));
 }

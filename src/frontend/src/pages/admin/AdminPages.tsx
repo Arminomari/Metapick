@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { AdminOverviewSection, AdminPayoutsSection, AdminFraudSection, AdminAuditSection, AdminCreateAdminCard, AdminBroadcastCard } from './AdminExtraSections';
+import { AdminSupportInboxCard, AdminUserThreadModal, useAdminUnreadThreads } from './AdminSupportInbox';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import api from '@/lib/api';
@@ -368,6 +369,9 @@ export function AdminDashboardPage() {
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [threadUser, setThreadUser] = useState<{ id: string; name: string } | null>(null);
+  const { data: supportThreads } = useAdminUnreadThreads();
+  const unreadReplies = (supportThreads ?? []).reduce((s, th) => s + th.unreadFromUser, 0);
   const triggerSync = useTriggerSync();
 
   const { data: campaignsData, isLoading: campaignsLoading, isError: campaignsError, error: campaignsErrorObj } = usePendingCampaigns(page);
@@ -451,7 +455,7 @@ export function AdminDashboardPage() {
         <div style={{ display: 'flex', gap: '.6rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
           {([
             ['overview', t('Översikt'), 0],
-            ['users', t('Användare'), pendingUserCount],
+            ['users', t('Användare'), pendingUserCount + unreadReplies],
             ['campaigns', t('Kampanjer'), pendingCampaignCount],
             ['payouts', t('Utbetalningar'), 0],
             ['fraud', t('Säkerhet'), 0],
@@ -474,6 +478,10 @@ export function AdminDashboardPage() {
           <>
             <AdminCreateAdminCard />
             <AdminBroadcastCard />
+            <AdminSupportInboxCard onOpenThread={(id, name) => setThreadUser({ id, name })} />
+            {threadUser && (
+              <AdminUserThreadModal userId={threadUser.id} userName={threadUser.name} onClose={() => setThreadUser(null)} />
+            )}
             <div style={s.tabs}>
               <button style={s.tab(filter === 'pending')} onClick={() => setFilter('pending')}>{t('Väntande')}</button>
               <button style={s.tab(filter === 'active')} onClick={() => setFilter('active')}>{t('Godkända')}</button>
@@ -521,6 +529,14 @@ export function AdminDashboardPage() {
                         style={{ background: 'none', border: '1px solid #7c3aed', borderRadius: '.5rem', padding: '.5rem .75rem', color: '#6a4ea8', cursor: 'pointer', fontSize: '.8rem', fontWeight: 600 }}
                       >
                         {t('Visa profil')}
+                      </button>
+                    )}
+                    {user.role !== 'Admin' && (
+                      <button
+                        onClick={() => setThreadUser({ id: user.id, name: user.role === 'Creator' ? user.displayName || user.email : user.companyName || user.email })}
+                        style={{ background: 'none', border: '1px solid #C26A4A', borderRadius: '.5rem', padding: '.5rem .75rem', color: '#C26A4A', cursor: 'pointer', fontSize: '.8rem', fontWeight: 600 }}
+                      >
+                        ✉️ {t('Meddela')}
                       </button>
                     )}
                     <button

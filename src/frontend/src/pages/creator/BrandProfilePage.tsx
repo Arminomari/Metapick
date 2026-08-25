@@ -10,6 +10,7 @@ import { t, statusLabel } from '@/lib/i18n';
 import { LoadingSpinner } from '@/components/ui';
 import { StarRating } from '@/components/ui/StarRating';
 import { useToast } from '@/components/vyrle/Toast';
+import { ApplyModal } from '@/components/vyrle/ApplyModal';
 import type { ApiResponse, ReviewDto } from '@/types';
 
 interface BrandPublicCampaign {
@@ -54,6 +55,7 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
   const toast = useToast();
   const apply = useApplyToCampaign();
   const [applyingId, setApplyingId] = useState<string | null>(null);
+  const [applyTarget, setApplyTarget] = useState<{ id: string; name: string } | null>(null);
 
   const { data: p, isLoading } = useQuery({
     queryKey: ['brand-public', id],
@@ -86,11 +88,12 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
   const appStatus = new Map<string, string>();
   (myApps?.data ?? []).forEach((a) => appStatus.set(a.campaignId, a.status));
 
-  const handleApply = async (campaignId: string) => {
+  const handleApply = async (campaignId: string, message: string) => {
     setApplyingId(campaignId);
     try {
-      await apply.mutateAsync({ campaignId, message: t('Jag vill gärna delta i denna kampanj!') });
+      await apply.mutateAsync({ campaignId, message });
       toast.push(t('Ansökan skickad!'), 'success');
+      setApplyTarget(null);
     } catch (err: any) {
       toast.push(err?.response?.data?.error?.message ?? t('Kunde inte skicka ansökan'), 'error');
     }
@@ -108,6 +111,15 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
 
   return (
     <section className="view active reveal">
+      {applyTarget && (
+        <ApplyModal
+          campaignName={applyTarget.name}
+          brandName={p.companyName}
+          busy={applyingId === applyTarget.id}
+          onClose={() => setApplyTarget(null)}
+          onSubmit={(msg) => void handleApply(applyTarget.id, msg)}
+        />
+      )}
       {/* ── Cover + identity ── */}
       <div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: 16 }}>
         <div style={{ padding: '24px 24px 22px', position: 'relative' }}>
@@ -260,7 +272,7 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
                       type="button"
                       className="btn-apply"
                       style={{ width: '100%', padding: 10, marginTop: 'auto' }}
-                      onClick={() => handleApply(c.id)}
+                      onClick={() => setApplyTarget({ id: c.id, name: c.name })}
                       disabled={applyingId === c.id || c.spotsLeft <= 0}
                     >
                       {applyingId === c.id ? t('Skickar…') : c.spotsLeft <= 0 ? t('Fullbokad') : t('Ansök')}

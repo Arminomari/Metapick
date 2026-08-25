@@ -54,6 +54,7 @@ public class AppDbContext : DbContext
     // ── Reviews & Chat ─────────────────────────────────
     public DbSet<Review> Reviews => Set<Review>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<SupportMessage> SupportMessages => Set<SupportMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

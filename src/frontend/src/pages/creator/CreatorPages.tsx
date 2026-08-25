@@ -4,6 +4,7 @@ import { TapBanner } from '@/components/vyrle/CreatorTaps';
 import { ChangeEmailCard, ChangePasswordCard } from '@/components/ui/AccountCards';
 import { maskSwishNumber, maskBankAccount } from '@/lib/masks';
 import { CopyField } from '@/components/ui/CopyButton';
+import { ApplyModal } from '@/components/vyrle/ApplyModal';
 import { t } from '@/lib/i18n';
 import { useState } from 'react';
 import { RefreshViewsButton } from '@/components/ui/RefreshViewsButton';
@@ -233,6 +234,7 @@ export function BrowseCampaignsPage() {
   const toast = useToast();
   const apply = useApplyToCampaign();
   const [applyingId, setApplyingId] = useState<string | null>(null);
+  const [applyTarget, setApplyTarget] = useState<{ id: string; name: string; brand?: string } | null>(null);
   const [calcId, setCalcId] = useState<string | null>(null);
 
   // Build a map of campaignId -> application status from backend data
@@ -247,11 +249,12 @@ export function BrowseCampaignsPage() {
     navigate(assignmentId ? `/creator/assignments/${assignmentId}` : '/creator/assignments');
   };
 
-  const handleApply = async (campaignId: string) => {
+  const handleApply = async (campaignId: string, message: string) => {
     setApplyingId(campaignId);
     try {
-      await apply.mutateAsync({ campaignId, message: t('Jag vill gärna delta i denna kampanj!') });
+      await apply.mutateAsync({ campaignId, message });
       toast.push(t('Ansökan skickad!'), 'success');
+      setApplyTarget(null);
     } catch (err: any) {
       const msg = err?.response?.data?.error?.message
         ?? err?.response?.data?.title
@@ -295,6 +298,15 @@ export function BrowseCampaignsPage() {
         </div>
       </div>
       <TikTokConnectBar />
+      {applyTarget && (
+        <ApplyModal
+          campaignName={applyTarget.name}
+          brandName={applyTarget.brand}
+          busy={applyingId === applyTarget.id}
+          onClose={() => setApplyTarget(null)}
+          onSubmit={(msg) => void handleApply(applyTarget.id, msg)}
+        />
+      )}
       {isError && (
         <div className="card" style={{ textAlign: 'center', padding: '40px 24px' }}>
           <div style={{ fontWeight: 700 }}>{t('Kunde inte hämta kampanjer')}</div>
@@ -354,7 +366,7 @@ export function BrowseCampaignsPage() {
                         </div>
                       )}
                       <button className={status === 'Approved' || status === 'Rejected' || status === 'Pending' || full ? 'btn-outline' : 'btn-apply'} style={{ width: '100%', marginTop: 'auto' }}
-                        onClick={() => appStatusMap.get(c.id) === 'Approved' ? goToAssignment(c.id) : handleApply(c.id)} disabled={isDisabled(c.id, c.spotsLeft)}>
+                        onClick={() => appStatusMap.get(c.id) === 'Approved' ? goToAssignment(c.id) : setApplyTarget({ id: c.id, name: c.name, brand: c.brandName })} disabled={isDisabled(c.id, c.spotsLeft)}>
                         {getButtonLabel(c.id, c.spotsLeft)}
                       </button>
                     </div>

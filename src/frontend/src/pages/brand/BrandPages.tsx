@@ -923,14 +923,32 @@ function CampaignApplicationsSection({ campaignId, campaignName }: { campaignId:
       {isLoading ? <CardSkeleton rows={2} /> : applications?.data.length ? (
         applications.data.map((a: ApplicationItem) => (
           <div key={a.id} className="list-row" style={{ gap: 14, flexWrap: 'wrap' }}>
-            <span className="mono" style={{ background: grad(a.creatorName) }}>{initial(a.creatorName)}</span>
+            <span role="button" tabIndex={0} title={t('Visa profil')} style={{ cursor: 'pointer', flex: '0 0 auto' }}
+              onClick={() => navigate(`/brand/creators/${a.creatorProfileId}`)}
+              onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/brand/creators/${a.creatorProfileId}`); }}>
+              {a.creatorAvatarUrl
+                ? <img src={a.creatorAvatarUrl} alt="" className="mono" style={{ objectFit: 'cover' }} />
+                : <span className="mono" style={{ background: grad(a.creatorName) }}>{initial(a.creatorName)}</span>}
+            </span>
             <div className="row-main" style={{ flex: '1 1 180px', minWidth: 0 }}>
-              <div className="t" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minWidth: 0 }}>{a.creatorName}
+              <div className="t" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minWidth: 0 }}>
+                <span role="button" tabIndex={0} style={{ cursor: 'pointer' }} title={t('Visa profil')}
+                  onClick={() => navigate(`/brand/creators/${a.creatorProfileId}`)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/brand/creators/${a.creatorProfileId}`); }}>{a.creatorName}</span>
                 {a.creatorCategory && <span className="badge grey">{a.creatorCategory}</span>}
+                {(a.followerCount ?? 0) > 0 && <span className="badge grey">{formatNumber(a.followerCount!)} {t('följare')}</span>}
               </div>
               {a.tikTokUsername && <a href={`https://www.tiktok.com/@${a.tikTokUsername}`} target="_blank" rel="noopener noreferrer" className="s" style={{ color: '#C26A4A' }}>@{a.tikTokUsername}</a>}
-              {a.message && <div className="s">{a.message}</div>}
-              <div className="s" style={{ color: 'var(--muted-2)' }}>{formatDate(a.createdAt)}</div>
+              {a.message && (
+                <div className="s" style={{ marginTop: 6, padding: '8px 12px', borderRadius: 12, background: 'rgba(255,244,236,.8)', borderLeft: '3px solid #F1A88F', fontStyle: 'italic', color: '#2C333F', lineHeight: 1.55, whiteSpace: 'pre-line', wordBreak: 'break-word' }}>
+                  “{a.message}”
+                </div>
+              )}
+              <div className="s" style={{ color: 'var(--muted-2)', marginTop: 4 }}>
+                {formatDate(a.createdAt)} · <span role="button" tabIndex={0} style={{ color: '#C26A4A', cursor: 'pointer', fontWeight: 600 }}
+                  onClick={() => navigate(`/brand/creators/${a.creatorProfileId}`)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/brand/creators/${a.creatorProfileId}`); }}>{t('Visa hela profilen')} →</span>
+              </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '0 1 auto', flexWrap: 'wrap', minWidth: 0 }}>
               <StatusBadge status={a.status} />

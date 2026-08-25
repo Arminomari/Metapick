@@ -301,6 +301,8 @@ export interface ApplicationItem {
   tikTokUsername?: string;
   creatorCategory?: string;
   creatorBio?: string;
+  creatorAvatarUrl?: string | null;
+  followerCount?: number;
 }
 
 // ── Assignments ────────────────────────────────────────

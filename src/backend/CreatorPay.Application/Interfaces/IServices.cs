@@ -220,6 +220,21 @@ public interface IFraudService
     Task<Result<PagedResult<FraudFlagDto>>> GetFraudFlagsAsync(string? status, string? severity, int page, int pageSize);
 }
 
+/// <summary>
+/// The one thread each user has with VYRLE's admins: written from the admin
+/// table, delivered by mail, answered in the app, read back in the same place.
+/// </summary>
+public interface ISupportMessageService
+{
+    Task<Result<List<SupportMessageDto>>> GetThreadForAdminAsync(Guid userId, CancellationToken ct = default);
+    Task<Result<SupportMessageDto>> SendFromAdminAsync(Guid adminUserId, Guid userId, SendSupportMessageRequest request, CancellationToken ct = default);
+    Task<Result<List<SupportThreadDto>>> GetThreadsAsync(bool unreadOnly, CancellationToken ct = default);
+
+    Task<Result<List<SupportMessageDto>>> GetMyThreadAsync(Guid userId, CancellationToken ct = default);
+    Task<Result<SupportMessageDto>> ReplyAsync(Guid userId, SendSupportMessageRequest request, CancellationToken ct = default);
+    Task<int> CountUnreadForUserAsync(Guid userId, CancellationToken ct = default);
+}
+
 public interface INotificationService
 {
     Task SendAsync(Guid recipientId, NotificationType type, string message, Guid? referenceId = null);

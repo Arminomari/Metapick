@@ -289,7 +289,9 @@ public class ApplicationService : IApplicationService
             .ToListAsync(ct);
 
         var dtos = items.Select(a => MapToDto(a, a.CreatorProfile.DisplayName, a.Campaign.Name,
-            a.CreatorProfile.TikTokAccount?.TikTokUsername, a.CreatorProfile.Category, a.CreatorProfile.Bio)).ToList();
+            a.CreatorProfile.TikTokAccount?.TikTokUsername, a.CreatorProfile.Category, a.CreatorProfile.Bio,
+            a.CreatorProfile.AvatarUrl,
+            Math.Max(a.CreatorProfile.FollowerCount, a.CreatorProfile.TikTokAccount?.FollowerCount ?? 0))).ToList();
         return new PagedResult<ApplicationDto>
         {
             Data = dtos, Page = page, PageSize = pageSize, TotalCount = totalCount
@@ -348,10 +350,11 @@ public class ApplicationService : IApplicationService
     }
 
     private static ApplicationDto MapToDto(CampaignApplication a, string creatorName, string campaignName,
-        string? tikTokUsername = null, string? creatorCategory = null, string? creatorBio = null) =>
+        string? tikTokUsername = null, string? creatorCategory = null, string? creatorBio = null,
+        string? creatorAvatarUrl = null, long followerCount = 0) =>
         new(a.Id, a.CampaignId, campaignName, a.CreatorProfileId, creatorName,
             a.Message, a.Status.ToString(), a.RejectionReason, a.ReviewedAt, a.CreatedAt,
-            tikTokUsername, creatorCategory, creatorBio);
+            tikTokUsername, creatorCategory, creatorBio, creatorAvatarUrl, followerCount);
 
     /// <summary>Returns true when a DbUpdateException wraps a DB unique-constraint violation.</summary>
     private static bool IsUniqueConstraintViolation(DbUpdateException ex)
@@ -379,6 +382,7 @@ public class AssignmentService : IAssignmentService
     private readonly IRepository<BrandCommunityMember> _communityRows;
     private readonly ITikTokApiClient _tikTok;
     private readonly IEncryptionService _encryption;
+    private readonly ISupportMessageService _support;
     private readonly TapAccrualService _tapAccrual;
 
     public AssignmentService(
@@ -397,8 +401,10 @@ public class AssignmentService : IAssignmentService
         IRepository<BrandCommunityMember> communityRows,
         ITikTokApiClient tikTok,
         IEncryptionService encryption,
-        TapAccrualService tapAccrual)
+        TapAccrualService tapAccrual,
+        ISupportMessageService support)
     {
+        _support = support;
         _tapAccrual = tapAccrual;
         _applicationRows = applicationRows;
         _communityRows = communityRows;
@@ -695,13 +701,15 @@ public class AssignmentService : IAssignmentService
         var requests = await _communityRows.Query()
             .CountAsync(m => m.BrandProfileId == brand.Id && m.Status == CommunityMemberStatus.Requested, ct);
 
-        return new ActionCountsDto(pendingApps, pendingVideos, 0, requests, pendingTapVideos);
+        var unreadSupport = await _support.CountUnreadForUserAsync(brandUserId, ct);
+        return new ActionCountsDto(pendingApps, pendingVideos, 0, requests, pendingTapVideos, unreadSupport);
     }
 
     public async Task<Result<ActionCountsDto>> GetCreatorActionCountsAsync(Guid creatorUserId, CancellationToken ct = default)
     {
         var creator = await _creators.Query().FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
         if (creator == null) return new ActionCountsDto(0, 0, 0);
+        var unreadSupport = await _support.CountUnreadForUserAsync(creatorUserId, ct);
 
         // Assignments that are live but have no tracked video yet — the
         // creator's own to-do list.
@@ -714,7 +722,7 @@ public class AssignmentService : IAssignmentService
                 && a.Campaign.EndDate >= today
                 && !a.SocialPosts.Any(p => p.IsActive), ct);
 
-        return new ActionCountsDto(0, 0, awaiting);
+        return new ActionCountsDto(0, 0, awaiting, 0, 0, unreadSupport);
     }
 
     /// <summary>

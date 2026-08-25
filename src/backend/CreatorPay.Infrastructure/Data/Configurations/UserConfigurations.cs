@@ -149,3 +149,20 @@ public class BrandPostConfiguration : IEntityTypeConfiguration<BrandPost>
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
+
+public class SupportMessageConfiguration : IEntityTypeConfiguration<SupportMessage>
+{
+    public void Configure(EntityTypeBuilder<SupportMessage> b)
+    {
+        b.ToTable("support_messages");
+        b.HasKey(e => e.Id);
+        b.Property(e => e.Body).HasMaxLength(4000).IsRequired();
+        b.HasIndex(e => new { e.UserId, e.CreatedAt });
+        b.HasIndex(e => new { e.UserId, e.FromAdmin, e.IsRead });
+
+        b.HasOne(e => e.User)
+            .WithMany()
+            .HasForeignKey(e => e.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}

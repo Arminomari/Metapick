@@ -12,6 +12,7 @@ import { ToastProvider } from '@/components/vyrle/Toast';
 
 const S = (d: ReactNode, sw = 1.7) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">{d}</svg>;
 const ICON: Record<string, ReactNode> = {
+  mail: S(<><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m4 7 8 6 8-6" /></>),
   dashboard: S(<><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></>),
   discover: S(<><circle cx="12" cy="12" r="9" /><polygon points="16,8 13.5,13.5 8,16 10.5,10.5" /></>),
   campaigns: S(<><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M3 12h18" /></>),
@@ -172,6 +173,7 @@ export function CreatorShell() {
     { label: t('Intäkter'), path: '/creator/earnings', icon: 'earnings' },
     { label: t('Creator-nivåer'), path: '/creator/levels', icon: 'levels', tag: 'NEW' },
     { label: t('Sparat'), path: '/creator/saved', icon: 'saved' },
+    { label: t('Meddelanden'), path: '/creator/messages', icon: 'mail', badge: counts?.unreadSupport || undefined },
     { label: t('Inställningar'), path: '/creator/profile', icon: 'settings' },
   ];
   const sub = (
@@ -200,6 +202,7 @@ export function BrandShell() {
     { label: t('Hitta creators'), path: '/brand/creators', icon: 'creators' },
     { label: t('PR-utskick'), path: '/brand/pr', icon: 'pr' },
     { label: t('Min profil'), path: '/brand/public-profile', icon: 'portfolio' },
+    { label: t('Meddelanden'), path: '/brand/messages', icon: 'mail', badge: counts?.unreadSupport || undefined },
     { label: t('Inställningar'), path: '/brand/settings', icon: 'settings' },
   ];
   const sub = (

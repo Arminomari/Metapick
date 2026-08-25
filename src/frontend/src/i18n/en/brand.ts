@@ -568,4 +568,6 @@ export const brand: Record<string, string> = {
   'Videon godkänd — views räknas nu': 'Video approved — views now count',
   'Videon nekad': 'Video rejected',
   'Kunde inte spara beslutet': 'Could not save the decision',
+  'Visa hela profilen': 'View full profile',
+  'följare': 'followers',
 };

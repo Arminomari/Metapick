@@ -62,6 +62,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<IChatService, ChatService>();
+        services.AddScoped<ISupportMessageService, SupportMessageService>();
 
         // ── Infrastructure services ────────────────────
         services.AddScoped<ITokenService, JwtTokenService>();
