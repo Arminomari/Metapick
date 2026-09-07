@@ -55,7 +55,12 @@ public enum NotificationType
     FraudAlert = 6, SystemMessage = 7, BrandApproved = 8,
     CreatorApproved = 9, NewApplication = 10, VideoVerified = 11,
     SubmissionApproved = 12, SubmissionRejected = 13,
-    PrOfferReceived = 14, PrOfferAccepted = 15, PrOfferDeclined = 16
+    PrOfferReceived = 14, PrOfferAccepted = 15, PrOfferDeclined = 16,
+
+    // ── UGC-marknadsplatsen ──
+    UgcCampaignMatch = 20, UgcNewApplication = 21, UgcHired = 22, UgcContractAccepted = 23,
+    UgcDelivered = 24, UgcRevisionRequested = 25, UgcApproved = 26, UgcPaid = 27,
+    UgcDeadlineReminder = 28, UgcAutoApproveReminder = 29, UgcDispute = 30, UgcCancelled = 31
 }
 
 // ── Portfolio & PR Hub ─────────────────────────────────

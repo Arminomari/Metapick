@@ -13,5 +13,10 @@
   <ItemGroup>
     <ProjectReference Include="..\CreatorPay.Domain\CreatorPay.Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- UGC contract templates: legal text lives in files, not code -->
+    <!-- WithCulture=false: the ".sv" in "contract.sv.md" is a language tag, not a satellite culture -->
+    <EmbeddedResource Include="Ugc\Contracts\*.md" WithCulture="false" LogicalName="CreatorPay.Application.Ugc.Contracts.%(Filename)%(Extension)" />
+  </ItemGroup>
 </Project>
 

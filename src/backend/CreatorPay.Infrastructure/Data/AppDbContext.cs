@@ -56,6 +56,18 @@ public class AppDbContext : DbContext
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<SupportMessage> SupportMessages => Set<SupportMessage>();
 
+    // ── UGC-marknadsplatsen ("Beställ video") ───────────
+    public DbSet<UgcCreatorProfile> UgcCreatorProfiles => Set<UgcCreatorProfile>();
+    public DbSet<UgcCampaign> UgcCampaigns => Set<UgcCampaign>();
+    public DbSet<UgcApplication> UgcApplications => Set<UgcApplication>();
+    public DbSet<UgcCollab> UgcCollabs => Set<UgcCollab>();
+    public DbSet<UgcDeliverable> UgcDeliverables => Set<UgcDeliverable>();
+    public DbSet<UgcPayment> UgcPayments => Set<UgcPayment>();
+    public DbSet<UgcWebhookEvent> UgcWebhookEvents => Set<UgcWebhookEvent>();
+    public DbSet<UgcDispute> UgcDisputes => Set<UgcDispute>();
+    public DbSet<UgcMessage> UgcMessages => Set<UgcMessage>();
+    public DbSet<UgcCollabEvent> UgcCollabEvents => Set<UgcCollabEvent>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

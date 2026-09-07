@@ -64,6 +64,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IChatService, ChatService>();
         services.AddScoped<ISupportMessageService, SupportMessageService>();
 
+        // ── UGC-marknadsplatsen: settings + payment gateway (Stripe lands in phase 2) ──
+        services.AddSingleton(sp => CreatorPay.Application.Ugc.UgcSettings.From(
+            sp.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>()));
+        services.AddScoped<CreatorPay.Application.Ugc.IUgcPaymentGateway, CreatorPay.Application.Ugc.UnconfiguredUgcPaymentGateway>();
+        services.AddScoped<CreatorPay.Application.Ugc.UgcSettlementService>();
+
         // ── Infrastructure services ────────────────────
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IEncryptionService, EncryptionService>();

@@ -194,6 +194,8 @@ if (runHangfireServerInApi)
     builder.Services.AddScoped<CreatorPay.Worker.Jobs.FraudDetectionJob>();
     builder.Services.AddScoped<CreatorPay.Worker.Jobs.PayoutSettlementJob>();
     builder.Services.AddScoped<CreatorPay.Worker.Jobs.PayoutRecalculationJob>();
+    builder.Services.AddScoped<CreatorPay.Worker.Jobs.UgcDeadlineJob>();
+    builder.Services.AddScoped<CreatorPay.Worker.Jobs.UgcAutoApproveJob>();
 }
 
 // ── Health checks ─────────────────────────────────────
@@ -464,6 +466,10 @@ app.MapHealthChecks("/health/ready",
         recurring.AddOrUpdate<CreatorPay.Worker.Jobs.PayoutRecalculationJob>(
             "payout-recalculation", j => j.ExecuteAsync(CancellationToken.None),
             builder.Configuration["Jobs:PayoutRecalcCron"] ?? "*/15 * * * *");
+        recurring.AddOrUpdate<CreatorPay.Worker.Jobs.UgcDeadlineJob>(
+            "ugc-deadlines", j => j.ExecuteAsync(), "10 * * * *");
+        recurring.AddOrUpdate<CreatorPay.Worker.Jobs.UgcAutoApproveJob>(
+            "ugc-auto-approve", j => j.ExecuteAsync(), "20 * * * *");
         Log.Information("Hangfire server + recurring jobs hosted in API process");
     }
 
