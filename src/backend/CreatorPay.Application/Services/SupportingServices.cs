@@ -544,7 +544,12 @@ public class NotificationService : INotificationService
         NotificationType.SubmissionRejected,
         NotificationType.PayoutReady,
         NotificationType.PayoutCompleted,
-        NotificationType.PrOfferReceived
+        NotificationType.PrOfferReceived,
+        // UGC-marknadsplatsen: allt som kräver att någon gör något går även som mejl
+        NotificationType.UgcCampaignMatch, NotificationType.UgcNewApplication, NotificationType.UgcHired,
+        NotificationType.UgcContractAccepted, NotificationType.UgcDelivered, NotificationType.UgcRevisionRequested,
+        NotificationType.UgcApproved, NotificationType.UgcPaid, NotificationType.UgcDeadlineReminder,
+        NotificationType.UgcAutoApproveReminder, NotificationType.UgcDispute, NotificationType.UgcCancelled
     };
 
     private static (string Text, string Path) CtaFor(NotificationType type) => type switch
@@ -557,6 +562,18 @@ public class NotificationService : INotificationService
         NotificationType.PayoutReady => ("Öppna Intäkter", "/creator/earnings"),
         NotificationType.PayoutCompleted => ("Öppna Intäkter", "/creator/earnings"),
         NotificationType.PrOfferReceived => ("Öppna PR-hubben", "/creator/pr"),
+        NotificationType.UgcCampaignMatch => ("Se uppdraget", "/creator/ugc"),
+        NotificationType.UgcNewApplication => ("Se buden", "/brand/ugc"),
+        NotificationType.UgcHired => ("Öppna uppdraget", "/creator/ugc/collabs"),
+        NotificationType.UgcContractAccepted => ("Öppna uppdraget", "/ugc"),
+        NotificationType.UgcDelivered => ("Granska leveransen", "/brand/ugc/pipeline"),
+        NotificationType.UgcRevisionRequested => ("Se feedbacken", "/creator/ugc/collabs"),
+        NotificationType.UgcApproved => ("Öppna uppdraget", "/ugc"),
+        NotificationType.UgcPaid => ("Öppna uppdraget", "/ugc"),
+        NotificationType.UgcDeadlineReminder => ("Leverera nu", "/creator/ugc/collabs"),
+        NotificationType.UgcAutoApproveReminder => ("Granska nu", "/brand/ugc/pipeline"),
+        NotificationType.UgcDispute => ("Se tvisten", "/ugc"),
+        NotificationType.UgcCancelled => ("Öppna VYRLE", "/ugc"),
         _ => ("Öppna VYRLE", "/")
     };
 
@@ -579,6 +596,18 @@ public class NotificationService : INotificationService
         NotificationType.PrOfferReceived => "Nytt PR-erbjudande ✨",
         NotificationType.PrOfferAccepted => "PR-erbjudande accepterat",
         NotificationType.PrOfferDeclined => "PR-erbjudande avböjt",
+        NotificationType.UgcCampaignMatch => "Nytt videouppdrag som passar dig 🎬",
+        NotificationType.UgcNewApplication => "Nytt bud på ditt videouppdrag",
+        NotificationType.UgcHired => "Du är vald! 🎉",
+        NotificationType.UgcContractAccepted => "Avtalet är på plats",
+        NotificationType.UgcDelivered => "Video levererad — dags att granska",
+        NotificationType.UgcRevisionRequested => "Ändring önskad",
+        NotificationType.UgcApproved => "Leveransen är godkänd ✓",
+        NotificationType.UgcPaid => "Utbetalning genomförd 💸",
+        NotificationType.UgcDeadlineReminder => "Deadline närmar sig ⏰",
+        NotificationType.UgcAutoApproveReminder => "24 timmar kvar att granska",
+        NotificationType.UgcDispute => "Tvist",
+        NotificationType.UgcCancelled => "Uppdrag avbrutet",
         _ => "Notis"
     };
 

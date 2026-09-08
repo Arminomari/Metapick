@@ -248,6 +248,8 @@ public class UgcPayment : BaseEntity
     public string Provider { get; set; } = "stripe";
     public string Currency { get; set; } = "SEK";
 
+    /// <summary>Hosted checkout session the brand was sent to; the intent/charge arrive via webhook.</summary>
+    public string? CheckoutSessionId { get; set; }
     public string? PaymentIntentId { get; set; }
     public string? ChargeId { get; set; }
     public string? TransferId { get; set; }
@@ -324,6 +326,8 @@ public class UgcMessage : BaseEntity
 public class UgcCollabEvent : BaseEntity
 {
     public Guid CollabId { get; set; }
+    /// <summary>Strictly increasing per process — orders events that share a timestamp.</summary>
+    public long Sequence { get; set; } = UgcSequence.Next();
     public UgcCollabStatus? FromStatus { get; set; }
     public UgcCollabStatus ToStatus { get; set; }
     public UgcActor Actor { get; set; }
@@ -332,4 +336,19 @@ public class UgcCollabEvent : BaseEntity
 
     // Navigation
     public UgcCollab Collab { get; set; } = null!;
+}
+
+/// <summary>Monotonic ticks: never hands out the same value twice, even within one tick.</summary>
+public static class UgcSequence
+{
+    private static long _last;
+    public static long Next()
+    {
+        while (true)
+        {
+            var prev = Volatile.Read(ref _last);
+            var next = Math.Max(DateTime.UtcNow.Ticks, prev + 1);
+            if (Interlocked.CompareExchange(ref _last, next, prev) == prev) return next;
+        }
+    }
 }

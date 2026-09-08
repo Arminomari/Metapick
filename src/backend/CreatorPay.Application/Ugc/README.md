@@ -6,8 +6,10 @@ går genom en explicit state machine. Modulen är medvetet skild från
 **kranen/kampanjerna** (`Campaign`, `CreatorCampaignAssignment`), som betalar
 per verifierad view — det här är fasta leveranser med escrow.
 
-> **Status:** Fas 1 klar (datamodell, migration, state machine, jobb, tester).
-> Fas 2 (Stripe Connect + webhooks + API) och fas 3 (UI + AI-brief) väntar på klartecken.
+> **Status:** Fas 1–3 byggda och driftsatta. Allt fungerar utan nycklar
+> (betalning registreras manuellt av admin, video sparas på servern, briefen
+> skrivs för hand). Lägg in nycklarna nedan så aktiveras Stripe, S3/R2 och AI
+> automatiskt vid nästa omstart — ingen kodändring behövs.
 
 ## Var koden ligger
 
@@ -22,7 +24,15 @@ per verifierad view — det här är fasta leveranser med escrow.
 | Application | `Ugc/UgcSettings.cs` | Konfiguration (sektionen `Ugc`) |
 | Application | `Ugc/UgcContractGenerator.cs` + `Ugc/Contracts/*.md` | Kontraktsmallar (inbäddade) → text + SHA-256 |
 | Application | `Ugc/IUgcPaymentGateway.cs` | Betalningsabstraktion (Stripe i fas 2) |
-| Application | `Ugc/UgcSettlementService.cs` | Approved → Paid, Cancelled → refund, strikes, track record |
+| Application | `Ugc/UgcSettlementService.cs` | Approved → Paid, Cancelled → refund, tvistdelning, strikes, track record |
+| Application | `Ugc/Services/*.cs` | Creator-, kampanj-, bud-, collab- och admin-tjänsterna; `UgcMapper` (DTO + `AvailableActions`) |
+| Application | `Ugc/UgcWebhookService.cs` | Idempotent webhook-hantering (claim → handler → release vid fel) |
+| Application | `Ugc/IUgcFileStore.cs` | Videolagring — lokal disk eller S3/R2 |
+| Infrastructure | `Services/StripeUgcPaymentGateway.cs` | Stripe Checkout, Transfer, Refund, Connect Express + webhook-parser |
+| Infrastructure | `Services/UgcFileStores.cs` | `LocalUgcFileStore` (`/uploads/ugc/…`) och `S3UgcFileStore` (presignerade URL:er) |
+| Infrastructure | `Services/AnthropicUgcBriefGenerator.cs` | AI-brief via Anthropic C#-SDK, strukturerad JSON |
+| Api | `Controllers/UgcControllers.cs` | `/api/ugc/creator/*`, `/api/ugc/brand/*`, `/api/ugc/admin/*`, `/api/ugc/collabs/{id}/license`, `/api/ugc/webhooks/stripe` |
+| Frontend | `src/hooks/ugc.ts`, `src/pages/ugc/*`, `src/pages/admin/AdminUgcSection.tsx` | Företag: Beställ video (lista, byggare med AI-brief, bud, pipeline-kanban, uppdrag). Creator: Videouppdrag (bud, mina uppdrag, UGC-profil). Admin: verifieringskö, tvister, integrationer |
 | Infrastructure | `Data/Configurations/UgcConfigurations.cs` | EF-mappning, tabeller `ugc_*` |
 | Infrastructure | `Migrations/*_AddUgcMarketplace.cs` | 10 tabeller |
 | Worker | `Jobs/UgcJobs.cs` | `UgcDeadlineJob` (xx:10) och `UgcAutoApproveJob` (xx:20), varje timme |
@@ -154,8 +164,21 @@ Sektionen `Ugc` (alla valfria, defaults i `UgcSettings`):
 | `Ugc__RequireFTaxForPaid` | `false` | Blockera betalda uppdrag utan F-skatt |
 | `Ugc__ContractTemplateVersion` | `2026-09-draft-1` | Version på mallsatsen |
 
-Fas 2 lägger till: `Stripe__SecretKey`, `Stripe__WebhookSecret`, `Stripe__ConnectClientId`.
-Fas 3 lägger till: `Anthropic__ApiKey` (AI-brief) och objektlagring för video.
+**Nycklar som aktiverar integrationerna (Railway → Metapick-tjänsten):**
+
+| Variabel | Aktiverar | Var den kommer ifrån |
+|---|---|---|
+| `Stripe__SecretKey` | Checkout, transfers, refunds, Connect-onboarding | Stripe Dashboard → Developers → API keys (`sk_live_…`) |
+| `Stripe__WebhookSecret` | Webhook-verifiering | Stripe Dashboard → Webhooks → endpoint `https://<api-host>/api/ugc/webhooks/stripe`, events: `checkout.session.completed`, `payment_intent.succeeded`, `charge.refunded`, `account.updated` (`whsec_…`) |
+| `Storage__S3__Bucket`, `Storage__S3__AccessKey`, `Storage__S3__SecretKey` | Videolagring i molnet | R2: Cloudflare → R2 → Manage R2 API tokens. S3: IAM-nyckel med rätt till bucketen |
+| `Storage__S3__ServiceUrl` | R2/MinIO-endpoint (`https://<accountid>.r2.cloudflarestorage.com`); utelämna för AWS | |
+| `Storage__S3__Region` | Region för AWS (`eu-north-1`); för R2 räcker ServiceUrl | |
+| `Storage__S3__PublicBaseUrl` | Valfritt: publik CDN-domän i stället för presignerade URL:er | |
+| `Anthropic__ApiKey` | "Generera brief med AI" | console.anthropic.com |
+| `Anthropic__Model` | Valfritt, default `claude-opus-5` | |
+
+Utan nycklarna: admin ser gul status under **Beställ video → Översikt → Integrationer**, betalningar registreras
+med **Registrera betalning manuellt** på uppdraget, videos ligger på API-servern (ok för test, försvinner vid omstart).
 
 ## Stripe-webhooks lokalt (fas 2)
 
@@ -169,24 +192,30 @@ stripe trigger payment_intent.succeeded
 Endpointen verifierar signaturen, skriver `UgcWebhookEvent` (unikt event-id)
 och först därefter agerar — ett event som redan finns i tabellen är ett no-op.
 
-## Nästa steg
+## Så testar du hela flödet utan nycklar
 
-**Fas 2 — betalning + API**
-- `StripeUgcPaymentGateway` (PaymentIntent, Transfer, Refund, Connect Express-onboarding)
-- Webhook-endpoint med idempotens + tester
-- Tjänster/endpoints: kampanj CRUD + publicera, ansök/bud, preselect/hire/direktbjud, kontrakt-accept + betalning, leverans, godkänn/revision, tvist, meddelanden, admin-verifiering och tvistkö
-- Verifieringstjänst (social snapshot + `UgcVerificationRule`)
-- Licensbevis (PDF) vid Paid
+1. **Företag:** Beställ video → Ny beställning → skriv brief → Publicera (kräver org.nr och godkänt konto).
+2. **Creator:** Videouppdrag → Min UGC-profil → kategorier + exempelvideo → *Kolla igen* (verifieras automatiskt om
+   följare ≥ 1 000 och L/F-kvot ≥ 5 %; annars **Admin → Beställ video → Verifieringskö → Godkänn**). Lägg bud.
+3. **Företag:** öppna beställningen → Anlita → Acceptera & betala (utan Stripe: stannar med "Betalningar är inte aktiverade").
+4. **Admin:** Beställ video → Alla uppdrag → uppdraget → *Registrera betalning manuellt*.
+5. **Creator:** Acceptera kontraktet → Leverera video (mp4/mov/webm, max 500 MB).
+6. **Företag:** Godkänn (eller Begär ändring / Öppna tvist). Vid godkännande: utan Stripe stannar uppdraget i *Godkänd*
+   med orsak på betalningsraden; med Stripe går transfern och uppdraget blir *Betald* med licensbevis.
+7. Auto-approve och no-show sköts av timjobben (`UgcAutoApproveJob` 20 över, `UgcDeadlineJob` 10 över).
 
-**Fas 3 — UI**
-- Brand: kampanjlista, kampanjbyggare med AI-brief, ansökningsvy, kanban-pipeline, granskningsvy med videospelare + versioner, chatt
-- Creator: matchande kampanjer, mina ansökningar, mina collabs, uppladdning, intäkter
-- Admin: verifieringskö, tvistkö, avgiftsinställningar
+## Avvikelser att känna till
 
-## Öppna frågor (behöver svar före fas 2)
+- **Licensbeviset** är en utskriftsvänlig HTML-sida (`/api/ugc/collabs/{id}/license`, skriv ut → PDF), inte en genererad PDF-fil.
+- **Uppladdning** går via API:t (multipart, 500 MB). Nästa steg vid volym: presignerad direktuppladdning till R2.
+- **Refusal-fallback** för AI-anropet är inte påslagen (icke-beta-vägen används); en refusal ger ett läsbart fel.
+- **Tester** (`CreatorPay.Tests/Ugc`, 431 st) kördes gröna fram till sista ändringen (event-sekvens). Därefter blockerar
+  **Windows Smart App Control** laddning av nybyggda DLL:er på utvecklarmaskinen (`0x800711C7`); stäng av det under
+  Windows-säkerhet → App- och webbläsarkontroll för att köra `dotnet test` och `dotnet ef` lokalt igen.
+  Migrationen `AddUgcEventSequence` är handskriven av samma skäl (kolumn + index; snapshot uppdaterad).
 
-1. Finns ett Stripe-konto med Connect aktiverat (Express, SE)? Annars: vem skapar det?
-2. Objektlagring för video: Cloudflare R2, S3 eller annat?
-3. Ska PR-hubben på sikt slås ihop med marknadsplatsens direktbjudan, eller leva parallellt?
-4. F-skatt-krav på från start (`Ugc__RequireFTaxForPaid=true`) eller först senare?
-5. Anthropic-nyckel för AI-brief — ok att lägga i Railway?
+## Öppna beslut
+
+1. PR-hubben: slå ihop med direktbeställning på sikt, eller leva parallellt? (Båda finns nu.)
+2. F-skatt-krav från start (`Ugc__RequireFTaxForPaid=true`)? Default av.
+3. Juridisk granskning av kontraktsmallarna innan skarpa betalningar.

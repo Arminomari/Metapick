@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { AdminOverviewSection, AdminPayoutsSection, AdminFraudSection, AdminAuditSection, AdminCreateAdminCard, AdminBroadcastCard } from './AdminExtraSections';
 import { AdminSupportInboxCard, AdminUserThreadModal, useAdminUnreadThreads } from './AdminSupportInbox';
+import { AdminUgcSection } from './AdminUgcSection';
+import { useUgcAdminOverview } from '@/hooks/ugc';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import api from '@/lib/api';
@@ -57,7 +59,7 @@ function getApiErrorMessage(error: any, fallback: string) {
     ?? fallback;
 }
 
-type AdminSection = 'overview' | 'users' | 'campaigns' | 'payouts' | 'fraud' | 'audit';
+type AdminSection = 'overview' | 'users' | 'campaigns' | 'ugc' | 'payouts' | 'fraud' | 'audit';
 
 const s = {
   page: { minHeight: '100vh', background: 'radial-gradient(1200px 600px at 12% -8%, rgba(255,216,199,.55), transparent 60%), radial-gradient(900px 500px at 105% 0%, rgba(237,225,255,.45), transparent 55%), #FFF4EC', color: '#0B0F17', padding: 'clamp(1rem, 4vw, 2rem)' } as React.CSSProperties,
@@ -371,6 +373,8 @@ export function AdminDashboardPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [threadUser, setThreadUser] = useState<{ id: string; name: string } | null>(null);
   const { data: supportThreads } = useAdminUnreadThreads();
+  const { data: ugcOverview } = useUgcAdminOverview();
+  const ugcBadge = (ugcOverview?.pendingVerification ?? 0) + (ugcOverview?.verifiedAwaitingApproval ?? 0) + (ugcOverview?.openDisputes ?? 0);
   const unreadReplies = (supportThreads ?? []).reduce((s, th) => s + th.unreadFromUser, 0);
   const triggerSync = useTriggerSync();
 
@@ -457,6 +461,7 @@ export function AdminDashboardPage() {
             ['overview', t('Översikt'), 0],
             ['users', t('Användare'), pendingUserCount + unreadReplies],
             ['campaigns', t('Kampanjer'), pendingCampaignCount],
+            ['ugc', t('Beställ video'), ugcBadge],
             ['payouts', t('Utbetalningar'), 0],
             ['fraud', t('Säkerhet'), 0],
             ['audit', t('Logg'), 0],
@@ -472,6 +477,7 @@ export function AdminDashboardPage() {
         {section === 'payouts' && <AdminPayoutsSection />}
         {section === 'fraud' && <AdminFraudSection />}
         {section === 'audit' && <AdminAuditSection />}
+        {section === 'ugc' && <AdminUgcSection />}
 
         {/* ── Users section ── */}
         {section === 'users' && (

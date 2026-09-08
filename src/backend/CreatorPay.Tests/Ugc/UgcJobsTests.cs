@@ -54,14 +54,16 @@ public class UgcJobsTests
         public long LastRefundOre { get; private set; }
         public bool IsConfigured => true;
 
-        public Task<UgcGatewayResult> HoldAsync(Guid collabId, long brandTotalOre, string currency, string brandUserEmail, CancellationToken ct = default)
-            => Task.FromResult(UgcGatewayResult.Ok("pi_test"));
+        public Task<UgcGatewayResult> CreateCheckoutAsync(UgcCheckoutRequest request, CancellationToken ct = default)
+            => Task.FromResult(UgcGatewayResult.Ok("cs_test", "https://checkout.stripe.com/test"));
+        public Task<UgcConnectStatus> GetConnectStatusAsync(string connectedAccountId, CancellationToken ct = default)
+            => Task.FromResult(new UgcConnectStatus(true, true, true, true, null));
         public Task<UgcGatewayResult> TransferAsync(Guid collabId, string chargeId, long amountOre, string currency, string connectedAccountId, CancellationToken ct = default)
         { Transfers++; LastTransferOre = amountOre; return Task.FromResult(Succeed ? UgcGatewayResult.Ok("tr_" + Transfers) : UgcGatewayResult.Fail("stripe down")); }
         public Task<UgcGatewayResult> RefundAsync(Guid collabId, string paymentIntentId, long amountOre, CancellationToken ct = default)
         { Refunds++; LastRefundOre = amountOre; return Task.FromResult(Succeed ? UgcGatewayResult.Ok("re_" + Refunds) : UgcGatewayResult.Fail("stripe down")); }
-        public Task<UgcGatewayResult> CreateConnectOnboardingAsync(Guid creatorProfileId, string email, string returnUrl, string refreshUrl, CancellationToken ct = default)
-            => Task.FromResult(UgcGatewayResult.Ok("acct_test", "https://connect.stripe.com/x"));
+        public Task<UgcGatewayResult> CreateConnectOnboardingAsync(Guid creatorProfileId, string? existingAccountId, string email, string returnUrl, string refreshUrl, CancellationToken ct = default)
+            => Task.FromResult(UgcGatewayResult.Ok(existingAccountId ?? "acct_test", "https://connect.stripe.com/x"));
     }
 
     // ── World builder ────────────────────────────────────────────────

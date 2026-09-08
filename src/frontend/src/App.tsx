@@ -7,6 +7,9 @@ import { BrandCommunityPage } from '@/pages/brand/BrandCommunityPage';
 import { Navigate, Route, BrowserRouter as Router, Routes, useParams } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SupportThreadPage } from '@/pages/shared/SupportThreadPage';
+import { UgcCollabPage } from '@/pages/ugc/UgcCollabPage';
+import { UgcBrandHomePage, UgcPipelinePage, UgcCampaignBuilderPage, UgcBrandCampaignPage, UgcDirectInvitePage } from '@/pages/ugc/UgcBrandPages';
+import { UgcCreatorHomePage, UgcCreatorApplicationsPage, UgcCreatorProfilePage } from '@/pages/ugc/UgcCreatorPages';
 import { useAuthStore } from '@/stores/authStore';
 import { CreatorShell, BrandShell } from '@/components/layout/VyrleShell';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -81,6 +84,7 @@ export default function App() {
 
           {/* Admin — standalone layout */}
           <Route path="/admin" element={<ProtectedRoute allowedRoles={['Admin']}><AdminDashboardPage /></ProtectedRoute>} />
+          <Route path="/admin/ugc/collabs/:id" element={<ProtectedRoute allowedRoles={['Admin']}><div className="vy-app" style={{ padding: 'clamp(1rem, 4vw, 2rem)', maxWidth: 1160, margin: '0 auto' }}><UgcCollabPage /></div></ProtectedRoute>} />
 
           {/* Brand area — VYRLE shell */}
           <Route element={<ProtectedRoute allowedRoles={['Brand']}><BrandShell /></ProtectedRoute>}>
@@ -99,6 +103,14 @@ export default function App() {
             <Route path="/brand/settings" element={<BrandSettingsPage />} />
             <Route path="/brand/assignments/:id" element={<BrandAssignmentDetailPage />} />
             <Route path="/brand/messages" element={<SupportThreadPage />} />
+            {/* UGC-marknadsplatsen: Beställ video */}
+            <Route path="/brand/ugc" element={<UgcBrandHomePage />} />
+            <Route path="/brand/ugc/pipeline" element={<UgcPipelinePage role="brand" />} />
+            <Route path="/brand/ugc/campaigns/new" element={<UgcCampaignBuilderPage />} />
+            <Route path="/brand/ugc/campaigns/:id" element={<UgcBrandCampaignPage />} />
+            <Route path="/brand/ugc/campaigns/:id/edit" element={<UgcCampaignBuilderPage />} />
+            <Route path="/brand/ugc/invite" element={<UgcDirectInvitePage />} />
+            <Route path="/brand/ugc/collabs/:id" element={<UgcCollabPage />} />
           </Route>
 
           {/* Creator area — VYRLE shell */}
@@ -118,18 +130,36 @@ export default function App() {
             <Route path="/creator/saved" element={<CreatorSavedPage />} />
             <Route path="/creator/profile" element={<CreatorProfilePage />} />
             <Route path="/creator/messages" element={<SupportThreadPage />} />
+            {/* UGC-marknadsplatsen: Videouppdrag */}
+            <Route path="/creator/ugc" element={<UgcCreatorHomePage />} />
+            <Route path="/creator/ugc/applications" element={<UgcCreatorApplicationsPage />} />
+            <Route path="/creator/ugc/collabs" element={<UgcPipelinePage role="creator" />} />
+            <Route path="/creator/ugc/collabs/:id" element={<UgcCollabPage />} />
+            <Route path="/creator/ugc/profile" element={<UgcCreatorProfilePage />} />
           </Route>
 
           {/* Redirect dashboard based on role */}
           <Route path="/dashboard" element={<RoleRedirect />} />
           {/* Mail CTAs land here and bounce to the right shell */}
           <Route path="/messages" element={<MessagesRedirect />} />
+          <Route path="/ugc" element={<UgcRedirect />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </QueryClientProvider>
     </ErrorBoundary>
   );
+}
+
+function UgcRedirect() {
+  const { isAuthenticated, role } = useAuthStore();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  switch (role) {
+    case 'Brand': return <Navigate to="/brand/ugc/pipeline" replace />;
+    case 'Creator': return <Navigate to="/creator/ugc/collabs" replace />;
+    case 'Admin': return <Navigate to="/admin?section=ugc" replace />;
+    default: return <Navigate to="/" replace />;
+  }
 }
 
 function MessagesRedirect() {

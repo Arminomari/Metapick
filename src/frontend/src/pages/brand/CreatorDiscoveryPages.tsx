@@ -156,6 +156,7 @@ export function BrandCreatorDetailPage() {
             <div className="tags" style={{ marginTop: 12 }}>{creator.profileTags.map((tg) => <span key={tg} className="tag g">{tg}</span>)}</div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end', minWidth: 0, maxWidth: '100%' }}>
+            <button className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} onClick={() => navigate(`/brand/ugc/invite?creator=${creator.id}`)}>🎬 {t('Beställ video')}</button>
             <InviteToCommunityButton creatorProfileId={creator.id} />
             {creator.openToPrOffers
               ? <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

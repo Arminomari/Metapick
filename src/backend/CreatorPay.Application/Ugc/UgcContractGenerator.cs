@@ -62,6 +62,10 @@ public static class UgcContractGenerator
         return new UgcContract(text, Hash(text), i.TemplateVersion);
     }
 
+    /// <summary>The rights clause on its own — quoted on the licence certificate.</summary>
+    public static string RightsClause(UgcRightsPackage package)
+        => StripHtmlComments(Load($"rights.{package}.sv.md")).Trim();
+
     /// <summary>The hash of a stored text — to verify nothing changed since acceptance.</summary>
     public static string Hash(string text)
         => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();

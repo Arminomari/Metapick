@@ -272,6 +272,21 @@ app.UseMiddleware<SecurityHeadersMiddleware>();
 
 app.UseRateLimiter();
 app.UseCors("Frontend");
+// Local video deliverables (dev / before object storage is configured) are
+// served from disk. With S3/R2 configured the store hands out presigned URLs
+// and this branch is never used.
+if (string.IsNullOrEmpty(builder.Configuration["Storage:S3:Bucket"]))
+{
+    var uploadsRoot = builder.Configuration["Storage:BasePath"] ?? Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+    Directory.CreateDirectory(uploadsRoot);
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsRoot),
+        RequestPath = "/uploads",
+        ServeUnknownFileTypes = false,
+    });
+}
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseHangfireDashboard("/hangfire", new DashboardOptions

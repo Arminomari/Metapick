@@ -67,8 +67,29 @@ public static class ServiceCollectionExtensions
         // ── UGC-marknadsplatsen: settings + payment gateway (Stripe lands in phase 2) ──
         services.AddSingleton(sp => CreatorPay.Application.Ugc.UgcSettings.From(
             sp.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>()));
-        services.AddScoped<CreatorPay.Application.Ugc.IUgcPaymentGateway, CreatorPay.Application.Ugc.UnconfiguredUgcPaymentGateway>();
+        if (!string.IsNullOrEmpty(config["Stripe:SecretKey"]))
+            services.AddScoped<CreatorPay.Application.Ugc.IUgcPaymentGateway, Services.StripeUgcPaymentGateway>();
+        else
+            services.AddScoped<CreatorPay.Application.Ugc.IUgcPaymentGateway, CreatorPay.Application.Ugc.UnconfiguredUgcPaymentGateway>();
+        services.AddSingleton<Services.StripeWebhookParser>();
+
+        if (!string.IsNullOrEmpty(config["Storage:S3:Bucket"]) && !string.IsNullOrEmpty(config["Storage:S3:AccessKey"]))
+            services.AddSingleton<CreatorPay.Application.Ugc.IUgcFileStore, Services.S3UgcFileStore>();
+        else
+            services.AddSingleton<CreatorPay.Application.Ugc.IUgcFileStore, Services.LocalUgcFileStore>();
+
+        if (!string.IsNullOrEmpty(config["Anthropic:ApiKey"]))
+            services.AddSingleton<CreatorPay.Application.Ugc.IUgcBriefGenerator, Services.AnthropicUgcBriefGenerator>();
+        else
+            services.AddSingleton<CreatorPay.Application.Ugc.IUgcBriefGenerator, CreatorPay.Application.Ugc.UnconfiguredUgcBriefGenerator>();
+
         services.AddScoped<CreatorPay.Application.Ugc.UgcSettlementService>();
+        services.AddScoped<CreatorPay.Application.Ugc.IUgcWebhookService, CreatorPay.Application.Ugc.UgcWebhookService>();
+        services.AddScoped<CreatorPay.Application.Ugc.Services.IUgcCreatorService, CreatorPay.Application.Ugc.Services.UgcCreatorService>();
+        services.AddScoped<CreatorPay.Application.Ugc.Services.IUgcCampaignService, CreatorPay.Application.Ugc.Services.UgcCampaignService>();
+        services.AddScoped<CreatorPay.Application.Ugc.Services.IUgcApplicationService, CreatorPay.Application.Ugc.Services.UgcApplicationService>();
+        services.AddScoped<CreatorPay.Application.Ugc.Services.IUgcCollabService, CreatorPay.Application.Ugc.Services.UgcCollabService>();
+        services.AddScoped<CreatorPay.Application.Ugc.Services.IUgcAdminService, CreatorPay.Application.Ugc.Services.UgcAdminService>();
 
         // ── Infrastructure services ────────────────────
         services.AddScoped<ITokenService, JwtTokenService>();

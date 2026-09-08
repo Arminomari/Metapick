@@ -163,6 +163,7 @@ public class UgcPaymentConfiguration : IEntityTypeConfiguration<UgcPayment>
         b.HasIndex(e => e.PaymentIntentId);
         b.Property(e => e.Provider).HasMaxLength(40);
         b.Property(e => e.Currency).HasMaxLength(3);
+        b.Property(e => e.CheckoutSessionId).HasMaxLength(120);
         b.Property(e => e.PaymentIntentId).HasMaxLength(100);
         b.Property(e => e.ChargeId).HasMaxLength(100);
         b.Property(e => e.TransferId).HasMaxLength(100);
@@ -232,7 +233,7 @@ public class UgcCollabEventConfiguration : IEntityTypeConfiguration<UgcCollabEve
     {
         b.ToTable("ugc_collab_events");
         b.HasKey(e => e.Id);
-        b.HasIndex(e => new { e.CollabId, e.CreatedAt });
+        b.HasIndex(e => new { e.CollabId, e.Sequence });
         b.Property(e => e.Note).HasMaxLength(1000);
 
         b.HasOne(e => e.Collab)

@@ -6,12 +6,14 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { useCreatorProfile, useBrandProfile, useNotifications, usePrUnreadCount, useUnreadChatCount, useActionCounts } from '@/hooks/api';
+import { useUgcActionCount } from '@/hooks/ugc';
 import { formatNumber } from '@/lib/utils';
 import { NotificationsDrawer, MessagesDrawer } from './ShellDrawers';
 import { ToastProvider } from '@/components/vyrle/Toast';
 
 const S = (d: ReactNode, sw = 1.7) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">{d}</svg>;
 const ICON: Record<string, ReactNode> = {
+  video: S(<><rect x="3" y="6" width="13" height="12" rx="2.5" /><path d="m16 10 5-3v10l-5-3z" /></>),
   mail: S(<><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m4 7 8 6 8-6" /></>),
   dashboard: S(<><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></>),
   discover: S(<><circle cx="12" cy="12" r="9" /><polygon points="16,8 13.5,13.5 8,16 10.5,10.5" /></>),
@@ -158,6 +160,7 @@ export function CreatorShell() {
   const { data: prUnread } = usePrUnreadCount();
   const { data: chatUnread } = useUnreadChatCount();
   const { data: counts } = useActionCounts('creator');
+  const { data: ugcCount } = useUgcActionCount('creator');
 
   const name = profile?.displayName || 'Creator';
   const handle = profile?.tikTokUsername ? '@' + profile.tikTokUsername : (email || '');
@@ -166,6 +169,7 @@ export function CreatorShell() {
     { label: t('Upptäck'), path: '/creator/browse', icon: 'discover' },
     { label: t('Mina kampanjer'), path: '/creator/assignments', icon: 'campaigns', badge: counts?.awaitingYourVideo || undefined },
     { label: t('Kranar'), path: '/creator/taps', icon: 'tap' },
+    { label: t('Videouppdrag'), path: '/creator/ugc', icon: 'video', badge: ugcCount || undefined, tag: ugcCount ? undefined : 'NY' },
     { label: t('Portfolio'), path: '/creator/portfolio', icon: 'portfolio' },
     { label: t('Statistik'), path: '/creator/analytics', icon: 'analytics' },
     { label: t('PR-hubb'), path: '/creator/pr', icon: 'pr', badge: prUnread || undefined },
@@ -190,6 +194,7 @@ export function BrandShell() {
   const { data: notifs } = useNotifications(true);
   const { data: chatUnread } = useUnreadChatCount();
   const { data: counts } = useActionCounts('brand');
+  const { data: ugcCount } = useUgcActionCount('brand');
 
   const name = profile?.companyName || 'Brand';
   const nav: NavItem[] = [
@@ -198,6 +203,7 @@ export function BrandShell() {
     { label: t('Community'), path: '/brand/community', icon: 'creators', badge: counts?.pendingCommunityRequests || undefined },
     { label: t('Statistik'), path: '/brand/analytics', icon: 'analytics' },
     { label: t('Kampanjer'), path: '/brand/campaigns', icon: 'campaigns', badge: counts?.pendingVideoReviews || undefined },
+    { label: t('Beställ video'), path: '/brand/ugc', icon: 'video', badge: ugcCount || undefined, tag: ugcCount ? undefined : 'NY' },
     { label: t('Ansökningar'), path: '/brand/applications', icon: 'applications', badge: counts?.pendingApplications || undefined },
     { label: t('Hitta creators'), path: '/brand/creators', icon: 'creators' },
     { label: t('PR-utskick'), path: '/brand/pr', icon: 'pr' },

@@ -126,6 +126,61 @@ public sealed class UgcSettlementService
         return true;
     }
 
+    /// <summary>
+    /// Dispute split: the creator's share is transferred, the rest of the
+    /// agreed amount goes back to the brand. Vyrle's fee stays — the platform
+    /// did its job. Ends in Paid with the payment marked PartiallyRefunded.
+    /// </summary>
+    public async Task<bool> TrySettleSplitAsync(UgcCollab collab, UgcCreatorProfile creator, int creatorSharePercent, UgcSettings settings, DateTime now, CancellationToken ct = default)
+    {
+        if (collab.Status != UgcCollabStatus.Approved) return collab.Status == UgcCollabStatus.Paid;
+        var ctx = UgcTransitionContext.From(collab, funded: true, settings.AutoApproveDays, settings.RevisionDeadlineDays);
+        var split = UgcFeeCalculator.SplitAgreed(collab.AgreedAmountOre, creatorSharePercent);
+
+        if (collab.Compensation == UgcCompensationType.ProductExchange)
+        {
+            if (collab.Payment == null) { collab.Payment = new UgcPayment { CollabId = collab.Id }; _payments.Add(collab.Payment); }
+            collab.Payment.Status = UgcPaymentStatus.NotApplicable;
+            _events.Add(UgcCollabStateMachine.Apply(collab, UgcCollabStatus.Paid, UgcActor.System, now, ctx, note: "Produktbyte — delning utan pengar."));
+            return true;
+        }
+
+        var payment = collab.Payment;
+        if (payment == null || payment.Status != UgcPaymentStatus.Held || string.IsNullOrEmpty(payment.ChargeId) || string.IsNullOrEmpty(payment.PaymentIntentId))
+        {
+            if (payment != null) payment.LastError = "Inga pengar hålls för uppdraget — kan inte dela.";
+            return false;
+        }
+        if (string.IsNullOrEmpty(creator.StripeConnectAccountId))
+        {
+            payment.LastError = "Creatorn har inte slutfört utbetalningsregistreringen.";
+            return false;
+        }
+
+        if (split.ToCreatorOre > 0 && payment.TransferredOre == 0)
+        {
+            var t = await _gateway.TransferAsync(collab.Id, payment.ChargeId, split.ToCreatorOre, payment.Currency, creator.StripeConnectAccountId, ct);
+            if (!t.Success) { payment.LastError = t.Error; return false; }
+            payment.TransferId = t.ExternalId;
+            payment.TransferredOre = split.ToCreatorOre;
+            payment.TransferredAt = now;
+        }
+        if (split.ToBrandOre > 0 && payment.RefundedOre == 0)
+        {
+            var r = await _gateway.RefundAsync(collab.Id, payment.PaymentIntentId, split.ToBrandOre, ct);
+            if (!r.Success) { payment.LastError = r.Error; return false; }
+            payment.RefundId = r.ExternalId;
+            payment.RefundedOre = split.ToBrandOre;
+            payment.RefundedAt = now;
+        }
+
+        payment.Status = UgcPaymentStatus.PartiallyRefunded;
+        payment.LastError = null;
+        _events.Add(UgcCollabStateMachine.Apply(collab, UgcCollabStatus.Paid, UgcActor.System, now, ctx,
+            note: $"Delning: {UgcFeeCalculator.FormatSek(split.ToCreatorOre)} till creatorn, {UgcFeeCalculator.FormatSek(split.ToBrandOre)} åter till företaget."));
+        return true;
+    }
+
     /// <summary>Approved delivery feeds the creator's track record exactly once.</summary>
     public static void RecordDelivery(UgcCollab collab, UgcCreatorProfile creator)
     {
