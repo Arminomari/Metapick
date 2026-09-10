@@ -44,10 +44,20 @@ server {
         proxy_connect_timeout 5s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
-        proxy_set_header Host $host;
+        # The backend sits behind Railway's edge, which routes on Host/SNI. Send the
+        # backend's own host (not the browser's), and keep the original host in
+        # X-Forwarded-Host for the API's forwarded-headers middleware.
+        proxy_set_header Host BACKEND_HOST_PLACEHOLDER;
+        proxy_ssl_server_name on;
+        proxy_ssl_name BACKEND_HOST_PLACEHOLDER;
+        proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        # Room for the edge's error pages and the API's security headers.
+        proxy_buffer_size 32k;
+        proxy_buffers 8 32k;
+        proxy_busy_buffers_size 64k;
     }
 
     gzip on;
