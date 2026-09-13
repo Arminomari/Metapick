@@ -149,7 +149,7 @@ export function UgcPipelinePage({ role }: { role: 'brand' | 'creator' }) {
       {isLoading ? <CardSkeleton rows={4} /> : collabs.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '54px 24px' }}>
           <div style={{ fontSize: 18, fontWeight: 700 }}>{t('Inga uppdrag ännu')}</div>
-          <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8 }}>{role === 'brand' ? t('Anlita en creator från ett bud eller bjud in direkt från Hitta creators.') : t('Lägg bud på en beställning så dyker uppdraget upp här när du blir vald.')}</div>
+          <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8 }}>{role === 'brand' ? t('Anlita en creator från ett bud eller bjud in direkt från Hitta creators.') : t('Ansök om en beställning så dyker uppdraget upp här när du blir vald.')}</div>
         </div>
       ) : (
         <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8, alignItems: 'flex-start' }}>
