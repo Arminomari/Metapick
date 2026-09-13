@@ -6,6 +6,7 @@ import { BrandTapPage } from '@/pages/brand/BrandTapPage';
 import { BrandCommunityPage } from '@/pages/brand/BrandCommunityPage';
 import { Navigate, Route, BrowserRouter as Router, Routes, useParams } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { VersionGuard } from '@/lib/versionGuard';
 import { SupportThreadPage } from '@/pages/shared/SupportThreadPage';
 import { UgcCollabPage } from '@/pages/ugc/UgcCollabPage';
 import { UgcBrandHomePage, UgcPipelinePage, UgcCampaignBuilderPage, UgcBrandCampaignPage, UgcDirectInvitePage } from '@/pages/ugc/UgcBrandPages';
@@ -69,6 +70,7 @@ export default function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <Router>
+        <VersionGuard />
         <Routes>
           {/* Public landing — the VYRLE marketing site */}
           <Route path="/" element={<VyrleFrame src="/vyrle.html" title="VYRLE" />} />
