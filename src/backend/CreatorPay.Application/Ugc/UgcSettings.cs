@@ -23,17 +23,13 @@ public sealed class UgcSettings
     /// <summary>No-shows before a creator is suspended.</summary>
     public int StrikesToSuspend { get; init; } = 3;
 
-    /// <summary>Automatic-verification bar.</summary>
-    public int AutoVerifyMinFollowers { get; init; } = 1_000;
-    public decimal AutoVerifyMinLikeFollowerRatio { get; init; } = 0.05m;
-
     /// <summary>Block paid jobs for creators without F-skatt. Off by default until the tax setup is decided.</summary>
     public bool RequireFTaxForPaid { get; init; } = false;
 
     /// <summary>Contract template set. Bump when the legal text changes so old collabs keep their version.</summary>
     public string ContractTemplateVersion { get; init; } = "2026-09-draft-1";
 
-    public UgcVerificationThresholds Thresholds => new(AutoVerifyMinFollowers, AutoVerifyMinLikeFollowerRatio, StrikesToSuspend);
+    public UgcVerificationThresholds Thresholds => new(StrikesToSuspend);
 
     public static UgcSettings From(IConfiguration config)
     {
@@ -45,8 +41,6 @@ public sealed class UgcSettings
             RevisionDeadlineDays = Int(s["RevisionDeadlineDays"], UgcSchedule.DefaultRevisionDeadlineDays),
             MaxRevisions = Int(s["MaxRevisions"], 2),
             StrikesToSuspend = Int(s["StrikesToSuspend"], 3),
-            AutoVerifyMinFollowers = Int(s["AutoVerifyMinFollowers"], 1_000),
-            AutoVerifyMinLikeFollowerRatio = Dec(s["AutoVerifyMinLikeFollowerRatio"], 0.05m),
             RequireFTaxForPaid = Bool(s["RequireFTaxForPaid"], false),
             ContractTemplateVersion = s["ContractTemplateVersion"] ?? "2026-09-draft-1",
         };

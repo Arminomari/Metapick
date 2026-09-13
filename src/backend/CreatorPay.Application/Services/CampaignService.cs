@@ -969,7 +969,7 @@ public class CampaignService : ICampaignService
                 try
                 {
                     await _notifications.SendAsync(followedBrand.UserId, NotificationType.SystemMessage,
-                        $"{creator.DisplayName} följer nu {followedBrand.CompanyName} — ni har {total} {(total == 1 ? "följare" : "följare")} på VYRLE.");
+                        $"{creator.DisplayName} följer nu {followedBrand.CompanyName} — ni har {total} {(total == 1 ? "följare" : "följare")} på VYRLE.", followedBrand.Id, "BrandFollowers");
                 }
                 catch { /* best-effort */ }
             }
@@ -1011,7 +1011,7 @@ public class CampaignService : ICampaignService
             try
             {
                 await _notifications.SendAsync(followerId, NotificationType.SystemMessage,
-                    $"{brand.CompanyName} har publicerat ett nytt inlägg: {preview}");
+                    $"{brand.CompanyName} har publicerat ett nytt inlägg: {preview}", brand.Id, "Brand");
             }
             catch { /* one bad follower must not stop the fan-out */ }
         }

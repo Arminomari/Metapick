@@ -180,18 +180,16 @@ public class UgcScheduleTests
 
 public class UgcVerificationRuleTests
 {
-    private static readonly UgcVerificationThresholds T = new(1_000, 0.05m, 3);
+    private static readonly UgcVerificationThresholds T = new(3);
 
     [Theory]
-    [InlineData(UgcCreatorStatus.Pending, 1_000, 0.05, true, UgcCreatorStatus.Verified)]
-    [InlineData(UgcCreatorStatus.Pending, 999, 0.05, true, UgcCreatorStatus.Pending)]
-    [InlineData(UgcCreatorStatus.Pending, 5_000, 0.049, true, UgcCreatorStatus.Pending)]
-    [InlineData(UgcCreatorStatus.Pending, 5_000, 0.2, false, UgcCreatorStatus.Pending)]
-    [InlineData(UgcCreatorStatus.Verified, 10, 0.0, false, UgcCreatorStatus.Pending)]     // numbers fell — back to review
-    [InlineData(UgcCreatorStatus.Approved, 10, 0.0, false, UgcCreatorStatus.Approved)]    // admin's call stands
-    [InlineData(UgcCreatorStatus.Suspended, 99_999, 1.0, true, UgcCreatorStatus.Suspended)]
-    public void Evaluate(UgcCreatorStatus current, int followers, double ratio, bool sample, UgcCreatorStatus expected)
-        => Assert.Equal(expected, UgcVerificationRule.Evaluate(current, followers, (decimal)ratio, sample, T));
+    [InlineData(UgcCreatorStatus.Pending, true, UgcCreatorStatus.Verified)]      // a sample video is all it takes
+    [InlineData(UgcCreatorStatus.Pending, false, UgcCreatorStatus.Pending)]
+    [InlineData(UgcCreatorStatus.Verified, false, UgcCreatorStatus.Pending)]     // sample removed — back to review
+    [InlineData(UgcCreatorStatus.Approved, false, UgcCreatorStatus.Approved)]    // admin's call stands
+    [InlineData(UgcCreatorStatus.Suspended, true, UgcCreatorStatus.Suspended)]
+    public void Evaluate(UgcCreatorStatus current, bool sample, UgcCreatorStatus expected)
+        => Assert.Equal(expected, UgcVerificationRule.Evaluate(current, sample));
 
     [Fact]
     public void Ratio_never_divides_by_zero()

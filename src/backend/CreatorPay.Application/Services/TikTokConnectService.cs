@@ -176,6 +176,7 @@ public class TikTokConnectService : ITikTokConnectService
                 };
                 _tiktokAccounts.Add(account);
             }
+            profile.FollowerCount = userInfo.FollowerCount;
 
             await _uow.SaveChangesAsync();
             await _audit.LogAsync(userId, "TikTok.Connected", "CreatorProfile", profile.Id);

@@ -407,6 +407,7 @@ export interface Notification {
   message: string;
   isRead: boolean;
   referenceId?: string;
+  referenceType?: string | null;
   createdAt: string;
 }
 

@@ -111,7 +111,9 @@ export function UgcCreatorHomePage() {
                   c.myCollabId ? <button className="btn-apply" style={{ width: '100%' }} onClick={() => navigate(`/creator/ugc/collabs/${c.myCollabId}`)}>✓ {t('Anlitad — öppna uppdraget')}</button>
                     : <button className="btn-outline" style={{ width: '100%' }} disabled>{c.myApplicationStatus === 'Rejected' ? '✗ ' + t('Budet antogs inte') : c.myApplicationStatus === 'Withdrawn' ? t('Bud återtaget') : `⏳ ${t('Bud lagt')}${c.myBidOre ? ` · ${formatOre(c.myBidOre)}` : ''}`}</button>
                 ) : (
-                  <button className="btn-apply" style={{ width: '100%' }} disabled={c.compensation === 'ProductExchange' ? !profile?.canTakeProduct : !profile?.canTakePaid} onClick={() => openApply(c)}>{t('Lägg bud')}</button>
+                  (c.compensation === 'ProductExchange' ? profile?.canTakeProduct : profile?.canTakePaid) === false
+                    ? <button className="btn-outline" style={{ width: '100%' }} onClick={() => { toast.push(profile?.blocker ?? t('Gör klart din UGC-profil först.'), 'error'); navigate('/creator/ugc/profile'); }}>{t('Fixa profilen först')} →</button>
+                    : <button className="btn-apply" style={{ width: '100%' }} disabled={!profile} onClick={() => openApply(c)}>{t('Lägg bud')}</button>
                 )}
               </div>
             </div>
@@ -220,7 +222,6 @@ export function UgcCreatorProfilePage() {
   });
 
   const steps = [
-    { ok: p.followerSnapshot > 0 || p.socialSnapshotAt != null, label: t('TikTok kopplat') },
     { ok: !!p.sampleVideoUrl, label: t('Exempelvideo') },
     { ok: p.status === 'Verified' || p.status === 'Approved', label: t('Verifierad') },
     { ok: p.payoutOnboardingComplete, label: t('Utbetalning klar') },
@@ -234,11 +235,12 @@ export function UgcCreatorProfilePage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <span className={`vy-badge ${p.status === 'Approved' || p.status === 'Verified' ? 'pos' : p.status === 'Suspended' ? 'neg' : 'pend'}`}>{t(CREATOR_STATUS_SV[p.status])}</span>
           <div style={{ flex: '1 1 220px', fontSize: 13.5 }}>{p.blocker ?? t('Allt klart — du kan ta både betalda uppdrag och produktbyten.')}{p.statusNote ? ` (${p.statusNote})` : ''}</div>
-          <button className="btn-outline" style={{ ...btn, padding: '8px 14px', fontSize: 12.5 }} disabled={refresh.isPending} onClick={() => refresh.mutate(undefined, { onSuccess: () => toast.push(t('Profilen är uppdaterad från TikTok'), 'success') })}>{refresh.isPending ? t('Kollar…') : t('Kolla igen')}</button>
+          <button className="btn-outline" style={{ ...btn, padding: '8px 14px', fontSize: 12.5 }} disabled={refresh.isPending} onClick={() => refresh.mutate(undefined, { onSuccess: () => toast.push(t('Profilen är kontrollerad igen'), 'success') })}>{refresh.isPending ? t('Kollar…') : t('Kolla igen')}</button>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 14 }}>
           {steps.map((s) => <span key={s.label} className={`vy-badge ${s.ok ? 'pos' : 'neu'}`}>{s.ok ? '✓' : '○'} {s.label}</span>)}
         </div>
+        <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 10 }}>{t('En exempelvideo räcker för att verifieras. TikTok-koppling är valfri — den visar bara dina följarsiffror för företagen.')}</div>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 12, fontSize: 12.5, color: 'var(--muted)' }}>
           <span>{formatNumber(p.followerSnapshot)} {t('följare')}</span><span>L/F {(p.likeFollowerRatio * 100).toFixed(0)} %</span><span>{p.deliveredCount} {t('leveranser')} · {p.onTimeCount} {t('i tid')}</span>{p.strikes > 0 && <span style={{ color: '#b3402f' }}>{p.strikes} {t('anmärkning(ar)')}</span>}
         </div>

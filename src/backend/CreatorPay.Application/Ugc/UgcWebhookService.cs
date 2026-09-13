@@ -185,7 +185,7 @@ public sealed class UgcWebhookService : IUgcWebhookService
 
     private async Task Notify(Guid userId, NotificationType type, string message, Guid? refId)
     {
-        try { await _notify.SendAsync(userId, type, message, refId); }
+        try { await _notify.SendAsync(userId, type, message, refId, refId == null ? "UgcProfile" : "UgcCollab"); }
         catch (Exception ex) { _logger.LogWarning(ex, "UGC notification failed for {User}", userId); }
     }
 }

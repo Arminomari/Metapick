@@ -93,7 +93,7 @@ export interface UgcCheckout { url?: string | null; funded: boolean; productExch
 export interface UgcAdminOverview {
   pendingVerification: number; verifiedAwaitingApproval: number; openDisputes: number; activeCollabs: number; publishedCampaigns: number;
   heldOre: number; paidOutOre: number; feesEarnedOre: number; feePercent: number; autoApproveDays: number; revisionDeadlineDays: number;
-  maxRevisions: number; strikesToSuspend: number; autoVerifyMinFollowers: number; autoVerifyMinLikeFollowerRatio: number; requireFTaxForPaid: boolean;
+  maxRevisions: number; strikesToSuspend: number; requireFTaxForPaid: boolean;
   stripeConfigured: boolean; storageConfigured: boolean; aiConfigured: boolean; contractTemplateVersion: string;
 }
 export interface UgcAdminCreatorRow {

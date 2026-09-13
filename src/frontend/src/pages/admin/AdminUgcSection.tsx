@@ -77,8 +77,8 @@ function Overview({ o }: { o: NonNullable<ReturnType<typeof useUgcAdminOverview>
           <div style={{ ...mutedTx, marginBottom: 8 }}>{t('Sätts som miljövariabler (Ugc__…) — ändringar kräver omstart.')}</div>
           {[
             ['Ugc__PlatformFeePercent', `${o.feePercent} %`], ['Ugc__AutoApproveDays', `${o.autoApproveDays} ${t('dagar')}`], ['Ugc__RevisionDeadlineDays', `${o.revisionDeadlineDays} ${t('dagar')}`],
-            ['Ugc__MaxRevisions', o.maxRevisions], ['Ugc__StrikesToSuspend', o.strikesToSuspend], ['Ugc__AutoVerifyMinFollowers', formatNumber(o.autoVerifyMinFollowers)],
-            ['Ugc__AutoVerifyMinLikeFollowerRatio', o.autoVerifyMinLikeFollowerRatio], ['Ugc__RequireFTaxForPaid', o.requireFTaxForPaid ? t('ja') : t('nej')], ['Ugc__ContractTemplateVersion', o.contractTemplateVersion],
+            ['Ugc__MaxRevisions', o.maxRevisions], ['Ugc__StrikesToSuspend', o.strikesToSuspend],
+            ['Ugc__RequireFTaxForPaid', o.requireFTaxForPaid ? t('ja') : t('nej')], ['Ugc__ContractTemplateVersion', o.contractTemplateVersion],
           ].map(([k, v]) => <div key={String(k)} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: '.82rem', padding: '.3rem 0', borderBottom: '1px solid rgba(241,168,143,.14)' }}><span style={{ fontFamily: 'ui-monospace, Menlo, monospace', color: '#6E7480' }}>{k}</span><strong>{String(v)}</strong></div>)}
         </div>
       </div>

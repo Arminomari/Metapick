@@ -237,7 +237,7 @@ public interface ISupportMessageService
 
 public interface INotificationService
 {
-    Task SendAsync(Guid recipientId, NotificationType type, string message, Guid? referenceId = null);
+    Task SendAsync(Guid recipientId, NotificationType type, string message, Guid? referenceId = null, string? referenceType = null);
     Task<Result<PagedResult<NotificationDto>>> GetNotificationsAsync(Guid userId, bool? unreadOnly, int page, int pageSize);
     Task<Result<bool>> MarkAsReadAsync(Guid notificationId, Guid userId);
     Task<Result<bool>> MarkAllReadAsync(Guid userId);

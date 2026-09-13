@@ -63,10 +63,29 @@ function notifIcon(type: string) {
   return <><path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7" /><path d="M10.5 20a2 2 0 0 0 3 0" /></>;
 }
 
-/** Where a notification takes you when tapped — by type, per role. */
-function notifTarget(type: string, role: string | null): string | null {
+/** Where a notification takes you when tapped — the thing it is about, per role. */
+type NotifLike = { type: string; referenceId?: string | null; referenceType?: string | null };
+function notifTarget(n: NotifLike, role: string | null): string | null {
   const brand = role === 'Brand';
-  switch (type) {
+  const creator = role === 'Creator';
+  const admin = !brand && !creator;
+  const id = n.referenceId ?? null;
+  const collab = (cid: string) => admin ? `/admin/ugc/collabs/${cid}` : brand ? `/brand/ugc/collabs/${cid}` : `/creator/ugc/collabs/${cid}`;
+
+  // Newer notifications say exactly what they point at.
+  switch (n.referenceType) {
+    case 'UgcCollab': return id ? collab(id) : null;
+    case 'UgcCampaign': return brand && id ? `/brand/ugc/campaigns/${id}` : brand ? '/brand/ugc' : '/creator/ugc';
+    case 'UgcProfile': return '/creator/ugc/profile';
+    case 'SupportThread': return brand ? '/brand/messages' : creator ? '/creator/messages' : '/messages';
+    case 'SupportUser': return admin && id ? `/admin?section=users&threadUser=${id}` : '/messages';
+    case 'Brand': return id ? `/creator/brands/${id}` : '/creator/browse';
+    case 'BrandFollowers': return '/brand/public-profile';
+    case 'Community': return '/brand/community';
+    case 'Campaign': return id ? `/brand/campaigns/${id}` : '/brand/campaigns';
+  }
+
+  switch (n.type) {
     case 'NewApplication': return '/brand/applications';
     case 'ApplicationApproved':
     case 'ApplicationRejected': return '/creator/assignments';
@@ -83,7 +102,20 @@ function notifTarget(type: string, role: string | null): string | null {
     case 'BrandApproved': return '/brand';
     case 'CreatorApproved': return '/creator';
     case 'FraudAlert': return brand ? '/brand/campaigns' : null;
-    default: return null;
+    case 'UgcCampaignMatch': return '/creator/ugc';
+    case 'UgcNewApplication': return '/brand/ugc/pipeline';
+    case 'UgcCancelled': return brand ? '/brand/ugc/pipeline' : '/creator/ugc/collabs';
+    case 'UgcHired':
+    case 'UgcContractAccepted':
+    case 'UgcDelivered':
+    case 'UgcRevisionRequested':
+    case 'UgcApproved':
+    case 'UgcPaid':
+    case 'UgcDeadlineReminder':
+    case 'UgcAutoApproveReminder':
+    case 'UgcDispute': return id ? collab(id) : brand ? '/brand/ugc/pipeline' : '/creator/ugc/collabs';
+    case 'SystemMessage': return brand ? '/brand/messages' : creator ? '/creator/messages' : '/admin?section=users';
+    default: return brand ? '/brand' : creator ? '/creator' : '/admin';
   }
 }
 
@@ -117,11 +149,11 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
                 className={`nd-item${n.isRead ? '' : ' unread'}`}
                 role="button"
                 tabIndex={0}
-                style={notifTarget(n.type, role) ? { cursor: 'pointer' } : undefined}
+                style={notifTarget(n, role) ? { cursor: 'pointer' } : undefined}
                 onKeyDown={(e) => { if (e.key === 'Enter') (e.currentTarget as HTMLElement).click(); }}
                 onClick={() => {
                   if (!n.isRead) markRead.mutate(n.id);
-                  const to = notifTarget(n.type, role);
+                  const to = notifTarget(n, role);
                   if (to) { onClose(); navigate(to); }
                 }}
               >
@@ -133,7 +165,7 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
                   <div className="nd-s" style={{ overflowWrap: 'anywhere' }}>{n.message}</div>
                   <div className="nd-time" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     {ago(n.createdAt)}
-                    {notifTarget(n.type, role) && <span style={{ color: '#9c4f31', fontWeight: 700 }}>{t('Öppna')} ›</span>}
+                    {notifTarget(n, role) && <span style={{ color: '#9c4f31', fontWeight: 700 }}>{t('Öppna')} ›</span>}
                   </div>
                 </div>
               </div>

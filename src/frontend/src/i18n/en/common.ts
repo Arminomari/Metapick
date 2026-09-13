@@ -238,4 +238,6 @@ export const common: Record<string, string> = {
   'Delad': 'Split',
   'Misslyckad': 'Failed',
   'Ingen betalning (produktbyte)': 'No payment (product exchange)',
+  'Följare (TikTok)': 'Followers (TikTok)',
+  'Följare och visningar hämtas automatiskt från ditt kopplade TikTok-konto och går inte att skriva in själv.': 'Followers and views are fetched automatically from your linked TikTok account and cannot be typed in.',
 };

@@ -320,6 +320,7 @@ public class SocialAuthService : ISocialAuthService
                 acc.DisplayName = ticket.DisplayName;
                 acc.AvatarUrl = ticket.AvatarUrl;
                 acc.FollowerCount = ticket.FollowerCount;
+                creator.FollowerCount = ticket.FollowerCount;
                 acc.AccessTokenEncrypted = _encryption.Encrypt(ticket.AccessToken);
                 acc.RefreshTokenEncrypted = _encryption.Encrypt(ticket.RefreshToken);
                 acc.TokenExpiresAt = DateTime.UtcNow.AddSeconds(ticket.ExpiresIn);

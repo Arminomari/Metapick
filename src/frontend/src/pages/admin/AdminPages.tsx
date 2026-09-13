@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { AdminOverviewSection, AdminPayoutsSection, AdminFraudSection, AdminAuditSection, AdminCreateAdminCard, AdminBroadcastCard } from './AdminExtraSections';
 import { AdminSupportInboxCard, AdminUserThreadModal, useAdminUnreadThreads } from './AdminSupportInbox';
@@ -291,12 +291,11 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
         <div style={{ ...apCard, marginBottom: 0 }}>
           <h3 style={{ margin: '0 0 6px', fontSize: '.95rem', fontWeight: 800 }}>{t('Räckvidd & kanaler')}</h3>
           {apRow({ label: t('Kategori'), value: p.category })}
-          {apRow({ label: t('Uppgivna följare'), value: formatNumber(p.followerCount) })}
-          {apRow({ label: t('Uppgivna snitt-views'), value: p.averageViews ? formatNumber(p.averageViews) : '–' })}
+          {apRow({ label: t('Följare (TikTok)'), value: formatNumber(p.followerCount) })}
           {apRow({ label: 'TikTok', value: p.tikTokUsername ? <a href={`https://www.tiktok.com/@${p.tikTokUsername}`} target="_blank" rel="noopener noreferrer" style={{ color: '#9c4f31' }}>@{p.tikTokUsername} ({formatNumber(p.tikTokFollowerCount)} {t('följare')})</a> : '–' })}
           {apRow({ label: t('TikTok-koppling'), value: p.tikTokConnected ? (p.tikTokOAuth ? t('OAuth (verifierad)') : t('Manuell (overifierad)')) : t('Ej kopplad') })}
           {apRow({ label: t('Senast synkad'), value: p.tikTokLastSync ? formatDate(p.tikTokLastSync) : '–' })}
-          {apRow({ label: 'Instagram', value: p.instagramUsername ? `@${p.instagramUsername} (${formatNumber(p.instagramFollowerCount)})` : '–' })}
+          {apRow({ label: 'Instagram', value: p.instagramUsername ? `@${p.instagramUsername}` : '–' })}
           {apRow({ label: t('Webbplats'), value: p.website ? <a href={p.website} target="_blank" rel="noopener noreferrer" style={{ color: '#9c4f31' }}>{p.website}</a> : '–' })}
           {apRow({ label: t('Utbetalningsmetod'), value: p.payoutMethodConfigured ? (p.payoutMethod || t('Konfigurerad')) : t('Ej konfigurerad') })}
         </div>
@@ -372,6 +371,8 @@ export function AdminDashboardPage() {
   const [rejectReason, setRejectReason] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [threadUser, setThreadUser] = useState<{ id: string; name: string } | null>(null);
+  const threadUserParam = searchParams.get('threadUser');
+  useEffect(() => { if (threadUserParam) setThreadUser({ id: threadUserParam, name: 'Användare' }); }, [threadUserParam]);
   const { data: supportThreads } = useAdminUnreadThreads();
   const { data: ugcOverview } = useUgcAdminOverview();
   const ugcBadge = (ugcOverview?.pendingVerification ?? 0) + (ugcOverview?.verifiedAwaitingApproval ?? 0) + (ugcOverview?.openDisputes ?? 0);

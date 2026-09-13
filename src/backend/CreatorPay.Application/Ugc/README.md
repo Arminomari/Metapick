@@ -159,8 +159,6 @@ Sektionen `Ugc` (alla valfria, defaults i `UgcSettings`):
 | `Ugc__RevisionDeadlineDays` | `3` | Ny, kortare deadline per revisionsrunda |
 | `Ugc__MaxRevisions` | `2` | Revisionsrundor per collab |
 | `Ugc__StrikesToSuspend` | `3` | No-shows innan avstängning |
-| `Ugc__AutoVerifyMinFollowers` | `1000` | Tröskel för automatisk verifiering |
-| `Ugc__AutoVerifyMinLikeFollowerRatio` | `0.05` | Tröskel för L/F-kvot |
 | `Ugc__RequireFTaxForPaid` | `false` | Blockera betalda uppdrag utan F-skatt |
 | `Ugc__ContractTemplateVersion` | `2026-09-draft-1` | Version på mallsatsen |
 
@@ -195,8 +193,9 @@ och först därefter agerar — ett event som redan finns i tabellen är ett no-
 ## Så testar du hela flödet utan nycklar
 
 1. **Företag:** Beställ video → Ny beställning → skriv brief → Publicera (kräver org.nr och godkänt konto).
-2. **Creator:** Videouppdrag → Min UGC-profil → kategorier + exempelvideo → *Kolla igen* (verifieras automatiskt om
-   följare ≥ 1 000 och L/F-kvot ≥ 5 %; annars **Admin → Beställ video → Verifieringskö → Godkänn**). Lägg bud.
+2. **Creator:** Videouppdrag → Min UGC-profil → kategorier + exempelvideo → verifieras direkt när en exempelvideo
+   finns (TikTok-koppling är valfri och visar bara följarsiffror; admin kan fortfarande stänga av under
+   **Admin → Beställ video → Verifieringskö**). Lägg bud.
 3. **Företag:** öppna beställningen → Anlita → Acceptera & betala (utan Stripe: stannar med "Betalningar är inte aktiverade").
 4. **Admin:** Beställ video → Alla uppdrag → uppdraget → *Registrera betalning manuellt*.
 5. **Creator:** Acceptera kontraktet → Leverera video (mp4/mov/webm, max 500 MB).

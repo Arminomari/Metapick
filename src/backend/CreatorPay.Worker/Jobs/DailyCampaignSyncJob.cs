@@ -159,7 +159,7 @@ public class DailyCampaignSyncJob : ICampaignSyncTrigger
             // wrong id violates the User FK and rolls back the entire campaign sync.
             if (campaign.BrandProfile != null)
                 await _notifications.SendAsync(campaign.BrandProfile.UserId, NotificationType.SystemMessage,
-                    $"Kampanjen '{campaign.Name}' har förbrukat {campaign.BudgetSpent:N0} av {campaign.Budget:N0} SEK");
+                    $"Kampanjen '{campaign.Name}' har förbrukat {campaign.BudgetSpent:N0} av {campaign.Budget:N0} SEK", campaign.Id, "Campaign");
         }
     }
 

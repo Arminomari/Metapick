@@ -120,15 +120,11 @@ public class CreatorService : ICreatorService
                 return Errors.Validation("Profilbilden är ogiltig eller för stor");
             creator.AvatarUrl = string.IsNullOrWhiteSpace(request.AvatarUrl) ? null : request.AvatarUrl.Trim();
         }
-        if (request.FollowerCount.HasValue && request.FollowerCount.Value >= 0)
-            creator.FollowerCount = request.FollowerCount.Value;
-        if (request.AverageViews.HasValue && request.AverageViews.Value >= 0)
-            creator.AverageViews = request.AverageViews.Value;
+        // Reach numbers are never taken from the form — followers come with the
+        // TikTok connection, and there is no honest source for the rest yet.
         if (request.InstagramUsername != null)
             creator.InstagramUsername = string.IsNullOrWhiteSpace(request.InstagramUsername)
                 ? null : request.InstagramUsername.TrimStart('@').Trim();
-        if (request.InstagramFollowerCount.HasValue && request.InstagramFollowerCount.Value >= 0)
-            creator.InstagramFollowerCount = request.InstagramFollowerCount.Value;
         if (request.Website != null)
             creator.Website = string.IsNullOrWhiteSpace(request.Website) ? null : request.Website.Trim();
         if (request.OpenToPrOffers.HasValue)

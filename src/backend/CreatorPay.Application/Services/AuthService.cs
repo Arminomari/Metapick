@@ -132,9 +132,10 @@ public class AuthService : IAuthService
                     ? null : request.InstagramUsername.TrimStart('@').Trim(),
                 AvatarUrl = MediaValidation.Normalize(request.AvatarUrl),
                 SelfieUrl = MediaValidation.Normalize(request.SelfieUrl),
-                FollowerCount = Math.Max(0, request.FollowerCount ?? 0),
-                AverageViews = request.AverageViews is > 0 ? request.AverageViews : null,
-                InstagramFollowerCount = Math.Max(0, request.InstagramFollowerCount ?? 0),
+                // Self-reported reach is not accepted — the numbers arrive with the TikTok connection.
+                FollowerCount = 0,
+                AverageViews = null,
+                InstagramFollowerCount = 0,
                 Website = TrimOrNull(request.Website, 300),
                 Status = CreatorStatus.Pending
             };

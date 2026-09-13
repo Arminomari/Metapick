@@ -82,7 +82,7 @@ public class SupportMessageService : ISupportMessageService
         await _uow.SaveChangesAsync(ct);
 
         await _notify.SendAsync(userId, NotificationType.SystemMessage,
-            "Du har ett nytt meddelande från VYRLE. Öppna Meddelanden för att svara.");
+            "Du har ett nytt meddelande från VYRLE. Öppna Meddelanden för att svara.", null, "SupportThread");
 
         if (request.SendEmail)
         {
@@ -210,7 +210,7 @@ public class SupportMessageService : ISupportMessageService
         foreach (var admin in admins)
         {
             await _notify.SendAsync(admin.Id, NotificationType.SystemMessage,
-                $"{who} svarade: {preview}", userId);
+                $"{who} svarade: {preview}", userId, "SupportUser");
             try
             {
                 await _email.SendAsync(admin.Email, $"Svar från {who}",

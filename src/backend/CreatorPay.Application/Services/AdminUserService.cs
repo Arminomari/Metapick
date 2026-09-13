@@ -245,7 +245,7 @@ public class AdminUserService : IAdminUserService
         await _audit.LogAsync(adminId, "Admin.RejectUser", "User", userId);
 
         await _notify.SendAsync(user.Id, NotificationType.SystemMessage,
-            $"Din ansökan godkändes tyvärr inte: {reason}", user.Id);
+            $"Din ansökan godkändes tyvärr inte: {reason}", user.Id, "SupportThread");
         await _email.SendAsync(user.Email, "Angående din VYRLE-ansökan",
             EmailTemplates.Branded(
                 "Angående din ansökan",

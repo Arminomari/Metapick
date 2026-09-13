@@ -133,5 +133,5 @@ public record UgcAdminOverviewDto(
     int PendingVerification, int VerifiedAwaitingApproval, int OpenDisputes, int ActiveCollabs, int PublishedCampaigns,
     long HeldOre, long PaidOutOre, long FeesEarnedOre,
     decimal FeePercent, int AutoApproveDays, int RevisionDeadlineDays, int MaxRevisions, int StrikesToSuspend,
-    int AutoVerifyMinFollowers, decimal AutoVerifyMinLikeFollowerRatio, bool RequireFTaxForPaid,
+    bool RequireFTaxForPaid,
     bool StripeConfigured, bool StorageConfigured, bool AiConfigured, string ContractTemplateVersion);

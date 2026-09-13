@@ -224,7 +224,7 @@ public class ChatService : IChatService
                 {
                     var brandName = (await _brands.Query().FirstOrDefaultAsync(b => b.Id == parties.BrandProfileId, ct))?.CompanyName ?? "Ett företag";
                     await _notifications.SendAsync(parties.CreatorUserId, NotificationType.SystemMessage,
-                        $"{brandName} har skickat dig ett meddelande på VYRLE.");
+                        $"{brandName} har skickat dig ett meddelande på VYRLE.", parties.BrandProfileId, "Brand");
                 }
                 catch { /* the message itself is what matters */ }
             }

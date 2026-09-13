@@ -185,8 +185,8 @@ interface WizardForm {
   displayName: string; bio: string; category: string; country: string; dateOfBirth: string;
   avatarUrl: string | null;
   selfieUrl: string | null;
-  tikTokUsername: string; followerCount: string; averageViews: string;
-  instagramUsername: string; instagramFollowerCount: string; website: string;
+  tikTokUsername: string;
+  instagramUsername: string; website: string;
   profileTags: string[]; openToPrOffers: boolean;
   // brand
   companyName: string; organizationNumber: string; industry: string; contactPhone: string;
@@ -198,10 +198,6 @@ const STEP_LABELS: Record<Role, string[]> = {
   Brand: ['Kontotyp', 'Konto', 'Företag', 'Kontakt'],
 };
 
-const intOrNull = (s: string): number | null => {
-  const n = parseInt(s.replace(/[\s,.]/g, ''), 10);
-  return Number.isFinite(n) && n >= 0 ? n : null;
-};
 
 export function RegisterPage() {
   const [searchParams] = useSearchParams();
@@ -218,8 +214,8 @@ export function RegisterPage() {
     displayName: social?.firstName ?? '', bio: '', category: 'Övrigt', country: 'SE', dateOfBirth: '',
     avatarUrl: social?.pictureUrl ?? null,
     selfieUrl: null,
-    tikTokUsername: '', followerCount: '', averageViews: '',
-    instagramUsername: '', instagramFollowerCount: '', website: '',
+    tikTokUsername: '',
+    instagramUsername: '', website: '',
     profileTags: [], openToPrOffers: true,
     companyName: '', organizationNumber: '', industry: 'Övrigt', contactPhone: '',
     description: '', logoUrl: null,
@@ -343,9 +339,6 @@ export function RegisterPage() {
       instagramUsername: form.instagramUsername.trim() || null,
       avatarUrl: form.avatarUrl,
       selfieUrl: form.selfieUrl,
-      followerCount: intOrNull(form.followerCount),
-      averageViews: intOrNull(form.averageViews),
-      instagramFollowerCount: intOrNull(form.instagramFollowerCount),
       website: form.website.trim() || null,
       industry: form.industry,
       logoUrl: form.logoUrl,
@@ -513,9 +506,6 @@ export function RegisterPage() {
             <div className="field"><label htmlFor="rg-ig">{t('Instagram-användarnamn')}</label>
               <div className="auth-at"><span>@</span><input id="rg-ig" type="text" value={form.instagramUsername} onChange={set('instagramUsername')} placeholder={t('dittinstagram')} /></div>
             </div>
-            {form.instagramUsername.trim() && (
-              <div className="field"><label htmlFor="rg-igf">{t('Följare på Instagram')}</label><input id="rg-igf" type="text" inputMode="numeric" value={form.instagramFollowerCount} onChange={set('instagramFollowerCount')} placeholder={t('t.ex. 4300')} /></div>
-            )}
             <div className="field"><label htmlFor="rg-web">{t('Webbplats / Linktree')}</label><input id="rg-web" type="url" value={form.website} onChange={set('website')} placeholder="https://…" /></div>
           </div>
         )}
@@ -615,7 +605,6 @@ function RegisterSummary({ form, social }: { form: WizardForm; social: PendingSo
         [t('Visningsnamn'), form.displayName || '—'],
         [t('Kategori'), `${t(form.category)} · ${form.country}`],
         ['TikTok', form.tikTokUsername ? `@${form.tikTokUsername.replace(/^@/, '')}` : '—'],
-        [t('Räckvidd'), form.followerCount ? `${form.followerCount} ${t('följare')}` : t('Ej angiven')],
       ]
     : [
         [t('Konto'), social ? `${social.email} (via ${social.provider})` : form.email],

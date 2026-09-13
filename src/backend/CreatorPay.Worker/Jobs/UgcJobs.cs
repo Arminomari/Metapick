@@ -131,7 +131,7 @@ public class UgcDeadlineJob
 
     private async Task Notify(Guid userId, NotificationType type, string message, Guid refId)
     {
-        try { await _notifications.SendAsync(userId, type, message, refId); }
+        try { await _notifications.SendAsync(userId, type, message, refId, "UgcCollab"); }
         catch (Exception ex) { _logger.LogWarning(ex, "UGC notification failed for {User}", userId); }
     }
 }
@@ -238,7 +238,7 @@ public class UgcAutoApproveJob
 
     private async Task Notify(Guid userId, NotificationType type, string message, Guid refId)
     {
-        try { await _notifications.SendAsync(userId, type, message, refId); }
+        try { await _notifications.SendAsync(userId, type, message, refId, "UgcCollab"); }
         catch (Exception ex) { _logger.LogWarning(ex, "UGC notification failed for {User}", userId); }
     }
 }

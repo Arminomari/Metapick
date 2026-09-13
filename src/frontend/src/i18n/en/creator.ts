@@ -591,4 +591,8 @@ export const creator: Record<string, string> = {
   'platser': 'spots',
   'tjänat': 'earned',
   'Kunde inte starta registreringen': 'Could not start registration',
+  'Fixa profilen först': 'Fix your profile first',
+  'Gör klart din UGC-profil först.': 'Finish your UGC profile first.',
+  'En exempelvideo räcker för att verifieras. TikTok-koppling är valfri — den visar bara dina följarsiffror för företagen.': 'A sample video is all it takes to be verified. Linking TikTok is optional — it only shows brands your follower numbers.',
+  'Profilen är kontrollerad igen': 'Profile re-checked',
 };

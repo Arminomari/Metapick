@@ -1048,8 +1048,8 @@ export function CreatorProfilePage() {
   const [form, setForm] = useState({
     displayName: '', bio: '', category: 'Övrigt', country: 'SE', language: 'sv',
     tikTokUsername: '', dateOfBirth: '', profileTags: [] as string[],
-    instagramUsername: '', instagramFollowerCount: '', website: '',
-    avatarUrl: '', followerCount: '', averageViews: '', openToPrOffers: true,
+    instagramUsername: '', website: '',
+    avatarUrl: '', openToPrOffers: true,
   });
   const [saved, setSaved] = useState(false);
   const [initialized, setInitialized] = useState(false);
@@ -1066,11 +1066,8 @@ export function CreatorProfilePage() {
       dateOfBirth: '',
       profileTags: profile.profileTags ?? [],
       instagramUsername: profile.instagramUsername ?? '',
-      instagramFollowerCount: profile.instagramFollowerCount ? String(profile.instagramFollowerCount) : '',
       website: profile.website ?? '',
       avatarUrl: profile.avatarUrl ?? '',
-      followerCount: profile.followerCount ? String(profile.followerCount) : '',
-      averageViews: profile.averageViews ? String(profile.averageViews) : '',
       openToPrOffers: profile.openToPrOffers ?? true,
     });
     setInitialized(true);
@@ -1092,10 +1089,7 @@ export function CreatorProfilePage() {
         dateOfBirth: form.dateOfBirth || undefined,
         profileTags: form.profileTags,
         avatarUrl: form.avatarUrl,
-        followerCount: form.followerCount === '' ? undefined : Number(form.followerCount),
-        averageViews: form.averageViews === '' ? undefined : Number(form.averageViews),
         instagramUsername: form.instagramUsername || undefined,
-        instagramFollowerCount: form.instagramFollowerCount === '' ? undefined : Number(form.instagramFollowerCount),
         website: form.website || undefined,
         openToPrOffers: form.openToPrOffers,
       });
@@ -1150,9 +1144,7 @@ export function CreatorProfilePage() {
           </div>
           <div className="field"><label>{t('Födelsedatum')}</label><DateInput value={form.dateOfBirth} onChange={v => setForm({ ...form, dateOfBirth: v })} disabled={!editing} className="" max={new Date(Date.now() - 13 * 365.25 * 86400000).toISOString().slice(0, 10)} /></div>
           <div className="field"><label>{t('Instagram-användarnamn')}</label><input type="text" value={form.instagramUsername} onChange={set('instagramUsername')} disabled={!editing} placeholder={t('@dittinstagram')} /></div>
-          <div className="field"><label>{t('Instagram-följare')}</label><input type="text" inputMode="numeric" value={form.instagramFollowerCount} disabled={!editing} onChange={(e) => setForm({ ...form, instagramFollowerCount: e.target.value.replace(/\D/g, '') })} /></div>
-          <div className="field"><label>{t('Följare (TikTok/övrigt)')}</label><input type="text" inputMode="numeric" value={form.followerCount} disabled={!editing} onChange={(e) => setForm({ ...form, followerCount: e.target.value.replace(/\D/g, '') })} /></div>
-          <div className="field"><label>{t('Snittvisningar')}</label><input type="text" inputMode="numeric" value={form.averageViews} disabled={!editing} onChange={(e) => setForm({ ...form, averageViews: e.target.value.replace(/\D/g, '') })} /></div>
+          <div className="field full" style={{ fontSize: 12.5, color: 'var(--muted)' }}>{t('Följare och visningar hämtas automatiskt från ditt kopplade TikTok-konto och går inte att skriva in själv.')}</div>
           <div className="field"><label>{t('Webbplats / Linktree')}</label><input type="url" value={form.website} onChange={set('website')} disabled={!editing} placeholder="https://…" /></div>
           <div className="field full">
             {editing ? (
@@ -1198,7 +1190,6 @@ export function CreatorProfilePage() {
         <div className="sec-head"><h3>{t('Profiluppgifter')}</h3></div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16 }}>
           <div><div className="vcamp-k">{t('Följare')}</div><div className="vcamp-v" style={{ fontSize: 16 }}>{formatNumber(profile.followerCount)}</div></div>
-          <div><div className="vcamp-k">{t('Snittvisningar')}</div><div className="vcamp-v" style={{ fontSize: 16 }}>{profile.averageViews ? formatNumber(profile.averageViews) : '–'}</div></div>
           <div><div className="vcamp-k">{t('Medlem sedan')}</div><div className="vcamp-v" style={{ fontSize: 16 }}>{formatDate(profile.createdAt)}</div></div>
           <div><div className="vcamp-k">Status</div><div style={{ marginTop: 3 }}><StatusBadge status={profile.status} /></div></div>
         </div>

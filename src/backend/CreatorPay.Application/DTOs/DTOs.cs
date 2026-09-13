@@ -466,7 +466,7 @@ public record NicheBenchmarkDto(string Category, decimal Cpm, long Views, long A
 // ──── Notification ────
 public record NotificationDto(
     Guid Id, string Type, string Title, string Message,
-    bool IsRead, Guid? ReferenceId, DateTime CreatedAt);
+    bool IsRead, Guid? ReferenceId, DateTime CreatedAt, string? ReferenceType = null);
 
 // ──── Dispute ────
 public record DisputeDto(

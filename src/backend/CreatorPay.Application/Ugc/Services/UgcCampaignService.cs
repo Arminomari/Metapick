@@ -227,9 +227,12 @@ public sealed class UgcCampaignService : IUgcCampaignService
         }
         if (!string.IsNullOrWhiteSpace(c.Region) && !string.Equals(c.Region, me.Region, StringComparison.OrdinalIgnoreCase)
             && !string.Equals(c.Region, me.City, StringComparison.OrdinalIgnoreCase)) return false;
+        // Follower limits only apply when the number is known (TikTok connected).
+        // A creator without a linked account is still shown — the brand sees the
+        // missing number on the bid and decides.
         var followers = Math.Max(me.FollowerSnapshot, creator.FollowerCount);
-        if (c.MinFollowers is { } min && followers < min) return false;
-        if (c.MaxFollowers is { } max && followers > max) return false;
+        if (followers > 0 && c.MinFollowers is { } min && followers < min) return false;
+        if (followers > 0 && c.MaxFollowers is { } max && followers > max) return false;
         return true;
     }
 
@@ -258,7 +261,7 @@ public sealed class UgcCampaignService : IUgcCampaignService
 
     private async Task Notify(Guid userId, NotificationType type, string message, Guid refId)
     {
-        try { await _notify.SendAsync(userId, type, message, refId); }
+        try { await _notify.SendAsync(userId, type, message, refId, "UgcCampaign"); }
         catch (Exception ex) { _logger.LogWarning(ex, "UGC notification failed for {User}", userId); }
     }
 

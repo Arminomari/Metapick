@@ -140,7 +140,7 @@ public sealed class UgcCreatorService : IUgcCreatorService
         p.FollowerSnapshot = followers;
         p.LikeFollowerRatio = ratio;
         p.SocialSnapshotAt = DateTime.UtcNow;
-        p.Status = UgcVerificationRule.Evaluate(p.Status, followers, ratio, hasSample, _settings.Thresholds);
+        p.Status = UgcVerificationRule.Evaluate(p.Status, hasSample);
         await _uow.SaveChangesAsync(ct);
     }
 

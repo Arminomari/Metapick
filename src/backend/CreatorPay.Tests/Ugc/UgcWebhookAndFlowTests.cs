@@ -25,7 +25,7 @@ public class UgcWebhookAndFlowTests
     private sealed class FakeNotifications : INotificationService
     {
         public List<(Guid User, NotificationType Type, string Message)> Sent { get; } = [];
-        public Task SendAsync(Guid recipientId, NotificationType type, string message, Guid? referenceId = null)
+        public Task SendAsync(Guid recipientId, NotificationType type, string message, Guid? referenceId = null, string? referenceType = null)
         { Sent.Add((recipientId, type, message)); return Task.CompletedTask; }
         public Task<Application.Common.Result<Application.Common.PagedResult<Application.DTOs.NotificationDto>>> GetNotificationsAsync(Guid userId, bool? unreadOnly, int page, int pageSize) => throw new NotImplementedException();
         public Task<Application.Common.Result<bool>> MarkAsReadAsync(Guid notificationId, Guid userId) => throw new NotImplementedException();

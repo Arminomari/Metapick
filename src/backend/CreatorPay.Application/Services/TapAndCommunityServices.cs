@@ -93,7 +93,7 @@ public class CommunityService : ICommunityService
         await _uow.SaveChangesAsync(ct);
         await _audit.LogAsync(brandUserId, "Community.Invited", "CreatorProfile", creator.Id);
         await _notifications.SendAsync(creator.UserId, NotificationType.SystemMessage,
-            $"{brand.CompanyName} har bjudit in dig till sitt creator-community. Du kan nu hämta ur deras kran — kolla Mina kampanjer.");
+            $"{brand.CompanyName} har bjudit in dig till sitt creator-community. Du kan nu hämta ur deras kran — kolla Mina kampanjer.", brand.Id, "Brand");
 
         return new CommunityMemberDto(creator.Id, creator.DisplayName, creator.AvatarUrl,
             creator.TikTokAccount?.TikTokUsername, creator.TikTokAccount?.FollowerCount ?? 0,
@@ -124,7 +124,7 @@ public class CommunityService : ICommunityService
             try
             {
                 await _notifications.SendAsync(creator.UserId, NotificationType.SystemMessage,
-                    $"{brand.CompanyName} har bjudit in dig till sitt creator-community. Du kan nu hämta ur deras kran — kolla Mina kampanjer.");
+                    $"{brand.CompanyName} har bjudit in dig till sitt creator-community. Du kan nu hämta ur deras kran — kolla Mina kampanjer.", brand.Id, "Brand");
             }
             catch { /* one failure must not stop the batch */ }
         }
@@ -172,7 +172,7 @@ public class CommunityService : ICommunityService
         try
         {
             await _notifications.SendAsync(brand.UserId, NotificationType.NewApplication,
-                $"{creator.DisplayName} vill gå med i ert creator-community.");
+                $"{creator.DisplayName} vill gå med i ert creator-community.", creator.Id, "Community");
         }
         catch { /* request is stored either way */ }
         return true;
@@ -196,7 +196,7 @@ public class CommunityService : ICommunityService
             try
             {
                 await _notifications.SendAsync(member.CreatorProfile.UserId, NotificationType.SystemMessage,
-                    $"{brand.CompanyName} har godkänt dig i sitt creator-community — du kan nu hämta ur deras kran.");
+                    $"{brand.CompanyName} har godkänt dig i sitt creator-community — du kan nu hämta ur deras kran.", brand.Id, "Brand");
             }
             catch { }
         }
@@ -510,7 +510,7 @@ public class TapService : ITapService
                 try
                 {
                     await _notifications.SendAsync(uid, NotificationType.SystemMessage,
-                        $"{brand.CompanyName} har öppnat sin kran: {request.Cpm:0} kr per 1 000 views, löpande varje månad. Publicera med din tracking-tag så räknas det.");
+                        $"{brand.CompanyName} har öppnat sin kran: {request.Cpm:0} kr per 1 000 views, löpande varje månad. Publicera med din tracking-tag så räknas det.", brand.Id, "Brand");
                 }
                 catch { /* fan-out is best-effort */ }
             }

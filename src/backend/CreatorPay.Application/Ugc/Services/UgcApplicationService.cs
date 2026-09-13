@@ -64,7 +64,7 @@ public sealed class UgcApplicationService : IUgcApplicationService
             return Errors.Forbidden(me.Status switch
             {
                 UgcCreatorStatus.Suspended => "Ditt konto på marknadsplatsen är avstängt.",
-                UgcCreatorStatus.Pending => "Din profil måste verifieras innan du kan lägga bud.",
+                UgcCreatorStatus.Pending => "Lägg till en exempelvideo i din UGC-profil så verifieras du direkt — sedan kan du lägga bud.",
                 _ when !me.PayoutOnboardingComplete => "Slutför utbetalningsregistreringen innan du tar betalda uppdrag.",
                 _ => "Betalda uppdrag kräver F-skatt.",
             });
@@ -246,7 +246,7 @@ public sealed class UgcApplicationService : IUgcApplicationService
 
     private async Task Notify(Guid userId, NotificationType type, string message, Guid refId)
     {
-        try { await _notify.SendAsync(userId, type, message, refId); }
+        try { await _notify.SendAsync(userId, type, message, refId, type == NotificationType.UgcHired ? "UgcCollab" : "UgcCampaign"); }
         catch (Exception ex) { _logger.LogWarning(ex, "UGC notification failed for {User}", userId); }
     }
 }

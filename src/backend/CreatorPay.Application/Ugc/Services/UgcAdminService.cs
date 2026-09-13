@@ -66,7 +66,7 @@ public sealed class UgcAdminService : IUgcAdminService
 
         return new UgcAdminOverviewDto(pending, verified, openDisputes, active, published, held, paidOut, fees,
             _settings.PlatformFeePercent, _settings.AutoApproveDays, _settings.RevisionDeadlineDays, _settings.MaxRevisions, _settings.StrikesToSuspend,
-            _settings.AutoVerifyMinFollowers, _settings.AutoVerifyMinLikeFollowerRatio, _settings.RequireFTaxForPaid,
+            _settings.RequireFTaxForPaid,
             _gateway.IsConfigured, _files.IsCloud, _brief.IsConfigured, _settings.ContractTemplateVersion);
     }
 
@@ -210,7 +210,7 @@ public sealed class UgcAdminService : IUgcAdminService
 
     private async Task Notify(Guid userId, NotificationType type, string message, Guid? refId)
     {
-        try { await _notify.SendAsync(userId, type, message, refId); }
+        try { await _notify.SendAsync(userId, type, message, refId, refId == null ? "UgcProfile" : "UgcCollab"); }
         catch (Exception ex) { _logger.LogWarning(ex, "UGC notification failed for {User}", userId); }
     }
 }

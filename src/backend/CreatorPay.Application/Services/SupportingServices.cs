@@ -611,7 +611,7 @@ public class NotificationService : INotificationService
         _ => "Notis"
     };
 
-    public async Task SendAsync(Guid recipientId, NotificationType type, string message, Guid? referenceId = null)
+    public async Task SendAsync(Guid recipientId, NotificationType type, string message, Guid? referenceId = null, string? referenceType = null)
     {
         _notifications.Add(new Notification
         {
@@ -619,7 +619,8 @@ public class NotificationService : INotificationService
             Type = type,
             Title = TitleFor(type),
             Message = message,
-            ReferenceId = referenceId
+            ReferenceId = referenceId,
+            ReferenceType = referenceType
         });
         await _uow.SaveChangesAsync();
 
@@ -666,7 +667,7 @@ public class NotificationService : INotificationService
         return new PagedResult<NotificationDto>
         {
             Data = items.Select(n => new NotificationDto(
-                n.Id, n.Type.ToString(), n.Title, n.Message, n.IsRead, n.ReferenceId, n.CreatedAt)).ToList(),
+                n.Id, n.Type.ToString(), n.Title, n.Message, n.IsRead, n.ReferenceId, n.CreatedAt, n.ReferenceType)).ToList(),
             Page = page, PageSize = pageSize, TotalCount = totalCount
         };
     }

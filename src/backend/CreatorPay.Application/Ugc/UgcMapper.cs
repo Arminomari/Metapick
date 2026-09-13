@@ -52,7 +52,7 @@ public static class UgcMapper
         string? blocker = p.Status switch
         {
             UgcCreatorStatus.Suspended => "Ditt konto på marknadsplatsen är avstängt.",
-            UgcCreatorStatus.Pending => "Din profil väntar på verifiering. Koppla TikTok och ladda upp en exempelvideo så går det oftast automatiskt.",
+            UgcCreatorStatus.Pending => "Lägg till en exempelvideo (länk eller portfoliovideo) under Min UGC-profil så verifieras du direkt.",
             _ when !p.PayoutOnboardingComplete => "Slutför utbetalningsregistreringen för att kunna ta betalda uppdrag.",
             _ when s.RequireFTaxForPaid && !p.HasFTax => "Betalda uppdrag kräver F-skatt.",
             _ => null,
