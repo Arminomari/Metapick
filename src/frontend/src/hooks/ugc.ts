@@ -142,7 +142,18 @@ export const CREATOR_STATUS_SV: Record<string, string> = { Pending: 'Väntar', V
 export const UGC_CATEGORIES = ['Mat & Dryck', 'Skönhet', 'Mode', 'Fitness', 'Hem & Inredning', 'Teknik', 'Barn & Familj', 'Resor', 'Nöje', 'Tjänster', 'Övrigt'];
 export const UGC_REGIONS = ['Stockholm', 'Göteborg', 'Malmö', 'Uppsala', 'Linköping', 'Örebro', 'Västerås', 'Helsingborg', 'Norrköping', 'Jönköping', 'Umeå', 'Lund', 'Hela Sverige'];
 
-export const apiError = (e: any, fallback: string) => e?.response?.data?.error?.message ?? e?.response?.data?.title ?? fallback;
+export const apiError = (e: any, fallback: string) => {
+  const d = e?.response?.data;
+  if (d?.errors && typeof d.errors === 'object') {
+    const msgs = Object.entries(d.errors as Record<string, unknown>).map(([k, v]) => {
+      const field = k.replace(/^\$\./, '').replace(/^request\./i, '');
+      const text = (Array.isArray(v) ? v : [v]).map(String).join(', ');
+      return field ? `${field}: ${text}` : text;
+    });
+    if (msgs.length) return msgs.join(' · ');
+  }
+  return d?.error?.message ?? d?.title ?? fallback;
+};
 
 const get = async <T,>(url: string, params?: Record<string, unknown>) => (await api.get<ApiResponse<T>>(url, { params })).data.data;
 const post = async <T,>(url: string, body?: unknown) => (await api.post<ApiResponse<T>>(url, body ?? {})).data.data;

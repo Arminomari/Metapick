@@ -5,7 +5,7 @@ import { formatDate, formatNumber } from '@/lib/utils';
 import { useToast, CardSkeleton, PageSkeleton } from '@/components/vyrle/Toast';
 import { useCreatorPublicProfile } from '@/hooks/api';
 import {
-  useUgcBrandCampaigns, useUgcBrandCampaign, useSaveUgcCampaign, useUgcCampaignAction, useGenerateUgcBrief,
+  useUgcBrandCampaigns, useUgcBrandCampaign, useSaveUgcCampaign, useUgcCampaignAction,
   useUgcCampaignApplications, useUgcApplicationDecision, useUgcCollabs, useUgcDirectInvite,
   formatOre, kronorToOre, oreToKronor, collabStatusLabel, COLLAB_TONE, COMPENSATION_LABEL, RIGHTS_LABEL, RIGHTS_HINT, UGC_CATEGORIES, UGC_REGIONS, apiError,
   type UgcBrief, type UgcCampaign, type UpsertUgcCampaign, type UgcCollabListItem, type UgcApplication,
@@ -63,7 +63,7 @@ export function UgcBrandHomePage() {
           <div style={{ fontSize: 30, marginBottom: 10 }} aria-hidden>🎬</div>
           <div style={{ fontSize: 18, fontWeight: 700 }}>{t('Ingen beställning ännu')}</div>
           <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8, maxWidth: 460, marginInline: 'auto', lineHeight: 1.6 }}>
-            {t('Skriv en brief (eller låt AI:n göra det), sätt en budget per video och publicera. Creators som passar lägger bud — ni väljer.')}
+            {t('Skriv en brief, sätt en budget per video och publicera. Creators som passar lägger bud — ni väljer.')}
           </div>
           <button className="btn-apply" style={{ ...btn, marginTop: 16 }} onClick={() => navigate('/brand/ugc/campaigns/new')}>{t('Skapa första beställningen')}</button>
         </div>
@@ -204,15 +204,15 @@ export function UgcCampaignBuilderPage() {
   const { data: existing, isLoading } = useUgcBrandCampaign(id ?? '');
   const save = useSaveUgcCampaign();
   const action = useUgcCampaignAction();
-  const gen = useGenerateUgcBrief();
 
   const [form, setForm] = useState<UpsertUgcCampaign>({
     title: '', brief: emptyBrief, region: '', categories: [], minFollowers: null, maxFollowers: null,
     compensation: 'Paid', budgetMinOre: 100_000, budgetMaxOre: 250_000, productDescription: '', productValueOre: null,
     rightsPackage: 'OrganicPlusAds6M', deadlineDays: 7, slots: 1, briefGeneratedByAi: false,
   });
-  const [ai, setAi] = useState({ open: false, goal: '', productOrService: '', audience: '', tone: '' });
   const [loaded, setLoaded] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
     if (existing && !loaded) {
@@ -230,7 +230,39 @@ export function UgcCampaignBuilderPage() {
   const setBrief = (patch: Partial<UgcBrief>) => setForm((f) => ({ ...f, brief: { ...f.brief, ...patch } }));
   const paid = form.compensation !== 'ProductExchange';
 
+  // What must be filled in before anything can be saved. Mirrors the server's
+  // rules so the red marks match the error the API would give.
+  const validate = (f: UpsertUgcCampaign): Record<string, string> => {
+    const e: Record<string, string> = {};
+    const isPaid = f.compensation !== 'ProductExchange';
+    if (f.title.trim().length < 3) e.title = t('Ge beställningen en titel (minst 3 tecken)');
+    if (!f.brief.goal.trim()) e.goal = t('Skriv vad videon ska åstadkomma');
+    if (!f.brief.format.trim()) e.format = t('Ange format');
+    if (!(f.brief.lengthSeconds >= 5 && f.brief.lengthSeconds <= 180)) e.lengthSeconds = t('5–180 sekunder');
+    if (!(f.brief.videoCount >= 1 && f.brief.videoCount <= 10)) e.videoCount = t('1–10 videor');
+    if (!f.brief.callToAction.trim()) e.callToAction = t('Skriv en call to action');
+    if (isPaid && !(f.budgetMinOre >= 5_000)) e.budgetMinOre = t('Minst 50 kr per video');
+    if (isPaid && f.budgetMaxOre < f.budgetMinOre) e.budgetMaxOre = t('Max kan inte vara lägre än min');
+    if (f.compensation !== 'Paid' && !(f.productDescription ?? '').trim()) e.productDescription = t('Beskriv produkten creatorn får');
+    if (!(f.deadlineDays >= 1 && f.deadlineDays <= 60)) e.deadlineDays = t('1–60 dagar');
+    if (!(f.slots >= 1 && f.slots <= 50)) e.slots = t('1–50 creators');
+    if (f.minFollowers != null && (f.minFollowers < 0 || f.minFollowers > 50_000_000)) e.minFollowers = t('Ange ett rimligt antal följare');
+    return e;
+  };
+  // After the first attempt the marks update live as the brand fixes things.
+  useEffect(() => { if (checked) setErrors(validate(form)); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [form, checked]);
+  const bad = (k: string): React.CSSProperties => errors[k] ? { border: '1.5px solid #cf4b4b', background: 'rgba(207,75,75,.05)' } : {};
+  const Err = ({ k }: { k: string }) => errors[k] ? <div data-error="1" style={{ color: '#cf4b4b', fontSize: 12, fontWeight: 600, marginTop: 4 }}>{errors[k]}</div> : null;
+  const lbl = (k: string): React.CSSProperties => errors[k] ? { color: '#cf4b4b' } : {};
+
   const submit = async (publish: boolean) => {
+    const e = validate(form);
+    setErrors(e); setChecked(true);
+    if (Object.keys(e).length > 0) {
+      toast.push(t('Fyll i det som är markerat i rött'), 'error');
+      setTimeout(() => document.querySelector('[data-error="1"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+      return;
+    }
     try {
       const saved = await save.mutateAsync({ id, body: { ...form, region: form.region || null, productDescription: form.productDescription || null } });
       if (publish) {
@@ -243,11 +275,6 @@ export function UgcCampaignBuilderPage() {
       }
     } catch (e) { toast.push(apiError(e, t('Kunde inte spara')), 'error'); }
   };
-
-  const runAi = () => gen.mutate({ goal: ai.goal, productOrService: ai.productOrService, audience: ai.audience, tone: ai.tone }, {
-    onSuccess: (b) => { set({ brief: { ...b, extraNotes: b.extraNotes ?? '' }, briefGeneratedByAi: true }); setAi((a) => ({ ...a, open: false })); toast.push(t('Briefen är skriven — läs igenom och justera.'), 'success'); },
-    onError: (e) => toast.push(apiError(e, t('AI:n kunde inte skriva briefen')), 'error'),
-  });
 
   if (id && isLoading) return <PageSkeleton />;
 
@@ -264,32 +291,17 @@ export function UgcCampaignBuilderPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))', gap: 16, alignItems: 'start' }}>
         <div style={{ display: 'grid', gap: 16 }}>
           <div className="card">
-            <div className="sec-head" style={{ flexWrap: 'wrap', gap: 8 }}>
-              <h3>{t('Brief')}</h3>
-              <button className="btn-outline" style={{ ...btn, padding: '8px 14px', fontSize: 12.5 }} onClick={() => setAi((a) => ({ ...a, open: !a.open }))}>✦ {t('Generera brief med AI')}</button>
-            </div>
-            {ai.open && (
-              <div style={{ padding: '14px 16px', borderRadius: 14, background: 'rgba(237,225,255,.35)', border: '1px solid rgba(156,125,224,.3)', marginBottom: 14 }}>
-                <div style={{ fontSize: 12.5, color: 'var(--muted)', marginBottom: 10 }}>{t('AI:n använder er företagsprofil (namn, bransch, beskrivning) plus det ni skriver här. Resultatet är ett utkast ni redigerar.')}</div>
-                <div className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-                  <div className="field"><label>{t('Mål')}</label><input style={input} value={ai.goal} onChange={(e) => setAi({ ...ai, goal: e.target.value })} placeholder={t('t.ex. fler lunchgäster på vardagar')} /></div>
-                  <div className="field"><label>{t('Produkt/tjänst')}</label><input style={input} value={ai.productOrService} onChange={(e) => setAi({ ...ai, productOrService: e.target.value })} placeholder={t('t.ex. nya lunchmenyn')} /></div>
-                  <div className="field"><label>{t('Målgrupp')}</label><input style={input} value={ai.audience} onChange={(e) => setAi({ ...ai, audience: e.target.value })} placeholder={t('t.ex. kontorsfolk på Södermalm')} /></div>
-                  <div className="field"><label>{t('Ton')}</label><input style={input} value={ai.tone} onChange={(e) => setAi({ ...ai, tone: e.target.value })} placeholder={t('t.ex. varm, lite humor')} /></div>
-                </div>
-                <button className="btn-apply" style={{ ...btn, marginTop: 10 }} disabled={gen.isPending} onClick={runAi}>{gen.isPending ? t('Skriver…') : t('Skriv briefen')}</button>
-              </div>
-            )}
+            <div className="sec-head"><h3>{t('Brief')}</h3></div>
             <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
-              <div className="field"><label>{t('Titel')} *</label><input style={input} value={form.title} onChange={(e) => set({ title: e.target.value })} placeholder={t('t.ex. Lunchdeal-video för TikTok')} maxLength={200} /></div>
-              <div className="field"><label>{t('Mål')} *</label><textarea rows={2} value={form.brief.goal} onChange={(e) => setBrief({ goal: e.target.value })} placeholder={t('Vad ska videon åstadkomma?')} /></div>
+              <div className="field"><label style={lbl('title')}>{t('Titel')} *</label><input style={{ ...input, ...bad('title') }} value={form.title} onChange={(e) => set({ title: e.target.value })} placeholder={t('t.ex. Lunchdeal-video för TikTok')} maxLength={200} /><Err k="title" /></div>
+              <div className="field"><label style={lbl('goal')}>{t('Mål')} *</label><textarea rows={2} style={bad('goal')} value={form.brief.goal} onChange={(e) => setBrief({ goal: e.target.value })} placeholder={t('Vad ska videon åstadkomma?')} /><Err k="goal" /></div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
-                <div className="field"><label>{t('Format')} *</label><input style={input} value={form.brief.format} onChange={(e) => setBrief({ format: e.target.value })} /></div>
-                <div className="field"><label>{t('Längd (sek)')}</label><input style={input} type="number" min={5} max={180} value={form.brief.lengthSeconds} onChange={(e) => setBrief({ lengthSeconds: Number(e.target.value) })} /></div>
-                <div className="field"><label>{t('Antal videor')}</label><input style={input} type="number" min={1} max={10} value={form.brief.videoCount} onChange={(e) => setBrief({ videoCount: Number(e.target.value) })} /></div>
+                <div className="field"><label style={lbl('format')}>{t('Format')} *</label><input style={{ ...input, ...bad('format') }} value={form.brief.format} onChange={(e) => setBrief({ format: e.target.value })} /><Err k="format" /></div>
+                <div className="field"><label style={lbl('lengthSeconds')}>{t('Längd (sek)')}</label><input style={{ ...input, ...bad('lengthSeconds') }} type="number" min={5} max={180} value={form.brief.lengthSeconds} onChange={(e) => setBrief({ lengthSeconds: Number(e.target.value) })} /><Err k="lengthSeconds" /></div>
+                <div className="field"><label style={lbl('videoCount')}>{t('Antal videor')}</label><input style={{ ...input, ...bad('videoCount') }} type="number" min={1} max={10} value={form.brief.videoCount} onChange={(e) => setBrief({ videoCount: Number(e.target.value) })} /><Err k="videoCount" /></div>
               </div>
               <ListField label={t('Hooks (första meningen i bild)')} values={form.brief.hooks} onChange={(v) => setBrief({ hooks: v })} placeholder={t('Visste du att…')} />
-              <div className="field"><label>{t('Call to action')} *</label><input style={input} value={form.brief.callToAction} onChange={(e) => setBrief({ callToAction: e.target.value })} placeholder={t('t.ex. Boka bord via länken i bion')} /></div>
+              <div className="field"><label style={lbl('callToAction')}>{t('Call to action')} *</label><input style={{ ...input, ...bad('callToAction') }} value={form.brief.callToAction} onChange={(e) => setBrief({ callToAction: e.target.value })} placeholder={t('t.ex. Boka bord via länken i bion')} /><Err k="callToAction" /></div>
               <ListField label={t('Gör')} values={form.brief.dos} onChange={(v) => setBrief({ dos: v })} placeholder={t('t.ex. Visa menyn i bild')} />
               <ListField label={t('Undvik')} values={form.brief.donts} onChange={(v) => setBrief({ donts: v })} placeholder={t('t.ex. Ingen musik med upphovsrätt')} />
               <ListField label={t('Referenser (länkar)')} values={form.brief.referenceUrls} onChange={(v) => setBrief({ referenceUrls: v })} placeholder="https://www.tiktok.com/@…/video/…" />
@@ -309,14 +321,14 @@ export function UgcCampaignBuilderPage() {
               </div>
               {paid && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div className="field"><label>{t('Min per video (kr)')}</label><input style={input} inputMode="decimal" value={oreToKronor(form.budgetMinOre)} onChange={(e) => set({ budgetMinOre: kronorToOre(e.target.value) })} /></div>
-                  <div className="field"><label>{t('Max per video (kr)')}</label><input style={input} inputMode="decimal" value={oreToKronor(form.budgetMaxOre)} onChange={(e) => set({ budgetMaxOre: kronorToOre(e.target.value) })} /></div>
+                  <div className="field"><label style={lbl('budgetMinOre')}>{t('Min per video (kr)')} *</label><input style={{ ...input, ...bad('budgetMinOre') }} inputMode="decimal" value={oreToKronor(form.budgetMinOre)} onChange={(e) => set({ budgetMinOre: kronorToOre(e.target.value) })} /><Err k="budgetMinOre" /></div>
+                  <div className="field"><label style={lbl('budgetMaxOre')}>{t('Max per video (kr)')} *</label><input style={{ ...input, ...bad('budgetMaxOre') }} inputMode="decimal" value={oreToKronor(form.budgetMaxOre)} onChange={(e) => set({ budgetMaxOre: kronorToOre(e.target.value) })} /><Err k="budgetMaxOre" /></div>
                 </div>
               )}
               {paid && <FeeNote amountOre={form.budgetMaxOre} />}
               {form.compensation !== 'Paid' && (
                 <>
-                  <div className="field"><label>{t('Produkt/tjänst creatorn får')} *</label><input style={input} value={form.productDescription ?? ''} onChange={(e) => set({ productDescription: e.target.value })} placeholder={t('t.ex. Middag för två')} /></div>
+                  <div className="field"><label style={lbl('productDescription')}>{t('Produkt/tjänst creatorn får')} *</label><input style={{ ...input, ...bad('productDescription') }} value={form.productDescription ?? ''} onChange={(e) => set({ productDescription: e.target.value })} placeholder={t('t.ex. Middag för två')} /><Err k="productDescription" /></div>
                   <div className="field"><label>{t('Ungefärligt värde (kr)')}</label><input style={input} inputMode="decimal" value={oreToKronor(form.productValueOre)} onChange={(e) => set({ productValueOre: kronorToOre(e.target.value) || null })} /></div>
                 </>
               )}
@@ -327,8 +339,8 @@ export function UgcCampaignBuilderPage() {
                 <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>{t(RIGHTS_HINT[form.rightsPackage])}</div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div className="field"><label>{t('Leveranstid (dagar)')}</label><input style={input} type="number" min={1} max={60} value={form.deadlineDays} onChange={(e) => set({ deadlineDays: Number(e.target.value) })} /></div>
-                <div className="field"><label>{t('Antal creators')}</label><input style={input} type="number" min={1} max={50} value={form.slots} onChange={(e) => set({ slots: Number(e.target.value) })} /></div>
+                <div className="field"><label style={lbl('deadlineDays')}>{t('Leveranstid (dagar)')} *</label><input style={{ ...input, ...bad('deadlineDays') }} type="number" min={1} max={60} value={form.deadlineDays} onChange={(e) => set({ deadlineDays: Number(e.target.value) })} /><Err k="deadlineDays" /></div>
+                <div className="field"><label style={lbl('slots')}>{t('Antal creators')} *</label><input style={{ ...input, ...bad('slots') }} type="number" min={1} max={50} value={form.slots} onChange={(e) => set({ slots: Number(e.target.value) })} /><Err k="slots" /></div>
               </div>
             </div>
           </div>
@@ -344,10 +356,7 @@ export function UgcCampaignBuilderPage() {
                   {UGC_CATEGORIES.map((c) => { const on = form.categories?.includes(c); return <button key={c} type="button" className={`tag ${on ? 'g' : ''}`} style={{ cursor: 'pointer', border: on ? undefined : '1px solid rgba(183,188,200,.4)', background: on ? undefined : 'transparent' }} onClick={() => set({ categories: on ? form.categories!.filter((x) => x !== c) : [...(form.categories ?? []), c] })}>{c}</button>; })}
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div className="field"><label>{t('Min följare')}</label><input style={input} type="number" min={0} value={form.minFollowers ?? ''} onChange={(e) => set({ minFollowers: e.target.value ? Number(e.target.value) : null })} /></div>
-                <div className="field"><label>{t('Max följare')}</label><input style={input} type="number" min={0} value={form.maxFollowers ?? ''} onChange={(e) => set({ maxFollowers: e.target.value ? Number(e.target.value) : null })} /></div>
-              </div>
+              <div className="field"><label style={lbl('minFollowers')}>{t('Min följare')}</label><input style={{ ...input, ...bad('minFollowers') }} type="number" min={0} max={50000000} value={form.minFollowers ?? ''} onChange={(e) => set({ minFollowers: e.target.value ? Number(e.target.value) : null, maxFollowers: null })} placeholder={t('Lämna tomt för alla')} /><Err k="minFollowers" /></div>
             </div>
           </div>
 
@@ -470,7 +479,7 @@ export function UgcBrandCampaignPage() {
           <div style={{ fontSize: 13.5, lineHeight: 1.7 }}>
             <div><strong>{t('Region')}:</strong> {c.region || t('Var som helst')}</div>
             <div><strong>{t('Kategorier')}:</strong> {c.categories.length ? c.categories.join(', ') : t('Alla')}</div>
-            <div><strong>{t('Följare')}:</strong> {c.minFollowers ?? 0}{c.maxFollowers ? `–${formatNumber(c.maxFollowers)}` : '+'}</div>
+            <div><strong>{t('Följare')}:</strong> {c.minFollowers ? `${formatNumber(c.minFollowers)}+` : t('Alla')}</div>
             <div><strong>{t('Publicerad')}:</strong> {c.publishedAt ? formatDate(c.publishedAt) : '–'}</div>
           </div>
         </div>
@@ -534,7 +543,6 @@ export function UgcDirectInvitePage() {
   const toast = useToast();
   const { data: creator } = useCreatorPublicProfile(creatorId);
   const invite = useUgcDirectInvite();
-  const gen = useGenerateUgcBrief();
 
   const [form, setForm] = useState({ title: '', brief: emptyBrief, compensation: 'Paid', amountOre: 150_000, productDescription: '', productValueOre: null as number | null, rightsPackage: 'OrganicPlusAds6M', deadlineDays: 7 });
   const set = (p: Partial<typeof form>) => setForm((f) => ({ ...f, ...p }));
@@ -557,9 +565,7 @@ export function UgcDirectInvitePage() {
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))', gap: 16, alignItems: 'start' }}>
         <div className="card">
-          <div className="sec-head" style={{ flexWrap: 'wrap', gap: 8 }}><h3>{t('Brief')}</h3>
-            <button className="btn-outline" style={{ ...btn, padding: '8px 14px', fontSize: 12.5 }} disabled={gen.isPending} onClick={() => gen.mutate({ goal: form.brief.goal || undefined }, { onSuccess: (b) => setBrief({ ...b, extraNotes: b.extraNotes ?? '' }), onError: (e) => toast.push(apiError(e, t('AI:n kunde inte skriva briefen')), 'error') })}>✦ {gen.isPending ? t('Skriver…') : t('Generera brief med AI')}</button>
-          </div>
+          <div className="sec-head"><h3>{t('Brief')}</h3></div>
           <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
             <div className="field"><label>{t('Titel')} *</label><input style={input} value={form.title} onChange={(e) => set({ title: e.target.value })} /></div>
             <div className="field"><label>{t('Mål')} *</label><textarea rows={2} value={form.brief.goal} onChange={(e) => setBrief({ goal: e.target.value })} /></div>
