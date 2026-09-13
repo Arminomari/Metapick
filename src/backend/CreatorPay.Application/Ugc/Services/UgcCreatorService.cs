@@ -52,7 +52,8 @@ public sealed class UgcCreatorService : IUgcCreatorService
     {
         var p = await _profiles.Query().FirstOrDefaultAsync(x => x.CreatorProfileId == creatorProfileId, ct);
         if (p != null) return p;
-        p = new UgcCreatorProfile { CreatorProfileId = creatorProfileId };
+        // Verified from the start — the account itself was approved at sign-up.
+        p = new UgcCreatorProfile { CreatorProfileId = creatorProfileId, Status = UgcCreatorStatus.Verified };
         _profiles.Add(p);
         await _uow.SaveChangesAsync(ct);
         return p;
@@ -106,9 +107,8 @@ public sealed class UgcCreatorService : IUgcCreatorService
     }
 
     /// <summary>
-    /// Snapshot followers and like/follower ratio from TikTok, then run the
-    /// automatic filter. Never demotes an admin-approved creator; never
-    /// touches a suspended one.
+    /// Snapshot followers and like/follower ratio from TikTok — numbers the
+    /// brand sees on an application. Status is not touched here.
     /// </summary>
     private async Task EvaluateAsync(CreatorProfile creator, UgcCreatorProfile p, CancellationToken ct)
     {
@@ -133,14 +133,9 @@ public sealed class UgcCreatorService : IUgcCreatorService
             }
         }
 
-        var hasSample = !string.IsNullOrWhiteSpace(p.SampleVideoUrl)
-            || await _portfolio.Query().AnyAsync(i => i.CreatorProfileId == creator.Id
-                && (i.MediaType == PortfolioMediaType.Video || i.MediaType == PortfolioMediaType.TikTok), ct);
-
         p.FollowerSnapshot = followers;
         p.LikeFollowerRatio = ratio;
         p.SocialSnapshotAt = DateTime.UtcNow;
-        p.Status = UgcVerificationRule.Evaluate(p.Status, hasSample);
         await _uow.SaveChangesAsync(ct);
     }
 
@@ -155,7 +150,7 @@ public sealed class UgcCreatorService : IUgcCreatorService
 
         var baseUrl = (_config["Frontend:BaseUrl"] ?? "https://www.vyrle.co").TrimEnd('/');
         var result = await _gateway.CreateConnectOnboardingAsync(creator.Id, p.StripeConnectAccountId, creator.User.Email,
-            $"{baseUrl}/creator/ugc/profile?onboarding=done", $"{baseUrl}/creator/ugc/profile?onboarding=refresh", ct);
+            $"{baseUrl}/creator/profile?onboarding=done", $"{baseUrl}/creator/profile?onboarding=refresh", ct);
         if (!result.Success) return Errors.Conflict(result.Error ?? "Kunde inte starta registreringen.");
 
         p.StripeConnectAccountId = result.ExternalId;

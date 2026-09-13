@@ -156,11 +156,11 @@ function ActionBar({ c, role, has, run, busy }: { c: UgcCollab; role: UgcRole; h
   if (role === 'brand' && has('pay')) buttons.push(<button key="pay" className="btn-apply" style={btn} disabled={busy} onClick={pay}>{t('Betala')} {formatOre(c.brandTotalOre)}</button>);
   if (role === 'creator' && has('accept')) buttons.push(<button key="acc" className="btn-apply" style={btn} disabled={busy} onClick={() => run('accept', undefined, t('Avtalet gäller — lycka till!'))}>{t('Acceptera kontraktet')}</button>);
   if (has('start')) buttons.push(<button key="start" className="btn-outline" style={btn} disabled={busy} onClick={() => run('start')}>{t('Markera som påbörjad')}</button>);
-  if (has('approve')) buttons.push(<button key="approve" className="btn-apply" style={btn} disabled={busy} onClick={() => run('approve', undefined, t('Godkänd — creatorn får betalt.'))}>✓ {t('Godkänn leveransen')}</button>);
+  if (has('approve')) buttons.push(<button key="approve" className="btn-apply" style={btn} disabled={busy} onClick={() => run('approve', undefined, t('Godkänd — creatorn får betalt.'))}>{t('Godkänn leveransen')}</button>);
   if (has('revision')) buttons.push(<button key="rev" className="btn-outline" style={btn} onClick={() => setMode(mode === 'revision' ? null : 'revision')}>{t('Begär ändring')} ({c.maxRevisions - c.revisionCount} {t('kvar')})</button>);
   if (has('dispute')) buttons.push(<button key="disp" className="btn-outline" style={{ ...btn, borderColor: 'var(--red)', color: 'var(--red)' }} onClick={() => setMode(mode === 'dispute' ? null : 'dispute')}>{t('Öppna tvist')}</button>);
   if (has('rate')) buttons.push(<button key="rate" className="btn-outline" style={btn} onClick={() => setMode(mode === 'rate' ? null : 'rate')}>★ {t('Betygsätt')}</button>);
-  if (has('license')) buttons.push(<a key="lic" className="btn-outline" style={{ ...btn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }} href={licenseUrl(c.id)} target="_blank" rel="noopener noreferrer">📄 {t('Licensbevis')}</a>);
+  if (has('license')) buttons.push(<a key="lic" className="btn-outline" style={{ ...btn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }} href={licenseUrl(c.id)} target="_blank" rel="noopener noreferrer">{t('Licensbevis')}</a>);
   if (has('mark-funded')) buttons.push(<button key="mf" className="btn-outline" style={btn} disabled={markFunded.isPending} onClick={() => markFunded.mutate({ id: c.id, reason: 'admin' }, { onSuccess: () => toast.push(t('Betalning registrerad'), 'success'), onError: (e) => toast.push(apiError(e, t('Något gick fel')), 'error') })}>{t('Registrera betalning manuellt')}</button>);
   if (has('cancel') || has('decline')) buttons.push(<button key="cancel" className="view-all" style={{ color: 'var(--red)' }} onClick={() => setMode(mode === 'cancel' ? null : 'cancel')}>{has('decline') ? t('Avböj') : t('Avbryt uppdraget')}</button>);
 
@@ -254,7 +254,7 @@ function DeliverablesCard({ c, role, has, run, busy }: { c: UgcCollab; role: Ugc
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
             <span className={`vy-badge ${i === 0 ? 'info' : 'neu'}`}>{t('Version')} {d.version}</span>
             <span style={{ fontSize: 12.5, color: 'var(--muted)' }}>{formatDateTime(d.createdAt)} · {Math.max(1, Math.round(d.fileSizeBytes / 1024 / 1024))} MB</span>
-            {d.fileUrl && <a href={fileUrl(d.fileUrl)} download style={{ marginLeft: 'auto', fontSize: 12.5, color: '#C26A4A', fontWeight: 600 }}>⬇ {t('Ladda ner')}</a>}
+            {d.fileUrl && <a href={fileUrl(d.fileUrl)} download style={{ marginLeft: 'auto', fontSize: 12.5, color: '#C26A4A', fontWeight: 600 }}>{t('Ladda ner')}</a>}
           </div>
           {d.fileUrl ? (
             <video controls playsInline preload="metadata" src={fileUrl(d.fileUrl)} style={{ width: '100%', maxHeight: 520, borderRadius: 16, background: '#0B0F17' }} />
@@ -308,8 +308,8 @@ function ContractCard({ c }: { c: UgcCollab }) {
         <button className="view-all" onClick={() => setOpen((v) => !v)}>{open ? t('Dölj') : t('Läs hela')}</button>
       </div>
       <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontSize: 12.5, color: 'var(--muted)' }}>
-        <span>{c.brandAcceptedAt ? `✓ ${t('Företaget')} ${formatDate(c.brandAcceptedAt)}` : `○ ${t('Företaget har inte accepterat')}`}</span>
-        <span>{c.creatorAcceptedAt ? `✓ ${t('Creatorn')} ${formatDate(c.creatorAcceptedAt)}` : `○ ${t('Creatorn har inte accepterat')}`}</span>
+        <span>{c.brandAcceptedAt ? `${t('Företaget')} ${formatDate(c.brandAcceptedAt)}` : `${t('Företaget har inte accepterat')}`}</span>
+        <span>{c.creatorAcceptedAt ? `${t('Creatorn')} ${formatDate(c.creatorAcceptedAt)}` : `${t('Creatorn har inte accepterat')}`}</span>
         <span title={c.contractHash} style={{ fontFamily: 'ui-monospace, Menlo, monospace' }}>SHA-256 {c.contractHash.slice(0, 12)}…</span>
       </div>
       {open && (

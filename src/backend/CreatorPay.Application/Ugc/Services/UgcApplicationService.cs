@@ -64,8 +64,8 @@ public sealed class UgcApplicationService : IUgcApplicationService
             return Errors.Forbidden(me.Status switch
             {
                 UgcCreatorStatus.Suspended => "Ditt konto på marknadsplatsen är avstängt.",
-                UgcCreatorStatus.Pending => "Lägg till en exempelvideo i din UGC-profil så verifieras du direkt — sedan kan du lägga bud.",
-                _ when !me.PayoutOnboardingComplete => "Slutför utbetalningsregistreringen innan du tar betalda uppdrag.",
+                UgcCreatorStatus.Pending => "Din profil granskas av VYRLE. Du kan ansöka så fort den är klar.",
+                _ when !me.PayoutOnboardingComplete => "Verifiera dig under Inställningar innan du tar betalda uppdrag.",
                 _ => "Betalda uppdrag kräver F-skatt.",
             });
 

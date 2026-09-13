@@ -51,7 +51,7 @@ function Overview({ o }: { o: NonNullable<ReturnType<typeof useUgcAdminOverview>
   );
   const Flag = ({ ok, label, hint }: { ok: boolean; label: string; hint: string }) => (
     <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '.6rem 0', borderBottom: '1px solid rgba(241,168,143,.18)' }}>
-      <span style={{ fontSize: 18, lineHeight: 1 }}>{ok ? '🟢' : '🟡'}</span>
+      <span className={`vy-badge ${ok ? 'pos' : 'pend'}`}>{ok ? t('Aktiv') : t('Ej aktiv')}</span>
       <div><div style={{ fontWeight: 700, fontSize: '.9rem' }}>{label}</div><div style={mutedTx}>{ok ? t('Aktiv') : hint}</div></div>
     </div>
   );
@@ -126,7 +126,7 @@ function CreatorQueue() {
               {r.statusNote && <div style={{ ...mutedTx, marginTop: 4, fontStyle: 'italic' }}>{r.statusNote}</div>}
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-              {r.status !== 'Approved' && <button style={{ ...btnDark, background: '#2f9d5b' }} disabled={set.isPending} onClick={() => decide(r.creatorProfileId, 'Approved')}>✓ {t('Godkänn')}</button>}
+              {r.status !== 'Approved' && <button style={{ ...btnDark, background: '#2f9d5b' }} disabled={set.isPending} onClick={() => decide(r.creatorProfileId, 'Approved')}>{t('Godkänn')}</button>}
               {r.status !== 'Suspended' && <button style={btnLine('#cf4b4b')} onClick={() => setNoteFor(noteFor === r.creatorProfileId ? null : r.creatorProfileId)}>{t('Stäng av')}</button>}
               {r.status === 'Suspended' && <button style={btnLine()} disabled={set.isPending} onClick={() => decide(r.creatorProfileId, 'Verified')}>{t('Häv avstängning')}</button>}
             </div>

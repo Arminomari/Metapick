@@ -5,6 +5,7 @@ import { ChangeEmailCard, ChangePasswordCard } from '@/components/ui/AccountCard
 import { maskSwishNumber, maskBankAccount } from '@/lib/masks';
 import { CopyField } from '@/components/ui/CopyButton';
 import { ApplyModal } from '@/components/vyrle/ApplyModal';
+import { CreatorVerificationCard } from '@/pages/ugc/UgcCreatorPages';
 import { t } from '@/lib/i18n';
 import { useState } from 'react';
 import { RefreshViewsButton } from '@/components/ui/RefreshViewsButton';
@@ -1119,6 +1120,7 @@ export function CreatorProfilePage() {
       </div>
 
       <div style={{ marginBottom: 16 }}><TikTokConnectionCard /></div>
+      <CreatorVerificationCard />
 
       <div className="card" style={{ maxWidth: 860 }}>
         <div className="sec-head"><h3>{t('Profilinformation')}</h3>{!editing && <button className="view-all" onClick={() => setEditing(true)}>{t('Redigera')}</button>}</div>

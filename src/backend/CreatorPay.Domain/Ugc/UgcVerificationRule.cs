@@ -9,23 +9,17 @@ public sealed record UgcVerificationThresholds(int StrikesToSuspend = 3)
 }
 
 /// <summary>
-/// The first filter a creator meets, and the strike rule that can remove them.
-/// Pure so the rules can be tuned and tested without a database.
+/// Who may take work, and the strike rule that can remove them. Pure so the
+/// rules can be tuned and tested without a database.
+///
+/// A creator starts out Verified: the account was already approved by VYRLE
+/// at sign-up, and a brand buys a finished video, so neither platform nor
+/// follower count is a gate. The real verification is the Stripe onboarding
+/// (identity + bank account), which is required for paid work. Pending is
+/// reserved for creators an admin has pulled in for review.
 /// </summary>
 public static class UgcVerificationRule
 {
-    /// <summary>
-    /// Verified as soon as a sample video exists. A brand buys a finished video,
-    /// so the creator's platform and follower count are not a gate — TikTok is
-    /// optional and only adds numbers the brand can see. Never promotes past
-    /// Verified (Approved is an admin's call) and never touches a Suspended creator.
-    /// </summary>
-    public static UgcCreatorStatus Evaluate(UgcCreatorStatus current, bool hasSampleVideo)
-    {
-        if (current is UgcCreatorStatus.Suspended or UgcCreatorStatus.Approved) return current;
-        return hasSampleVideo ? UgcCreatorStatus.Verified : UgcCreatorStatus.Pending;
-    }
-
     /// <summary>Likes across recent videos over followers. Zero followers → zero, never a division error.</summary>
     public static decimal LikeFollowerRatio(long totalLikes, int followers)
         => followers <= 0 ? 0m : Math.Round((decimal)totalLikes / followers, 4);
@@ -33,7 +27,7 @@ public static class UgcVerificationRule
     public static bool ShouldSuspend(int strikes, UgcVerificationThresholds thresholds)
         => strikes >= thresholds.StrikesToSuspend;
 
-    /// <summary>May this creator take paid work? Product exchange is open to anyone Approved/Verified.</summary>
+    /// <summary>May this creator take the work? Product exchange is open to anyone Verified/Approved; paid work needs the Stripe verification.</summary>
     public static bool CanApply(UgcCreatorStatus status, UgcCompensationType compensation,
         bool payoutOnboardingComplete, bool hasFTax, bool requireFTaxForPaid)
     {

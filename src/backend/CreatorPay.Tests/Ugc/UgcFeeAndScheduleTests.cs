@@ -182,15 +182,6 @@ public class UgcVerificationRuleTests
 {
     private static readonly UgcVerificationThresholds T = new(3);
 
-    [Theory]
-    [InlineData(UgcCreatorStatus.Pending, true, UgcCreatorStatus.Verified)]      // a sample video is all it takes
-    [InlineData(UgcCreatorStatus.Pending, false, UgcCreatorStatus.Pending)]
-    [InlineData(UgcCreatorStatus.Verified, false, UgcCreatorStatus.Pending)]     // sample removed — back to review
-    [InlineData(UgcCreatorStatus.Approved, false, UgcCreatorStatus.Approved)]    // admin's call stands
-    [InlineData(UgcCreatorStatus.Suspended, true, UgcCreatorStatus.Suspended)]
-    public void Evaluate(UgcCreatorStatus current, bool sample, UgcCreatorStatus expected)
-        => Assert.Equal(expected, UgcVerificationRule.Evaluate(current, sample));
-
     [Fact]
     public void Ratio_never_divides_by_zero()
     {

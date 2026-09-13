@@ -193,9 +193,10 @@ och först därefter agerar — ett event som redan finns i tabellen är ett no-
 ## Så testar du hela flödet utan nycklar
 
 1. **Företag:** Beställ video → Ny beställning → skriv brief → Publicera (kräver org.nr och godkänt konto).
-2. **Creator:** Videouppdrag → Min UGC-profil → kategorier + exempelvideo → verifieras direkt när en exempelvideo
-   finns (TikTok-koppling är valfri och visar bara följarsiffror; admin kan fortfarande stänga av under
-   **Admin → Beställ video → Verifieringskö**). Lägg bud.
+2. **Creator:** Inställningar → **Verifiering** (Stripe-onboarding: identitet + bankkonto; utan Stripe-nycklar visas
+   "Betalningar är inte aktiverade"). Produktbyten går utan verifiering, betalda uppdrag kräver den. Videouppdrag →
+   Min UGC-profil → kategorier/stad (exempelvideo är valfri och visas bara för företaget). Ansök med ditt pris.
+   Admin kan fortfarande stänga av eller dra in en creator för granskning under **Admin → Beställ video → Verifieringskö**.
 3. **Företag:** öppna beställningen → Anlita → Acceptera & betala (utan Stripe: stannar med "Betalningar är inte aktiverade").
 4. **Admin:** Beställ video → Alla uppdrag → uppdraget → *Registrera betalning manuellt*.
 5. **Creator:** Acceptera kontraktet → Leverera video (mp4/mov/webm, max 500 MB).

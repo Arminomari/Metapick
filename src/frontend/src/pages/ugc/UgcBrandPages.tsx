@@ -60,7 +60,6 @@ export function UgcBrandHomePage() {
 
       {isLoading ? <CardSkeleton rows={3} /> : campaigns.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '54px 24px' }}>
-          <div style={{ fontSize: 30, marginBottom: 10 }} aria-hidden>🎬</div>
           <div style={{ fontSize: 18, fontWeight: 700 }}>{t('Ingen beställning ännu')}</div>
           <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8, maxWidth: 460, marginInline: 'auto', lineHeight: 1.6 }}>
             {t('Skriv en brief, sätt en budget per video och publicera. Creators som passar lägger bud — ni väljer.')}
@@ -111,7 +110,7 @@ export function CollabRow({ c, role, onOpen }: { c: UgcCollabListItem; role: 'br
         <div className="vcamp-b" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           {c.title}
           <span className={`vy-badge ${COLLAB_TONE[c.status] ?? 'neu'}`}>{collabStatusLabel(c.status)}</span>
-          {c.unreadMessages > 0 && <span className="vy-badge neg">{c.unreadMessages} ✉</span>}
+          {c.unreadMessages > 0 && <span className="vy-badge neg">{c.unreadMessages} </span>}
         </div>
         <div className="vcamp-m">{who} · {c.compensation === 'ProductExchange' ? t('Produktbyte') : formatOre(role === 'brand' ? c.brandTotalOre : c.agreedAmountOre)}{c.deadlineAt && !['Paid', 'Cancelled', 'Submitted', 'Approved'].includes(c.status) ? ` · ${t('deadline')} ${formatDate(c.deadlineAt)}` : ''}{c.autoApproveAt && c.status === 'Submitted' ? ` · ${t('auto-godkänns')} ${formatDate(c.autoApproveAt)}` : ''}</div>
       </div>
@@ -174,9 +173,9 @@ export function UgcPipelinePage({ role }: { role: 'brand' | 'creator' }) {
                           <span style={{ fontWeight: 700, fontSize: 13 }}>{c.compensation === 'ProductExchange' ? t('Produkt') : formatOre(role === 'brand' ? c.brandTotalOre : c.agreedAmountOre)}</span>
                           <span className={`vy-badge ${COLLAB_TONE[c.status] ?? 'neu'}`} style={{ fontSize: 10.5 }}>{collabStatusLabel(c.status)}</span>
                         </div>
-                        {(c.deadlineAt && ['Accepted', 'InProgress', 'RevisionRequested'].includes(c.status)) && <div style={{ fontSize: 11.5, color: '#9c4f31', marginTop: 6 }}>⏱ {t('deadline')} {formatDate(c.deadlineAt)}</div>}
-                        {c.autoApproveAt && c.status === 'Submitted' && <div style={{ fontSize: 11.5, color: '#9c6b1c', marginTop: 6 }}>⏱ {t('auto-godkänns')} {formatDate(c.autoApproveAt)}</div>}
-                        {c.unreadMessages > 0 && <div style={{ fontSize: 11.5, color: '#b3402f', marginTop: 6, fontWeight: 700 }}>✉ {c.unreadMessages} {t('olästa')}</div>}
+                        {(c.deadlineAt && ['Accepted', 'InProgress', 'RevisionRequested'].includes(c.status)) && <div style={{ fontSize: 11.5, color: '#9c4f31', marginTop: 6 }}>{t('deadline')} {formatDate(c.deadlineAt)}</div>}
+                        {c.autoApproveAt && c.status === 'Submitted' && <div style={{ fontSize: 11.5, color: '#9c6b1c', marginTop: 6 }}>{t('auto-godkänns')} {formatDate(c.autoApproveAt)}</div>}
+                        {c.unreadMessages > 0 && <div style={{ fontSize: 11.5, color: '#b3402f', marginTop: 6, fontWeight: 700 }}>{c.unreadMessages} {t('olästa')}</div>}
                         {c.needsMyAction && <div style={{ fontSize: 11.5, color: '#9c6b1c', marginTop: 6, fontWeight: 700 }}>→ {t('Din tur')}</div>}
                       </div>
                     );
@@ -476,7 +475,7 @@ export function UgcBrandCampaignPage() {
               ) : (
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <button className="btn-apply" style={{ ...btn, padding: '9px 16px', fontSize: 12.5 }} disabled={decide.isPending || c.hiredCount >= c.slots} onClick={() => run(a.id, 'hire')}>{t('Anlita')} {a.bidOre > 0 ? formatOre(a.bidOre) : ''}</button>
-                  {a.status !== 'Preselected' && <button className="btn-outline" style={{ ...btn, padding: '9px 14px', fontSize: 12.5 }} disabled={decide.isPending} onClick={() => run(a.id, 'preselect')}>☆ {t('Favorit')}</button>}
+                  {a.status !== 'Preselected' && <button className="btn-outline" style={{ ...btn, padding: '9px 14px', fontSize: 12.5 }} disabled={decide.isPending} onClick={() => run(a.id, 'preselect')}>{t('Favorit')}</button>}
                   <button className="view-all" style={{ color: 'var(--red)' }} onClick={() => setRejecting(a.id)}>{t('Avböj')}</button>
                 </div>
               )}
@@ -534,7 +533,7 @@ function BidRow({ a, onOpenProfile, children }: { a: UgcApplication; onOpenProfi
       <div className="row-main" style={{ flex: '1 1 260px', minWidth: 0 }}>
         <div className="t" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <span role="button" tabIndex={0} onClick={onOpenProfile} style={{ cursor: 'pointer' }}>{a.creatorName}</span>
-          {a.status === 'Preselected' && <span className="vy-badge info">☆ {t('Favorit')}</span>}
+          {a.status === 'Preselected' && <span className="vy-badge info">{t('Favorit')}</span>}
           {a.creatorStatus === 'Approved' && <span className="vy-badge pos">{t('Godkänd av VYRLE')}</span>}
           {a.bidOre > 0 && <span style={{ fontWeight: 800, color: '#9c4f31' }}>{formatOre(a.bidOre)}</span>}
         </div>
@@ -543,7 +542,7 @@ function BidRow({ a, onOpenProfile, children }: { a: UgcApplication; onOpenProfi
           <span>L/F {(a.likeFollowerRatio * 100).toFixed(0)} %</span>
           <span>{a.deliveredCount} {t('leveranser')}{onTime != null ? ` · ${onTime} % ${t('i tid')}` : ''}</span>
           {a.ratingCount > 0 && <span>★ {a.averageRating.toFixed(1)}</span>}
-          {(a.city || a.region) && <span>📍 {a.city || a.region}</span>}
+          {(a.city || a.region) && <span>{a.city || a.region}</span>}
         </div>
         <div className="s" style={{ marginTop: 6, padding: '8px 12px', borderRadius: 12, background: 'rgba(255,244,236,.8)', borderLeft: '3px solid #F1A88F', fontStyle: 'italic', color: '#2C333F', lineHeight: 1.55, whiteSpace: 'pre-line' }}>“{a.pitch}”</div>
         <div className="s" style={{ color: 'var(--muted-2)', marginTop: 4 }}>{formatDate(a.createdAt)}</div>

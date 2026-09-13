@@ -36,6 +36,9 @@ server {
 
     location / {
         try_files $uri $uri/ /index.html;
+        # The SPA shell is not fingerprinted: browsers must revalidate it on every
+        # load or users keep an old bundle for days after a deploy.
+        expires -1;
     }
 
     location /api/ {

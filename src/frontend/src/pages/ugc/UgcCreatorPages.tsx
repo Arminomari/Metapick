@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { t } from '@/lib/i18n';
-import { formatDate, formatNumber } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 import { useToast, CardSkeleton } from '@/components/vyrle/Toast';
 import {
-  useUgcCreatorProfile, useUpsertUgcCreatorProfile, useRefreshUgcVerification, useUgcPayoutStatus, useStartUgcPayoutOnboarding,
+  useUgcCreatorProfile, useUpsertUgcCreatorProfile, useUgcPayoutStatus, useStartUgcPayoutOnboarding,
   useUgcCreatorCampaigns, useApplyToUgcCampaign, useUgcMyApplications, useWithdrawUgcApplication, useUgcCollabs,
-  formatOre, kronorToOre, oreToKronor, COMPENSATION_LABEL, RIGHTS_LABEL, RIGHTS_HINT, CREATOR_STATUS_SV, UGC_CATEGORIES, UGC_REGIONS, apiError,
+  formatOre, kronorToOre, oreToKronor, COMPENSATION_LABEL, RIGHTS_LABEL, RIGHTS_HINT, UGC_CATEGORIES, UGC_REGIONS, apiError,
   type UgcCampaign,
 } from '@/hooks/ugc';
 import { BriefView, CollabRow } from './UgcBrandPages';
@@ -39,16 +39,16 @@ export function UgcCreatorHomePage() {
     setPitch('');
   };
   const send = () => target && apply.mutate({ campaignId: target.id, bidOre: kronorToOre(bid), pitch }, {
-    onSuccess: () => { toast.push(t('Budet är skickat! Företaget får en notis.'), 'success'); setTarget(null); },
-    onError: (e) => toast.push(apiError(e, t('Kunde inte skicka budet')), 'error'),
+    onSuccess: () => { toast.push(t('Ansökan är skickad. Företaget får en notis.'), 'success'); setTarget(null); },
+    onError: (e) => toast.push(apiError(e, t('Kunde inte skicka ansökan')), 'error'),
   });
 
   return (
     <section className="view active reveal">
       <div className="page-head">
         <div>
-          <h1 className="page-title">🎬 {t('Video')}<em>{t('uppdrag')}</em></h1>
-          <p className="page-sub">{t('Företag beställer korta UGC-videor till fast pris. Lägg ditt bud, leverera, få betalt via VYRLE.')}</p>
+          <h1 className="page-title">{t('Video')}<em>{t('uppdrag')}</em></h1>
+          <p className="page-sub">{t('Företag beställer korta UGC-videor till fast pris. Ansök med ditt pris, leverera, få betalt via VYRLE.')}</p>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button className="btn-outline" style={btn} onClick={() => navigate('/creator/ugc/profile')}>{t('Min UGC-profil')}</button>
@@ -59,16 +59,15 @@ export function UgcCreatorHomePage() {
       {profile && (
         <div className="card" style={{ marginBottom: 16, border: blocked ? '1px solid rgba(212,155,46,.45)' : undefined, background: blocked ? 'linear-gradient(160deg,#fff,#FFF9F0)' : undefined }}>
           <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
-            <span className={`vy-badge ${profile.status === 'Approved' || profile.status === 'Verified' ? 'pos' : profile.status === 'Suspended' ? 'neg' : 'pend'}`}>{t(CREATOR_STATUS_SV[profile.status])}</span>
             <div style={{ flex: '1 1 240px', fontSize: 13.5, lineHeight: 1.5 }}>
-              {profile.blocker ?? t('Du kan lägga bud på betalda uppdrag och produktbyten.')}
+              {profile.blocker ?? t('Du kan ansöka om betalda uppdrag och produktbyten.')}
             </div>
             <div style={{ display: 'flex', gap: 14, fontSize: 12.5, color: 'var(--muted)', flexWrap: 'wrap' }}>
               <span>{profile.deliveredCount} {t('leveranser')}</span>
               {profile.ratingCount > 0 && <span>★ {profile.averageRating.toFixed(1)}</span>}
               <span>{formatOre(earned)} {t('tjänat')}</span>
             </div>
-            {(profile.status === 'Pending' || !profile.payoutOnboardingComplete) && <button className="btn-apply" style={{ ...btn, padding: '9px 16px', fontSize: 12.5 }} onClick={() => navigate('/creator/ugc/profile')}>{t('Fixa profilen')} →</button>}
+            {!profile.payoutOnboardingComplete && profile.status !== 'Suspended' && <button className="btn-apply" style={{ ...btn, padding: '9px 16px', fontSize: 12.5 }} onClick={() => navigate('/creator/profile')}>{t('Verifiera dig')}</button>}
           </div>
         </div>
       )}
@@ -108,12 +107,12 @@ export function UgcCreatorHomePage() {
               <div className="tags" style={{ marginBottom: 10 }}><span className="tag g">{t(RIGHTS_LABEL[c.rightsPackage])}</span><span className="tag">{t(COMPENSATION_LABEL[c.compensation])}</span>{c.slots - c.hiredCount > 0 && <span className="tag">{c.slots - c.hiredCount} {t('platser')}</span>}</div>
               <div style={{ marginTop: 'auto' }}>
                 {c.myApplicationStatus ? (
-                  c.myCollabId ? <button className="btn-apply" style={{ width: '100%' }} onClick={() => navigate(`/creator/ugc/collabs/${c.myCollabId}`)}>✓ {t('Anlitad — öppna uppdraget')}</button>
-                    : <button className="btn-outline" style={{ width: '100%' }} disabled>{c.myApplicationStatus === 'Rejected' ? '✗ ' + t('Budet antogs inte') : c.myApplicationStatus === 'Withdrawn' ? t('Bud återtaget') : `⏳ ${t('Bud lagt')}${c.myBidOre ? ` · ${formatOre(c.myBidOre)}` : ''}`}</button>
+                  c.myCollabId ? <button className="btn-apply" style={{ width: '100%' }} onClick={() => navigate(`/creator/ugc/collabs/${c.myCollabId}`)}>{t('Anlitad — öppna uppdraget')}</button>
+                    : <button className="btn-outline" style={{ width: '100%' }} disabled>{c.myApplicationStatus === 'Rejected' ? t('Ansökan antogs inte') : c.myApplicationStatus === 'Withdrawn' ? t('Ansökan återtagen') : `${t('Ansökan skickad')}${c.myBidOre ? ` · ${formatOre(c.myBidOre)}` : ''}`}</button>
                 ) : (
                   (c.compensation === 'ProductExchange' ? profile?.canTakeProduct : profile?.canTakePaid) === false
-                    ? <button className="btn-outline" style={{ width: '100%' }} onClick={() => { toast.push(profile?.blocker ?? t('Gör klart din UGC-profil först.'), 'error'); navigate('/creator/ugc/profile'); }}>{t('Fixa profilen först')} →</button>
-                    : <button className="btn-apply" style={{ width: '100%' }} disabled={!profile} onClick={() => openApply(c)}>{t('Lägg bud')}</button>
+                    ? <button className="btn-outline" style={{ width: '100%' }} onClick={() => { toast.push(profile?.blocker ?? t('Verifiera dig under Inställningar först.'), 'error'); navigate('/creator/profile'); }}>{t('Verifiera dig först')}</button>
+                    : <button className="btn-apply" style={{ width: '100%' }} disabled={!profile} onClick={() => openApply(c)}>{t('Ansök')}</button>
                 )}
               </div>
             </div>
@@ -127,7 +126,7 @@ export function UgcCreatorHomePage() {
           <div role="dialog" aria-modal="true" style={{ position: 'fixed', zIndex: 81, top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(600px, calc(100vw - 28px))', maxHeight: 'calc(100dvh - 40px)', overflowY: 'auto', background: 'linear-gradient(160deg,#fff,#FFF9F5)', borderRadius: 24, border: '1px solid rgba(241,168,143,.35)', boxShadow: '0 30px 80px rgba(11,15,23,.28)', padding: 'clamp(18px, 5vw, 26px)' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>{t('Lägg bud på')} {target.title}</h2>
+                <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>{t('Ansök om')} {target.title}</h2>
                 <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 3 }}>{target.brandName} · {t(RIGHTS_LABEL[target.rightsPackage])} · {target.deadlineDays} {t('dagars leverans')}</div>
               </div>
               <button type="button" onClick={() => setTarget(null)} aria-label={t('Stäng')} style={{ border: 'none', background: 'rgba(183,188,200,.2)', width: 34, height: 34, borderRadius: '50%', cursor: 'pointer', fontSize: 16 }}>×</button>
@@ -146,7 +145,7 @@ export function UgcCreatorHomePage() {
               <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 4, display: 'flex', justifyContent: 'space-between' }}><span>{pitch.trim().length < 20 ? t('Minst 20 tecken.') : t('Bra — konkret slår långt.')}</span><span>{pitch.length}/2000</span></div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button className="btn-apply" style={{ ...btn, flex: 1 }} disabled={apply.isPending || pitch.trim().length < 20} onClick={send}>{apply.isPending ? t('Skickar…') : t('Skicka bud')}</button>
+              <button className="btn-apply" style={{ ...btn, flex: 1 }} disabled={apply.isPending || pitch.trim().length < 20} onClick={send}>{apply.isPending ? t('Skickar…') : t('Skicka ansökan')}</button>
               <button className="btn-outline" style={btn} onClick={() => setTarget(null)}>{t('Avbryt')}</button>
             </div>
           </div>
@@ -164,13 +163,13 @@ export function UgcCreatorApplicationsPage() {
   const toast = useToast();
   const { data: apps = [], isLoading } = useUgcMyApplications();
   const withdraw = useWithdrawUgcApplication();
-  const label: Record<string, [string, string]> = { Applied: ['Bud lagt', 'pend'], Preselected: ['Favorit hos företaget', 'info'], Hired: ['Anlitad', 'pos'], Rejected: ['Antogs inte', 'neg'], Withdrawn: ['Återtaget', 'neu'] };
+  const label: Record<string, [string, string]> = { Applied: ['Ansökan skickad', 'pend'], Preselected: ['Favorit hos företaget', 'info'], Hired: ['Anlitad', 'pos'], Rejected: ['Antogs inte', 'neg'], Withdrawn: ['Återtaget', 'neu'] };
 
   return (
     <section className="view active reveal">
-      <div className="page-head"><div><h1 className="page-title">{t('Mina')} <em>{t('bud')}</em></h1><p className="page-sub">{t('Allt du lagt bud på. När ett företag anlitar dig dyker uppdraget upp under Mina uppdrag.')}</p></div></div>
+      <div className="page-head"><div><h1 className="page-title">{t('Mina')} <em>{t('ansökningar')}</em></h1><p className="page-sub">{t('Allt du ansökt om. När ett företag anlitar dig dyker uppdraget upp under Mina uppdrag.')}</p></div></div>
       {isLoading ? <CardSkeleton rows={3} /> : apps.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: '54px 24px' }}><div style={{ fontSize: 18, fontWeight: 700 }}>{t('Inga bud ännu')}</div><button className="btn-apply" style={{ ...btn, marginTop: 14 }} onClick={() => navigate('/creator/ugc')}>{t('Se öppna beställningar')}</button></div>
+        <div className="card" style={{ textAlign: 'center', padding: '54px 24px' }}><div style={{ fontSize: 18, fontWeight: 700 }}>{t('Inga ansökningar ännu')}</div><button className="btn-apply" style={{ ...btn, marginTop: 14 }} onClick={() => navigate('/creator/ugc')}>{t('Se öppna beställningar')}</button></div>
       ) : (
         <div className="card">
           {apps.map((a) => (
@@ -180,8 +179,8 @@ export function UgcCreatorApplicationsPage() {
                 <div className="s">{a.bidOre > 0 ? `${formatOre(a.bidOre)} / video · ` : ''}{formatDate(a.createdAt)}{a.decisionNote ? ` · ${a.decisionNote}` : ''}</div>
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {a.collabId && <button className="btn-apply" style={{ ...btn, padding: '9px 16px', fontSize: 12.5 }} onClick={() => navigate(`/creator/ugc/collabs/${a.collabId}`)}>{t('Öppna uppdraget')} →</button>}
-                {(a.status === 'Applied' || a.status === 'Preselected') && <button className="view-all" style={{ color: 'var(--red)' }} disabled={withdraw.isPending} onClick={() => withdraw.mutate(a.id, { onSuccess: () => toast.push(t('Budet är återtaget'), 'success'), onError: (e) => toast.push(apiError(e, t('Kunde inte återta')), 'error') })}>{t('Ta tillbaka')}</button>}
+                {a.collabId && <button className="btn-apply" style={{ ...btn, padding: '9px 16px', fontSize: 12.5 }} onClick={() => navigate(`/creator/ugc/collabs/${a.collabId}`)}>{t('Öppna uppdraget')}</button>}
+                {(a.status === 'Applied' || a.status === 'Preselected') && <button className="view-all" style={{ color: 'var(--red)' }} disabled={withdraw.isPending} onClick={() => withdraw.mutate(a.id, { onSuccess: () => toast.push(t('Ansökan är återtagen'), 'success'), onError: (e) => toast.push(apiError(e, t('Kunde inte återta')), 'error') })}>{t('Ta tillbaka')}</button>}
               </div>
             </div>
           ))}
@@ -194,66 +193,73 @@ export function UgcCreatorApplicationsPage() {
 // ═══════════════════════════════════════════════════════════════════
 // UGC profile: verification, payout onboarding, tax, portfolio opt-out
 // ═══════════════════════════════════════════════════════════════════
-export function UgcCreatorProfilePage() {
+/** Identity + payout verification through Stripe, plus the tax facts. Rendered under Inställningar. */
+export function CreatorVerificationCard() {
   const toast = useToast();
   const [params] = useSearchParams();
-  const { data: p, isLoading } = useUgcCreatorProfile();
+  const { data: p } = useUgcCreatorProfile();
   const { data: payout, refetch: refetchPayout } = useUgcPayoutStatus(!!p?.hasStripeAccount);
   const upsert = useUpsertUgcCreatorProfile();
-  const refresh = useRefreshUgcVerification();
   const onboard = useStartUgcPayoutOnboarding();
+  const [tax, setTax] = useState<{ hasFTax: boolean; vatRegistered: boolean; vatNumber: string } | null>(null);
+  useEffect(() => { if (p && !tax) setTax({ hasFTax: p.hasFTax, vatRegistered: p.vatRegistered, vatNumber: p.vatNumber ?? '' }); }, [p, tax]);
+  useEffect(() => {
+    if (params.get('onboarding') === 'done') { refetchPayout(); toast.push(t('Välkommen tillbaka — vi kollar din verifiering hos Stripe.'), 'success'); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  if (!p) return null;
+
+  const suspended = p.status === 'Suspended';
+  const verified = p.payoutOnboardingComplete;
+  const start = () => onboard.mutate(undefined, {
+    onSuccess: (r) => { if (r.url) window.location.href = r.url; else toast.push(r.message ?? t('Verifieringen är redan klar'), r.complete ? 'success' : 'error'); },
+    onError: (e) => toast.push(apiError(e, t('Kunde inte starta verifieringen')), 'error'),
+  });
+  const saveTax = () => tax && upsert.mutate(tax as any, { onSuccess: () => toast.push(t('Sparat'), 'success'), onError: (e) => toast.push(apiError(e, t('Kunde inte spara')), 'error') });
+
+  return (
+    <div className="card" style={{ maxWidth: 860, marginBottom: 16 }}>
+      <div className="sec-head"><h3>{t('Verifiering')}</h3><span className={`vy-badge ${suspended ? 'neg' : verified ? 'pos' : 'pend'}`}>{suspended ? t('Avstängd') : verified ? t('Verifierad') : t('Inte verifierad')}</span></div>
+      <p style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--ink-2)', margin: 0 }}>{t('Verifieringen görs hos Stripe: du styrker din identitet och kopplar bankkontot som betalda videouppdrag betalas ut till. Det tar några minuter och görs bara en gång. Produktbyten kan du ta utan verifiering.')}</p>
+      {payout?.message && !verified && <div style={{ fontSize: 12.5, color: '#9c6b1c', marginTop: 8 }}>{payout.message}</div>}
+      {!verified && !suspended && <button className="btn-apply" style={{ ...btn, marginTop: 12 }} disabled={onboard.isPending} onClick={start}>{onboard.isPending ? t('Öppnar…') : p.hasStripeAccount ? t('Fortsätt verifieringen') : t('Verifiera dig')}</button>}
+      {tax && (
+        <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid rgba(183,188,200,.25)' }}>
+          <div style={{ fontWeight: 700, fontSize: 13.5, marginBottom: 8 }}>{t('Skatt')}</div>
+          <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
+            <label className="checkrow"><input type="checkbox" checked={tax.hasFTax} onChange={(e) => setTax({ ...tax, hasFTax: e.target.checked })} /> {t('Jag är godkänd för F-skatt')}</label>
+            <label className="checkrow"><input type="checkbox" checked={tax.vatRegistered} onChange={(e) => setTax({ ...tax, vatRegistered: e.target.checked })} /> {t('Jag är momsregistrerad')}</label>
+            {tax.vatRegistered && <div className="field"><label>{t('Momsregistreringsnummer')}</label><input value={tax.vatNumber} onChange={(e) => setTax({ ...tax, vatNumber: e.target.value })} placeholder="SE…01" style={{ width: '100%' }} /></div>}
+            <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.55 }}>{t('Du ansvarar själv för skatt på ersättning och på produkter du får i produktbyten.')}</div>
+          </div>
+          <button className="btn-outline" style={{ ...btn, marginTop: 10, padding: '8px 14px', fontSize: 12.5 }} disabled={upsert.isPending} onClick={saveTax}>{upsert.isPending ? t('Sparar…') : t('Spara')}</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function UgcCreatorProfilePage() {
+  const toast = useToast();
+  const { data: p, isLoading } = useUgcCreatorProfile();
+  const upsert = useUpsertUgcCreatorProfile();
   const [form, setForm] = useState({ categories: [] as string[], city: '', region: '', sampleVideoUrl: '', hasFTax: false, vatRegistered: false, vatNumber: '', allowPortfolioUse: true });
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     if (p && !loaded) { setForm({ categories: p.categories, city: p.city ?? '', region: p.region ?? '', sampleVideoUrl: p.sampleVideoUrl ?? '', hasFTax: p.hasFTax, vatRegistered: p.vatRegistered, vatNumber: p.vatNumber ?? '', allowPortfolioUse: p.allowPortfolioUse }); setLoaded(true); }
   }, [p, loaded]);
-  useEffect(() => {
-    if (params.get('onboarding') === 'done') { refetchPayout(); toast.push(t('Välkommen tillbaka — vi kollar din registrering hos Stripe.'), 'success'); }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   if (isLoading || !p) return <CardSkeleton rows={4} />;
 
-  const save = () => upsert.mutate(form as any, { onSuccess: () => toast.push(t('Sparat'), 'success'), onError: (e) => toast.push(apiError(e, t('Kunde inte spara')), 'error') });
-  const startOnboarding = () => onboard.mutate(undefined, {
-    onSuccess: (r) => { if (r.url) window.location.href = r.url; else toast.push(r.message ?? t('Registreringen är redan klar'), r.complete ? 'success' : 'error'); },
-    onError: (e) => toast.push(apiError(e, t('Kunde inte starta registreringen')), 'error'),
-  });
-
-  const steps = [
-    { ok: !!p.sampleVideoUrl, label: t('Exempelvideo') },
-    { ok: p.status === 'Verified' || p.status === 'Approved', label: t('Verifierad') },
-    { ok: p.payoutOnboardingComplete, label: t('Utbetalning klar') },
-  ];
+  // Tax facts are edited under Inställningar — only the matching fields go from here.
+  const save = () => upsert.mutate({ categories: form.categories, city: form.city, region: form.region, sampleVideoUrl: form.sampleVideoUrl, allowPortfolioUse: form.allowPortfolioUse } as any, { onSuccess: () => toast.push(t('Sparat'), 'success'), onError: (e) => toast.push(apiError(e, t('Kunde inte spara')), 'error') });
 
   return (
     <section className="view active reveal">
-      <div className="page-head"><div><h1 className="page-title">{t('Min')} <em>{t('UGC-profil')}</em></h1><p className="page-sub">{t('Det företag ser när du lägger bud, och det som krävs för att kunna ta betalda uppdrag.')}</p></div></div>
-
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <span className={`vy-badge ${p.status === 'Approved' || p.status === 'Verified' ? 'pos' : p.status === 'Suspended' ? 'neg' : 'pend'}`}>{t(CREATOR_STATUS_SV[p.status])}</span>
-          <div style={{ flex: '1 1 220px', fontSize: 13.5 }}>{p.blocker ?? t('Allt klart — du kan ta både betalda uppdrag och produktbyten.')}{p.statusNote ? ` (${p.statusNote})` : ''}</div>
-          <button className="btn-outline" style={{ ...btn, padding: '8px 14px', fontSize: 12.5 }} disabled={refresh.isPending} onClick={() => refresh.mutate(undefined, { onSuccess: () => toast.push(t('Profilen är kontrollerad igen'), 'success') })}>{refresh.isPending ? t('Kollar…') : t('Kolla igen')}</button>
-        </div>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 14 }}>
-          {steps.map((s) => <span key={s.label} className={`vy-badge ${s.ok ? 'pos' : 'neu'}`}>{s.ok ? '✓' : '○'} {s.label}</span>)}
-        </div>
-        <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 10 }}>{t('En exempelvideo räcker för att verifieras. TikTok-koppling är valfri — den visar bara dina följarsiffror för företagen.')}</div>
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 12, fontSize: 12.5, color: 'var(--muted)' }}>
-          <span>{formatNumber(p.followerSnapshot)} {t('följare')}</span><span>L/F {(p.likeFollowerRatio * 100).toFixed(0)} %</span><span>{p.deliveredCount} {t('leveranser')} · {p.onTimeCount} {t('i tid')}</span>{p.strikes > 0 && <span style={{ color: '#b3402f' }}>{p.strikes} {t('anmärkning(ar)')}</span>}
-        </div>
-      </div>
+      <div className="page-head"><div><h1 className="page-title">{t('Min')} <em>{t('UGC-profil')}</em></h1><p className="page-sub">{t('Det företag ser när du ansöker. Verifiering och utbetalning hittar du under Inställningar.')}</p></div></div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: 16, alignItems: 'start' }}>
-        <div className="card">
-          <div className="sec-head"><h3>{t('Utbetalning')}</h3><span className={`vy-badge ${p.payoutOnboardingComplete ? 'pos' : 'pend'}`}>{p.payoutOnboardingComplete ? t('Klar') : t('Inte klar')}</span></div>
-          <p style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--ink-2)', margin: 0 }}>{t('Betalda uppdrag betalas ut via Stripe direkt till ditt bankkonto när företaget godkänt leveransen. Registreringen tar några minuter.')}</p>
-          {payout?.message && !p.payoutOnboardingComplete && <div style={{ fontSize: 12.5, color: '#9c6b1c', marginTop: 8 }}>{payout.message}</div>}
-          {!p.payoutOnboardingComplete && <button className="btn-apply" style={{ ...btn, marginTop: 12 }} disabled={onboard.isPending} onClick={startOnboarding}>{p.hasStripeAccount ? t('Fortsätt registreringen') : t('Starta registreringen')}</button>}
-        </div>
-
         <div className="card">
           <div className="sec-head"><h3>{t('Så matchas du')}</h3></div>
           <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
@@ -264,16 +270,13 @@ export function UgcCreatorProfilePage() {
               <div className="field"><label>{t('Stad')}</label><input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} style={{ width: '100%' }} /></div>
               <div className="field"><label>{t('Region')}</label><select value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })}><option value="">–</option>{UGC_REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}</select></div>
             </div>
-            <div className="field"><label>{t('Exempelvideo (länk)')}</label><input value={form.sampleVideoUrl} onChange={(e) => setForm({ ...form, sampleVideoUrl: e.target.value })} placeholder="https://www.tiktok.com/@…/video/…" style={{ width: '100%' }} /><div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>{t('En video som visar hur du gör. Portfoliovideor räknas också.')}</div></div>
+            <div className="field"><label>{t('Exempelvideo (länk)')}</label><input value={form.sampleVideoUrl} onChange={(e) => setForm({ ...form, sampleVideoUrl: e.target.value })} placeholder="https://…" style={{ width: '100%' }} /><div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>{t('Valfritt. Visas för företaget när du ansöker.')}</div></div>
           </div>
         </div>
 
         <div className="card">
-          <div className="sec-head"><h3>{t('Skatt & rättigheter')}</h3></div>
+          <div className="sec-head"><h3>{t('Rättigheter')}</h3></div>
           <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
-            <label className="checkrow"><input type="checkbox" checked={form.hasFTax} onChange={(e) => setForm({ ...form, hasFTax: e.target.checked })} /> {t('Jag är godkänd för F-skatt')}</label>
-            <label className="checkrow"><input type="checkbox" checked={form.vatRegistered} onChange={(e) => setForm({ ...form, vatRegistered: e.target.checked })} /> {t('Jag är momsregistrerad')}</label>
-            {form.vatRegistered && <div className="field"><label>{t('Momsregistreringsnummer')}</label><input value={form.vatNumber} onChange={(e) => setForm({ ...form, vatNumber: e.target.value })} placeholder="SE…01" style={{ width: '100%' }} /></div>}
             <label className="checkrow"><input type="checkbox" checked={form.allowPortfolioUse} onChange={(e) => setForm({ ...form, allowPortfolioUse: e.target.checked })} /> {t('VYRLE får visa mina levererade videos i min portfolio och i marknadsföring av tjänsten')}</label>
             <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.55 }}>{t('Du ansvarar själv för skatt på ersättning och på produkter du får i produktbyten. Rättighetspaketet per uppdrag står i kontraktet:')} {Object.values(RIGHTS_LABEL).map((v) => t(v)).join(' · ')}.</div>
             <div style={{ fontSize: 11.5, color: 'var(--muted-2)' }}>{t(RIGHTS_HINT.FullTransfer)}</div>

@@ -8,7 +8,7 @@ namespace CreatorPay.Domain.Enums;
 /// <summary>Where a creator stands in the UGC marketplace, on top of their ordinary Vyrle account.</summary>
 public enum UgcCreatorStatus
 {
-    /// <summary>Onboarded, waiting for the automatic filter or an admin.</summary>
+    /// <summary>Pulled in for review by an admin. New profiles start as Verified.</summary>
     Pending = 0,
     /// <summary>Passed the automatic filter (followers, like/follower ratio, sample video).</summary>
     Verified = 1,

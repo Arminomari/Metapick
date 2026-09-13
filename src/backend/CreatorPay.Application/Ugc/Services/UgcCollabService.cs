@@ -282,8 +282,8 @@ public sealed class UgcCollabService : IUgcCollabService
         var me = await _ugcCreators.Query().FirstOrDefaultAsync(p => p.CreatorProfileId == collab.CreatorProfileId, ct);
         if (me == null || !UgcVerificationRule.CanApply(me.Status, collab.Compensation, me.PayoutOnboardingComplete, me.HasFTax, _settings.RequireFTaxForPaid))
             return Errors.Forbidden(me?.Status == UgcCreatorStatus.Suspended ? "Ditt konto på marknadsplatsen är avstängt."
-                : me == null || me.Status == UgcCreatorStatus.Pending ? "Lägg till en exempelvideo i din UGC-profil så verifieras du direkt — sedan kan du acceptera."
-                : "Slutför utbetalningsregistreringen innan du tar betalda uppdrag.");
+                : me == null || me.Status == UgcCreatorStatus.Pending ? "Din profil granskas av VYRLE. Du kan acceptera så fort den är klar."
+                : "Verifiera dig under Inställningar innan du tar betalda uppdrag.");
 
         if (!UgcMapper.IsFunded(collab)) return Errors.Conflict("Företaget har inte betalat ännu — du får en notis så fort pengarna är på plats.");
 

@@ -389,7 +389,7 @@ public class UgcWebhookAndFlowTests
         await w.CampaignService.PublishAsync(w.BrandUser.Id, c.Value!.Id);
         var r = await w.ApplicationService.ApplyAsync(w.CreatorUser.Id, c.Value.Id, new(150_000, "En tillräckligt lång pitch för att passera."));
         Assert.False(r.IsSuccess);
-        Assert.Contains("verifieras", r.Error!.Message);
+        Assert.Contains("granskas", r.Error!.Message);
     }
 
     [Fact]
