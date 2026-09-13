@@ -36,6 +36,16 @@ public class BrandService : IBrandService
         brand.Industry = request.Industry;
         brand.Description = request.Description;
         brand.ContactPhone = request.ContactPhone;
+
+        // Org.nr is what lets a brand order video; it is normalised to XXXXXX-XXXX
+        // and never blanked from here (leave the field empty to keep the old one).
+        if (!string.IsNullOrWhiteSpace(request.OrganizationNumber))
+        {
+            var digits = new string(request.OrganizationNumber.Where(char.IsDigit).ToArray());
+            if (digits.Length != 10)
+                return Errors.Validation("Organisationsnummer ska vara 10 siffror (XXXXXX-XXXX).");
+            brand.OrganizationNumber = $"{digits[..6]}-{digits[6..]}";
+        }
         if (request.LogoUrl != null)
         {
             if (!MediaValidation.IsValidImageRef(request.LogoUrl))

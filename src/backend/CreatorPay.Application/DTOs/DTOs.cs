@@ -110,7 +110,7 @@ public record BrandListDto(
 
 public record UpdateBrandProfileRequest(
     string CompanyName, string? Website, string Industry, string? Description, string? ContactPhone,
-    string? LogoUrl = null);
+    string? LogoUrl = null, string? OrganizationNumber = null);
 
 // ──── Creator ────
 public record CreatorProfileDto(

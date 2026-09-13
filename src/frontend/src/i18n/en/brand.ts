@@ -692,4 +692,9 @@ export const brand: Record<string, string> = {
   'Lämna tomt för alla': 'Leave empty for all',
   'Ange ett rimligt antal följare': 'Enter a reasonable follower count',
   'Skriv en brief, sätt en budget per video och publicera. Creators som passar lägger bud — ni väljer.': 'Write a brief, set a budget per video and publish. Matching creators bid — you choose.',
+  'en per rad': 'one per line',
+  '10 siffror — strecket sätts automatiskt. Krävs för att beställa video.': '10 digits — the dash is added automatically. Required to order video.',
+  'Organisationsnummer saknas': 'Organization number missing',
+  'Ni kan fylla i beställningen nu, men den kan inte publiceras förrän företagets organisationsnummer finns under Inställningar.': 'You can fill in the order now, but it cannot be published until the company organization number is set under Settings.',
+  'Lägg till org.nr': 'Add org. number',
 };

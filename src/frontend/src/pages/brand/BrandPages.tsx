@@ -10,6 +10,8 @@ import { DateInput } from '@/components/ui/DateInput';
 import { TagSelector } from '@/components/ui/TagSelector';
 import { ChatPanel } from '@/components/ui/ChatPanel';
 import { ReviewSection } from '@/components/ui/ReviewSection';
+import { maskOrgNr } from '@/lib/masks';
+import { apiError } from '@/hooks/ugc';
 import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
 import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
 import { t, statusLabel } from '@/lib/i18n';
@@ -1013,7 +1015,7 @@ export function BrandSettingsPage() {
   const updateProfile = useUpdateBrandProfile();
   const changePassword = useChangePassword();
   const [activeTab, setActiveTab] = useState<'profile' | 'security'>('profile');
-  const [profileForm, setProfileForm] = useState({ companyName: '', website: '', industry: '', description: '', contactPhone: '', logoUrl: null as string | null });
+  const [profileForm, setProfileForm] = useState({ companyName: '', organizationNumber: '', website: '', industry: '', description: '', contactPhone: '', logoUrl: null as string | null });
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [profileMsg, setProfileMsg] = useState('');
   const [profileError, setProfileError] = useState('');
@@ -1025,6 +1027,7 @@ export function BrandSettingsPage() {
   if (profile && !profileLoaded) {
     setProfileForm({
       companyName: profile.companyName ?? '',
+      organizationNumber: profile.organizationNumber ?? '',
       website: profile.website ?? '',
       industry: profile.industry ?? '',
       description: profile.description ?? '',
@@ -1038,12 +1041,14 @@ export function BrandSettingsPage() {
     e.preventDefault();
     setProfileError('');
     setProfileMsg('');
+    const org = profileForm.organizationNumber.trim();
+    if (org && !/^\d{6}-?\d{4}$/.test(org)) { setProfileError(t('Ange organisationsnummer i formatet XXXXXX-XXXX')); return; }
     try {
       // null logo means "removed" — send empty string so the backend clears it.
-      await updateProfile.mutateAsync({ ...profileForm, logoUrl: profileForm.logoUrl ?? '' });
+      await updateProfile.mutateAsync({ ...profileForm, organizationNumber: org || null, logoUrl: profileForm.logoUrl ?? '' });
       setProfileMsg(t('Profilen sparades!'));
-    } catch {
-      setProfileError(t('Kunde inte spara profilen.'));
+    } catch (err) {
+      setProfileError(apiError(err, t('Kunde inte spara profilen.')));
     }
   };
 
@@ -1096,6 +1101,11 @@ export function BrandSettingsPage() {
                 hint={t('Visas för kreatörer på era kampanjer och PR-erbjudanden.')} />
             </div>
             <div className="field full"><label>{t('Företagsnamn')} *</label><input type="text" value={profileForm.companyName} required onChange={e => setProfileForm({ ...profileForm, companyName: e.target.value })} /></div>
+            <div className="field full">
+              <label>{t('Organisationsnummer')} *</label>
+              <input type="text" inputMode="numeric" value={profileForm.organizationNumber} placeholder="556677-8899" onChange={e => setProfileForm({ ...profileForm, organizationNumber: maskOrgNr(e.target.value) })} />
+              <span style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 4 }}>{t('10 siffror — strecket sätts automatiskt. Krävs för att beställa video.')}</span>
+            </div>
             <div className="field"><label>{t('Bransch')}</label>
               <select value={profileForm.industry} onChange={e => setProfileForm({ ...profileForm, industry: e.target.value })}>
                 {['Övrigt', 'Mode', 'Skönhet', 'Mat & Dryck', 'Teknik', 'Gaming', 'Sport', 'Musik', 'Resor', 'Hälsa'].map(i => <option key={i} value={i}>{t(i)}</option>)}

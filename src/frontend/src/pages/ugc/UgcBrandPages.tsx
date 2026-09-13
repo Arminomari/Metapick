@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { t } from '@/lib/i18n';
 import { formatDate, formatNumber } from '@/lib/utils';
 import { useToast, CardSkeleton, PageSkeleton } from '@/components/vyrle/Toast';
-import { useCreatorPublicProfile } from '@/hooks/api';
+import { useBrandProfile, useCreatorPublicProfile } from '@/hooks/api';
 import {
   useUgcBrandCampaigns, useUgcBrandCampaign, useSaveUgcCampaign, useUgcCampaignAction,
   useUgcCampaignApplications, useUgcApplicationDecision, useUgcCollabs, useUgcDirectInvite,
@@ -197,6 +197,21 @@ export function UgcPipelinePage({ role }: { role: 'brand' | 'creator' }) {
 // ═══════════════════════════════════════════════════════════════════
 const emptyBrief: UgcBrief = { goal: '', format: '9:16 vertikal, TikTok/Reels', lengthSeconds: 30, videoCount: 1, hooks: [], callToAction: '', referenceUrls: [], dos: [], donts: [], extraNotes: '' };
 
+/** Ordering needs a registered org number — say so up front and link to where it is set. */
+function OrgNumberNotice() {
+  const { data: profile } = useBrandProfile();
+  if (!profile || profile.organizationNumber) return null;
+  return (
+    <div className="card" style={{ marginBottom: 16, borderColor: 'rgba(245,158,11,.45)', background: 'rgba(245,158,11,.07)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+      <div>
+        <strong style={{ display: 'block', marginBottom: 2 }}>{t('Organisationsnummer saknas')}</strong>
+        <span style={{ fontSize: 13, color: 'var(--muted)' }}>{t('Ni kan fylla i beställningen nu, men den kan inte publiceras förrän företagets organisationsnummer finns under Inställningar.')}</span>
+      </div>
+      <Link to="/brand/settings" className="btn-outline" style={{ padding: '8px 14px', fontSize: 12.5, whiteSpace: 'nowrap' }}>{t('Lägg till org.nr')} →</Link>
+    </div>
+  );
+}
+
 export function UgcCampaignBuilderPage() {
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
@@ -287,6 +302,7 @@ export function UgcCampaignBuilderPage() {
           <p className="page-sub">{t('En bra brief är kort, konkret och filmbar. Creators lägger bud inom er budget — ni betalar först när ni anlitar.')}</p>
         </div>
       </div>
+      <OrgNumberNotice />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))', gap: 16, alignItems: 'start' }}>
         <div style={{ display: 'grid', gap: 16 }}>
@@ -380,19 +396,23 @@ function FeeNote({ amountOre }: { amountOre: number }) {
   );
 }
 
+const toLines = (text: string) => text.split('\n').map((l) => l.trim()).filter(Boolean);
+
+/** One item per line — just write; every non-empty line counts, no "+" needed. */
 function ListField({ label, values, onChange, placeholder }: { label: string; values: string[]; onChange: (v: string[]) => void; placeholder?: string }) {
-  const [draft, setDraft] = useState('');
-  const add = () => { const v = draft.trim(); if (!v) return; onChange([...values, v]); setDraft(''); };
+  const [text, setText] = useState(values.join('\n'));
+  // Re-sync only when the parent changes the list from outside (e.g. a loaded draft).
+  useEffect(() => { if (values.join('\n') !== toLines(text).join('\n')) setText(values.join('\n')); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [values]);
   return (
     <div className="field">
-      <label>{label}</label>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: values.length ? 6 : 0 }}>
-        {values.map((v, i) => <span key={i} className="tag g" style={{ display: 'inline-flex', gap: 6, alignItems: 'center', maxWidth: '100%' }}><span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{v}</span><button type="button" onClick={() => onChange(values.filter((_, j) => j !== i))} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'inherit', padding: 0 }}>×</button></span>)}
-      </div>
-      <div style={{ display: 'flex', gap: 6 }}>
-        <input style={{ flex: 1, minWidth: 0 }} value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }} placeholder={placeholder} />
-        <button type="button" className="btn-outline" style={{ padding: '8px 14px', fontSize: 12.5 }} onClick={add}>+</button>
-      </div>
+      <label>{label} <span style={{ fontWeight: 400, color: 'var(--muted)', fontSize: 12 }}>· {t('en per rad')}</span></label>
+      <textarea
+        rows={Math.min(6, Math.max(2, text.split('\n').length))}
+        value={text}
+        onChange={(e) => { setText(e.target.value); onChange(toLines(e.target.value)); }}
+        placeholder={placeholder}
+        style={{ width: '100%', resize: 'vertical' }}
+      />
     </div>
   );
 }
@@ -563,6 +583,7 @@ export function UgcDirectInvitePage() {
           <p className="page-sub">{t('Direkt beställning utan öppen kampanj. Creatorn får ett kontrakt att acceptera när ni betalat.')}</p>
         </div>
       </div>
+      <OrgNumberNotice />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))', gap: 16, alignItems: 'start' }}>
         <div className="card">
           <div className="sec-head"><h3>{t('Brief')}</h3></div>

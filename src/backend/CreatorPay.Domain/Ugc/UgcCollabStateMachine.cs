@@ -259,7 +259,7 @@ public static class UgcCampaignStateMachine
         if (!Rules.TryGetValue((from, to), out var actors)) return UgcTransitionCheck.Deny($"Ingen väg från {from} till {to}.");
         if (!actors.Contains(actor)) return UgcTransitionCheck.Deny($"{actor} får inte flytta {from} → {to}.");
         if (to == UgcCampaignStatus.Published && !brandHasOrgNumber)
-            return UgcTransitionCheck.Deny("Företaget måste ha organisationsnummer registrerat för att beställa.");
+            return UgcTransitionCheck.Deny("Lägg till företagets organisationsnummer under Inställningar innan du beställer.");
         return UgcTransitionCheck.Ok;
     }
 
