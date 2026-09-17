@@ -688,7 +688,7 @@ public class AssignmentService : IAssignmentService
         if (brand == null) return new ActionCountsDto(0, 0, 0);
 
         var pendingApps = await _applicationRows.Query()
-            .CountAsync(a => a.Campaign.BrandProfileId == brand.Id && a.Status == ApplicationStatus.Pending, ct);
+            .CountAsync(a => a.Campaign.BrandProfileId == brand.Id && !a.Campaign.IsDeleted && a.Status == ApplicationStatus.Pending, ct);
         var pendingVideos = await _submissions.Query()
             .CountAsync(s => s.Assignment.Campaign.BrandProfileId == brand.Id
                 && s.Assignment.Campaign.Kind == CampaignKind.Campaign
@@ -971,6 +971,14 @@ public class AssignmentService : IAssignmentService
             if (result.Amount != assignment.CurrentPayoutAmount)
             {
                 assignment.CurrentPayoutAmount = result.Amount;
+
+                // Keep the campaign's stored spend in step, so every page that still
+                // reads the column agrees with the live sum.
+                if (assignment.Campaign.Kind != CampaignKind.Tap)
+                    assignment.Campaign.BudgetSpent = (await _assignments.Query()
+                        .Where(a => a.CampaignId == assignment.CampaignId && a.Id != assignment.Id
+                            && (a.Status == AssignmentStatus.Active || a.Status == AssignmentStatus.Completed))
+                        .SumAsync(a => (decimal?)a.CurrentPayoutAmount, ct) ?? 0m) + result.Amount;
 
                 foreach (var stale in await _calculations.Query()
                     .Where(c => c.AssignmentId == assignment.Id && c.IsLatest).ToListAsync(ct))

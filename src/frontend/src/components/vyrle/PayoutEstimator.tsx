@@ -78,7 +78,7 @@ export function PayoutTerms({ rules, minViews }: { rules: PayoutRule[]; minViews
       ))}
       {cap != null && (
         <div className="pay-row" style={{ flexWrap: 'wrap' }}>
-          <span className="pr-l" style={{ minWidth: 0 }}>{t('Maxersättning per kreatör')}</span>
+          <span className="pr-l" style={{ minWidth: 0 }}>{t('Maxersättning per creator')}</span>
           <span className="pr-v">{formatCurrency(cap)}</span>
         </div>
       )}

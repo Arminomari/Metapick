@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { formatCurrency } from '@/lib/utils';
 import { CATEGORIES } from '@/lib/categories';
 import api from '@/lib/api';
 import { t } from '@/lib/i18n';
@@ -111,11 +112,8 @@ export interface UgcAdminDisputeRow {
 
 /** 172 500 öre → "1 725 kr" (whole kronor unless there are öre). */
 export function formatOre(ore: number | null | undefined): string {
-  const v = Math.round(ore ?? 0);
-  const kr = Math.trunc(v / 100);
-  const rest = Math.abs(v % 100);
-  const whole = new Intl.NumberFormat('sv-SE').format(kr);
-  return rest === 0 ? `${whole} kr` : `${whole},${String(rest).padStart(2, '0')} kr`;
+  // Same formatter as the rest of the product, so "0,00 kr" never sits next to "0 kr".
+  return formatCurrency(Math.round(ore ?? 0) / 100);
 }
 export const kronorToOre = (kr: string | number) => Math.round((typeof kr === 'string' ? Number(kr.replace(',', '.').replace(/\s/g, '')) || 0 : kr) * 100);
 export const oreToKronor = (ore: number | null | undefined) => ore == null ? '' : String(Math.round(ore) / 100);

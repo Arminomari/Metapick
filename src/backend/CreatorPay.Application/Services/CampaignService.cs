@@ -414,7 +414,11 @@ public class CampaignService : ICampaignService
             .Select(c => new
             {
                 c.Id, c.Name, c.Category, c.Country, c.Status,
-                c.Budget, c.BudgetSpent, c.MaxCreators,
+                c.Budget,
+                BudgetSpent = c.Assignments
+                    .Where(a => a.Status == AssignmentStatus.Active || a.Status == AssignmentStatus.Completed)
+                    .Sum(a => (decimal?)a.CurrentPayoutAmount) ?? 0m,
+                c.MaxCreators,
                 ActiveCreators = c.Assignments.Count(a => a.Status == AssignmentStatus.Active),
                 c.StartDate, c.EndDate, c.CreatedAt
             })
@@ -818,6 +822,18 @@ public class CampaignService : ICampaignService
             r.MaxPayoutPerCreator, r.SortOrder, r.TriggerType.ToString(),
             r.MinClicks, r.MaxClicks)).ToList() ?? [];
 
+    /// <summary>
+    /// What the campaign has cost so far: the sum its active and finished creators
+    /// have earned. Falls back to the stored figure for taps (accounted per month)
+    /// and when the assignments were not loaded with the campaign.
+    /// </summary>
+    private static decimal LiveSpent(Campaign c) =>
+        c.Kind == CampaignKind.Tap || c.Assignments == null || c.Assignments.Count == 0
+            ? c.BudgetSpent
+            : c.Assignments
+                .Where(a => a.Status == AssignmentStatus.Active || a.Status == AssignmentStatus.Completed)
+                .Sum(a => a.CurrentPayoutAmount);
+
     private static string BuildPayoutSummary(List<PayoutRule> rules)
     {
         if (!rules.Any()) return "Ej konfigurerad";
@@ -854,7 +870,7 @@ public class CampaignService : ICampaignService
             c.Country, c.Region, c.Category, c.RequiredHashtag,
             c.ContentInstructions, c.ForbiddenContent,
             c.MinViews, c.MaxViews, c.PayoutModel.ToString(),
-            c.Budget, c.BudgetSpent, c.BudgetReserved,
+            c.Budget, LiveSpent(c), c.BudgetReserved,
             c.MaxCreators, c.RequiredVideoCount, approvedCount, totalViews,
             c.StartDate, c.EndDate, EffectiveCampaignStatus(c.Status, c.EndDate, DateTime.UtcNow.Date),
             c.Requirements?.Select(r => new CampaignRequirementDto(r.RequirementType.ToString(), r.Value, r.IsRequired)).ToList() ?? [],

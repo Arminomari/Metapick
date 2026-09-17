@@ -203,7 +203,7 @@ export function CreatorShell() {
     { label: t('Intäkter'), path: '/creator/earnings', icon: 'earnings' },
     { label: t('Creator-nivåer'), path: '/creator/levels', icon: 'levels', tag: t('NY') },
     { label: t('Sparat'), path: '/creator/saved', icon: 'saved' },
-    { label: t('Support'), path: '/creator/messages', icon: 'mail', badge: counts?.unreadSupport || undefined },
+    { label: t('Meddelanden'), path: '/creator/messages', icon: 'mail', badge: ((counts?.unreadSupport ?? 0) + (chatUnread ?? 0)) || undefined },
     { label: t('Inställningar'), path: '/creator/settings', icon: 'settings' },
   ];
   return <ShellChrome group="Creator" role="Creator" nav={nav} identity={identity} fallbackInitial="C" bellBadge={notifs?.totalCount ?? 0} chatBadge={chatUnread ?? 0} />;
@@ -234,7 +234,7 @@ export function BrandShell() {
     { label: t('Hitta creators'), path: '/brand/creators', icon: 'creators' },
     { label: t('PR-utskick'), path: '/brand/pr', icon: 'pr' },
     { label: t('Min profil'), path: '/brand/public-profile', icon: 'portfolio' },
-    { label: t('Support'), path: '/brand/messages', icon: 'mail', badge: counts?.unreadSupport || undefined },
+    { label: t('Meddelanden'), path: '/brand/messages', icon: 'mail', badge: ((counts?.unreadSupport ?? 0) + (chatUnread ?? 0)) || undefined },
     { label: t('Inställningar'), path: '/brand/settings', icon: 'settings' },
   ];
   return <ShellChrome group={t('Varumärke')} role="Brand" nav={nav} identity={identity} fallbackInitial="B" bellBadge={notifs?.totalCount ?? 0} chatBadge={chatUnread ?? 0} />;

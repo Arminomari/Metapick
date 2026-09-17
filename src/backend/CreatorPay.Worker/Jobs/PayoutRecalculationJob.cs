@@ -105,6 +105,11 @@ public class PayoutRecalculationJob
                 if (result.Amount == assignment.CurrentPayoutAmount) continue;
 
                 assignment.CurrentPayoutAmount = result.Amount;
+                if (campaign.Kind != CampaignKind.Tap)
+                    campaign.BudgetSpent = (await _assignments.Query()
+                        .Where(a => a.CampaignId == campaign.Id && a.Id != assignment.Id
+                            && (a.Status == AssignmentStatus.Active || a.Status == AssignmentStatus.Completed))
+                        .SumAsync(a => (decimal?)a.CurrentPayoutAmount, ct) ?? 0m) + result.Amount;
 
                 foreach (var stale in await _calculations.Query()
                     .Where(c => c.AssignmentId == assignment.Id && c.IsLatest).ToListAsync(ct))

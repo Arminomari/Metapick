@@ -56,7 +56,7 @@ export function CreatorStudioDashboard() {
   const totalEarned = assignments.reduce((s, a) => s + a.currentPayoutAmount, 0);
   const paidOut = payouts.filter((p) => ['Completed', 'Approved', 'Processing'].includes(p.status)).reduce((s, p) => s + p.amount, 0);
   const pending = Math.max(0, totalEarned - paidOut);
-  const name = profile?.displayName || t('kreatör');
+  const name = profile?.displayName || t('creator');
 
   // chart: real per-campaign values for selected metric, ascending
   const chartCamps = [...assignments].sort((a, b) => mVal(a, metric) - mVal(b, metric)).slice(-8);

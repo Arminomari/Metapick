@@ -114,7 +114,7 @@ function navLinksFor(role: string) {
       { label: t('Översikt'),     path: '/brand' },
       { label: t('Kampanjer'),    path: '/brand/campaigns' },
       { label: t('Ansökningar'),  path: '/brand/applications' },
-      { label: t('Hitta kreatörer'), path: '/brand/creators' },
+      { label: t('Hitta creators'), path: '/brand/creators' },
       { label: t('PR-utskick'),   path: '/brand/pr' },
       { label: t('Inställningar'),path: '/brand/settings' },
     ],

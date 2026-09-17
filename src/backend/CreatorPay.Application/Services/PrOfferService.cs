@@ -124,6 +124,7 @@ public class PrOfferService : IPrOfferService
             return Errors.Validation($"This offer can no longer be responded to (status: {offer.Status})");
 
         offer.Status = request.Accept ? PrOfferStatus.Accepted : PrOfferStatus.Declined;
+        offer.ViewedAt ??= DateTime.UtcNow;
         offer.ResponseMessage = string.IsNullOrWhiteSpace(request.ResponseMessage) ? null : request.ResponseMessage.Trim();
         offer.RespondedAt = DateTime.UtcNow;
         await _uow.SaveChangesAsync(ct);
@@ -239,7 +240,7 @@ public class PrOfferService : IPrOfferService
 
         var offers = await _offers.Query()
             .Where(o => o.BrandProfileId == brand.Id)
-            .Select(o => new { o.Status, o.Category })
+            .Select(o => new { o.Status, o.Category, o.ViewedAt })
             .ToListAsync(ct);
 
         var byCategory = offers
@@ -251,7 +252,9 @@ public class PrOfferService : IPrOfferService
         return new PrOfferStatsDto(
             offers.Count,
             offers.Count(o => o.Status == PrOfferStatus.Sent),
-            offers.Count(o => o.Status == PrOfferStatus.Viewed),
+            // Seen = everything that got past the inbox, whatever happened to it afterwards.
+            offers.Count(o => o.ViewedAt != null || o.Status is PrOfferStatus.Viewed or PrOfferStatus.Accepted
+                or PrOfferStatus.Declined or PrOfferStatus.Completed),
             offers.Count(o => o.Status is PrOfferStatus.Accepted or PrOfferStatus.Completed),
             offers.Count(o => o.Status == PrOfferStatus.Declined),
             byCategory);

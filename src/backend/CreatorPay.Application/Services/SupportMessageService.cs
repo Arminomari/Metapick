@@ -82,7 +82,7 @@ public class SupportMessageService : ISupportMessageService
         await _uow.SaveChangesAsync(ct);
 
         await _notify.SendAsync(userId, NotificationType.SystemMessage,
-            "Du har ett nytt meddelande från VYRLE. Öppna Support för att svara.", null, "SupportThread");
+            "Du har ett nytt meddelande från VYRLE. Öppna Meddelanden för att svara.", null, "SupportThread");
 
         if (request.SendEmail)
         {

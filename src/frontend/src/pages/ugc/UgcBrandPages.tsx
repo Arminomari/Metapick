@@ -19,6 +19,8 @@ const initial = (s: string) => (s?.[0] || '?').toUpperCase();
 // Overview: campaigns + what needs attention
 // ═══════════════════════════════════════════════════════════════════
 export function UgcBrandHomePage() {
+  const { data: brandProfile } = useBrandProfile();
+  const needsOrgNumber = !!brandProfile && !brandProfile.organizationNumber;
   const navigate = useNavigate();
   const { data: campaigns = [], isLoading } = useUgcBrandCampaigns();
   const { data: collabs = [] } = useUgcCollabs('brand');
@@ -85,7 +87,7 @@ export function UgcBrandHomePage() {
                     </div>
                   </div>
                   {c.status === 'Draft' && (
-                    <button className="btn-apply" style={{ ...btn, padding: '8px 14px', fontSize: 12.5 }} onClick={(e) => { e.stopPropagation(); action.mutate({ id: c.id, action: 'publish' }, { onSuccess: () => toast.push(t('Publicerad — creators som matchar får en notis.'), 'success'), onError: (err) => toast.push(apiError(err, t('Kunde inte publicera')), 'error') }); }}>
+                    <button className="btn-apply" style={{ ...btn, padding: '8px 14px', fontSize: 12.5 }} onClick={(e) => { e.stopPropagation(); if (needsOrgNumber) { toast.push(t('Lägg till företagets organisationsnummer under Inställningar innan ni publicerar.'), 'error'); navigate('/brand/settings'); return; } action.mutate({ id: c.id, action: 'publish' }, { onSuccess: () => toast.push(t('Publicerad — creators som matchar får en notis.'), 'success'), onError: (err) => toast.push(apiError(err, t('Kunde inte publicera')), 'error') }); }}>
                       {t('Publicera')}
                     </button>
                   )}
@@ -420,6 +422,8 @@ function ListField({ label, values, onChange, placeholder }: { label: string; va
 // Campaign detail: bids ranked, preselect / hire
 // ═══════════════════════════════════════════════════════════════════
 export function UgcBrandCampaignPage() {
+  const { data: brandProfile } = useBrandProfile();
+  const needsOrgNumber = !!brandProfile && !brandProfile.organizationNumber;
   const { id = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const toast = useToast();
@@ -455,7 +459,7 @@ export function UgcBrandCampaignPage() {
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {c.status === 'Draft' && <Link to={`/brand/ugc/campaigns/${c.id}/edit`} className="btn-outline" style={{ ...btn, textDecoration: 'none' }}>{t('Redigera')}</Link>}
-          {c.status === 'Draft' && <button className="btn-apply" style={btn} onClick={() => action.mutate({ id: c.id, action: 'publish' }, { onSuccess: () => toast.push(t('Publicerad'), 'success'), onError: (e) => toast.push(apiError(e, t('Kunde inte publicera')), 'error') })}>{t('Publicera')}</button>}
+          {c.status === 'Draft' && <button className="btn-apply" style={btn} onClick={() => { if (needsOrgNumber) { toast.push(t('Lägg till företagets organisationsnummer under Inställningar innan ni publicerar.'), 'error'); navigate('/brand/settings'); return; } action.mutate({ id: c.id, action: 'publish' }, { onSuccess: () => toast.push(t('Publicerad'), 'success'), onError: (e) => toast.push(apiError(e, t('Kunde inte publicera')), 'error') }); }}>{t('Publicera')}</button>}
           {c.status === 'Published' && <button className="btn-outline" style={btn} onClick={() => action.mutate({ id: c.id, action: 'close' }, { onSuccess: () => toast.push(t('Stängd'), 'success') })}>{t('Stäng beställningen')}</button>}
         </div>
       </div>

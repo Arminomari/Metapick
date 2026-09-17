@@ -277,7 +277,7 @@ export const creator: Record<string, string> = {
   // ── Creator Studio dashboard ──────────────────────────
   'UNDER GRANSKNING': 'IN REVIEW',
   'PÅGÅR': 'IN PROGRESS',
-  'kreatör': 'there',
+  'creator': 'there',
   'Utmärkt': 'Excellent',
   'Mycket bra': 'Great',
   'Bra': 'Good',

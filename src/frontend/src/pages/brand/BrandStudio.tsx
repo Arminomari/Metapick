@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useBrandCampaigns, useBrandProfile, usePrStats } from '@/hooks/api';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
 import { t, statusLabel } from '@/lib/i18n';
 import type { CampaignListItem } from '@/types';
 import { PageSkeleton } from '@/components/vyrle/Toast';
@@ -74,7 +74,7 @@ export function BrandStudioDashboard() {
         <div className="hero-inner">
           <div className="hero-eyebrow"><span className="hero-live" /> {t('Brand Desk · Live')}</div>
           <h1 className="hero-title">{t('Välkommen tillbaka,')} <em>{name}</em></h1>
-          <p className="hero-sub">{t('Aktiva briefs, budget i rörelse och kreatörerna som levererar din räckvidd, i realtid.')}</p>
+          <p className="hero-sub">{t('Aktiva briefs, budget i rörelse och creators som levererar din räckvidd, i realtid.')}</p>
           <div className="hero-kpis">
             <div className="hero-kpi"><div className="hk-v">{active.length}</div><div className="hk-l">{t('Aktiva kampanjer')}</div></div>
             <div className="hero-kpi-sep" />
@@ -90,10 +90,10 @@ export function BrandStudioDashboard() {
       <div className="vtop">
         <div className="card vperf">
           <div className="vperf-head"><h3>{t('Spenderad budget per kampanj')}</h3><span className="vchip">{campaigns.length} {t('kampanjer')}</span></div>
-          {vals.length >= 2 ? (
+          {vals.length >= 2 && vals.some((v) => v > 0) ? (
             <>
               <div className="vchart">
-                <div className="vchart-y"><span>{formatCurrency(max)}</span><span>{formatCurrency(Math.round(max * .75))}</span><span>{formatCurrency(Math.round(max * .5))}</span><span>{formatCurrency(Math.round(max * .25))}</span><span>0</span></div>
+                <div className="vchart-y">{[1, .75, .5, .25, 0].map((f) => <span key={f}>{formatNumber(Math.round(max * f))} kr</span>)}</div>
                 <div className="vchart-plot">
                   <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="vchart-svg">
                     <defs>
@@ -117,8 +117,8 @@ export function BrandStudioDashboard() {
             </>
           ) : (
             <div style={{ padding: '40px 10px', textAlign: 'center' }}>
-              <div style={{ fontWeight: 600 }}>{t('Ingen kampanjspend än')}</div>
-              <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>{t('Lansera en kampanj så visas din budgetfördelning här.')}</div>
+              <div style={{ fontWeight: 600 }}>{t('Inget spenderat ännu')}</div>
+              <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>{campaigns.length ? t('Diagrammet fylls i när dina creators börjar tjäna på kampanjerna.') : t('Lansera en kampanj så visas din budgetfördelning här.')}</div>
               <Link to="/brand/campaigns/new" className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 20px', marginTop: 16 }}>{t('Skapa kampanj')}</Link>
             </div>
           )}
@@ -149,7 +149,7 @@ export function BrandStudioDashboard() {
           {campaigns.length ? campaigns.slice(0, 5).map((c) => {
             const pct = c.budget ? Math.round((c.budgetSpent / c.budget) * 100) : 0;
             return (
-              <div key={c.id} className="vcamp" onClick={() => navigate(`/brand/campaigns/${c.id}`)}>
+              <div key={c.id} className="vcamp" role="link" tabIndex={0} onClick={() => navigate(`/brand/campaigns/${c.id}`)} onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/brand/campaigns/${c.id}`); }}>
                 <span className="vcamp-thumb" style={{ background: grad(c.name) }}><span className="brand-mono">{initial(c.name)}</span></span>
                 <div className="vcamp-main">
                   <div className="vcamp-b">{c.name}</div>
@@ -172,14 +172,14 @@ export function BrandStudioDashboard() {
 
         <div className="card vdisc">
           <div className="vperf-head"><h3>{t('Väx din räckvidd')}</h3></div>
-          <div className="vdisc-sub">{t('Hitta kreatörer och skicka direkta PR-erbjudanden.')}</div>
+          <div className="vdisc-sub">{t('Hitta creators och skicka direkta PR-erbjudanden.')}</div>
           <div className="vdisc-item" onClick={() => navigate('/brand/creators')}>
             <span className="vcamp-thumb" style={{ background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)' }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3" /><circle cx="16" cy="9" r="2.5" /><path d="M3 19a6 6 0 0 1 12 0M14 18a5 5 0 0 1 7-1" /></svg></span>
-            <div className="vdisc-main"><div className="vdisc-b">{t('Hitta kreatörer')}</div><div className="vdisc-why">{t('Sök på publik, marknad och innehållsstil.')}</div></div>
+            <div className="vdisc-main"><div className="vdisc-b">{t('Hitta creators')}</div><div className="vdisc-why">{t('Sök på publik, marknad och innehållsstil.')}</div></div>
           </div>
           <div className="vdisc-item" onClick={() => navigate('/brand/applications')}>
             <span className="vcamp-thumb" style={{ background: 'linear-gradient(135deg,#cdb8f2,#9c7de0)' }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3 8-8" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg></span>
-            <div className="vdisc-main"><div className="vdisc-b">{t('Granska ansökningar')}</div><div className="vdisc-why">{t('Godkänn kreatörer som ansökt till dina briefs.')}</div></div>
+            <div className="vdisc-main"><div className="vdisc-b">{t('Granska ansökningar')}</div><div className="vdisc-why">{t('Godkänn creators som ansökt till dina briefs.')}</div></div>
           </div>
           <div className="vdisc-item" onClick={() => navigate('/brand/campaigns/new')}>
             <span className="vcamp-thumb" style={{ background: 'linear-gradient(135deg,#a9dcc0,#5fb98a)' }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="3" /><path d="M12 9v6M9 12h6" /></svg></span>

@@ -27,7 +27,7 @@ export const components: Record<string, string> = {
   'visningar': 'views',
   'bonus över': 'bonus above',
   'vid': 'at',
-  'Maxersättning per kreatör': 'Maximum payout per creator',
+  'Maxersättning per creator': 'Maximum payout per creator',
   'Visningar krävs för utbetalning': 'Views required for payout',
   'Räkna på din ersättning': 'Estimate your earnings',
   'Antal visningar': 'Number of views',
@@ -37,7 +37,7 @@ export const components: Record<string, string> = {
   // ── AppLayout ──────────────────────────────────────
   'Meny': 'Menu',
   'Skapad med ☀ i Stockholm': 'Made with ☀ in Stockholm',
-  'Hitta kreatörer': 'Find Creators',
+  'Hitta creators': 'Find Creators',
   'Utforska': 'Browse',
   'Mina uppdrag': 'My Assignments',
   'PR-erbjudanden': 'PR Offers',

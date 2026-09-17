@@ -78,7 +78,7 @@ function notifTarget(n: NotifLike, role: string | null): string | null {
     case 'UgcCollab': return id ? collab(id) : null;
     case 'UgcCampaign': return brand && id ? `/brand/ugc/campaigns/${id}` : brand ? '/brand/ugc' : '/creator/ugc';
     case 'UgcProfile': return '/creator/ugc/profile';
-    case 'SupportThread': return brand ? '/brand/messages' : creator ? '/creator/messages' : '/messages';
+    case 'SupportThread': return brand ? '/brand/messages?tab=support' : creator ? '/creator/messages?tab=support' : '/messages';
     case 'SupportUser': return admin && id ? `/admin?section=users&threadUser=${id}` : '/messages';
     case 'Brand': return id ? `/creator/brands/${id}` : '/creator/browse';
     case 'BrandFollowers': return '/brand/public-profile';
@@ -208,7 +208,7 @@ export function MessagesDrawer({ open, onClose }: { open: boolean; onClose: () =
   );
 }
 
-function ConversationList({ onOpen }: { onOpen: (c: ChatConversationDto) => void }) {
+export function ConversationList({ onOpen }: { onOpen: (c: ChatConversationDto) => void }) {
   const { data: convos = [], isLoading } = useChatConversations();
   if (isLoading) return <DrawerLoading />;
   if (!convos.length) return <DrawerEmpty>{t('Inga konversationer än. När ett samarbete startar kan ni chatta här.')}</DrawerEmpty>;
@@ -232,7 +232,7 @@ function ConversationList({ onOpen }: { onOpen: (c: ChatConversationDto) => void
   );
 }
 
-function ChatThread({ sel, onBack, onCloseAll }: { sel: ChatConversationDto | null; onBack: () => void; onCloseAll?: () => void }) {
+export function ChatThread({ sel, onBack, onCloseAll }: { sel: ChatConversationDto | null; onBack: () => void; onCloseAll?: () => void }) {
   const { userId } = useAuthStore();
   const navigate = useNavigate();
   const openCounterpart = () => {

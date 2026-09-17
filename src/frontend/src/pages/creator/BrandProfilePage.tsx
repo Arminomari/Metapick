@@ -426,7 +426,7 @@ function PostComposer({ onPosted, logoUrl, initial: brandInitial }: { onPosted: 
   const [busy, setBusy] = useState(false);
 
   const publish = async () => {
-    if (!body.trim()) return;
+    if (!body.trim()) { toast.push(t('Skriv något först — ett tomt inlägg kan inte publiceras.'), 'error'); return; }
     setBusy(true);
     try {
       await api.post('/brand/posts', { body: body.trim(), imageUrl: image });

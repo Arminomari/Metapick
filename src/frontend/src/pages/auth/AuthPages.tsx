@@ -56,8 +56,8 @@ function AuthShell({ children, wide }: { children: ReactNode; wide?: boolean }) 
 
           <div className="auth-brand-mid">
             <div className="hero-eyebrow"><span className="hero-live" /> {t('KREATÖRER × VARUMÄRKEN')}</div>
-            <h1>{t('Där kreatörer och varumärken faktiskt')} <em>{t('möts')}</em>.</h1>
-            <p className="auth-brand-sub">{t('VYRLE matchar rätt kreatörer med rätt kampanjer, och betalar ut i samma stund som jobbet presterar.')}</p>
+            <h1>{t('Där creators och varumärken faktiskt')} <em>{t('möts')}</em>.</h1>
+            <p className="auth-brand-sub">{t('VYRLE matchar rätt creators med rätt kampanjer, och betalar ut i samma stund som jobbet presterar.')}</p>
             <div className="auth-props">
               <div className="auth-prop"><Check /> {t('Briefs matchade mot din publik, inte ditt följarantal')}</div>
               <div className="auth-prop"><Check /> {t('Transparent ersättning innan du postar')}</div>
@@ -65,7 +65,7 @@ function AuthShell({ children, wide }: { children: ReactNode; wide?: boolean }) 
             </div>
           </div>
 
-          <div className="auth-brand-foot">{t('Byggt för kreatörer och varumärken i Norden.')}</div>
+          <div className="auth-brand-foot">{t('Byggt för creators och varumärken i Norden.')}</div>
         </aside>
 
         <main className="auth-main" style={{ position: 'relative' }}>
@@ -396,14 +396,14 @@ export function RegisterPage() {
               <button type="button" role="radio" aria-checked={form.role === 'Creator'} className={`role-card${form.role === 'Creator' ? ' on' : ''}`} onClick={() => setForm((f) => ({ ...f, role: 'Creator' }))}>
                 <span className="rc-check"><SmallCheck /></span>
                 <div className="rc-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 7l-7 5 7 5V7z" /><rect x="1" y="5" width="15" height="14" rx="2" /></svg></div>
-                <div className="rc-t">{t('Jag är kreatör')}</div>
+                <div className="rc-t">{t('Jag är creator')}</div>
                 <div className="rc-d">{t('Hitta betalda kampanjer, visa upp ditt innehåll och få betalt per visning.')}</div>
               </button>
               <button type="button" role="radio" aria-checked={form.role === 'Brand'} className={`role-card${form.role === 'Brand' ? ' on' : ''}`} onClick={() => setForm((f) => ({ ...f, role: 'Brand' }))}>
                 <span className="rc-check"><SmallCheck /></span>
                 <div className="rc-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M9 22V12h6v10" /></svg></div>
                 <div className="rc-t">{t('Jag är varumärke')}</div>
-                <div className="rc-d">{t('Skapa kampanjer, hitta rätt kreatörer och betala bara för verifierade visningar.')}</div>
+                <div className="rc-d">{t('Skapa kampanjer, hitta rätt creators och betala bara för verifierade visningar.')}</div>
               </button>
             </div>
           </div>
@@ -546,7 +546,7 @@ export function RegisterPage() {
               shape="rounded"
               value={form.logoUrl}
               onChange={(v) => setForm((f) => ({ ...f, logoUrl: v }))}
-              hint={t('Visas för kreatörer på era kampanjer.')}
+              hint={t('Visas för creators på era kampanjer.')}
             />
             <div className="field"><label htmlFor="rg-co">{t('Företagsnamn')} *</label><input id="rg-co" type="text" value={form.companyName} onChange={set('companyName')} required autoComplete="organization" /></div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: 16, minWidth: 0 }}>
@@ -572,7 +572,7 @@ export function RegisterPage() {
                 </select>
               </div>
             </div>
-            <div className="field"><label htmlFor="rg-desc">{t('Om företaget')}</label><textarea id="rg-desc" value={form.description} onChange={set('description')} rows={3} placeholder={t('Vad gör ni, och vilken typ av kreatörer letar ni efter? Kreatörer ser detta på era kampanjer.')} /></div>
+            <div className="field"><label htmlFor="rg-desc">{t('Om företaget')}</label><textarea id="rg-desc" value={form.description} onChange={set('description')} rows={3} placeholder={t('Vad gör ni, och vilken typ av creators letar ni efter? Creators ser detta på era kampanjer.')} /></div>
             <RegisterSummary form={form} social={social} />
           </div>
         )}

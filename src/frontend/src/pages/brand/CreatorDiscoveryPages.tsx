@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { CATEGORIES } from '@/lib/categories';
+import { CATEGORIES, canonicalCategory } from '@/lib/categories';
 import api from '@/lib/api';
 import { DateInput } from '@/components/ui/DateInput';
 import { MessageCreatorModal } from '@/components/ui/MessageCreatorModal';
@@ -8,7 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Pagination } from '@/components/ui';
 import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
 import { useCreatorSearch, useCreatorPublicProfile, useCreatePrOffer } from '@/hooks/api';
-import { formatNumber } from '@/lib/utils';
+import { formatNumber, plural } from '@/lib/utils';
 import { t } from '@/lib/i18n';
 import { ALL_TAGS } from '@/lib/tags';
 import type { CreatorDiscoveryItem, PortfolioItem } from '@/types';
@@ -53,7 +53,7 @@ export function DiscoverCreatorsPage() {
       <div className="page-head">
         <div>
           <h1 className="page-title">{t('Hitta rätt')} <em>{t('röst')}</em></h1>
-          <p className="page-sub">{t('Sök i hela kreatörsbasen, granska profiler och portföljer, och skicka PR-erbjudanden.')}</p>
+          <p className="page-sub">{t('Sök i hela creatorsbasen, granska profiler och portföljer, och skicka PR-erbjudanden.')}</p>
         </div>
       </div>
 
@@ -74,7 +74,7 @@ export function DiscoverCreatorsPage() {
 
       {isLoading ? <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}><CardSkeleton rows={3} /><CardSkeleton rows={3} /><CardSkeleton rows={3} /></div> : data && data.data.length > 0 ? (
         <>
-          <div className="results-meta"><div className="cnt"><span className="live-dot" />{data.totalCount} {t('kreatörer')}</div></div>
+          <div className="results-meta"><div className="cnt"><span className="live-dot" />{plural(data.totalCount, t('creator'), t('creators'))}</div></div>
           <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
             {data.data.map((c) => <CreatorSearchCard key={c.id} creator={c} onOpen={() => navigate(`/brand/creators/${c.id}`)} />)}
           </div>
@@ -82,7 +82,7 @@ export function DiscoverCreatorsPage() {
         </>
       ) : (
         <div className="card" style={{ textAlign: 'center', padding: '54px 24px' }}>
-          <div style={{ fontSize: 18, fontWeight: 700 }}>{t('Inga kreatörer matchade')}</div>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>{t('Inga creators matchade')}</div>
           <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8 }}>{t('Justera filtren eller sök på något annat.')}</div>
         </div>
       )}
@@ -126,7 +126,7 @@ export function BrandCreatorDetailPage() {
   if (isLoading) return <PageSkeleton />;
   if (!creator) return (
     <section className="view active reveal"><div className="card" style={{ textAlign: 'center', padding: '54px 24px' }}>
-      <div style={{ fontSize: 18, fontWeight: 700 }}>{t('Kreatören hittades inte')}</div>
+      <div style={{ fontSize: 18, fontWeight: 700 }}>{t('Creatorn hittades inte')}</div>
       <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8 }}>{t('Profilen kan ha tagits bort eller inte godkänts.')}</div>
     </div></section>
   );
@@ -193,11 +193,11 @@ export function BrandCreatorDetailPage() {
             ))}
           </div>
         ) : (
-          <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>{t('Inga verifierade kampanjvideos ännu — siffrorna dyker upp när kreatören kört sin första kampanj.')}</p>
+          <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>{t('Inga verifierade kampanjvideos ännu — siffrorna dyker upp när creatorn kört sin första kampanj.')}</p>
         )}
       </div>
 
-      {showPr && id && <SendPrOfferForm creatorProfileId={id} onDone={() => setShowPr(false)} />}
+      {showPr && id && <SendPrOfferForm creatorProfileId={id} defaultCategory={creator.category} onDone={() => setShowPr(false)} />}
 
       <div className="card" style={{ marginTop: 16 }}>
         <div className="sec-head"><h2>{t('Portfölj')} ({creator.portfolio.length})</h2></div>
@@ -206,7 +206,7 @@ export function BrandCreatorDetailPage() {
             {creator.portfolio.map((it) => <PortfolioCard key={it.id} item={it} />)}
           </div>
         ) : (
-          <p style={{ fontSize: 13, color: 'var(--muted)' }}>{t('Kreatören har inte lagt till några arbeten ännu.')}</p>
+          <p style={{ fontSize: 13, color: 'var(--muted)' }}>{t('Creatorn har inte lagt till några arbeten ännu.')}</p>
         )}
       </div>
 
@@ -254,10 +254,10 @@ function PortfolioCard({ item }: { item: PortfolioItem }) {
   );
 }
 
-function SendPrOfferForm({ creatorProfileId, onDone }: { creatorProfileId: string; onDone: () => void }) {
+function SendPrOfferForm({ creatorProfileId, defaultCategory, onDone }: { creatorProfileId: string; defaultCategory?: string | null; onDone: () => void }) {
   const create = useCreatePrOffer();
   const [form, setForm] = useState({
-    title: '', message: '', offerType: 'ProductGifting', category: 'Mat',
+    title: '', message: '', offerType: 'ProductGifting', category: canonicalCategory(defaultCategory) || 'Övrigt',
     compensationAmount: '', productDescription: '', productValue: '', deadline: '',
   });
   const [error, setError] = useState('');
@@ -312,9 +312,9 @@ function SendPrOfferForm({ creatorProfileId, onDone }: { creatorProfileId: strin
             <option value="ProductGifting">{t('Produkt / gåva')}</option><option value="Paid">{t('Betald')}</option><option value="Hybrid">{t('Produkt + betalt')}</option><option value="Event">{t('Event')}</option>
           </select>
         </div>
-        <div className="field"><label>{t('Kategori')}</label><input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder={t('t.ex. Mat')} /></div>
-        <div className="field full"><label>{t('Meddelande')} *</label><textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} rows={4} required placeholder={t('Beskriv samarbetet, vad ni vill ha, och vad kreatören får.')} /></div>
-        <div className="field full"><label>{t('Vad får kreatören? (PR-utbud)')}</label><textarea value={form.productDescription} onChange={(e) => setForm({ ...form, productDescription: e.target.value })} rows={2} placeholder={t('t.ex. Måltid för två + dryck')} /></div>
+        <div className="field"><label>{t('Kategori')}</label><select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>{CATEGORIES.map((c) => <option key={c} value={c}>{t(c)}</option>)}</select></div>
+        <div className="field full"><label>{t('Meddelande')} *</label><textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} rows={4} required placeholder={t('Beskriv samarbetet, vad ni vill ha, och vad creatorn får.')} /></div>
+        <div className="field full"><label>{t('Vad får creatorn? (PR-utbud)')}</label><textarea value={form.productDescription} onChange={(e) => setForm({ ...form, productDescription: e.target.value })} rows={2} placeholder={t('t.ex. Måltid för två + dryck')} /></div>
         <div className="field"><label>{t('Ersättning (SEK)')}{needsCash ? ' *' : ''}</label><input inputMode="numeric" value={form.compensationAmount} onChange={(e) => setForm({ ...form, compensationAmount: e.target.value.replace(/\D/g, '') })} placeholder="0" /></div>
         <div className="field"><label>{t('Produktvärde (SEK)')}</label><input inputMode="numeric" value={form.productValue} onChange={(e) => setForm({ ...form, productValue: e.target.value.replace(/\D/g, '') })} placeholder={t('t.ex. 500')} /></div>
         <div className="field"><label>{t('Deadline')}</label><DateInput value={form.deadline} onChange={(v) => setForm({ ...form, deadline: v })} className="" /></div>

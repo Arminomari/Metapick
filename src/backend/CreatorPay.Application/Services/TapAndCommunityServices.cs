@@ -64,7 +64,7 @@ public class CommunityService : ICommunityService
 
         var creatorIds = rows.Select(r => r.CreatorProfileId).ToList();
         var earned = await _assignments.Query()
-            .Where(a => creatorIds.Contains(a.CreatorProfileId) && a.Campaign.BrandProfileId == brand.Id)
+            .Where(a => creatorIds.Contains(a.CreatorProfileId) && a.Campaign.BrandProfileId == brand.Id && !a.Campaign.IsDeleted)
             .GroupBy(a => a.CreatorProfileId)
             .Select(g => new { CreatorId = g.Key, Earned = g.Sum(a => a.CurrentPayoutAmount), Views = g.Sum(a => a.TotalVerifiedViews), Jobs = g.Count() })
             .ToListAsync(ct);

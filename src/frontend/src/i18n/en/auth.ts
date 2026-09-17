@@ -6,14 +6,14 @@
 export const auth: Record<string, string> = {
   // ── AuthShell brand panel ──────────────────────────
   'KREATÖRER × VARUMÄRKEN': 'CREATORS × BRANDS',
-  'Där kreatörer och varumärken faktiskt': 'Where creators and brands actually',
+  'Där creators och varumärken faktiskt': 'Where creators and brands actually',
   'möts': 'meet',
-  'VYRLE matchar rätt kreatörer med rätt kampanjer, och betalar ut i samma stund som jobbet presterar.':
+  'VYRLE matchar rätt creators med rätt kampanjer, och betalar ut i samma stund som jobbet presterar.':
     'VYRLE matches the right creators with the right campaigns, and pays out the moment the work performs.',
   'Briefs matchade mot din publik, inte ditt följarantal': 'Briefs matched to your audience, not your follower count',
   'Transparent ersättning innan du postar': 'Transparent pay before you post',
   'Direkta utbetalningar, inga mellanhänder': 'Direct payouts, no middlemen',
-  'Byggt för kreatörer och varumärken i Norden.': 'Built for creators and brands in the Nordics.',
+  'Byggt för creators och varumärken i Norden.': 'Built for creators and brands in the Nordics.',
 
   // ── API errors ─────────────────────────────────────
   'Kunde inte nå servern. Försök igen om en stund.': 'Could not reach the server. Please try again in a moment.',
@@ -53,11 +53,11 @@ export const auth: Record<string, string> = {
   'Kontakt': 'Contact',
 
   // ── Step: role ─────────────────────────────────────
-  'Jag är kreatör': 'I am a creator',
+  'Jag är creator': 'I am a creator',
   'Hitta betalda kampanjer, visa upp ditt innehåll och få betalt per visning.':
     'Find paid campaigns, showcase your content and get paid per view.',
   'Jag är varumärke': 'I am a brand',
-  'Skapa kampanjer, hitta rätt kreatörer och betala bara för verifierade visningar.':
+  'Skapa kampanjer, hitta rätt creators och betala bara för verifierade visningar.':
     'Create campaigns, find the right creators and pay only for verified views.',
 
   // ── Step: account ──────────────────────────────────
@@ -122,7 +122,7 @@ export const auth: Record<string, string> = {
 
   // ── Step: company ──────────────────────────────────
   'Logotyp': 'Logo',
-  'Visas för kreatörer på era kampanjer.': 'Shown to creators on your campaigns.',
+  'Visas för creators på era kampanjer.': 'Shown to creators on your campaigns.',
   'Företagsnamn': 'Company name',
   'Organisationsnummer': 'Organization number',
   'Bransch': 'Industry',
@@ -132,7 +132,7 @@ export const auth: Record<string, string> = {
   // ── Step: contact ──────────────────────────────────
   'Kontakttelefon': 'Contact phone',
   'Om företaget': 'About the company',
-  'Vad gör ni, och vilken typ av kreatörer letar ni efter? Kreatörer ser detta på era kampanjer.':
+  'Vad gör ni, och vilken typ av creators letar ni efter? Creators ser detta på era kampanjer.':
     'What do you do, and what kind of creators are you looking for? Creators see this on your campaigns.',
 
   // ── Wizard nav / consent ───────────────────────────

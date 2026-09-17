@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ConfirmButton } from '@/components/ui/ConfirmButton';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCreatorSearch } from '@/hooks/api';
@@ -66,10 +67,10 @@ export function BrandCommunityPage() {
       </div>
 
       <div className="stat-row">
-        <div className="card stat"><div className="top"><div><div className="lbl">{t('Medlemmar')}</div><div className="val">{members.length}</div></div></div></div>
+        <div className="card stat"><div className="top"><div><div className="lbl">{t('Medlemmar')}</div><div className="val">{active.length}</div></div></div></div>
         <div className="card stat"><div className="top"><div><div className="lbl">{t('Auto-kvalificerade')}</div><div className="val">{auto}</div></div></div></div>
         <div className="card stat"><div className="top"><div><div className="lbl">{t('Inbjudna')}</div><div className="val">{invited}</div></div></div></div>
-        <div className="card stat"><div className="top"><div><div className="lbl">{t('Utbetalt till communityn')}</div><div className="val">{formatCurrency(totalEarned)}</div></div></div></div>
+        <div className="card stat"><div className="top"><div><div className="lbl">{t('Intjänat av communityn')}</div><div className="val">{formatCurrency(totalEarned)}</div></div></div></div>
       </div>
 
       {requests.length > 0 && (
@@ -88,7 +89,7 @@ export function BrandCommunityPage() {
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flex: '0 0 auto' }}>
                 <button className="btn-apply" style={{ width: 'auto', padding: '8px 16px', fontSize: 12.5 }} onClick={() => respond.mutate({ id: m.creatorProfileId, approve: true })} disabled={respond.isPending}>✓ {t('Godkänn')}</button>
-                <button className="btn-outline" style={{ padding: '8px 16px', fontSize: 12.5 }} onClick={() => respond.mutate({ id: m.creatorProfileId, approve: false })} disabled={respond.isPending}>{t('Neka')}</button>
+                <ConfirmButton style={{ padding: '8px 16px', fontSize: 12.5 }} onConfirm={() => respond.mutate({ id: m.creatorProfileId, approve: false })} disabled={respond.isPending}>{t('Neka')}</ConfirmButton>
               </div>
             </div>
           ))}

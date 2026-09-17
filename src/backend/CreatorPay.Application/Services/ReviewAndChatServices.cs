@@ -417,7 +417,10 @@ public class ChatService : IChatService
             .ToListAsync(ct);
 
         var aggByAssignment = aggregates.ToDictionary(x => x.AssignmentId);
-        var conversations = assignments.Select(a =>
+        // A deleted campaign leaves no empty shells behind — only threads people actually wrote in.
+        var conversations = assignments
+            .Where(a => !a.Campaign.IsDeleted || aggByAssignment.ContainsKey(a.Id))
+            .Select(a =>
         {
             var isBrandSide = a.Campaign.BrandProfile.UserId == userId;
             aggByAssignment.TryGetValue(a.Id, out var agg);
@@ -429,7 +432,7 @@ public class ChatService : IChatService
                     ? (a.CreatorProfile?.DisplayName ?? "Creator")
                     : (a.Campaign.BrandProfile?.CompanyName ?? "Varumärke"),
                 isBrandSide ? a.CreatorProfile?.AvatarUrl : a.Campaign.BrandProfile?.LogoUrl,
-                a.Campaign.Name,
+                a.Campaign.IsDeleted ? $"{a.Campaign.Name} (borttagen kampanj)" : a.Campaign.Name,
                 lastBody,
                 agg?.LastAt,
                 agg?.Unread ?? 0,

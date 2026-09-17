@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ConfirmButton } from '@/components/ui/ConfirmButton';
 import type { CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -18,7 +19,7 @@ export interface TapDto {
 }
 
 const input: CSSProperties = { width: '100%', border: '1px solid rgba(241,168,143,.28)', borderRadius: 13, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', background: 'rgba(255,255,255,.8)', color: '#0B0F17' };
-const lbl: CSSProperties = { fontSize: 12, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6, display: 'block' };
+const lbl: CSSProperties = { fontSize: 13, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 6, display: 'block' };
 const GRADS = ['linear-gradient(135deg,#FFD8C7,#F1A88F)', 'linear-gradient(135deg,#cdb8f2,#9c7de0)', 'linear-gradient(135deg,#F2C58A,#e0a04e)', 'linear-gradient(135deg,#a9dcc0,#5fb98a)'];
 const grad = (s: string) => GRADS[((s || '').charCodeAt(0) || 0) % GRADS.length];
 
@@ -110,7 +111,7 @@ function TapForm({ tap, onDone }: { tap: TapDto | null; onDone: () => void }) {
           <span style={lbl}>{t('Månadstak per creator (SEK)')}</span>
           <input style={input} type="number" min={0} step={100} value={form.monthlyCapPerCreator} onChange={(e) => setForm({ ...form, monthlyCapPerCreator: e.target.value })} placeholder={t('valfritt')} />
           <div style={hint}>{capCreator > 0 && budget > 0
-            ? <>{t('Budgeten räcker till minst')} <strong>{minCreators}</strong> {t('creators per månad.')}</>
+            ? <>{t('Budgeten räcker till minst')} <strong>{minCreators}</strong> {minCreators === 1 ? t('creator per månad.') : t('creators per månad.')}</>
             : t('Tomt = inget tak. Med tak sprids budgeten över fler creators.')}</div>
         </div>
         <div style={{ gridColumn: '1 / -1', padding: '16px 18px', borderRadius: 16, background: ready ? 'linear-gradient(160deg,#fff,#FFF6F0)' : 'rgba(183,188,200,.10)', border: '1px solid rgba(241,168,143,.3)', minWidth: 0 }}>
@@ -131,7 +132,7 @@ function TapForm({ tap, onDone }: { tap: TapDto | null; onDone: () => void }) {
                   <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--muted)' }}>{t('Spridning')}</div>
                   <div style={{ fontSize: 13.5, marginTop: 3, lineHeight: 1.5 }}>
                     {capCreator > 0
-                      ? <>{t('Minst')} <strong>{minCreators}</strong> {t('creators kan maxa sin månad.')}</>
+                      ? <>{t('Minst')} <strong>{minCreators}</strong> {minCreators === 1 ? t('creator kan maxa sin månad.') : t('creators kan maxa sin månad.')}</>
                       : <span style={{ color: '#9c6b1c' }}>{t('Inget månadstak — en ensam creator kan ta hela budgeten.')}</span>}
                   </div>
                 </div>
@@ -213,15 +214,15 @@ export function BrandTapPage() {
     <section className="view active reveal">
       <div className="page-head">
         <div>
-          <h1 className="page-title">{t('Kranen')} <em>{t('löpande')}</em></h1>
+          <h1 className="page-title">{t('Din')} <em>{t('kran')}</em></h1>
           <p className="page-sub">{t('En stående månadsbudget som kontinuerligt betalar din creator-community för godkänt innehåll. Förutsägbart för dig, jämn intjäning för creators.')}</p>
         </div>
         {tap && !editing && (
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <button className="btn-outline" style={{ width: 'auto', padding: '12px 22px' }} onClick={() => setEditing(true)}>✎ {t('Redigera')}</button>
-            <button className={isActive ? 'btn-outline' : 'btn-apply'} style={{ width: 'auto', padding: '12px 22px' }} onClick={() => status.mutate(!isActive)} disabled={status.isPending}>
-              {isActive ? t('Pausa kranen') : t('Öppna kranen igen')}
-            </button>
+            {isActive
+              ? <ConfirmButton style={{ width: 'auto', padding: '12px 22px' }} confirmLabel={t('Pausa för alla creators? Klicka igen')} onConfirm={() => status.mutate(false)} disabled={status.isPending}>{t('Pausa kranen')}</ConfirmButton>
+              : <button className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} onClick={() => status.mutate(true)} disabled={status.isPending}>{t('Öppna kranen igen')}</button>}
           </div>
         )}
       </div>

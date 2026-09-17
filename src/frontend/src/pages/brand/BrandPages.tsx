@@ -12,9 +12,10 @@ import { ChatPanel } from '@/components/ui/ChatPanel';
 import { ReviewSection } from '@/components/ui/ReviewSection';
 import { maskOrgNr } from '@/lib/masks';
 import { CATEGORIES } from '@/lib/categories';
+import { ConfirmButton } from '@/components/ui/ConfirmButton';
 import { apiError } from '@/hooks/ugc';
 import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
-import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
+import { formatCurrency, formatDate, formatNumber, categoryLabel, payoutModelLabel } from '@/lib/utils';
 import { t, statusLabel } from '@/lib/i18n';
 import { PLATFORM_TAGS, NICHE_TAGS } from '@/lib/tags';
 import { CardSkeleton, useToast } from '@/components/vyrle/Toast';
@@ -157,15 +158,18 @@ export function BrandCampaignListPage() {
               {data.data.map((c) => {
                 const pct = c.budget ? Math.round((c.budgetSpent / c.budget) * 100) : 0;
                 return (
-                  <div key={c.id} className="vcamp" onClick={() => setPreview(c)} title={t('Snabbvy')}>
+                  <div key={c.id} className="vcamp" role="link" tabIndex={0} title={t('Öppna kampanjen')}
+                    onClick={() => navigate(`/brand/campaigns/${c.id}`)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/brand/campaigns/${c.id}`); }}>
                     <span className="vcamp-thumb" style={{ background: grad(c.name) }}><span className="brand-mono">{initial(c.name)}</span></span>
                     <div className="vcamp-main">
                       <div className="vcamp-b">{c.name}</div>
-                      <div className="vcamp-m">{c.category} · {formatDate(c.startDate)} – {formatDate(c.endDate)}</div>
+                      <div className="vcamp-m">{categoryLabel(c.category)} · {formatDate(c.startDate)} – {formatDate(c.endDate)}</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', minWidth: 0 }}><StatusBadge status={c.status} /><div className="progress-line" style={{ flex: '1 1 80px', maxWidth: 160, marginTop: 0, minWidth: 0 }}><span style={{ width: `${pct}%` }} /></div><span style={{ fontSize: 11.5, color: 'var(--muted)', fontWeight: 600 }}>{pct}%</span></div>
                     </div>
                     <div className="vcamp-end"><div className="vcamp-k">{t('Creators')}</div><div className="vcamp-v">{c.approvedCreatorCount}/{c.maxCreators}</div></div>
-                    <div className="vcamp-end"><div className="vcamp-k">{t('Budget')}</div><div className="vcamp-v">{formatCurrency(c.budgetSpent)}</div></div>
+                    <div className="vcamp-end"><div className="vcamp-k">{t('Spenderat')}</div><div className="vcamp-v">{formatCurrency(c.budgetSpent)}</div><div className="vcamp-k">{t('av')} {formatCurrency(c.budget)}</div></div>
+                    <button type="button" className="view-all" onClick={(e) => { e.stopPropagation(); setPreview(c); }}>{t('Snabbvy')}</button>
                   </div>
                 );
               })}
@@ -425,7 +429,7 @@ export function CreateCampaignPage() {
       <div className="page-head">
         <div>
           <h1 className="page-title">{t('Skapa ny')} <em>{t('kampanj')}</em></h1>
-          <p className="page-sub">{t('Sätt upp brief, budget och ersättningsmodell. Kreatörer kan ansöka så snart kampanjen är godkänd.')}</p>
+          <p className="page-sub">{t('Sätt upp brief, budget och ersättningsmodell. Creators kan ansöka så snart kampanjen är godkänd.')}</p>
         </div>
       </div>
       <div className="card" style={{ maxWidth: 760, width: '100%', minWidth: 0 }}>
@@ -646,13 +650,13 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
       )}
 
       <div className="stat-row">
-        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg></div><div><div className="lbl">{t('Total views')}</div><div className="val">{formatNumber(campaign.totalViews)}</div></div></div></div>
+        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg></div><div><div className="lbl">{t('Views totalt')}</div><div className="val">{formatNumber(campaign.totalViews)}</div></div></div></div>
         <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="9" cy="7" rx="6" ry="3" /><path d="M3 7v5c0 1.7 2.7 3 6 3" /><ellipse cx="15" cy="14" rx="6" ry="3" /></svg></div><div><div className="lbl">{isDraftish ? t('Kampanjens maximala kostnad') : t('Budget kvar')}</div><div className="val">{formatCurrency(isDraftish ? campaign.budget : campaign.budget - campaign.budgetSpent - campaign.budgetReserved)}</div></div></div></div>
         {!isDraftish && (
           <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 7H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg></div><div><div className="lbl">{t('Upparbetat hittills')}</div><div className="val">{formatCurrency(spentSoFar)}</div></div></div></div>
         )}
-        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3" /><circle cx="16" cy="9" r="2.5" /><path d="M3 19a6 6 0 0 1 12 0M14 18a5 5 0 0 1 7-1" /></svg></div><div><div className="lbl">{isDraftish ? t('Maximalt antal kreatörer') : t('Aktiva creators')}</div><div className="val">{isDraftish ? campaign.maxCreators : `${campaign.approvedCreatorCount} / ${campaign.maxCreators}`}</div></div></div></div>
-        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 10h18" /></svg></div><div><div className="lbl">{t('Utbetalningsmodell')} · {campaign.payoutModel}</div><div className="val" style={{ fontSize: 16.5 }}>{payoutTerms}</div></div></div></div>
+        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3" /><circle cx="16" cy="9" r="2.5" /><path d="M3 19a6 6 0 0 1 12 0M14 18a5 5 0 0 1 7-1" /></svg></div><div><div className="lbl">{isDraftish ? t('Maximalt antal creators') : t('Aktiva creators')}</div><div className="val">{isDraftish ? campaign.maxCreators : `${campaign.approvedCreatorCount} / ${campaign.maxCreators}`}</div></div></div></div>
+        <div className="card stat"><div className="top"><div className="ico soft"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 10h18" /></svg></div><div><div className="lbl">{t('Utbetalningsmodell')} · {payoutModelLabel(campaign.payoutModel)}</div><div className="val" style={{ fontSize: 16.5 }}>{payoutTerms}</div></div></div></div>
       </div>
 
       {!['Draft', 'PendingReview'].includes(campaign.status) && applications && (
@@ -673,7 +677,7 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
                   {a.status === 'Pending' && (
                     <>
                       <button className="btn-apply" style={{ width: 'auto', padding: '9px 16px', fontSize: 12.5 }} onClick={() => approve.mutateAsync({ id: a.id })} disabled={approve.isPending}>{t('Godkänn')}</button>
-                      <button className="btn-outline" style={{ padding: '9px 16px', fontSize: 12.5 }} onClick={() => reject.mutateAsync({ id: a.id, reason: 'Avvisad av varumärke' })} disabled={reject.isPending}>{t('Neka')}</button>
+                      <ConfirmButton style={{ padding: '9px 16px', fontSize: 12.5 }} onConfirm={() => reject.mutateAsync({ id: a.id, reason: 'Avvisad av varumärke' })} disabled={reject.isPending}>{t('Neka')}</ConfirmButton>
                     </>
                   )}
                 </div>
@@ -1080,12 +1084,12 @@ export function BrandSettingsPage() {
       <div className="page-head">
         <div>
           <h1 className="page-title">{t('Inställningar')}</h1>
-          <p className="page-sub">{t('Hantera er företagsprofil och säkerhet.')} {profile?.status === 'Approved' ? t('Verifierat konto.') : statusLabel(profile?.status ?? '')}</p>
+          <p className="page-sub">{t('Hantera er företagsprofil och säkerhet.')} {profile?.status === 'Approved' ? t('Kontot är godkänt av VYRLE.') : statusLabel(profile?.status ?? '')}{profile && !profile.organizationNumber ? ` ${t('Organisationsnummer saknas — det krävs för att beställa video.')}` : ''}</p>
         </div>
       </div>
 
       <div className="tabs">
-        {([['profile', 'Profil'], ['security', 'Lösenord']] as const).map(([key, label]) => (
+        {([['profile', 'Profil'], ['security', 'Konto & säkerhet']] as const).map(([key, label]) => (
           <button key={key} className={`tab${activeTab === key ? ' active' : ''}`} onClick={() => setActiveTab(key)}>{t(label)}</button>
         ))}
       </div>
@@ -1097,7 +1101,7 @@ export function BrandSettingsPage() {
             <div className="field full">
               <ImagePicker label={t('Logotyp')} shape="rounded" value={profileForm.logoUrl}
                 onChange={(v) => setProfileForm({ ...profileForm, logoUrl: v })}
-                hint={t('Visas för kreatörer på era kampanjer och PR-erbjudanden.')} />
+                hint={t('Visas för creators på era kampanjer och PR-erbjudanden.')} />
             </div>
             <div className="field full"><label>{t('Företagsnamn')} *</label><input type="text" value={profileForm.companyName} required onChange={e => setProfileForm({ ...profileForm, companyName: e.target.value })} /></div>
             <div className="field full">
@@ -1197,7 +1201,7 @@ function DraftEditCard({ campaign, onDone }: { campaign: any; onDone: () => void
   const [busy, setBusy] = useState(false);
 
   const input: React.CSSProperties = { width: '100%', border: '1px solid rgba(241,168,143,.28)', borderRadius: 13, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', background: 'rgba(255,255,255,.75)', color: '#0B0F17' };
-  const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6, display: 'block' };
+  const lbl: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 6, display: 'block' };
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1228,7 +1232,7 @@ function DraftEditCard({ campaign, onDone }: { campaign: any; onDone: () => void
         <div style={{ gridColumn: '1 / -1' }}><span style={lbl}>{t('Kampanjnamn')}</span><input style={input} required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
         <div style={{ gridColumn: '1 / -1' }}><span style={lbl}>{t('Beskrivning')}</span><textarea style={{ ...input, resize: 'vertical' }} rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
         <div><span style={lbl}>{t('Maximal kostnad (SEK)')}</span><input style={input} type="number" min={1} required value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} /></div>
-        <div><span style={lbl}>{t('Maximalt antal kreatörer')}</span><input style={input} type="number" min={1} required value={form.maxCreators} onChange={(e) => setForm({ ...form, maxCreators: e.target.value })} /></div>
+        <div><span style={lbl}>{t('Maximalt antal creators')}</span><input style={input} type="number" min={1} required value={form.maxCreators} onChange={(e) => setForm({ ...form, maxCreators: e.target.value })} /></div>
         <div><span style={lbl}>{t('Startdatum')}</span><DateInput value={form.startDate} onChange={(v) => setForm({ ...form, startDate: v })} style={input} /></div>
         <div><span style={lbl}>{t('Slutdatum')}</span><DateInput value={form.endDate} onChange={(v) => setForm({ ...form, endDate: v })} style={input} /></div>
       </div>

@@ -128,7 +128,7 @@ export function BrandAnalyticsPage() {
     <section className="view active reveal" data-view="analytics">
       <div className="page-head">
         <div>
-          <h1 className="page-title">{t('Attention')} <em>{t('intelligence')}</em></h1>
+          <h1 className="page-title">{t('Statistik &')} <em>{t('insikter')}</em></h1>
           <p className="page-sub">{t('Hur effektivt din spend förvandlas till uppmärksamhet. Räckvidd, engagemang och kostnadseffektivitet — allt från verklig kampanjdata.')}</p>
         </div>
       </div>
@@ -138,12 +138,12 @@ export function BrandAnalyticsPage() {
       ) : campaigns.length === 0 ? (
         <Empty title={t('Ingen analys än')} sub={t('Lansera en kampanj så börjar vi mäta visningar, engagemang och CPM i realtid.')} />
       ) : !hasData ? (
-        <Empty title={t('Väntar på första datan')} sub={t('Dina kampanjer är igång men inga verifierade visningar har kommit in ännu. Analysen fylls i automatiskt så snart kreatörernas content går live.')} />
+        <Empty title={t('Väntar på första datan')} sub={t('Dina kampanjer är igång men inga verifierade visningar har kommit in ännu. Analysen fylls i automatiskt så snart creators content går live.')} />
       ) : (
         <>
           {/* ── Overview KPIs ── */}
           <div className="vstat-row">
-            <Kpi tint="peach" featured label={t('Totala visningar')} val={formatNumber(TV)} sub={`${creators} ${t('kreatörer')} · ${TP} ${t('posts')}`} icon={<><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></>} />
+            <Kpi tint="peach" featured label={t('Totala visningar')} val={formatNumber(TV)} sub={`${creators} ${t('creators')} · ${TP} ${t('posts')}`} icon={<><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></>} />
             <Kpi tint="green" label={t('Total spend')} val={formatCurrency(TS)} sub={`${formatCurrency(remaining)} ${t('kvar')}`} icon={<><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 10h18M7 15h4" /></>} />
             <Kpi tint="lilac" label="CPM" val={kr2(CPM)} sub={t('kostnad / 1 000 visn.')} icon={<><path d="M5 20V10M12 20V4M19 20v-6" /></>} />
             <Kpi tint="amber" label={t('Snitt visningar / post')} val={short(AVP)} sub={`${formatNumber(views24h)} ${t('senaste dygnet')}`} icon={<><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></>} />
@@ -259,7 +259,7 @@ export function BrandAnalyticsPage() {
           {/* ── Top creators ── */}
           <div className="vcsplit" style={{ marginTop: 18 }}>
             <div className="card">
-              <div className="vperf-head" style={{ flexWrap: 'wrap', gap: 8 }}><h3>{t('Bästa kreatörer')}</h3><Link to="/brand/creators" className="view-all">{t('Hitta fler')}</Link></div>
+              <div className="vperf-head" style={{ flexWrap: 'wrap', gap: 8 }}><h3>{t('Bästa creators')}</h3><Link to="/brand/creators" className="view-all">{t('Hitta fler')}</Link></div>
               {topCreators.length ? topCreators.map((c) => {
                 const ccpm = c.views ? (c.payout / c.views) * 1000 : 0;
                 const eff = c.payout ? c.views / (c.payout / 1000) : 0; // views per 1000 kr
@@ -275,7 +275,7 @@ export function BrandAnalyticsPage() {
                     <div className="vcamp-end"><div className="vcamp-k">{t('Visn/1000kr')}</div><div className="vcamp-v">{eff ? short(eff) : '—'}</div></div>
                   </div>
                 );
-              }) : <Muted>{t('Inga kreatörer med data än.')}</Muted>}
+              }) : <Muted>{t('Inga creators med data än.')}</Muted>}
             </div>
             <div className="card">
               <div className="vperf-head"><h3>{t('Per nisch')}</h3></div>
