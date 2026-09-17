@@ -352,7 +352,7 @@ export function BrandAnalyticsPage() {
                 {['100K+', '500K+', '1M+'].map((lab, i) => (
                   <div key={lab} style={{ textAlign: 'center', padding: '14px 8px', borderRadius: 14, background: 'linear-gradient(140deg,rgba(255,227,211,.5),rgba(237,225,255,.35))' }}>
                     <div style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-.02em', color: 'var(--ink)' }}>{viral[i]}</div>
-                    <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{t('videos')} {lab}</div>
+                    <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{t('videor')} {lab}</div>
                   </div>
                 ))}
               </div>

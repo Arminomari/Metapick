@@ -48,7 +48,7 @@ export function UgcBrandHomePage() {
       <div className="vstat-row">
         <div className="card vstat" style={{ background: 'linear-gradient(160deg,#fff,#FFF6F0)' }}><div className="vstat-lbl">{t('Öppna beställningar')}</div><div className="vstat-val">{live.length}</div><div className="vstat-sub"><span className="vmut">{live.reduce((s, c) => s + c.pendingApplicationCount, 0)} {t('nya bud')}</span></div></div>
         <div className="card vstat"><div className="vstat-lbl">{t('Pågående uppdrag')}</div><div className="vstat-val">{active.length}</div><div className="vstat-sub"><span className="vmut">{needsMe.length} {t('väntar på dig')}</span></div></div>
-        <div className="card vstat"><div className="vstat-lbl">{t('Levererade videos')}</div><div className="vstat-val">{collabs.filter((c) => c.status === 'Paid').length}</div><div className="vstat-sub"><span className="vmut">{formatOre(spent)} {t('totalt')}</span></div></div>
+        <div className="card vstat"><div className="vstat-lbl">{t('Levererade videor')}</div><div className="vstat-val">{collabs.filter((c) => c.status === 'Paid').length}</div><div className="vstat-sub"><span className="vmut">{formatOre(spent)} {t('totalt')}</span></div></div>
       </div>
 
       {needsMe.length > 0 && (

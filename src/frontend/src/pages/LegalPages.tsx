@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { t } from '@/lib/i18n';
+import { t, lang } from '@/lib/i18n';
 
 const STAR_PATH = 'M12 1.5c.7 5.6 2.9 7.8 8.5 8.5 .9.1 .9 1.4 0 1.5-5.6.7-7.8 2.9-8.5 8.5-.1.9-1.4.9-1.5 0-.7-5.6-2.9-7.8-8.5-8.5-.9-.1-.9-1.4 0-1.5 5.6-.7 7.8-2.9 8.5-8.5.1-.9 1.4-.9 1.5 0z';
 
@@ -14,7 +14,7 @@ function LegalShell({ title, accent, updated, children }: { title: string; accen
             VYRLE
           </Link>
           <div className="card" style={{ padding: 'clamp(22px, 5vw, 40px) clamp(16px, 5vw, 38px)', minWidth: 0, overflowWrap: 'break-word' }}>
-            <h1 className="auth-title" style={{ fontSize: 'clamp(26px, 6vw, 32px)', overflowWrap: 'anywhere' }}>{title} <em>{accent}</em></h1>
+            <h1 className="auth-title" style={{ fontSize: 'clamp(26px, 6vw, 32px)', overflowWrap: 'anywhere' }}>{title}{lang === 'sv' ? '' : ' '}<em>{accent}</em></h1>
             <p className="auth-sub" style={{ marginBottom: 8 }}>{t('Senast uppdaterad:')} {updated}</p>
             {children}
             <div style={{ marginTop: 34, paddingTop: 20, borderTop: '1px solid rgba(241,168,143,.2)', fontSize: 13, color: 'var(--muted)', lineHeight: 1.7, overflowWrap: 'anywhere' }}>

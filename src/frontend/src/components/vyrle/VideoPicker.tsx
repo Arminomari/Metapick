@@ -47,7 +47,7 @@ export function VideoPicker({ assignmentId, onDone }: { assignmentId: string; on
   if (!open) {
     return (
       <button type="button" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} onClick={() => setOpen(true)}>
-        🎬 {t('Välj bland dina TikTok-videos')}
+        {t('Välj bland dina TikTok-videor')}
       </button>
     );
   }
@@ -55,23 +55,23 @@ export function VideoPicker({ assignmentId, onDone }: { assignmentId: string; on
   return (
     <div style={{ marginTop: 4 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
-        <span style={{ fontWeight: 700, fontSize: 14 }}>{t('Dina senaste videos')}</span>
+        <span style={{ fontWeight: 700, fontSize: 14 }}>{t('Dina senaste videor')}</span>
         <button type="button" className="btn-outline" style={{ width: 'auto', padding: '7px 14px', fontSize: 12.5, marginLeft: 'auto' }} onClick={() => setOpen(false)}>
           {t('Stäng')}
         </button>
       </div>
 
-      {isLoading && <div style={{ padding: 20, color: 'var(--muted)', fontSize: 13 }}>{t('Hämtar dina videos från TikTok…')}</div>}
+      {isLoading && <div style={{ padding: 20, color: 'var(--muted)', fontSize: 13 }}>{t('Hämtar dina videor från TikTok…')}</div>}
 
       {isError && (
         <div style={{ padding: '14px 16px', borderRadius: 14, background: 'rgba(242,197,138,.22)', color: '#7a5518', fontSize: 13, lineHeight: 1.55 }}>
-          {(error as any)?.response?.data?.error?.message ?? t('Kunde inte hämta dina videos just nu.')}
+          {(error as any)?.response?.data?.error?.message ?? t('Kunde inte hämta dina videor just nu.')}
         </div>
       )}
 
       {!isLoading && !isError && videos.length === 0 && (
         <div style={{ padding: '14px 16px', borderRadius: 14, background: 'rgba(183,188,200,.14)', color: 'var(--muted)', fontSize: 13, lineHeight: 1.55 }}>
-          {t('Inga videos hittades på ditt TikTok-konto de senaste 90 dagarna. Publicera en video så dyker den upp här.')}
+          {t('Inga videor hittades på ditt TikTok-konto de senaste 90 dagarna. Publicera en video så dyker den upp här.')}
         </div>
       )}
 
@@ -92,7 +92,7 @@ export function VideoPicker({ assignmentId, onDone }: { assignmentId: string; on
                   ? <img src={v.coverImageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 22 }}>♪</div>}
                 <span style={{ position: 'absolute', left: 8, bottom: 8, padding: '3px 9px', borderRadius: 980, background: 'rgba(11,15,23,.72)', color: '#fff', fontSize: 11, fontWeight: 700 }}>
-                  👁 {formatNumber(v.views)}
+                  {formatNumber(v.views)}
                 </span>
               </div>
               <div style={{ padding: '10px 11px 12px', minWidth: 0 }}>

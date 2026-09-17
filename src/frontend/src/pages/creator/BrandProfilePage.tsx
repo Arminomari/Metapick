@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { useApplyToCampaign, useBrandProfile, useUpdateBrandProfile, useMyApplications } from '@/hooks/api';
 import { ImagePicker } from '@/components/auth/ImagePicker';
-import { formatNumber, formatDate, formatCurrency } from '@/lib/utils';
+import { formatNumber, formatDate, formatCurrency, categoryLabel, countryName, payoutSummaryText } from '@/lib/utils';
 import { t, statusLabel } from '@/lib/i18n';
 import { LoadingSpinner } from '@/components/ui';
 import { StarRating } from '@/components/ui/StarRating';
@@ -139,7 +139,7 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
                 <span className="badge green">✓ {t('Verifierat företag')}</span>
               </div>
               <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 3 }}>
-                {p.industry} · {p.country} · {t('Medlem sedan')} {new Date(p.memberSince).getFullYear()}
+                {categoryLabel(p.industry)} · {countryName(p.country)} · {t('Medlem sedan')} {new Date(p.memberSince).getFullYear()}
                 {p.website && <> · <a href={p.website} target="_blank" rel="noopener noreferrer" style={{ color: '#9c4f31', fontWeight: 600 }}>{t('Webbplats')}</a></>}
               </div>
             </div>
@@ -180,7 +180,6 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
       {p.hasTap && !ownView && (
         <div className="card" style={{ marginBottom: 16, background: 'linear-gradient(160deg,#fff,#FFF6F0)', border: '1px solid rgba(241,168,143,.4)' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 26, flexShrink: 0 }} aria-hidden>💧</span>
             <div style={{ flex: '1 1 240px', minWidth: 0 }}>
               <div style={{ fontWeight: 800, fontSize: 16 }}>{t('Kranen är öppen')}{p.tapName ? ` · ${p.tapName}` : ''}</div>
               <div style={{ fontSize: 13.5, color: 'var(--ink-2)', marginTop: 3, lineHeight: 1.55 }}>
@@ -250,9 +249,9 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
             {p.activeCampaigns.map((c) => (
               <div key={c.id} style={{ border: '1px solid rgba(241,168,143,.25)', borderRadius: 16, padding: 16, background: 'linear-gradient(160deg,#fff,#FFF6F0)', display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 15, wordBreak: 'break-word' }}>{c.name}</div>
-                <div style={{ fontSize: 12.5, color: '#9c4f31', fontWeight: 700 }}>{c.payoutSummary}</div>
-                <div style={{ fontSize: 12, color: 'var(--muted)' }}>{c.category} · {c.spotsLeft} {t('platser kvar')} · {formatDate(c.startDate)} – {formatDate(c.endDate)}</div>
-                {c.totalViews > 0 && <div style={{ fontSize: 12, fontWeight: 700, color: '#2f7d52' }}>👁 {formatNumber(c.totalViews)} {t('levererade views')}</div>}
+                <div style={{ fontSize: 12.5, color: '#9c4f31', fontWeight: 700 }}>{payoutSummaryText(c.payoutSummary)}</div>
+                <div style={{ fontSize: 12, color: 'var(--muted)' }}>{categoryLabel(c.category)} · {c.spotsLeft} {c.spotsLeft === 1 ? t('plats kvar') : t('platser kvar')} · {formatDate(c.startDate)} – {formatDate(c.endDate)}</div>
+                {c.totalViews > 0 && <div style={{ fontSize: 12, fontWeight: 700, color: '#2f7d52' }}>{formatNumber(c.totalViews)} {t('levererade views')}</div>}
                 {!ownView && (() => {
                   const mine = appStatus.get(c.id);
                   if (mine === 'Approved') return (
@@ -295,7 +294,7 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
             <div key={c.id} className="list-row">
               <div className="row-main" style={{ flex: 1, minWidth: 0 }}>
                 <div className="t">{c.name}</div>
-                <div className="s">{c.category} · {formatDate(c.startDate)} – {formatDate(c.endDate)} · {statusLabel(c.status)}</div>
+                <div className="s">{categoryLabel(c.category)} · {formatDate(c.startDate)} – {formatDate(c.endDate)} · {statusLabel(c.status)}</div>
               </div>
               <div style={{ textAlign: 'right', flex: '0 0 auto' }}>
                 <div className="t">{formatNumber(c.totalViews)}</div>
@@ -366,7 +365,7 @@ export function BrandOwnPublicProfilePage() {
   return (
     <>
       <div className="card" style={{ marginBottom: 16, padding: '12px 18px', background: 'rgba(237,225,255,.35)', border: '1px solid rgba(157,139,196,.3)' }}>
-        <span style={{ fontSize: 13, color: '#6a4ea8', fontWeight: 600 }}>👁 {t('Så här ser din profil ut för creators. En stark profil ger fler ansökningar.')}</span>
+        <span style={{ fontSize: 13, color: '#6a4ea8', fontWeight: 600 }}>{t('Så här ser din profil ut för creators. En stark profil ger fler ansökningar.')}</span>
       </div>
 
       {editing && (
@@ -440,7 +439,7 @@ function PostComposer({ onPosted, logoUrl, initial: brandInitial }: { onPosted: 
       )}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
         <button type="button" className="btn-outline" style={{ width: 'auto', padding: '8px 14px', fontSize: 12.5 }} onClick={() => setShowImage((v) => !v)}>
-          🖼 {showImage ? t('Utan bild') : t('Lägg till bild')}
+          {showImage ? t('Utan bild') : t('Lägg till bild')}
         </button>
         <button type="button" className="btn-apply" style={{ width: 'auto', padding: '9px 22px', marginLeft: 'auto' }} onClick={() => void publish()} disabled={busy || !body.trim()}>
           {busy ? t('Publicerar…') : t('Publicera')}

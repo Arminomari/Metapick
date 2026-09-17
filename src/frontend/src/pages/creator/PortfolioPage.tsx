@@ -5,7 +5,7 @@ import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
 import { ReviewList } from '@/components/ui/ReviewSection';
 import { usePortfolio, useAddPortfolioItem, useUpdatePortfolioItem, useDeletePortfolioItem, useCreatorProfile, useCreatorAssignments, useUserReviews } from '@/hooks/api';
 import { useToast, CardSkeleton } from '@/components/vyrle/Toast';
-import { formatNumber, formatDate, formatCurrency } from '@/lib/utils';
+import { formatNumber, formatCurrency, categoryLabel, formatMonthYear } from '@/lib/utils';
 import type { PortfolioItem, PortfolioMediaType } from '@/types';
 
 const GRADS = ['linear-gradient(135deg,#FFD8C7,#F1A88F)', 'linear-gradient(135deg,#cdb8f2,#9c7de0)', 'linear-gradient(135deg,#F2C58A,#e0a04e)', 'linear-gradient(135deg,#a9dcc0,#5fb98a)'];
@@ -127,7 +127,7 @@ export function CreatorPortfolioPage() {
             : <span style={{ width: 84, height: 84, borderRadius: '50%', flex: '0 0 84px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"Fraunces",serif', fontSize: 34, color: '#fff', background: grad(name), boxShadow: '0 6px 16px rgba(241,168,143,.35)' }}>{initial(name)}</span>}
           <div style={{ flex: 1, minWidth: 'min(100%, 240px)' }}>
             <div style={{ fontSize: 26, fontWeight: 600, letterSpacing: '-.02em', color: 'var(--ink)', wordBreak: 'break-word' }}>{name}</div>
-            <div style={{ fontSize: 13, color: 'var(--muted)', wordBreak: 'break-word' }}>{handle}{handle && (profile?.category || profile?.country) ? ' · ' : ''}{profile?.category}{profile?.country ? ` · ${COUNTRY[profile.country] || profile.country}` : ''}</div>
+            <div style={{ fontSize: 13, color: 'var(--muted)', wordBreak: 'break-word' }}>{handle}{handle && (profile?.category || profile?.country) ? ' · ' : ''}{categoryLabel(profile?.category)}{profile?.country ? ` · ${COUNTRY[profile.country] || profile.country}` : ''}</div>
             {profile?.bio && <p style={{ fontSize: 14, marginTop: 10, color: 'var(--ink-2)', lineHeight: 1.55, maxWidth: 560 }}>{profile.bio}</p>}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 12, fontSize: 13 }}>
               {profile?.tikTokUsername && <a href={`https://www.tiktok.com/@${profile.tikTokUsername}`} target="_blank" rel="noopener noreferrer" style={{ color: '#C26A4A', fontWeight: 600 }}>TikTok</a>}
@@ -167,7 +167,7 @@ export function CreatorPortfolioPage() {
             <div><div className="vcamp-k">{t('Land')}</div><div className="vcamp-v" style={{ fontSize: 15 }}>{profile?.country ? (COUNTRY[profile.country] || profile.country) : '—'}</div></div>
             <div><div className="vcamp-k">{t('Kategori')}</div><div className="vcamp-v" style={{ fontSize: 15 }}>{profile?.category || '—'}</div></div>
             <div><div className="vcamp-k">{t('Språk')}</div><div className="vcamp-v" style={{ fontSize: 15 }}>{profile?.language === 'sv' ? t('Svenska') : profile?.language || '—'}</div></div>
-            <div><div className="vcamp-k">{t('Medlem sedan')}</div><div className="vcamp-v" style={{ fontSize: 15 }}>{profile?.createdAt ? formatDate(profile.createdAt) : '—'}</div></div>
+            <div><div className="vcamp-k">{t('Medlem sedan')}</div><div className="vcamp-v" style={{ fontSize: 15 }}>{profile?.createdAt ? formatMonthYear(profile.createdAt) : '—'}</div></div>
           </div>
         </div>
       </div>
@@ -189,7 +189,7 @@ export function CreatorPortfolioPage() {
 
       {/* ── 4. Best content ── */}
       <div className="sec-head" style={{ marginBottom: 14 }}>
-        <h3 style={{ fontSize: 17, fontWeight: 600 }}>{t('Bästa content')}</h3>
+        <h3 style={{ fontSize: 17, fontWeight: 600 }}>{t('Bästa innehåll')}</h3>
         {!showForm && (
           <button className="btn-apply" style={{ width: 'auto', padding: '9px 18px', fontSize: 12.5, display: 'inline-flex', alignItems: 'center', gap: 7 }} onClick={() => { reset(); setShowForm(true); }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg> {t('Lägg till arbete')}
@@ -266,7 +266,7 @@ export function CreatorPortfolioPage() {
       ) : (
         <div className="card" style={{ textAlign: 'center', padding: '54px 24px' }}>
           <div style={{ fontSize: 18, fontWeight: 700 }}>{t('Din portfölj är tom')}</div>
-          <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8 }}>{t('Lägg till dina bästa videos och samarbeten så företag kan se vad du kan.')}</div>
+          <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8 }}>{t('Lägg till dina bästa videor och samarbeten så företag kan se vad du kan.')}</div>
           <button className="btn-apply" style={{ width: 'auto', display: 'inline-block', padding: '11px 22px', marginTop: 16 }} onClick={() => { reset(); setShowForm(true); }}>{t('Lägg till ditt första arbete')}</button>
         </div>
       )}

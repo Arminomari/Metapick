@@ -822,17 +822,20 @@ public class CampaignService : ICampaignService
     {
         if (!rules.Any()) return "Ej konfigurerad";
         var first = rules.OrderBy(r => r.SortOrder).First();
+        // Invariant on purpose: the client re-renders this in the viewer's locale
+        // (lib/utils payoutSummaryText), so the shape must not follow the server's culture.
+        static string M(decimal v) => v.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
         return first.PayoutType switch
         {
             PayoutType.CPM => first.MaxPayoutPerCreator.HasValue
-                ? $"{first.Amount} SEK per 1000 views (max {first.MaxPayoutPerCreator.Value} SEK)"
-                : $"{first.Amount} SEK per 1000 views",
-            PayoutType.FixedThreshold => $"{first.Amount} SEK vid {first.MinViews:N0}+ views",
+                ? $"{M(first.Amount)} SEK per 1000 views (max {M(first.MaxPayoutPerCreator.Value)} SEK)"
+                : $"{M(first.Amount)} SEK per 1000 views",
+            PayoutType.FixedThreshold => $"{M(first.Amount)} SEK vid {first.MinViews}+ views",
             PayoutType.Tiered when rules.Count > 1 =>
-                $"{rules.Min(r => r.Amount)}–{rules.Max(r => r.Amount)} SEK beroende på views",
+                $"{M(rules.Min(r => r.Amount))}–{M(rules.Max(r => r.Amount))} SEK beroende på views",
             _ => rules.Count == 1
-                ? $"{first.Amount} SEK"
-                : $"{rules.Min(r => r.Amount)}–{rules.Max(r => r.Amount)} SEK"
+                ? $"{M(first.Amount)} SEK"
+                : $"{M(rules.Min(r => r.Amount))}–{M(rules.Max(r => r.Amount))} SEK"
         };
     }
 

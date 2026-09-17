@@ -247,7 +247,7 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
               {p.emailVerified
                 ? <span style={apPill('rgba(169,220,192,.35)', '#2f7d52')}>✓ {t('E-post verifierad')}</span>
                 : <span style={apPill('rgba(255,90,77,.15)', '#c0392b')}>✗ {t('E-post EJ verifierad')}</span>}
-              {p.tikTokConnected && <span style={apPill('rgba(183,188,200,.25)', '#3c4250')}>{p.tikTokOAuth ? '✓ TikTok OAuth' : '⚠ TikTok manuell'}</span>}
+              {p.tikTokConnected && <span style={apPill('rgba(183,188,200,.25)', '#3c4250')}>{p.tikTokOAuth ? '✓ TikTok OAuth' : 'TikTok manuell'}</span>}
             </div>
             <div style={{ ...apMuted, marginTop: 6, overflowWrap: 'anywhere' }}>{p.email} · {p.country} · {t('Medlem sedan')} {formatDate(p.registeredAt)}</div>
             {p.bio && <p style={{ margin: '10px 0 0', fontSize: '.9rem', color: '#3c4250', lineHeight: 1.55 }}>{p.bio}</p>}
@@ -312,7 +312,7 @@ function AdminCreatorProfilePage({ creatorId, onBack }: { creatorId: string; onB
             </div>
           </div>
         ) : (
-          <div style={{ fontSize: '.85rem', fontWeight: 600, color: '#c0392b' }}>⚠ {t('Ingen selfie inskickad — kontot skapades innan kravet infördes.')}</div>
+          <div style={{ fontSize: '.85rem', fontWeight: 600, color: '#c0392b' }}>{t('Ingen selfie inskickad — kontot skapades innan kravet infördes.')}</div>
         )}
       </div>
 
@@ -446,7 +446,7 @@ export function AdminDashboardPage() {
             onClick={() => triggerSync.mutate()}
             disabled={triggerSync.isPending}
             style={{ padding: '.5rem 1rem', borderRadius: '.5rem', border: '1px solid #7c3aed', background: '#6a4ea8', color: '#fff', cursor: 'pointer', fontSize: '.8rem', fontWeight: 600, opacity: triggerSync.isPending ? 0.6 : 1 }}>
-            {triggerSync.isPending ? t('⏳ Synkar…') : triggerSync.isSuccess ? t('✓ Synk startad!') : t('🔄 Synka TikTok nu')}
+            {triggerSync.isPending ? t('Synkar…') : triggerSync.isSuccess ? t('✓ Synk startad!') : t('Synka TikTok nu')}
             </button>
             <button
               onClick={() => { logout(); window.location.href = '/login'; }}
@@ -543,7 +543,7 @@ export function AdminDashboardPage() {
                         onClick={() => setThreadUser({ id: user.id, name: user.role === 'Creator' ? user.displayName || user.email : user.companyName || user.email })}
                         style={{ background: 'none', border: '1px solid #C26A4A', borderRadius: '.5rem', padding: '.5rem .75rem', color: '#C26A4A', cursor: 'pointer', fontSize: '.8rem', fontWeight: 600 }}
                       >
-                        ✉️ {t('Meddela')}
+                        {t('Meddela')}
                       </button>
                     )}
                     <button

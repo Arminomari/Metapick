@@ -28,7 +28,7 @@ export function CreatorTapsPage() {
     <section className="view active reveal">
       <div className="page-head">
         <div>
-          <h1 className="page-title">💧 {t('Dina')} <em>{t('kranar')}</em></h1>
+          <h1 className="page-title">{t('Dina')} <em>{t('kranar')}</em></h1>
           <p className="page-sub">{t('Löpande ersättning från företag vars community du är med i. Publicera när du vill — betalt per verifierad view, varje månad.')}</p>
         </div>
       </div>
@@ -47,13 +47,12 @@ export function CreatorTapsPage() {
         <div className="card vstat">
           <div className="vstat-lbl">{t('Öppna kranar')}</div>
           <div className="vstat-val">{open}</div>
-          <div className="vstat-sub"><span className="vmut">{t('av')} {taps.length}</span></div>
+          <div className="vstat-sub"><span className="vmut">{taps.length > 0 ? `${t('av')} ${taps.length}` : t('inga kranar än')}</span></div>
         </div>
       </div>
 
       {isLoading ? <CardSkeleton rows={3} /> : taps.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '54px 24px' }}>
-          <div style={{ fontSize: 30, marginBottom: 10 }} aria-hidden>💧</div>
           <div style={{ fontSize: 18, fontWeight: 700 }}>{t('Du är inte med i någon kran ännu')}</div>
           <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 8, maxWidth: 460, marginInline: 'auto', lineHeight: 1.6 }}>
             {t('Kör en kampanj för ett företag så kvalificerar du in i deras community automatiskt — eller ansök direkt från företagets profil.')}

@@ -69,7 +69,7 @@ export function PayoutRequestCard() {
               <div style={{ flex: '1 1 200px', minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <span style={{ fontWeight: 700, fontSize: 14.5, wordBreak: 'break-word' }}>{p.campaignName}</span>
-                  {p.isTap && <span className="vy-badge info">💧 {t('Kranen')}</span>}
+                  {p.isTap && <span className="vy-badge info">{t('Kranen')}</span>}
                 </div>
                 <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 3 }}>
                   {formatNumber(p.verifiedViews)} {t('verifierade views')} · {t('intjänat')} {formatCurrency(p.earned)}

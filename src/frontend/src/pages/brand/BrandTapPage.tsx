@@ -132,15 +132,15 @@ function TapForm({ tap, onDone }: { tap: TapDto | null; onDone: () => void }) {
                   <div style={{ fontSize: 13.5, marginTop: 3, lineHeight: 1.5 }}>
                     {capCreator > 0
                       ? <>{t('Minst')} <strong>{minCreators}</strong> {t('creators kan maxa sin månad.')}</>
-                      : <span style={{ color: '#9c6b1c' }}>⚠ {t('Inget månadstak — en ensam creator kan ta hela budgeten.')}</span>}
+                      : <span style={{ color: '#9c6b1c' }}>{t('Inget månadstak — en ensam creator kan ta hela budgeten.')}</span>}
                   </div>
                 </div>
                 <div style={{ padding: '10px 12px', borderRadius: 12, background: 'rgba(255,255,255,.75)', border: '1px solid rgba(241,168,143,.22)' }}>
                   <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--muted)' }}>{t('Per video')}</div>
                   <div style={{ fontSize: 13.5, marginTop: 3, lineHeight: 1.5 }}>
                     {capVideo > 0
-                      ? <>{t('Max')} <strong>{formatCurrency(capVideo)}</strong> {t('per video — minst')} <strong>{minVideos}</strong> {t('videos för att förbruka månaden.')}</>
-                      : <span style={{ color: '#9c6b1c' }}>⚠ {t('Inget tak per video — en viral video kan äta stora delar av månaden.')}</span>}
+                      ? <>{t('Max')} <strong>{formatCurrency(capVideo)}</strong> {t('per video — minst')} <strong>{minVideos}</strong> {t('videor för att förbruka månaden.')}</>
+                      : <span style={{ color: '#9c6b1c' }}>{t('Inget tak per video — en viral video kan äta stora delar av månaden.')}</span>}
                   </div>
                 </div>
               </div>
@@ -343,7 +343,7 @@ function TapReviewSection() {
         <h3>{t('Videos att granska')}</h3>
         <span className="vy-badge pend">{subs.length}</span>
         <span style={{ fontSize: 12, color: '#9c6b1c', fontWeight: 600, marginLeft: 'auto' }}>
-          ⏱ {t('Godkänns automatiskt efter 48 timmar')}
+          {t('Godkänns automatiskt efter 48 timmar')}
         </span>
       </div>
 

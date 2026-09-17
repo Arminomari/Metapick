@@ -441,7 +441,7 @@ export function CreateCampaignPage() {
           <div className="field"><label>{t('Slutdatum')} *</label><DateInput value={form.endDate} onChange={v => setForm({ ...form, endDate: v })} required className="" /></div>
           <div className="field"><label>{t('Total budget (SEK)')} *</label><input type="text" inputMode="numeric" value={form.budget || ''} required onChange={setNum('budget')} placeholder={t('t.ex. 10000')} /></div>
           <div className="field"><label>{t('Max antal creators')}</label><input type="text" inputMode="numeric" value={form.maxCreators || ''} onChange={setNum('maxCreators')} placeholder={t('t.ex. 10')} /></div>
-          <div className="field"><label>{t('Antal videos per creator')}</label><input type="text" inputMode="numeric" value={form.requiredVideoCount || ''} onChange={setNum('requiredVideoCount')} placeholder={t('t.ex. 1')} /><span className="hint" style={{ alignSelf: 'flex-start', color: 'var(--muted)' }}>{t('Hur många videos varje creator ska leverera')}</span></div>
+          <div className="field"><label>{t('Antal videor per creator')}</label><input type="text" inputMode="numeric" value={form.requiredVideoCount || ''} onChange={setNum('requiredVideoCount')} placeholder={t('t.ex. 1')} /><span className="hint" style={{ alignSelf: 'flex-start', color: 'var(--muted)' }}>{t('Hur många videor varje creator ska leverera')}</span></div>
 
           {/* ── Payout Configuration ── */}
           <div className="field full" style={{ border: '1px solid rgba(241,168,143,.18)', borderRadius: 16, padding: 18, background: 'rgba(255,255,255,.4)', gap: 14, minWidth: 0 }}>
@@ -709,7 +709,6 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
       {campaign.status === 'Completed' && (
         <div className="card" style={{ marginBottom: 16, background: 'linear-gradient(160deg,#fff,#FFF6F0)', border: '1px solid rgba(241,168,143,.4)' }}>
           <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 24 }} aria-hidden>💧</span>
             <div style={{ flex: 1, minWidth: 240 }}>
               <div style={{ fontWeight: 800, fontSize: 15 }}>{t('Gör det här månatligt')}</div>
               <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 2 }}>{t('Kampanjen är klar — creators som levererade är nu i ditt community. Öppna kranen så fortsätter de skapa löpande, utan nya kampanjprojekt.')}</div>
@@ -722,7 +721,6 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
       {['Draft', 'PendingReview'].includes(campaign.status) && (
         <div className="card" style={{ marginBottom: 16, background: 'rgba(242,197,138,.14)', border: '1px solid rgba(212,155,46,.3)' }}>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 20 }} aria-hidden>📋</span>
             <p style={{ margin: 0, fontSize: 13.5, color: '#7a5518', lineHeight: 1.55, flex: 1, minWidth: 220 }}>
               {campaign.status === 'Draft'
                 ? t('Kampanjen är ett utkast — skicka in den för granskning så öppnas den för ansökningar när den godkänts.')
@@ -734,7 +732,7 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
 
       {!['Draft', 'PendingReview'].includes(campaign.status) && analytics && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="sec-head" style={{ flexWrap: 'wrap', gap: 8 }}><h3>{t('Creator-prestanda')}</h3><span style={{ fontSize: 12, color: '#9c6b1c', fontWeight: 600, minWidth: 0 }}>⏱ {t('Videos som inte granskas inom 48 timmar godkänns automatiskt.')}</span></div>
+          <div className="sec-head" style={{ flexWrap: 'wrap', gap: 8 }}><h3>{t('Creator-prestanda')}</h3><span style={{ fontSize: 12, color: '#9c6b1c', fontWeight: 600, minWidth: 0 }}>{t('Videos som inte granskas inom 48 timmar godkänns automatiskt.')}</span></div>
           <div className="space-y-6">
             {analytics.creatorPerformance.map((cp: CreatorPerformance) => {
               const approvedCount = cp.videos.filter(v => v.status === 'Approved').length;
@@ -756,7 +754,7 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
                   <div className="flex flex-col items-end gap-2 min-w-0 max-w-full">
                     <div className="flex items-center gap-2 flex-wrap justify-end">
                       <span className="text-xs px-2 py-0.5 rounded bg-muted font-medium">
-                        {approvedCount}/{reqCount} {t('videos godkända')}
+                        {approvedCount}/{reqCount} {t('videor godkända')}
                       </span>
                       <StatusBadge status={cp.status} />
                     </div>
@@ -782,7 +780,7 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
                 {cp.payoutStatus === 'AwaitingThreshold' && (
                   <p className="text-xs text-muted-foreground">
                     {cp.videos?.some((v: CreatorVideo) => v.status === 'Approved')
-                      ? t('Creatorn har godkända videos men har inte nått betalningsnivån ännu.')
+                      ? t('Creatorn har godkända videor men har inte nått betalningsnivån ännu.')
                       : t('Väntar på att creatorn skickar in en video — godkänn den sedan här.')}
                   </p>
                 )}
@@ -811,7 +809,7 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
                               const hoursLeft = Math.max(0, 48 - Math.floor((Date.now() - +new Date(v.createdAt)) / 3600000));
                               return (
                                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 980, background: 'rgba(242,197,138,.28)', color: '#7a5518', fontSize: 12, fontWeight: 700, maxWidth: '100%', flexWrap: 'wrap' }}>
-                                  ⏱ {hoursLeft > 0 ? `${t('Auto-godkänns om')} ${hoursLeft} ${t('tim')}` : t('Auto-godkänns inom kort')} — {t('granska nu för att behålla kontrollen')}
+                                  {hoursLeft > 0 ? `${t('Auto-godkänns om')} ${hoursLeft} ${t('tim')}` : t('Auto-godkänns inom kort')} — {t('granska nu för att behålla kontrollen')}
                                 </div>
                               );
                             })()}
@@ -853,7 +851,7 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground">{t('Inga videos ännu')}</p>
+                      <p className="text-sm text-muted-foreground">{t('Inga videor ännu')}</p>
                     )}
                   </div>
                   <div className="xl:col-span-1">

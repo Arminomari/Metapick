@@ -80,7 +80,7 @@ export function CopyField({ icon, label, value, hint }: { icon?: string; label: 
       <div style={{ flex: '1 1 170px', minWidth: 0 }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--muted)' }}>{label}</div>
         <div style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontWeight: 700, fontSize: 14, color: '#0B0F17', wordBreak: 'break-word', marginTop: 2, lineHeight: 1.45 }}>{value}</div>
-        {hint && <div style={{ fontSize: 11.5, color: '#9c6b1c', marginTop: 3 }}>⚠ {hint}</div>}
+        {hint && <div style={{ fontSize: 11.5, color: '#9c6b1c', marginTop: 3 }}>{hint}</div>}
       </div>
       <CopyButton text={value} />
     </div>

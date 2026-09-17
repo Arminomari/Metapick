@@ -197,8 +197,8 @@ public class AdminUserService : IAdminUserService
             ? NotificationType.BrandApproved
             : NotificationType.CreatorApproved;
         await _notify.SendAsync(user.Id, approvedType,
-            "Ditt konto är godkänt — välkommen till VYRLE! 🎉", user.Id);
-        await _email.SendAsync(user.Email, "Ditt VYRLE-konto är godkänt 🎉",
+            "Ditt konto är godkänt — välkommen till VYRLE! ", user.Id);
+        await _email.SendAsync(user.Email, "Ditt VYRLE-konto är godkänt ",
             EmailTemplates.Branded(
                 "Välkommen till VYRLE!",
                 $"<p>Hej {System.Net.WebUtility.HtmlEncode(user.FirstName)}!</p>" +

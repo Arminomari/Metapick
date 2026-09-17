@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { statusLabel, t } from '@/lib/i18n';
 import { useCreatorAssignments, useCreatorProfile, useCreatorPayouts, useSavedCampaigns, useToggleSaveCampaign } from '@/hooks/api';
-import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
+import { formatCurrency, formatDate, formatNumber, categoryLabel, payoutSummaryText, payoutModelLabel } from '@/lib/utils';
 import { AreaChart, Donut, MiniBars, VizDefs, BLUSH } from '@/components/vyrle/Viz';
 import { useToast, CardSkeleton } from '@/components/vyrle/Toast';
 
@@ -63,7 +63,7 @@ export function CreatorAnalyticsPage() {
       {isLoading ? (
         <CardSkeleton rows={4} />
       ) : assignments.length === 0 ? (
-        <EmptyCard title={t('Ingen statistik ännu')} sub={t('När du går med i en kampanj och dina videos går live visas din verifierade prestation här — räckvidd, klick och intäkter, samlat på ett ställe.')} cta={t('Upptäck kampanjer')} to="/creator/browse" />
+        <EmptyCard title={t('Ingen statistik ännu')} sub={t('När du går med i en kampanj och dina videor går live visas din verifierade prestation här — räckvidd, klick och intäkter, samlat på ett ställe.')} cta={t('Upptäck kampanjer')} to="/creator/browse" />
       ) : (
         <>
           <div className="vstat-row">
@@ -248,7 +248,7 @@ export function CreatorLevelsPage() {
     <section className="view active reveal" data-view="levels">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Creator <em>Levels</em></h1>
+          <h1 className="page-title">{t('Dina')} <em>{t('creator-nivåer')}</em></h1>
           <p className="page-sub">{t('Din nivå förtjänas genom riktiga, utbetalda intäkter på plattformen. Fortsätt leverera kampanjer för att klättra på stegen och låsa upp förmåner.')}</p>
         </div>
       </div>
@@ -337,17 +337,17 @@ export function CreatorSavedPage() {
                 </div>
                 <div className="desc">{c.description}</div>
                 <div className="tags">
-                  <span className="tag g">{c.category}</span><span className="tag">{c.payoutModel}</span>
+                  <span className="tag g">{categoryLabel(c.category)}</span><span className="tag">{payoutModelLabel(c.payoutModel)}</span>
                   <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' }}>{t('Sparad')} <b style={{ color: 'var(--ink)' }}>{formatDate(savedAt)}</b></span>
                 </div>
                 <div className="meta-cols">
-                  <div className="mc"><div className="k">{t('Ersättning')}</div><div className="v green">{c.payoutSummary}</div></div>
+                  <div className="mc"><div className="k">{t('Ersättning')}</div><div className="v green">{payoutSummaryText(c.payoutSummary)}</div></div>
                   <div className="mc"><div className="k">{t('Platser')}</div><div className="v">{c.spotsLeft} / {c.maxCreators}</div></div>
                   <div className="mc"><div className="k">{t('Stänger')}</div><div className="v">{formatDate(c.endDate)}</div></div>
                 </div>
                 <button className={full ? 'btn-outline' : 'btn-apply'} style={{ width: '100%', marginTop: 'auto' }} disabled={full}
                   onClick={() => navigate('/creator/browse')}>
-                  {full ? t('Fullbokad') : t('Ansök via Discover')}
+                  {full ? t('Fullbokad') : t('Ansök via Upptäck')}
                 </button>
               </div>
             );

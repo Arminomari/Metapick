@@ -54,7 +54,7 @@ export function CreatorTapsSection() {
   return (
     <div className="card" style={{ marginTop: 18, background: 'linear-gradient(160deg,#fff,#FFF6F0)' }}>
       <div className="vperf-head" style={{ flexWrap: 'wrap', gap: '4px 12px' }}>
-        <h3>💧 {t('Dina kranar')}</h3>
+        <h3>{t('Dina kranar')}</h3>
         <span style={{ fontSize: 13, color: 'var(--muted)' }}>{taps.length ? t('Löpande ersättning — publicera när du vill') : t('Du är medlem i företags-communities — kranarna dyker upp här när de öppnas')}</span>
         <Link to="/creator/taps" className="view-all" style={{ marginLeft: 'auto' }}>{t('Visa alla kranar')} →</Link>
       </div>
@@ -116,7 +116,6 @@ export function TapBanner({ assignmentId }: { assignmentId: string }) {
   return (
     <div className="card" style={{ marginBottom: 16, background: 'linear-gradient(160deg,#fff,#FFF6F0)', border: '1px solid rgba(241,168,143,.4)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 22, flexShrink: 0 }} aria-hidden>💧</span>
         <div style={{ flex: 1, minWidth: 'min(100%, 220px)' }}>
           <div style={{ fontWeight: 800, fontSize: 15, wordBreak: 'break-word' }}>{t('Kranen')} · {tap.brandName} <span className={`badge ${open ? 'green' : 'grey'}`} style={{ marginLeft: 6 }}>{open ? t('Öppen') : t('Pausad')}</span></div>
           <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 2, wordBreak: 'break-word' }}>

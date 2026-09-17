@@ -69,7 +69,7 @@ function Overview({ o }: { o: NonNullable<ReturnType<typeof useUgcAdminOverview>
         <div style={card}>
           <div style={{ fontWeight: 700, marginBottom: 6 }}>{t('Integrationer')}</div>
           <Flag ok={o.stripeConfigured} label="Stripe Connect" hint={t('Lägg in Stripe__SecretKey och Stripe__WebhookSecret i Railway. Tills dess: registrera betalningar manuellt på uppdraget.')} />
-          <Flag ok={o.storageConfigured} label={t('Videolagring (S3/R2)')} hint={t('Lägg in Storage__S3__Bucket, AccessKey, SecretKey, ServiceUrl. Tills dess sparas videos på servern (försvinner vid omstart).')} />
+          <Flag ok={o.storageConfigured} label={t('Videolagring (S3/R2)')} hint={t('Lägg in Storage__S3__Bucket, AccessKey, SecretKey, ServiceUrl. Tills dess sparas videor på servern (försvinner vid omstart).')} />
           <Flag ok={o.aiConfigured} label={t('AI-brief (Anthropic)')} hint={t('Lägg in Anthropic__ApiKey så kan företag generera briefs.')} />
         </div>
         <div style={card}>

@@ -69,8 +69,7 @@ export function SupportThreadPage() {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, padding: '4px 2px', overflowY: 'auto', maxHeight: '55vh' }}>
           {isLoading ? <CardSkeleton rows={3} /> : messages.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '44px 20px', color: 'var(--muted)' }}>
-              <div style={{ fontSize: 28, marginBottom: 10 }} aria-hidden>✉️</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#0B0F17' }}>{t('Inga meddelanden än')}</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#0B0F17' }}>{t('Inga meddelanden ännu')}</div>
               <div style={{ fontSize: 13.5, marginTop: 6, maxWidth: 400, marginInline: 'auto', lineHeight: 1.6 }}>
                 {t('Har du en fråga om ditt konto, en utbetalning eller något annat? Skriv nedan så svarar teamet så fort de kan.')}
               </div>

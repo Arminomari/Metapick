@@ -42,7 +42,7 @@ export function AdminSupportInboxCard({ onOpenThread }: { onOpenThread: (userId:
       {open && (
         <div style={{ marginTop: '.9rem', display: 'grid', gap: '.5rem' }}>
           {isLoading && <div style={mutedTx}>{t('Laddar…')}</div>}
-          {!isLoading && threads.length === 0 && <div style={mutedTx}>{t('Inga konversationer än — skriv till en användare via ✉️ på deras rad.')}</div>}
+          {!isLoading && threads.length === 0 && <div style={mutedTx}>{t('Inga konversationer än — skriv till en användare via på deras rad.')}</div>}
           {threads.map((th) => (
             <button key={th.userId} type="button" onClick={() => onOpenThread(th.userId, th.name)}
               style={{
@@ -114,7 +114,7 @@ export function AdminUserThreadModal({ userId, userName, onClose }: { userId: st
         }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, wordBreak: 'break-word' }}>✉️ {userName}</h2>
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, wordBreak: 'break-word' }}>{userName}</h2>
             <div style={{ fontSize: 12, color: '#6E7480', marginTop: 3 }}>
               {t('Användaren får en notis i appen och (valfritt) ett mejl — svaret kommer tillbaka hit.')}
             </div>

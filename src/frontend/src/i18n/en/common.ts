@@ -47,11 +47,11 @@ export const common: Record<string, string> = {
   'Färdig videobeskrivning (exempel)': 'Ready-made video description (example)',
   'Min recension av produkten!': 'My review of the product!',
   'Automatisk tracking:': 'Automatic tracking:',
-  'Vi scannar regelbundet efter nya videos. När din video hittas dyker den upp nedan av sig själv — publicera och luta dig tillbaka.':
+  'Vi scannar regelbundet efter nya videor. När din video hittas dyker den upp nedan av sig själv — publicera och luta dig tillbaka.':
     'We scan for new videos regularly. Once your video is found it shows up below on its own — publish and lean back.',
 
   // ── Tracked videos ─────────────────────────────────
-  'Spårade videos': 'Tracked videos',
+  'Spårade videor': 'Tracked videos',
   'Skicka in video manuellt': 'Submit a video manually',
   'Videos som matchar din tracking-tag hittas automatiskt. Använd formuläret nedan om du vill lägga till en video manuellt.':
     'Videos matching your tracking tag are found automatically. Use the form below to add a video manually.',
@@ -63,7 +63,7 @@ export const common: Record<string, string> = {
   'Godkänd av varumärket': 'Approved by the brand',
   'Nekad': 'Rejected',
   'Väntar på att systemet ska hämta videodata…': 'Waiting for the system to fetch video data…',
-  'Inga videos ännu. Publicera en TikTok-video med din tracking-tag så hittas den automatiskt, eller skicka in manuellt ovan.':
+  'Inga videor ännu. Publicera en TikTok-video med din tracking-tag så hittas den automatiskt, eller skicka in manuellt ovan.':
     'No videos yet. Publish a TikTok video with your tracking tag and it will be found automatically, or submit one manually above.',
 
   // ── TikTok connection ──────────────────────────────
@@ -256,4 +256,20 @@ export const common: Record<string, string> = {
   'Till översikten': 'Go to overview',
   'Till startsidan': 'Go to start page',
   'Din session har gått ut. Logga in igen så kommer du tillbaka dit du var.': 'Your session has expired. Log in again and you will return to where you were.',
+  'NY': 'NEW',
+  'per 1 000 views': 'per 1,000 views',
+  'beroende på views': 'depending on views',
+  'plats kvar': 'spot left',
+  'creator-nivåer': 'creator levels',
+  'Ansök via Upptäck': 'Apply via Discover',
+  'Sparad i Sparat': 'Saved to Saved',
+  'Borttagen från Sparat': 'Removed from Saved',
+  'totalt sedan start': 'total since start',
+  'minst': 'min',
+  'inga kranar än': 'no taps yet',
+  'Bästa innehåll': 'Best content',
+  'Inga meddelanden ännu': 'No messages yet',
+  'plats': 'spot',
+  'Trappa': 'Tiered',
+  'Hybrid': 'Hybrid',
 };

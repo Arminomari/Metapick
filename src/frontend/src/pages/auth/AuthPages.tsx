@@ -636,7 +636,6 @@ export function PendingApprovalPage({ email }: { email?: string }) {
         <h1 className="auth-title">{t('Ansökan')} <em>{t('mottagen')}</em></h1>
         <p className="auth-sub" style={{ maxWidth: 360, margin: '8px auto 0' }}>{t('Tack för att du går med i VYRLE. Vi granskar din profil nu och hör av oss så snart du är godkänd, oftast inom 1 till 2 arbetsdagar.')}</p>
         <div style={{ background: 'rgba(255,227,211,.45)', border: '1px solid rgba(241,168,143,.4)', borderRadius: 14, padding: 14, margin: '20px 0 10px', fontSize: 12.5, color: '#7a4a30', textAlign: 'left', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-          <span style={{ fontSize: 17, lineHeight: 1 }} aria-hidden>📧</span>
           <span style={{ lineHeight: 1.55 }}>
             {t('Vi har skickat ett bekräftelsemejl till')} {email ? <strong>{email}</strong> : t('din e-postadress')} — {t('klicka på länken i mejlet för att verifiera din adress. Hittar du det inte? Kolla skräpposten.')}
           </span>
@@ -774,7 +773,6 @@ export function VerifyEmailPage() {
       <div style={{ textAlign: 'center', padding: '18px 6px' }}>
         {state === 'working' && (
           <>
-            <div style={{ fontSize: 30, marginBottom: 10 }} aria-hidden>✉️</div>
             <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>{t('Bekräftar din e-postadress…')}</h2>
           </>
         )}
@@ -788,7 +786,6 @@ export function VerifyEmailPage() {
         )}
         {state === 'fail' && (
           <>
-            <div style={{ fontSize: 30, marginBottom: 10 }} aria-hidden>⚠️</div>
             <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>{t('Kunde inte bekräfta adressen')}</h2>
             <p style={{ fontSize: 13.5, color: 'var(--muted)', marginTop: 8, lineHeight: 1.55 }}>{message} {t('Logga in och begär en ny länk från bannern högst upp.')}</p>
             <Link to="/login" className="btn-apply" style={{ display: 'inline-block', width: 'auto', padding: '12px 26px', marginTop: 16, textDecoration: 'none' }}>{t('Logga in')}</Link>

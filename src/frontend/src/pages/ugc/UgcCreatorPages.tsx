@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { t } from '@/lib/i18n';
-import { formatDate } from '@/lib/utils';
+import { formatDate, plural } from '@/lib/utils';
 import { useToast, CardSkeleton } from '@/components/vyrle/Toast';
 import {
   useUgcCreatorProfile, useUpsertUgcCreatorProfile, useUgcPayoutStatus, useStartUgcPayoutOnboarding,
@@ -104,7 +104,7 @@ export function UgcCreatorHomePage() {
                 <div className="mc"><div className="k">{t('Format')}</div><div className="v" style={{ fontSize: 13 }}>{c.brief.lengthSeconds} s · {c.brief.videoCount} st</div></div>
                 <div className="mc"><div className="k">{t('Leverans')}</div><div className="v" style={{ fontSize: 13 }}>{c.deadlineDays} {t('dagar')}</div></div>
               </div>
-              <div className="tags" style={{ marginBottom: 10 }}><span className="tag g">{t(RIGHTS_LABEL[c.rightsPackage])}</span><span className="tag">{t(COMPENSATION_LABEL[c.compensation])}</span>{c.slots - c.hiredCount > 0 && <span className="tag">{c.slots - c.hiredCount} {t('platser')}</span>}</div>
+              <div className="tags" style={{ marginBottom: 10 }}><span className="tag g">{t(RIGHTS_LABEL[c.rightsPackage])}</span><span className="tag">{t(COMPENSATION_LABEL[c.compensation])}</span>{c.slots - c.hiredCount > 0 && <span className="tag">{plural(c.slots - c.hiredCount, t('plats'), t('platser'))}</span>}</div>
               <div style={{ marginTop: 'auto' }}>
                 {c.myApplicationStatus ? (
                   c.myCollabId ? <button className="btn-apply" style={{ width: '100%' }} onClick={() => navigate(`/creator/ugc/collabs/${c.myCollabId}`)}>{t('Anlitad — öppna uppdraget')}</button>
@@ -277,7 +277,7 @@ export function UgcCreatorProfilePage() {
         <div className="card">
           <div className="sec-head"><h3>{t('Rättigheter')}</h3></div>
           <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
-            <label className="checkrow"><input type="checkbox" checked={form.allowPortfolioUse} onChange={(e) => setForm({ ...form, allowPortfolioUse: e.target.checked })} /> {t('VYRLE får visa mina levererade videos i min portfolio och i marknadsföring av tjänsten')}</label>
+            <label className="checkrow"><input type="checkbox" checked={form.allowPortfolioUse} onChange={(e) => setForm({ ...form, allowPortfolioUse: e.target.checked })} /> {t('VYRLE får visa mina levererade videor i min portfolio och i marknadsföring av tjänsten')}</label>
             <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.55 }}>{t('Du ansvarar själv för skatt på ersättning och på produkter du får i produktbyten. Rättighetspaketet per uppdrag står i kontraktet:')} {Object.values(RIGHTS_LABEL).map((v) => t(v)).join(' · ')}.</div>
             <div style={{ fontSize: 11.5, color: 'var(--muted-2)' }}>{t(RIGHTS_HINT.FullTransfer)}</div>
           </div>

@@ -149,12 +149,12 @@ export function CreatorPrInboxPage() {
           <div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#FFE9D2,#F2C58A)', color: '#9c6b1c' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="m3 7 9 6 9-6" /></svg></div>
           <div className="vstat-lbl">{t('Totalt mottagna')}</div>
           <div className="vstat-val">{offers.length}</div>
-          <div className="vstat-sub"><span className="vmut">{t('genom tiderna')}</span></div>
+          <div className="vstat-sub"><span className="vmut">{t('sedan start')}</span></div>
         </div>
       </div>
 
       <div className="card" style={{ padding: '12px 16px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 13, color: 'var(--muted)' }}>ℹ️ {t('Den här sidan visar PR-erbjudanden (produkter och gåvor). Dina betalda kampanjsamarbeten hittar du under')}</span>
+        <span style={{ fontSize: 13, color: 'var(--muted)' }}>ℹ {t('Den här sidan visar PR-erbjudanden (produkter och gåvor). Dina betalda kampanjsamarbeten hittar du under')}</span>
         <Link to="/creator/assignments" style={{ fontSize: 13, fontWeight: 700, color: '#9c4f31' }}>{t('Mina kampanjer')} →</Link>
       </div>
 

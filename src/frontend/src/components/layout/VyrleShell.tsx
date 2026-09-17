@@ -7,7 +7,7 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { useCreatorProfile, useBrandProfile, useNotifications, usePrUnreadCount, useUnreadChatCount, useActionCounts } from '@/hooks/api';
 import { useUgcActionCount } from '@/hooks/ugc';
-import { formatNumber } from '@/lib/utils';
+import { formatNumber, categoryLabel } from '@/lib/utils';
 import { NotificationsDrawer, MessagesDrawer } from './ShellDrawers';
 import { ToastProvider } from '@/components/vyrle/Toast';
 
@@ -169,20 +169,20 @@ export function CreatorShell() {
     { label: t('Upptäck'), path: '/creator/browse', icon: 'discover' },
     { label: t('Mina kampanjer'), path: '/creator/assignments', icon: 'campaigns', badge: counts?.awaitingYourVideo || undefined },
     { label: t('Kranar'), path: '/creator/taps', icon: 'tap' },
-    { label: t('Videouppdrag'), path: '/creator/ugc', icon: 'video', badge: ugcCount || undefined, tag: ugcCount ? undefined : 'NY' },
+    { label: t('Videouppdrag'), path: '/creator/ugc', icon: 'video', badge: ugcCount || undefined, tag: ugcCount ? undefined : t('NY') },
     { label: t('Portfolio'), path: '/creator/portfolio', icon: 'portfolio' },
     { label: t('Statistik'), path: '/creator/analytics', icon: 'analytics' },
     { label: t('PR-hubb'), path: '/creator/pr', icon: 'pr', badge: prUnread || undefined },
     ...(FEATURES.linkTree ? ([{ label: t('Länkar'), path: '/creator/links', icon: 'links' }] as NavItem[]) : []),
     { label: t('Intäkter'), path: '/creator/earnings', icon: 'earnings' },
-    { label: t('Creator-nivåer'), path: '/creator/levels', icon: 'levels', tag: 'NEW' },
+    { label: t('Creator-nivåer'), path: '/creator/levels', icon: 'levels', tag: t('NY') },
     { label: t('Sparat'), path: '/creator/saved', icon: 'saved' },
     { label: t('Meddelanden'), path: '/creator/messages', icon: 'mail', badge: counts?.unreadSupport || undefined },
     { label: t('Inställningar'), path: '/creator/profile', icon: 'settings' },
   ];
   const sub = (
     <div style={{ marginTop: 12, fontSize: 12, color: 'var(--muted)', textAlign: 'center' }}>
-      {formatNumber(profile?.followerCount ?? 0)} {t('följare')} · {profile?.category || 'Creator'}
+      {formatNumber(profile?.followerCount ?? 0)} {t('följare')} · {categoryLabel(profile?.category) || 'Creator'}
     </div>
   );
   return <ShellChrome group="Creator" role="Creator" nav={nav} name={name} handle={handle} sub={sub} initial={(name[0] || 'C').toUpperCase()} imageUrl={profile?.avatarUrl} bellBadge={notifs?.totalCount ?? 0} chatBadge={chatUnread ?? 0} />;
@@ -199,11 +199,11 @@ export function BrandShell() {
   const name = profile?.companyName || 'Brand';
   const nav: NavItem[] = [
     { label: t('Översikt'), path: '/brand', icon: 'dashboard' },
-    { label: t('Kranen'), path: '/brand/tap', icon: 'earnings', badge: counts?.pendingTapReviews || undefined, tag: counts?.pendingTapReviews ? undefined : 'NY' },
+    { label: t('Kranen'), path: '/brand/tap', icon: 'earnings', badge: counts?.pendingTapReviews || undefined, tag: counts?.pendingTapReviews ? undefined : t('NY') },
     { label: t('Community'), path: '/brand/community', icon: 'creators', badge: counts?.pendingCommunityRequests || undefined },
     { label: t('Statistik'), path: '/brand/analytics', icon: 'analytics' },
     { label: t('Kampanjer'), path: '/brand/campaigns', icon: 'campaigns', badge: counts?.pendingVideoReviews || undefined },
-    { label: t('Beställ video'), path: '/brand/ugc', icon: 'video', badge: ugcCount || undefined, tag: ugcCount ? undefined : 'NY' },
+    { label: t('Beställ video'), path: '/brand/ugc', icon: 'video', badge: ugcCount || undefined, tag: ugcCount ? undefined : t('NY') },
     { label: t('Ansökningar'), path: '/brand/applications', icon: 'applications', badge: counts?.pendingApplications || undefined },
     { label: t('Hitta creators'), path: '/brand/creators', icon: 'creators' },
     { label: t('PR-utskick'), path: '/brand/pr', icon: 'pr' },

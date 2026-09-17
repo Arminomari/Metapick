@@ -7,7 +7,7 @@ import {
   useCreatorAssignments, useCreatorPayouts, useCreatorProfile,
   useBrowseCampaigns, useProfile, useUserReviews,
 } from '@/hooks/api';
-import { formatCurrency, formatNumber, formatDate } from '@/lib/utils';
+import { formatCurrency, formatNumber, formatDate, categoryLabel, payoutSummaryText } from '@/lib/utils';
 import type { AssignmentListItem } from '@/types';
 import { PageSkeleton } from '@/components/vyrle/Toast';
 
@@ -205,9 +205,9 @@ export function CreatorStudioDashboard() {
               <div key={c.id} className="vdisc-item" onClick={() => navigate('/creator/browse')}>
                 <span className="vdisc-score" style={{ '--s': filled } as React.CSSProperties}>
                   <svg viewBox="0 0 44 44" className="vdisc-ring"><circle className="vdisc-track" cx="22" cy="22" r="19" /><circle className="vdisc-prog" cx="22" cy="22" r="19" stroke="url(#perfLine)" /></svg>
-                  <span className="vdisc-num">{c.spotsLeft}</span>
+                  <span className="vdisc-num" aria-hidden>{(c.brandName || c.name || '?').trim().charAt(0).toUpperCase()}</span>
                 </span>
-                <div className="vdisc-main"><div className="vdisc-b">{c.name}</div><div className="vdisc-m">{c.brandName} · {c.category} · {c.payoutSummary}</div><div className="vdisc-why">{c.spotsLeft} {t('av')} {c.maxCreators} {t('platser kvar')} · min {formatNumber(c.minViews)} views</div></div>
+                <div className="vdisc-main"><div className="vdisc-b">{c.name}</div><div className="vdisc-m">{c.brandName} · {categoryLabel(c.category)} · {payoutSummaryText(c.payoutSummary)}</div><div className="vdisc-why">{c.spotsLeft} {t('av')} {c.maxCreators} {c.maxCreators === 1 ? t('plats kvar') : t('platser kvar')}{c.minViews > 0 ? ` · ${t('minst')} ${formatNumber(c.minViews)} views` : ''}</div></div>
               </div>
             );
           }) : (
