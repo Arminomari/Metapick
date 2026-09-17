@@ -21,6 +21,7 @@ export function ApplyModal({
 }) {
   const [message, setMessage] = useState('');
   const ready = message.trim().length >= 10;
+  const [nudged, setNudged] = useState(false);
 
   return (
     <>
@@ -65,7 +66,7 @@ export function ApplyModal({
           }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 6, fontSize: 11.5, color: 'var(--muted)', flexWrap: 'wrap' }}>
-          <span>{ready ? t('Bra — konkret slår långt.') : t('Minst 10 tecken.')}</span>
+          <span role={nudged && !ready ? 'alert' : undefined} style={nudged && !ready ? { color: '#cf4b4b', fontWeight: 700 } : undefined}>{ready ? t('Bra — konkret slår långt.') : t('Minst 10 tecken.')}</span>
           <span>{message.length}/1000</span>
         </div>
 
@@ -73,9 +74,10 @@ export function ApplyModal({
           <button
             type="button"
             className="btn-apply"
-            style={{ width: 'auto', padding: '12px 24px', flex: '1 1 auto' }}
-            disabled={!ready || busy}
-            onClick={() => onSubmit(message.trim())}
+            disabled={busy}
+            aria-disabled={!ready || busy}
+            style={{ width: 'auto', padding: '12px 24px', flex: '1 1 auto', opacity: ready ? 1 : 0.45 }}
+            onClick={() => { if (!ready) { setNudged(true); return; } onSubmit(message.trim()); }}
           >
             {busy ? t('Skickar…') : t('Skicka ansökan')}
           </button>

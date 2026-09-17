@@ -60,7 +60,7 @@ export function SupportThreadPage() {
     <section className="view active reveal">
       <div className="page-head">
         <div>
-          <h1 className="page-title">{t('Meddelanden från')} <em>VYRLE</em></h1>
+          <h1 className="page-title">{t('Support från')} <em>VYRLE</em></h1>
           <p className="page-sub">{t('Din direktlinje till teamet bakom plattformen. Vi ser ditt svar direkt — och du får våra meddelanden både här och på mejlen.')}</p>
         </div>
       </div>

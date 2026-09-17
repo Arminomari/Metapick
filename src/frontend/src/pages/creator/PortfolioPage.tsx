@@ -23,7 +23,7 @@ const MEDIA_TYPES: { value: PortfolioMediaType; label: string }[] = [
 
 const emptyForm = {
   title: '', description: '', mediaType: 'TikTok' as PortfolioMediaType, mediaUrl: '',
-  thumbnailUrl: '', category: '', brandName: '', views: '', likes: '', isFeatured: false,
+  thumbnailUrl: '', category: '', brandName: '', isFeatured: false,
 };
 
 export function CreatorPortfolioPage() {
@@ -37,8 +37,6 @@ export function CreatorPortfolioPage() {
 
   const assignments = asgRes?.data ?? [];
   const brands = [...new Map(assignments.map((a) => [a.campaignName, a])).values()];
-  const pfViews = (items ?? []).reduce((s, it) => s + (it.views ?? 0), 0);
-  const pfLikes = (items ?? []).reduce((s, it) => s + (it.likes ?? 0), 0);
   const realViews = assignments.reduce((s, a) => s + (a.totalVerifiedViews || 0), 0);
   const realEarned = assignments.reduce((s, a) => s + (a.currentPayoutAmount || 0), 0);
   const name = profile?.displayName || 'Creator';
@@ -56,7 +54,7 @@ export function CreatorPortfolioPage() {
     setForm({
       title: it.title, description: it.description ?? '', mediaType: it.mediaType,
       mediaUrl: it.mediaUrl, thumbnailUrl: it.thumbnailUrl ?? '', category: it.category ?? '',
-      brandName: it.brandName ?? '', views: it.views?.toString() ?? '', likes: it.likes?.toString() ?? '',
+      brandName: it.brandName ?? '',
       isFeatured: it.isFeatured,
     });
     setShowForm(true);
@@ -79,8 +77,6 @@ export function CreatorPortfolioPage() {
       thumbnailUrl: form.thumbnailUrl.trim() || undefined,
       category: form.category.trim() || undefined,
       brandName: form.brandName.trim() || undefined,
-      views: form.views ? Number(form.views) : undefined,
-      likes: form.likes ? Number(form.likes) : undefined,
       isFeatured: form.isFeatured,
     };
     try {
@@ -114,7 +110,7 @@ export function CreatorPortfolioPage() {
     <section className="view active reveal" data-view="portfolio">
       <div className="page-head">
         <div>
-          <h1 className="page-title">{t('Din')} <em>{t('profil')}</em></h1>
+          <h1 className="page-title">{t('Din')} <em>{t('portfolio')}</em></h1>
           <p className="page-sub">{t('Det här ser företag när du ansöker eller söks upp. Profil, samarbeten, bästa content och dina omdömen, samlat.')}</p>
         </div>
       </div>
@@ -143,7 +139,7 @@ export function CreatorPortfolioPage() {
       {/* ── 4. Analytics: utvalda metrics ── */}
       <div className="vstat-row">
         <div className="card vstat" style={{ background: 'linear-gradient(160deg,#fff,#FFF6F0)' }}><div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#FFE3D3,#FFC2A6)', color: '#9c4f31' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3" /><circle cx="16" cy="9" r="2.5" /><path d="M3 19a6 6 0 0 1 12 0M14 18a5 5 0 0 1 7-1" /></svg></div><div className="vstat-lbl">{t('Följare')}</div><div className="vstat-val">{formatNumber(profile?.followerCount ?? 0)}</div><div className="vstat-sub"><span className="vmut">{profile?.averageViews ? `${formatNumber(profile.averageViews)} ${t('snittvisningar')}` : t('din publik')}</span></div></div>
-        <div className="card vstat"><div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#EDE1FF,#cdb8f2)', color: '#6a4ea8' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg></div><div className="vstat-lbl">{t('Verifierade views')}</div><div className="vstat-val">{formatNumber(realViews || pfViews)}</div><div className="vstat-sub"><span className="vmut">{realViews ? t('genom kampanjer') : `${formatNumber(pfLikes)} ${t('likes i portfölj')}`}</span></div></div>
+        <div className="card vstat"><div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#EDE1FF,#cdb8f2)', color: '#6a4ea8' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg></div><div className="vstat-lbl">{t('Verifierade views')}</div><div className="vstat-val">{formatNumber(realViews)}</div><div className="vstat-sub"><span className="vmut">{t('genom kampanjer')}</span></div></div>
         <div className="card vstat"><div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#d7f0e0,#a9dcc0)', color: '#2f7d52' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M11 12 8 9a2 2 0 0 0-3 3l4 4a3 3 0 0 0 4 0M13 12l3-3a2 2 0 0 1 3 3l-4 4a3 3 0 0 1-4 0" /></svg></div><div className="vstat-lbl">{t('Samarbeten')}</div><div className="vstat-val">{brands.length}</div><div className="vstat-sub"><span className="vmut">{realEarned ? formatCurrency(realEarned) + ' ' + t('intjänat') : t('företag du jobbat med')}</span></div></div>
         <div className="card vstat"><div className="vstat-ico" style={{ background: 'linear-gradient(140deg,#FFE9D2,#F2C58A)', color: '#9c6b1c' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m12 4 2.3 4.8 5.2.7-3.8 3.6.9 5.1L12 16l-4.6 2.8.9-5.1L4.5 9.5l5.2-.7z" /></svg></div><div className="vstat-lbl">{t('Omdöme')}</div><div className="vstat-val">{reviews && reviews.totalReviews > 0 ? reviews.averageStars.toFixed(1) : '—'}</div><div className="vstat-sub"><span className="vmut">{reviews && reviews.totalReviews > 0 ? `${reviews.totalReviews} ${t('omdömen')}` : t('inga omdömen än')}</span></div></div>
       </div>
@@ -210,8 +206,6 @@ export function CreatorPortfolioPage() {
             )}
             <div className="field full"><label>{t('Beskrivning')}</label><textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} placeholder={t('Vad gjorde du? Vilket resultat?')} /></div>
             <div className="field"><label>{t('Varumärke')}</label><input type="text" value={form.brandName} onChange={(e) => setForm({ ...form, brandName: e.target.value })} placeholder={t('t.ex. Café X')} /></div>
-            <div className="field"><label>Views</label><input type="text" inputMode="numeric" value={form.views} onChange={(e) => setForm({ ...form, views: e.target.value.replace(/\D/g, '') })} placeholder={t('t.ex. 25000')} /></div>
-            <div className="field"><label>Likes</label><input type="text" inputMode="numeric" value={form.likes} onChange={(e) => setForm({ ...form, likes: e.target.value.replace(/\D/g, '') })} placeholder={t('t.ex. 1200')} /></div>
             <div className="field full checkrow" style={{ flexDirection: 'row', justifyContent: 'flex-start' }}><input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })} /> {t('Markera som utvald (visas först)')}</div>
             <div className="field full">
               {error && <p style={{ color: 'var(--red)', fontSize: 13, marginBottom: 8 }}>{error}</p>}
@@ -247,12 +241,6 @@ export function CreatorPortfolioPage() {
                 </div>
                 <div className="s">{[it.category, it.brandName].filter(Boolean).join(' · ')}</div>
                 {it.description && <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 8, lineHeight: 1.5 }}>{it.description}</p>}
-                {(it.views != null || it.likes != null) && (
-                  <div className="pf-stats">
-                    {it.views != null && <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="12" r="9" /><path d="m10 9 5 3-5 3z" fill="currentColor" stroke="none" /></svg>{formatNumber(it.views)}</span>}
-                    {it.likes != null && <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M12 20s-7-4.3-7-9a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 4.7-7 9-7 9z" /></svg>{formatNumber(it.likes)}</span>}
-                  </div>
-                )}
                 <div className="pf-actions" style={{ flexWrap: 'wrap' }}>
                   <button className="btn-outline" style={{ flex: '1 1 110px', padding: 10, minWidth: 0 }} onClick={() => startEdit(it)}>{t('Redigera')}</button>
                   <button className="btn-outline" style={{ flex: '1 1 110px', padding: 10, minWidth: 0, ...(armedDelete === it.id ? { borderColor: 'var(--red)', color: 'var(--red)', fontWeight: 600 } : {}) }} onClick={() => handleDelete(it.id)} disabled={remove.isPending}>

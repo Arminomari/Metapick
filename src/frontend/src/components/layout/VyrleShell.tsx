@@ -9,7 +9,9 @@ import { useCreatorProfile, useBrandProfile, useNotifications, usePrUnreadCount,
 import { useUgcActionCount } from '@/hooks/ugc';
 import { formatNumber, categoryLabel } from '@/lib/utils';
 import { NotificationsDrawer, MessagesDrawer } from './ShellDrawers';
-import { ToastProvider } from '@/components/vyrle/Toast';
+import { ToastProvider, Skeleton } from '@/components/vyrle/Toast';
+import { GlobalSearch } from './GlobalSearch';
+import { useTitle } from '@/lib/title';
 
 const S = (d: ReactNode, sw = 1.7) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">{d}</svg>;
 const ICON: Record<string, ReactNode> = {
@@ -35,8 +37,28 @@ const ICON: Record<string, ReactNode> = {
 
 interface NavItem { label: string; path: string; icon: string; badge?: number; tag?: string }
 
-function ShellChrome({ group, role, nav, name, handle, sub, initial, imageUrl, bellBadge, chatBadge, children }:
-  { group: string; role: string; nav: NavItem[]; name: string; handle: string; sub: ReactNode; initial: string; imageUrl?: string | null; bellBadge: number; chatBadge: number; children?: ReactNode }) {
+/** Last known identity per user, so a hard reload paints the real name at once instead of a placeholder. */
+type Identity = { name: string; handle: string; imageUrl?: string | null; line?: string };
+function cachedIdentity(userId: string | null): Identity | null {
+  try { const raw = userId ? sessionStorage.getItem('vyrle-identity:' + userId) : null; return raw ? JSON.parse(raw) as Identity : null; } catch { return null; }
+}
+function useIdentity(userId: string | null, fresh: Identity | null): Identity | null {
+  const [cached] = useState(() => cachedIdentity(userId));
+  useEffect(() => {
+    if (fresh && userId) { try { sessionStorage.setItem('vyrle-identity:' + userId, JSON.stringify(fresh)); } catch { /* private mode */ } }
+  }, [userId, fresh?.name, fresh?.handle, fresh?.imageUrl, fresh?.line]); // eslint-disable-line react-hooks/exhaustive-deps
+  return fresh ?? cached;
+}
+
+function ShellChrome({ group, role, nav, identity, fallbackInitial, bellBadge, chatBadge, children }:
+  { group: string; role: string; nav: NavItem[]; identity: Identity | null; fallbackInitial: string; bellBadge: number; chatBadge: number; children?: ReactNode }) {
+  const name = identity?.name ?? null;
+  const handle = identity?.handle ?? '';
+  const imageUrl = identity?.imageUrl;
+  const initial = (name?.[0] || fallbackInitial).toUpperCase();
+  const sub = identity?.line
+    ? <div style={{ marginTop: 12, fontSize: 12, color: 'var(--muted)', textAlign: 'center' }}>{identity.line}</div>
+    : null;
   const { logout } = useAuthStore();
   const navigate = useNavigate();
   const loc = useLocation();
@@ -46,6 +68,7 @@ function ShellChrome({ group, role, nav, name, handle, sub, initial, imageUrl, b
   const [drawer, setDrawer] = useState<'none' | 'notif' | 'msg'>('none');
   const [mobileNav, setMobileNav] = useState(false);
   useEffect(() => { setMobileNav(false); setDrawer('none'); }, [loc.pathname]);
+  useTitle(nav.find((n) => isActive(n.path))?.label ?? null);
 
   return (
     <div className="vy-app">
@@ -84,8 +107,9 @@ function ShellChrome({ group, role, nav, name, handle, sub, initial, imageUrl, b
                   : <div className="cc-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"Fraunces",serif', fontSize: 26, color: '#fff', background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)' }}>{initial}</div>}
                 <span className="cc-online" />
               </div>
-              <div className="cc-name">{name}</div>
-              <div className="cc-handle">{handle}</div>
+              {name
+                ? <><div className="cc-name">{name}</div><div className="cc-handle">{handle}</div></>
+                : <div aria-busy="true" style={{ display: 'grid', gap: 7, justifyItems: 'center', marginTop: 10 }}><Skeleton h={15} w={110} /><Skeleton h={11} w={80} /></div>}
             </div>
             {sub}
           </div>
@@ -93,21 +117,17 @@ function ShellChrome({ group, role, nav, name, handle, sub, initial, imageUrl, b
 
         <div className="main">
           <header className="topbar">
-            <button className="icon-btn mob-only" aria-label="Meny" onClick={() => setMobileNav(true)}>
+            <button className="icon-btn mob-only" aria-label={t('Meny')} onClick={() => setMobileNav(true)}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
             </button>
-            <div className="search">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
-              <input placeholder={t('Sök kampanjer, varumärken, insikter…')} />
-              <span className="kbd">⌘ K</span>
-            </div>
+            <GlobalSearch role={role} pages={nav.map((n) => ({ label: n.label, path: n.path }))} />
             <div className="top-right">
               <LangSwitcher />
-              <button className="icon-btn" aria-label="Meddelanden" onClick={() => setDrawer((d) => d === 'msg' ? 'none' : 'msg')}>
+              <button className="icon-btn" aria-label={t('Meddelanden')} onClick={() => setDrawer((d) => d === 'msg' ? 'none' : 'msg')}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
                 {chatBadge > 0 && <span className="ping ping-chat">{chatBadge > 9 ? '9+' : chatBadge}</span>}
               </button>
-              <button className="icon-btn" aria-label="Notiser" onClick={() => setDrawer((d) => d === 'notif' ? 'none' : 'notif')}>
+              <button className="icon-btn" aria-label={t('Notiser')} onClick={() => setDrawer((d) => d === 'notif' ? 'none' : 'notif')}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7" /><path d="M10.5 20a2 2 0 0 0 3 0" /></svg>
                 {bellBadge > 0 && <span className="ping">{bellBadge > 9 ? '9+' : bellBadge}</span>}
               </button>
@@ -115,7 +135,9 @@ function ShellChrome({ group, role, nav, name, handle, sub, initial, imageUrl, b
                 {imageUrl
                   ? <img className="avatar" src={imageUrl} alt="" style={{ objectFit: 'cover' }} />
                   : <div className="avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"Fraunces",serif', color: '#fff', background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)' }}>{initial}</div>}
-                <div><div className="nm">{name}</div><div className="hd">{handle}</div></div>
+                {name
+                  ? <div><div className="nm">{name}</div><div className="hd">{handle}</div></div>
+                  : <div aria-busy="true" style={{ display: 'grid', gap: 6 }}><Skeleton h={12} w={90} /><Skeleton h={10} w={64} /></div>}
               </div>
             </div>
           </header>
@@ -154,7 +176,7 @@ function ShellChrome({ group, role, nav, name, handle, sub, initial, imageUrl, b
 }
 
 export function CreatorShell() {
-  const { email } = useAuthStore();
+  const { userId } = useAuthStore();
   const { data: profile } = useCreatorProfile();
   const { data: notifs } = useNotifications(true);
   const { data: prUnread } = usePrUnreadCount();
@@ -162,8 +184,12 @@ export function CreatorShell() {
   const { data: counts } = useActionCounts('creator');
   const { data: ugcCount } = useUgcActionCount('creator');
 
-  const name = profile?.displayName || 'Creator';
-  const handle = profile?.tikTokUsername ? '@' + profile.tikTokUsername : (email || '');
+  const identity = useIdentity(userId, profile ? {
+    name: profile.displayName || t('Creator'),
+    handle: profile.tikTokUsername ? '@' + profile.tikTokUsername : '',
+    imageUrl: profile.avatarUrl,
+    line: `${formatNumber(profile.followerCount ?? 0)} ${t('följare')}${profile.category ? ' · ' + categoryLabel(profile.category) : ''}`,
+  } : null);
   const nav: NavItem[] = [
     { label: t('Översikt'), path: '/creator', icon: 'dashboard' },
     { label: t('Upptäck'), path: '/creator/browse', icon: 'discover' },
@@ -177,26 +203,26 @@ export function CreatorShell() {
     { label: t('Intäkter'), path: '/creator/earnings', icon: 'earnings' },
     { label: t('Creator-nivåer'), path: '/creator/levels', icon: 'levels', tag: t('NY') },
     { label: t('Sparat'), path: '/creator/saved', icon: 'saved' },
-    { label: t('Meddelanden'), path: '/creator/messages', icon: 'mail', badge: counts?.unreadSupport || undefined },
-    { label: t('Inställningar'), path: '/creator/profile', icon: 'settings' },
+    { label: t('Support'), path: '/creator/messages', icon: 'mail', badge: counts?.unreadSupport || undefined },
+    { label: t('Inställningar'), path: '/creator/settings', icon: 'settings' },
   ];
-  const sub = (
-    <div style={{ marginTop: 12, fontSize: 12, color: 'var(--muted)', textAlign: 'center' }}>
-      {formatNumber(profile?.followerCount ?? 0)} {t('följare')} · {categoryLabel(profile?.category) || 'Creator'}
-    </div>
-  );
-  return <ShellChrome group="Creator" role="Creator" nav={nav} name={name} handle={handle} sub={sub} initial={(name[0] || 'C').toUpperCase()} imageUrl={profile?.avatarUrl} bellBadge={notifs?.totalCount ?? 0} chatBadge={chatUnread ?? 0} />;
+  return <ShellChrome group="Creator" role="Creator" nav={nav} identity={identity} fallbackInitial="C" bellBadge={notifs?.totalCount ?? 0} chatBadge={chatUnread ?? 0} />;
 }
 
 export function BrandShell() {
-  const { email } = useAuthStore();
+  const { email, userId } = useAuthStore();
   const { data: profile } = useBrandProfile();
   const { data: notifs } = useNotifications(true);
   const { data: chatUnread } = useUnreadChatCount();
   const { data: counts } = useActionCounts('brand');
   const { data: ugcCount } = useUgcActionCount('brand');
 
-  const name = profile?.companyName || 'Brand';
+  const identity = useIdentity(userId, profile ? {
+    name: profile.companyName || t('Varumärke'),
+    handle: email || '',
+    imageUrl: profile.logoUrl,
+    line: `${categoryLabel(profile.industry) || t('Varumärke')} · ${statusLabel(profile.status || '')}`,
+  } : null);
   const nav: NavItem[] = [
     { label: t('Översikt'), path: '/brand', icon: 'dashboard' },
     { label: t('Kranen'), path: '/brand/tap', icon: 'earnings', badge: counts?.pendingTapReviews || undefined, tag: counts?.pendingTapReviews ? undefined : t('NY') },
@@ -208,15 +234,10 @@ export function BrandShell() {
     { label: t('Hitta creators'), path: '/brand/creators', icon: 'creators' },
     { label: t('PR-utskick'), path: '/brand/pr', icon: 'pr' },
     { label: t('Min profil'), path: '/brand/public-profile', icon: 'portfolio' },
-    { label: t('Meddelanden'), path: '/brand/messages', icon: 'mail', badge: counts?.unreadSupport || undefined },
+    { label: t('Support'), path: '/brand/messages', icon: 'mail', badge: counts?.unreadSupport || undefined },
     { label: t('Inställningar'), path: '/brand/settings', icon: 'settings' },
   ];
-  const sub = (
-    <div style={{ marginTop: 12, fontSize: 12, color: 'var(--muted)', textAlign: 'center' }}>
-      {profile?.industry || t('Varumärke')} · {statusLabel(profile?.status || '')}
-    </div>
-  );
-  return <ShellChrome group={t('Varumärke')} role="Brand" nav={nav} name={name} handle={email || ''} sub={sub} initial={(name[0] || 'B').toUpperCase()} imageUrl={profile?.logoUrl} bellBadge={notifs?.totalCount ?? 0} chatBadge={chatUnread ?? 0} />;
+  return <ShellChrome group={t('Varumärke')} role="Brand" nav={nav} identity={identity} fallbackInitial="B" bellBadge={notifs?.totalCount ?? 0} chatBadge={chatUnread ?? 0} />;
 }
 
 /** Slim amber bar shown until the logged-in user has confirmed their email. */

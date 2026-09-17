@@ -6,7 +6,7 @@ import { useToast, CardSkeleton } from '@/components/vyrle/Toast';
 import {
   useUgcCreatorProfile, useUpsertUgcCreatorProfile, useUgcPayoutStatus, useStartUgcPayoutOnboarding,
   useUgcCreatorCampaigns, useApplyToUgcCampaign, useUgcMyApplications, useWithdrawUgcApplication, useUgcCollabs,
-  formatOre, kronorToOre, oreToKronor, COMPENSATION_LABEL, RIGHTS_LABEL, RIGHTS_HINT, UGC_CATEGORIES, UGC_REGIONS, apiError,
+  formatOre, kronorToOre, oreToKronor, COMPENSATION_LABEL, RIGHTS_LABEL, UGC_CATEGORIES, UGC_REGIONS, apiError,
   type UgcCampaign,
 } from '@/hooks/ugc';
 import { BriefView, CollabRow } from './UgcBrandPages';
@@ -279,7 +279,6 @@ export function UgcCreatorProfilePage() {
           <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
             <label className="checkrow"><input type="checkbox" checked={form.allowPortfolioUse} onChange={(e) => setForm({ ...form, allowPortfolioUse: e.target.checked })} /> {t('VYRLE får visa mina levererade videor i min portfolio och i marknadsföring av tjänsten')}</label>
             <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.55 }}>{t('Du ansvarar själv för skatt på ersättning och på produkter du får i produktbyten. Rättighetspaketet per uppdrag står i kontraktet:')} {Object.values(RIGHTS_LABEL).map((v) => t(v)).join(' · ')}.</div>
-            <div style={{ fontSize: 11.5, color: 'var(--muted-2)' }}>{t(RIGHTS_HINT.FullTransfer)}</div>
           </div>
         </div>
       </div>

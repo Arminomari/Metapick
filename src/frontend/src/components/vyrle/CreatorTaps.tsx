@@ -7,12 +7,28 @@ import type { ApiResponse } from '@/types';
 
 export interface MyCommunity {
   brandProfileId: string; brandName: string; brandLogoUrl?: string | null; source: string; joinedAt: string; hasActiveTap: boolean;
+  /** 'Active' for a member, 'Requested' while the brand has not answered. */
+  status?: string;
 }
 
+const fetchCommunities = async () => (await api.get<ApiResponse<MyCommunity[]>>('/creator/communities')).data.data;
+
+/** Communities the creator is a member of. */
 export function useMyCommunities() {
   return useQuery({
     queryKey: ['my-communities'],
-    queryFn: async () => (await api.get<ApiResponse<MyCommunity[]>>('/creator/communities')).data.data,
+    queryFn: fetchCommunities,
+    select: (rows) => rows.filter((r) => (r.status ?? 'Active') === 'Active'),
+    refetchInterval: 120000,
+  });
+}
+
+/** Tap/community applications the brand has not answered yet. */
+export function usePendingCommunityRequests() {
+  return useQuery({
+    queryKey: ['my-communities'],
+    queryFn: fetchCommunities,
+    select: (rows) => rows.filter((r) => r.status === 'Requested'),
     refetchInterval: 120000,
   });
 }

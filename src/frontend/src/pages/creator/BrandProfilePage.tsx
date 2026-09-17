@@ -75,9 +75,21 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
     },
   });
 
+  const [confirmJoin, setConfirmJoin] = useState(false);
+  const leaveTap = useMutation({
+    mutationFn: async () => (await api.delete(`/creator/communities/${id}`)).data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['brand-public', id] });
+      qc.invalidateQueries({ queryKey: ['my-communities'] });
+      toast.push(t('Ansökan är återtagen'), 'success');
+    },
+    onError: (e: any) => toast.push(e?.response?.data?.error?.message ?? t('Kunde inte ta tillbaka ansökan'), 'error'),
+  });
   const joinTap = useMutation({
     mutationFn: async () => (await api.post(`/creator/communities/${id}/request`)).data.data,
     onSuccess: () => {
+      setConfirmJoin(false);
+      qc.invalidateQueries({ queryKey: ['my-communities'] });
       qc.invalidateQueries({ queryKey: ['brand-public', id] });
       toast.push(t('Ansökan skickad! Företaget får en notis och svarar snart.'), 'success');
     },
@@ -194,11 +206,21 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
               {p.membershipStatus === 'Active' ? (
                 <span className="vy-badge pos">{t('Du är medlem — kranen är din')}</span>
               ) : p.membershipStatus === 'Requested' ? (
-                <span className="vy-badge pend">{t('Ansökan skickad — väntar på svar')}</span>
+                <div style={{ display: 'grid', gap: 6, justifyItems: 'end' }}>
+                  <span className="vy-badge pend">{t('Ansökan skickad — väntar på svar')}</span>
+                  <button type="button" className="view-all" style={{ color: 'var(--red)' }} onClick={() => leaveTap.mutate()} disabled={leaveTap.isPending}>{t('Ta tillbaka ansökan')}</button>
+                </div>
+              ) : confirmJoin ? (
+                <div role="alertdialog" aria-label={t('Bekräfta ansökan')} style={{ display: 'grid', gap: 8, maxWidth: 280 }}>
+                  <div style={{ fontSize: 13, lineHeight: 1.5 }}>{t('Skicka en ansökan till')} <strong>{p.companyName}</strong>? {t('Företaget ser din profil och svarar med en notis. Du kan ta tillbaka ansökan tills de svarat.')}</div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <button type="button" className="btn-apply" style={{ width: 'auto', padding: '10px 18px' }} onClick={() => joinTap.mutate()} disabled={joinTap.isPending}>{joinTap.isPending ? t('Skickar…') : t('Ja, skicka ansökan')}</button>
+                    <button type="button" className="btn-outline" style={{ padding: '10px 16px' }} onClick={() => setConfirmJoin(false)} disabled={joinTap.isPending}>{t('Avbryt')}</button>
+                  </div>
+                </div>
               ) : (
-                <button type="button" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }}
-                  onClick={() => joinTap.mutate()} disabled={joinTap.isPending}>
-                  {joinTap.isPending ? t('Skickar…') : t('Ansök till kranen')}
+                <button type="button" className="btn-apply" style={{ width: 'auto', padding: '12px 22px' }} onClick={() => setConfirmJoin(true)}>
+                  {t('Ansök till kranen')}
                 </button>
               )}
             </div>

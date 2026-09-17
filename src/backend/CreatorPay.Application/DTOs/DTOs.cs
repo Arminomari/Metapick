@@ -390,7 +390,8 @@ public record CommunityMemberDto(
     decimal LifetimeEarned, long LifetimeViews, int Collaborations);
 
 public record MyCommunityDto(
-    Guid BrandProfileId, string BrandName, string? BrandLogoUrl, string Source, DateTime JoinedAt, bool HasActiveTap);
+    Guid BrandProfileId, string BrandName, string? BrandLogoUrl, string Source, DateTime JoinedAt, bool HasActiveTap,
+    string Status = "Active");
 
 public record InviteMemberRequest(Guid CreatorProfileId);
 

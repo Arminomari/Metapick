@@ -285,7 +285,8 @@ export function CreatorLevelsPage() {
       </div>
 
       <div className="card">
-        <div className="sec-head"><h3>{t('Förmåner')}</h3></div>
+        <div className="sec-head"><h3>{t('Alla nivåer')}</h3></div>
+        <p style={{ margin: '0 0 12px', fontSize: 13.5, lineHeight: 1.6, color: 'var(--muted)' }}>{t('Din nivå bygger på hur mycket du fått utbetalt via VYRLE och låses upp automatiskt.')}</p>
         {TIERS.map((tier, i) => (
           <div key={tier.name} className={`perk${i > idx ? ' locked' : ''}`}>
             <span className="perk-ic" style={{ background: grad(tier.name) }}><svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{i > idx ? <><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></> : <path d="m5 12 4 4L19 7" />}</svg></span>

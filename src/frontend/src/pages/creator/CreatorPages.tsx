@@ -1,7 +1,7 @@
 import { VideoPicker } from '@/components/vyrle/VideoPicker';
 import { PayoutRequestCard } from '@/components/vyrle/PayoutRequestCard';
 import { TapBanner } from '@/components/vyrle/CreatorTaps';
-import { ChangeEmailCard, ChangePasswordCard } from '@/components/ui/AccountCards';
+import { ChangeEmailCard, ChangePasswordCard, LanguageCard, DeleteAccountCard } from '@/components/ui/AccountCards';
 import { maskSwishNumber, maskBankAccount } from '@/lib/masks';
 import { CopyField } from '@/components/ui/CopyButton';
 import { ApplyModal } from '@/components/vyrle/ApplyModal';
@@ -9,7 +9,7 @@ import { CreatorVerificationCard } from '@/pages/ugc/UgcCreatorPages';
 import { t } from '@/lib/i18n';
 import { useState } from 'react';
 import { RefreshViewsButton } from '@/components/ui/RefreshViewsButton';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
 import { DateInput } from '@/components/ui/DateInput';
 import { TagSelector } from '@/components/ui/TagSelector';
 import { ChatPanel } from '@/components/ui/ChatPanel';
@@ -24,7 +24,7 @@ import {
   useSavedCampaignIds, useToggleSaveCampaign,
   usePayoutMethod, useSetPayoutMethod,
 } from '@/hooks/api';
-import { useToast, CardSkeleton } from '@/components/vyrle/Toast';
+import { useToast, CardSkeleton, PageSkeleton } from '@/components/vyrle/Toast';
 import { PayoutEstimator, PayoutTerms } from '@/components/vyrle/PayoutEstimator';
 import { ImagePicker } from '@/components/auth/ImagePicker';
 import api from '@/lib/api';
@@ -237,6 +237,10 @@ export function BrowseCampaignsPage() {
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [applyTarget, setApplyTarget] = useState<{ id: string; name: string; brand?: string } | null>(null);
   const [calcId, setCalcId] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = (searchParams.get('q') ?? '').trim();
+  const matchesQuery = (c: { name: string; brandName?: string; category?: string }) =>
+    !query || `${c.name} ${c.brandName ?? ''} ${c.category ?? ''}`.toLowerCase().includes(query.toLowerCase());
 
   // Build a map of campaignId -> application status from backend data
   const appStatusMap = new Map<string, string>();
@@ -327,9 +331,9 @@ export function BrowseCampaignsPage() {
         <>
           {data?.data.length ? (
             <>
-              <div className="results-meta"><div className="cnt"><span className="live-dot" />{data.totalCount} {data.totalCount === 1 ? t('kampanj tillgänglig') : t('kampanjer tillgängliga')}</div></div>
+              {query && <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 13 }}><span className="tag g">{t('Sökning')}: {query}</span><button type="button" className="view-all" onClick={() => setSearchParams({})}>{t('Rensa')}</button></div>}<div className="results-meta"><div className="cnt"><span className="live-dot" />{data.totalCount} {data.totalCount === 1 ? t('kampanj tillgänglig') : t('kampanjer tillgängliga')}</div></div>
               <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: 16, display: 'grid' }}>
-                {data.data.map((c) => {
+                {data.data.filter(matchesQuery).map((c) => {
                   const status = appStatusMap.get(c.id);
                   const full = c.spotsLeft <= 0;
                   const saved = savedSet.has(c.id);
@@ -779,7 +783,7 @@ export function EarningsPage() {
   const { data: assignments } = useCreatorAssignments(undefined, 1);
   const { data, isLoading } = useCreatorPayouts(undefined, page);
 
-  if (isLoading) return <LoadingSpinner />;
+  if (isLoading) return <PageSkeleton />;
   const payouts = data?.data ?? [];
   const totalAccrued = (assignments?.data ?? []).reduce((sum, a) => sum + a.currentPayoutAmount, 0);
 
@@ -1111,10 +1115,10 @@ export function CreatorProfilePage() {
     <section className="view active reveal" data-view="profile">
       <div className="page-head">
         <div>
-          <h1 className="page-title">{t('Hantera din')} <em>{t('profil')}</em></h1>
-          <p className="page-sub">{t('Uppdatera din profil, publik och kopplade konton så att företag lär känna dig bättre.')}</p>
+          <h1 className="page-title">{t('Dina')} <em>{t('inställningar')}</em></h1>
+          <p className="page-sub">{t('Konto, verifiering, kopplade konton och uppgifterna företag ser om dig.')}</p>
         </div>
-        <StatusBadge status={profile.status} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--muted)' }}>{t('Kontostatus')} <StatusBadge status={profile.status} /></div>
       </div>
 
       <div style={{ marginBottom: 16 }}><TikTokConnectionCard /></div>
@@ -1196,6 +1200,8 @@ export function CreatorProfilePage() {
       </div>
 
       <ChangeEmailCard />
+      <LanguageCard />
+      <DeleteAccountCard />
       <ChangePasswordCard />
       <div style={{ maxWidth: 860, marginTop: 16 }}><CreatorReviewCard userId={profile.userId} /></div>
     </section>

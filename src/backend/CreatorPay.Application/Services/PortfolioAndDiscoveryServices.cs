@@ -61,8 +61,9 @@ public class PortfolioService : IPortfolioService
             ThumbnailUrl = string.IsNullOrWhiteSpace(request.ThumbnailUrl) ? null : request.ThumbnailUrl.Trim(),
             Category = string.IsNullOrWhiteSpace(request.Category) ? null : request.Category.Trim(),
             BrandName = string.IsNullOrWhiteSpace(request.BrandName) ? null : request.BrandName.Trim(),
-            Views = request.Views is >= 0 ? request.Views : null,
-            Likes = request.Likes is >= 0 ? request.Likes : null,
+            // Self-reported reach is not accepted anywhere; verified views come from campaigns.
+            Views = null,
+            Likes = null,
             IsFeatured = request.IsFeatured,
             SortOrder = maxSort + 1,
         };
@@ -91,8 +92,8 @@ public class PortfolioService : IPortfolioService
         item.ThumbnailUrl = string.IsNullOrWhiteSpace(request.ThumbnailUrl) ? null : request.ThumbnailUrl.Trim();
         item.Category = string.IsNullOrWhiteSpace(request.Category) ? null : request.Category.Trim();
         item.BrandName = string.IsNullOrWhiteSpace(request.BrandName) ? null : request.BrandName.Trim();
-        item.Views = request.Views is >= 0 ? request.Views : null;
-        item.Likes = request.Likes is >= 0 ? request.Likes : null;
+        item.Views = null;
+        item.Likes = null;
         item.SortOrder = request.SortOrder;
         item.IsFeatured = request.IsFeatured;
 

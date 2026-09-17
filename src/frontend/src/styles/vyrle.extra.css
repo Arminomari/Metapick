@@ -167,7 +167,7 @@
   border:1.5px solid rgba(241,168,143,.3);transition:all .25s cubic-bezier(.22,1,.3,1)}
 .vy-app .wiz-step.cur .wiz-dot{background:linear-gradient(135deg,#1A2230,#0B0F17);border-color:transparent;color:#fff;box-shadow:0 6px 14px rgba(11,15,23,.26)}
 .vy-app .wiz-step.done .wiz-dot{background:linear-gradient(135deg,#FFD8C7,#F1A88F);border-color:transparent;color:#3a1d12}
-.vy-app .wiz-lbl{font-size:11.5px;font-weight:600;color:var(--muted);white-space:nowrap;display:none}
+.vy-app .wiz-lbl{font-size:11.5px;font-weight:600;color:var(--muted);white-space:nowrap;display:block}
 .vy-app .wiz-step.cur .wiz-lbl{display:block;color:var(--ink)}
 .vy-app .wiz-conn{flex:1 1 18px;height:1.5px;margin:0 7px;background:rgba(241,168,143,.28);border-radius:2px;min-width:12px}
 .vy-app .wiz-conn.done{background:linear-gradient(90deg,#FFD8C7,#F1A88F)}
@@ -300,3 +300,6 @@
 @media(max-width:480px){
   .vy-app .auth-main{padding-top:64px}
 }
+
+/* A disabled action must read as disabled; a full-strength button that does nothing looks broken. */
+.vy-app .btn-apply:disabled,.vy-app .btn-outline:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;transform:none}

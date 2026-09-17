@@ -3,7 +3,10 @@ import { t } from '@/lib/i18n';
 import { formatCurrency, formatNumber, formatDate } from '@/lib/utils';
 import { CardSkeleton } from '@/components/vyrle/Toast';
 import { CopyButton } from '@/components/ui/CopyButton';
-import { useCreatorTaps, type CreatorTap } from '@/components/vyrle/CreatorTaps';
+import { useCreatorTaps, usePendingCommunityRequests, type CreatorTap } from '@/components/vyrle/CreatorTaps';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '@/lib/api';
+import { useToast } from '@/components/vyrle/Toast';
 
 const Meter = ({ value, max, danger }: { value: number; max: number; danger?: boolean }) => {
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
@@ -18,6 +21,14 @@ const Meter = ({ value, max, danger }: { value: number; max: number; danger?: bo
 export function CreatorTapsPage() {
   const navigate = useNavigate();
   const { data: taps = [], isLoading } = useCreatorTaps();
+  const { data: pending = [] } = usePendingCommunityRequests();
+  const qc = useQueryClient();
+  const toast = useToast();
+  const withdraw = useMutation({
+    mutationFn: async (brandProfileId: string) => (await api.delete(`/creator/communities/${brandProfileId}`)).data,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['my-communities'] }); qc.invalidateQueries({ queryKey: ['brand-public'] }); toast.push(t('Ansökan är återtagen'), 'success'); },
+    onError: (e: any) => toast.push(e?.response?.data?.error?.message ?? t('Kunde inte ta tillbaka ansökan'), 'error'),
+  });
 
   const monthEarned = taps.reduce((s, x) => s + x.myMonthEarned, 0);
   const monthViews = taps.reduce((s, x) => s + x.myMonthViews, 0);
@@ -50,6 +61,21 @@ export function CreatorTapsPage() {
           <div className="vstat-sub"><span className="vmut">{taps.length > 0 ? `${t('av')} ${taps.length}` : t('inga kranar än')}</span></div>
         </div>
       </div>
+
+      {pending.length > 0 && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="sec-head"><h3>{t('Väntande ansökningar')}</h3><span className="vy-badge pend">{pending.length}</span></div>
+          <div style={{ display: 'grid', gap: 10 }}>
+            {pending.map((r) => (
+              <div key={r.brandProfileId} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                <button type="button" className="view-all" style={{ fontWeight: 700, fontSize: 14 }} onClick={() => navigate(`/creator/brands/${r.brandProfileId}`)}>{r.brandName}</button>
+                <span style={{ fontSize: 12.5, color: 'var(--muted)' }}>{t('Skickad')} {formatDate(r.joinedAt)} · {t('väntar på företagets svar')}</span>
+                <button type="button" className="view-all" style={{ marginLeft: 'auto', color: 'var(--red)' }} disabled={withdraw.isPending} onClick={() => withdraw.mutate(r.brandProfileId)}>{t('Ta tillbaka')}</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {isLoading ? <CardSkeleton rows={3} /> : taps.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '54px 24px' }}>

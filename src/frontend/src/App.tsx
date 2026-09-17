@@ -146,6 +146,7 @@ export default function App() {
             <Route path="/creator/earnings" element={<EarningsPage />} />
             <Route path="/creator/levels" element={<CreatorLevelsPage />} />
             <Route path="/creator/saved" element={<CreatorSavedPage />} />
+            <Route path="/creator/settings" element={<CreatorProfilePage />} />
             <Route path="/creator/profile" element={<CreatorProfilePage />} />
             <Route path="/creator/messages" element={<SupportThreadPage />} />
             {/* UGC-marknadsplatsen: Videouppdrag */}

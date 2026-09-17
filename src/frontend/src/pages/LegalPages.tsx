@@ -72,7 +72,7 @@ export function PrivacyPage() {
   return (
     <LegalShell title={t('Integritets')} accent={t('policy')} updated={t('12 juni 2026')}>
       <Sec n={1} title={t('Vilka uppgifter vi samlar in')}>
-        {t('När du skapar ett konto samlar vi in e-postadress, namn och lösenord (lagrat krypterat som hash), samt profiluppgifterna du själv anger: visningsnamn eller företagsnamn, bio, kategori, land, profilbild/logotyp, webbplats och sociala användarnamn. Om du loggar in med Google, Apple eller Facebook tar vi emot din verifierade e-postadress, ditt namn och eventuell profilbild från leverantören — aldrig ditt lösenord.')}
+        {t('När du skapar ett konto samlar vi in e-postadress, namn och lösenord (lagrat krypterat som hash), samt profiluppgifterna du själv anger: visningsnamn eller företagsnamn, bio, kategori, land, profilbild/logotyp, webbplats och sociala användarnamn. Om du loggar in via en extern tjänst — TikTok och, där det erbjuds, Google, Apple eller Facebook — tar vi emot din verifierade e-postadress, ditt namn och eventuell profilbild från leverantören, aldrig ditt lösenord.')}
       </Sec>
       <Sec n={2} title={t('TikTok-data')}>
         {t('Kreatörer kan koppla sitt TikTok-konto via TikToks officiella inloggning (OAuth). Med ditt uttryckliga samtycke hämtar vi då offentliga profiluppgifter (användarnamn, visningsnamn, följarantal) och statistik för videor du publicerar inom kampanjer (visningar, gillningar) för att verifiera räckvidd och beräkna ersättning. Du kan när som helst koppla bort ditt TikTok-konto från din profil; då slutar vi hämta ny data.')}

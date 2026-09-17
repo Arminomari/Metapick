@@ -100,6 +100,21 @@ export function PayoutEstimator({ model, rules, defaultViews = 25_000 }: {
 }) {
   const [views, setViews] = useState(defaultViews);
   const amount = estimatePayout(model, rules, views);
+
+  // One flat amount above one threshold: there is nothing to slide.
+  const only = rules.length === 1 ? rules[0] : null;
+  if (only && only.payoutType === 'FixedThreshold') {
+    return (
+      <div className="pay-est">
+        <div className="pe-t">{t('Så får du betalt')}</div>
+        <div className="pe-row" style={{ flexWrap: 'wrap' }}>
+          <span className="pe-views">{t('Från')} {formatNumber(only.minViews)} {t('visningar')}</span>
+          <span className="pe-amt">{formatCurrency(only.amount)}</span>
+        </div>
+        <div className="auth-hint">{t('Fast ersättning: beloppet är detsamma oavsett hur många visningar videon får över tröskeln. Under tröskeln utgår ingen ersättning.')}</div>
+      </div>
+    );
+  }
   return (
     <div className="pay-est">
       <div className="pe-t">{t('Räkna på din ersättning')}</div>
@@ -108,7 +123,7 @@ export function PayoutEstimator({ model, rules, defaultViews = 25_000 }: {
         <span className="pe-amt">≈ {formatCurrency(amount)}</span>
       </div>
       <input
-        type="range" min={1000} max={500_000} step={1000} value={views}
+        type="range" min={0} max={500_000} step={1000} value={views}
         onChange={(e) => setViews(Number(e.target.value))}
         aria-label={t('Antal visningar')}
         style={{ width: '100%', maxWidth: '100%', minWidth: 0 }}

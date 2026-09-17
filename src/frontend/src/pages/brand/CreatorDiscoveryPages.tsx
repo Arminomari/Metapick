@@ -247,7 +247,7 @@ function PortfolioCard({ item }: { item: PortfolioItem }) {
       )}
       <div className="pf-body">
         <div className="t">{item.title}</div>
-        <div className="s">{[item.brandName, item.views != null ? `${formatNumber(item.views)} ${t('views (uppgivet)')}` : null].filter(Boolean).join(' · ')}</div>
+        <div className="s">{item.brandName ?? ''}</div>
         {item.description && <p style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 8, lineHeight: 1.5 }}>{item.description}</p>}
       </div>
     </div>

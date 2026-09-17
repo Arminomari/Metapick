@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { t, lang } from '@/lib/i18n';
+import { Skeleton } from '@/components/vyrle/Toast';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import {
@@ -120,7 +121,7 @@ function notifTarget(n: NotifLike, role: string | null): string | null {
 }
 
 export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { data } = useNotifications(false);
+  const { data, isLoading } = useNotifications(false);
   const navigate = useNavigate();
   const { role } = useAuthStore();
   const markRead = useMarkNotificationRead();
@@ -141,7 +142,16 @@ export function NotificationsDrawer({ open, onClose }: { open: boolean; onClose:
           </div>
         </div>
         <div className="nd-scroll">
-          {items.length ? items.map((n) => {
+          {isLoading && !items.length ? (
+            <div aria-busy="true" style={{ display: 'grid', gap: 14, padding: '6px 4px' }}>
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <Skeleton h={38} w={38} r={12} />
+                  <span style={{ flex: 1, display: 'grid', gap: 7 }}><Skeleton h={12} w={`${60 + i * 8}%`} /><Skeleton h={10} w="40%" /></span>
+                </div>
+              ))}
+            </div>
+          ) : items.length ? items.map((n) => {
             const st = notifStyle(n.type);
             return (
               <div

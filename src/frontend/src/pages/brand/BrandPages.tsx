@@ -1,6 +1,6 @@
 import api from '@/lib/api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChangeEmailCard } from '@/components/ui/AccountCards';
+import { ChangeEmailCard, LanguageCard, DeleteAccountCard } from '@/components/ui/AccountCards';
 import { useState, type FormEvent as ReactFormEvent } from 'react';
 import { RefreshViewsButton } from '@/components/ui/RefreshViewsButton';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -1122,6 +1122,8 @@ export function BrandSettingsPage() {
       )}
 
       {activeTab === 'security' && <ChangeEmailCard />}
+      {activeTab === 'security' && <LanguageCard />}
+      {activeTab === 'security' && <DeleteAccountCard />}
       {activeTab === 'security' && (
         <div className="card" style={{ maxWidth: 720, width: '100%', minWidth: 0 }}>
           <div className="sec-head"><h3>{t('Byt lösenord')}</h3></div>

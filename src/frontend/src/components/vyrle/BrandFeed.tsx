@@ -67,7 +67,7 @@ export function BrandFeedSection() {
                   <span style={{ fontSize: 12.5, color: 'var(--muted)' }}>· {ago(post.createdAt)}</span>
                 </div>
                 <p style={{ margin: '5px 0 0', fontSize: 14.5, lineHeight: 1.6, color: 'var(--ink)', whiteSpace: 'pre-line', wordBreak: 'break-word' }}>{post.body}</p>
-                {post.imageUrl && <img src={post.imageUrl} alt="" style={{ marginTop: 10, maxWidth: '100%', maxHeight: 380, borderRadius: 16, objectFit: 'cover', border: '1px solid rgba(241,168,143,.2)' }} />}
+                {post.imageUrl && <img src={post.imageUrl} alt={`${t('Bild i inlägg från')} ${post.brandName ?? ''}`.trim()} style={{ marginTop: 10, maxWidth: '100%', maxHeight: 380, borderRadius: 16, objectFit: 'cover', border: '1px solid rgba(241,168,143,.2)' }} />}
               </div>
             </div>
           ))}

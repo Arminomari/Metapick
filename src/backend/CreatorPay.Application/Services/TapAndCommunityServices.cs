@@ -138,10 +138,13 @@ public class CommunityService : ICommunityService
     /// </summary>
     public async Task<Result<bool>> RequestMembershipAsync(Guid creatorUserId, Guid brandProfileId, CancellationToken ct = default)
     {
-        var creator = await _creators.Query().FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
+        var creator = await _creators.Query().Include(c => c.User).FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
         if (creator == null) return Errors.NotFound("Creator");
         if (creator.Status != CreatorStatus.Approved)
             return Errors.Forbidden("Ditt konto måste vara godkänt först.");
+        // Same rule as campaign applications: applying requires a proven inbox.
+        if (creator.User is { EmailVerified: false })
+            return Errors.Forbidden("Bekräfta din e-postadress först — kolla mejlet vi skickat, eller begär en ny länk i bannern högst upp.");
 
         var brand = await _brands.Query().FirstOrDefaultAsync(b => b.Id == brandProfileId, ct);
         if (brand == null) return Errors.NotFound("Brand", brandProfileId);
@@ -258,7 +261,9 @@ public class CommunityService : ICommunityService
 
         var rows = await _members.Query()
             .Include(m => m.BrandProfile)
-            .Where(m => m.CreatorProfileId == creator.Id && m.Status == CommunityMemberStatus.Active)
+            // Requested rows ride along so the creator can see (and withdraw) what is still waiting.
+            .Where(m => m.CreatorProfileId == creator.Id
+                && (m.Status == CommunityMemberStatus.Active || m.Status == CommunityMemberStatus.Requested))
             .OrderByDescending(m => m.JoinedAt)
             .ToListAsync(ct);
         var brandIds = rows.Select(r => r.BrandProfileId).ToList();
@@ -270,7 +275,7 @@ public class CommunityService : ICommunityService
 
         return rows.Select(r => new MyCommunityDto(
             r.BrandProfileId, r.BrandProfile.CompanyName, r.BrandProfile.LogoUrl,
-            r.Source.ToString(), r.JoinedAt, hasTap.Contains(r.BrandProfileId))).ToList();
+            r.Source.ToString(), r.JoinedAt, hasTap.Contains(r.BrandProfileId), r.Status.ToString())).ToList();
     }
 
     /// <summary>

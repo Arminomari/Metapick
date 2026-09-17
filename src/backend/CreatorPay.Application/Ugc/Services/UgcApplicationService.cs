@@ -52,8 +52,11 @@ public sealed class UgcApplicationService : IUgcApplicationService
 
     public async Task<Result<UgcApplicationDto>> ApplyAsync(Guid creatorUserId, Guid campaignId, ApplyToUgcCampaignRequest r, CancellationToken ct = default)
     {
-        var creator = await _creators.Query().FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
+        var creator = await _creators.Query().Include(c => c.User).FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
         if (creator == null) return Errors.NotFound("Creator");
+        // Same rule as campaign applications: applying requires a proven inbox.
+        if (creator.User is { EmailVerified: false })
+            return Errors.Forbidden("Bekräfta din e-postadress först — kolla mejlet vi skickat, eller begär en ny länk i bannern högst upp.");
         var me = await _creatorService.GetOrCreateAsync(creator.Id, ct);
 
         var campaign = await _campaigns.Query().Include(c => c.BrandProfile).FirstOrDefaultAsync(c => c.Id == campaignId, ct);
