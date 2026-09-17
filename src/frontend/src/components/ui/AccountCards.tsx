@@ -44,7 +44,7 @@ export function ChangePasswordCard() {
 
   return (
     <div className="card" style={{ width: '100%', maxWidth: 860, minWidth: 0, marginTop: 16 }}>
-      <div className="sec-head"><h3>{t('Byt lösenord')}</h3></div>
+      <div className="sec-head"><h2>{t('Byt lösenord')}</h2></div>
       <form onSubmit={submit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 14, minWidth: 0 }}>
         <div><span style={label}>{t('Nuvarande lösenord')}</span><input style={input} type="password" required value={form.current} onChange={(e) => setForm({ ...form, current: e.target.value })} autoComplete="current-password" /></div>
         <div><span style={label}>{t('Nytt lösenord')}</span><input style={input} type="password" required minLength={8} value={form.next} onChange={(e) => setForm({ ...form, next: e.target.value })} autoComplete="new-password" placeholder={t('Minst 8 tecken, versal + siffra')} /></div>
@@ -88,7 +88,7 @@ export function ChangeEmailCard() {
 
   return (
     <div className="card" style={{ width: '100%', maxWidth: 860, minWidth: 0, marginTop: 16 }}>
-      <div className="sec-head"><h3>{t('Byt e-postadress')}</h3></div>
+      <div className="sec-head"><h2>{t('Byt e-postadress')}</h2></div>
       {prof && <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--muted)' }}>{t('Nuvarande adress:')} <strong style={{ color: '#0B0F17' }}>{prof.email}</strong></p>}
       <form onSubmit={submit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 14, minWidth: 0 }}>
         <div><span style={label}>{t('Ny e-postadress')}</span><input style={input} type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} autoComplete="email" placeholder={t('ny@adress.se')} /></div>
@@ -107,7 +107,7 @@ export function ChangeEmailCard() {
 export function LanguageCard() {
   return (
     <div className="card" style={{ width: '100%', maxWidth: 860, minWidth: 0, marginTop: 16 }}>
-      <div className="sec-head"><h3>{t('Språk')}</h3></div>
+      <div className="sec-head"><h2>{t('Språk')}</h2></div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
         <p style={{ margin: 0, fontSize: 13.5, color: 'var(--muted)', flex: '1 1 240px' }}>{t('Välj språk för VYRLE i den här webbläsaren.')}</p>
         <LangSwitcher />
@@ -135,7 +135,7 @@ export function DeleteAccountCard() {
 
   return (
     <div className="card" style={{ width: '100%', maxWidth: 860, minWidth: 0, marginTop: 16 }}>
-      <div className="sec-head"><h3>{t('Radera konto')}</h3></div>
+      <div className="sec-head"><h2>{t('Radera konto')}</h2></div>
       {step === 'sent' ? (
         <div style={ok} role="status">{t('Din begäran är skickad. Vi raderar kontot och dina personuppgifter inom 30 dagar och bekräftar via e-post. Uppgifter vi enligt lag måste spara, till exempel bokföring av utbetalningar, sparas så länge lagen kräver.')}</div>
       ) : (

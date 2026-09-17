@@ -8,6 +8,7 @@ import { postLoginPath, takeSessionExpired } from '@/lib/session';
 import { useTitle } from '@/lib/title';
 import { DateInput } from '@/components/ui/DateInput';
 import { ALL_TAGS } from '@/lib/tags';
+import { CATEGORIES } from '@/lib/categories';
 import api from '@/lib/api';
 import { SocialButtons } from '@/components/auth/SocialButtons';
 import { ImagePicker } from '@/components/auth/ImagePicker';
@@ -31,7 +32,6 @@ const SmallCheck = () => (
   <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 7" /></svg>
 );
 
-const CATEGORIES = ['Övrigt', 'Mode', 'Skönhet', 'Mat', 'Teknik', 'Gaming', 'Sport', 'Musik', 'Resor', 'Livsstil', 'Humor'];
 const INDUSTRIES = ['Mode & Kläder', 'Skönhet & Hudvård', 'Mat & Dryck', 'Teknik & Appar', 'Gaming', 'Sport & Hälsa', 'Resor', 'Inredning & Hem', 'Finans', 'Utbildning', 'Underhållning', 'Övrigt'];
 const COUNTRIES: [string, string][] = [['SE', 'Sverige'], ['NO', 'Norge'], ['DK', 'Danmark'], ['FI', 'Finland']];
 

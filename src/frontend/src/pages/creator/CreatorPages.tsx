@@ -5,6 +5,7 @@ import { ChangeEmailCard, ChangePasswordCard, LanguageCard, DeleteAccountCard } 
 import { maskSwishNumber, maskBankAccount } from '@/lib/masks';
 import { CopyField } from '@/components/ui/CopyButton';
 import { ApplyModal } from '@/components/vyrle/ApplyModal';
+import { CATEGORIES } from '@/lib/categories';
 import { CreatorVerificationCard } from '@/pages/ugc/UgcCreatorPages';
 import { t } from '@/lib/i18n';
 import { useState } from 'react';
@@ -454,7 +455,7 @@ export function CreatorAssignmentsPage() {
         <div className="card">
           {data?.data.length ? (
             <>
-              <div className="sec-head"><h3>{data.totalCount} {t('uppdrag')}</h3></div>
+              <div className="sec-head"><h2>{data.totalCount} {t('uppdrag')}</h2></div>
               {data.data.map((a) => (
                 <div key={a.id} className="vcamp" onClick={() => navigate(`/creator/assignments/${a.id}`)}>
                   <span className="vcamp-thumb" style={{ background: grad(a.campaignName) }}><span className="brand-mono">{initial(a.campaignName)}</span></span>
@@ -635,7 +636,7 @@ export function AssignmentDetailPage() {
 
       {campaign && (campaign.requirements?.length > 0 || campaign.contentInstructions || campaign.perks) && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="sec-head"><h3>{t('Kampanjkrav & brief')}</h3><span style={{ fontSize: 13, color: 'var(--muted)' }}>{campaign.category} · {formatDate(campaign.startDate)} – {formatDate(campaign.endDate)}</span></div>
+          <div className="sec-head"><h2>{t('Kampanjkrav & brief')}</h2><span style={{ fontSize: 13, color: 'var(--muted)' }}>{campaign.category} · {formatDate(campaign.startDate)} – {formatDate(campaign.endDate)}</span></div>
           {campaign.contentInstructions && <p style={{ fontSize: 13.5, color: 'var(--ink-2)', lineHeight: 1.6, marginBottom: 14 }}>{campaign.contentInstructions}</p>}
           {campaign.requirements?.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
@@ -677,7 +678,7 @@ export function AssignmentDetailPage() {
 
       {assignment.trackingTag && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="sec-head"><h3>{t('Automatisk spårning')}</h3><span className="vy-badge neu">{t('Frivilligt')}</span></div>
+          <div className="sec-head"><h2>{t('Automatisk spårning')}</h2><span className="vy-badge neu">{t('Frivilligt')}</span></div>
           <p style={{ margin: '0 0 14px', fontSize: 13.5, color: 'var(--muted)', lineHeight: 1.55 }}>
             {t('Vill du slippa lägga till videon själv? Ta med hashtagen eller din tracking-tag i beskrivningen så hittas videon automatiskt. Du kan lika gärna hoppa över det och välja videon manuellt ovan.')}
           </p>
@@ -700,7 +701,7 @@ export function AssignmentDetailPage() {
 
       {assignment.status === 'Active' && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="sec-head"><h3>{t('Lägg till din video')}</h3></div>
+          <div className="sec-head"><h2>{t('Lägg till din video')}</h2></div>
           <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.6 }}>
             {t('Enklast: välj videon direkt från ditt TikTok-konto. Då behövs varken hashtag eller kod i beskrivningen — inget i videon behöver se ut som en annons.')}
           </p>
@@ -722,7 +723,7 @@ export function AssignmentDetailPage() {
       )}
 
       <div className="card" style={{ marginBottom: 16 }}>
-        <div className="sec-head"><h3>{t('Spårade videor')}</h3><RefreshViewsButton assignmentId={assignment.id} /></div>
+        <div className="sec-head"><h2>{t('Spårade videor')}</h2><RefreshViewsButton assignmentId={assignment.id} /></div>
         {(assignment.socialPosts?.length > 0) ? (
           <div style={{ display: 'grid', gap: 14 }}>
             {assignment.socialPosts.map((sp) => (
@@ -765,12 +766,12 @@ export function AssignmentDetailPage() {
         )}
       </div>
       <div className="card" style={{ marginBottom: 16 }}>
-        <div className="sec-head"><h3>{t('Meddelanden')}</h3></div>
+        <div className="sec-head"><h2>{t('Meddelanden')}</h2></div>
         <ChatPanel assignmentId={assignment.id} />
       </div>
 
       <div className="card">
-        <div className="sec-head"><h3>{t('Omdöme')}</h3></div>
+        <div className="sec-head"><h2>{t('Omdöme')}</h2></div>
         <ReviewSection assignmentId={assignment.id} revieweeUserId={assignment.brandUserId} assignmentCompleted={assignment.status === 'Completed'} />
       </div>
     </section>
@@ -881,7 +882,7 @@ export function EarningsPage() {
 
       {/* how payouts work */}
       <div className="card" style={{ marginTop: 18 }}>
-        <div className="sec-head"><h3>{t('Så får du betalt')}</h3><span style={{ fontSize: 12.5, color: 'var(--muted)' }}>{t('Från visning till pengar på kontot')}</span></div>
+        <div className="sec-head"><h2>{t('Så får du betalt')}</h2><span style={{ fontSize: 12.5, color: 'var(--muted)' }}>{t('Från visning till pengar på kontot')}</span></div>
         <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: 12 }}>
           {[
             [t('1. Posta & verifiera'), t('Du postar med kampanjens hashtag — dina visningar verifieras automatiskt via TikTok.')],
@@ -900,14 +901,14 @@ export function EarningsPage() {
       {/* pending detail */}
       {pendingList.length > 0 && (
         <div className="card" style={{ marginTop: 18 }}>
-          <div className="sec-head"><h3>{t('Väntande utbetalningar')} <span className="badge amber">{pendingList.length}</span></h3></div>
+          <div className="sec-head"><h2>{t('Väntande utbetalningar')} <span className="badge amber">{pendingList.length}</span></h2></div>
           {pendingList.map((p) => <PayoutRow key={p.id} p={p} />)}
         </div>
       )}
 
       {/* all payouts */}
       <div className="card" style={{ marginTop: 18 }}>
-        <div className="sec-head"><h3>{t('Utbetalningshistorik')}</h3></div>
+        <div className="sec-head"><h2>{t('Utbetalningshistorik')}</h2></div>
         {payouts.length ? payouts.map((p) => <PayoutRow key={p.id} p={p} />) : (
           <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--muted)' }}>{t('Inga utbetalningar ännu. När en kampanj betalar ut dyker den upp här.')}</div>
         )}
@@ -1125,7 +1126,7 @@ export function CreatorProfilePage() {
       <CreatorVerificationCard />
 
       <div className="card" style={{ maxWidth: 860 }}>
-        <div className="sec-head"><h3>{t('Profilinformation')}</h3>{!editing && <button className="view-all" onClick={() => setEditing(true)}>{t('Redigera')}</button>}</div>
+        <div className="sec-head"><h2>{t('Profilinformation')}</h2>{!editing && <button className="view-all" onClick={() => setEditing(true)}>{t('Redigera')}</button>}</div>
         <form onSubmit={handleSave} className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))' }}>
           <div className="field"><label>{t('Visningsnamn')} *</label><input type="text" value={form.displayName} onChange={set('displayName')} required disabled={!editing} /></div>
           <div className="field"><label>{t('TikTok-användarnamn')}</label>
@@ -1138,7 +1139,7 @@ export function CreatorProfilePage() {
           <div className="field full"><label>Bio</label><textarea value={form.bio} onChange={set('bio')} rows={3} disabled={!editing} placeholder={t('Berätta om dig själv och ditt innehåll...')} /></div>
           <div className="field"><label>{t('Kategori')}</label>
             <select value={form.category} onChange={set('category')} disabled={!editing}>
-              {['Övrigt', 'Mode', 'Skönhet', 'Mat', 'Teknik', 'Gaming', 'Sport', 'Musik', 'Resor', 'Livsstil', 'Humor'].map(c => <option key={c} value={c}>{t(c)}</option>)}
+              {CATEGORIES.map(c => <option key={c} value={c}>{t(c)}</option>)}
             </select>
           </div>
           <div className="field"><label>{t('Land')}</label>
@@ -1191,7 +1192,7 @@ export function CreatorProfilePage() {
       </div>
 
       <div className="card" style={{ maxWidth: 860, marginTop: 16 }}>
-        <div className="sec-head"><h3>{t('Profiluppgifter')}</h3></div>
+        <div className="sec-head"><h2>{t('Profiluppgifter')}</h2></div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16 }}>
           <div><div className="vcamp-k">{t('Följare')}</div><div className="vcamp-v" style={{ fontSize: 16 }}>{formatNumber(profile.followerCount)}</div></div>
           <div><div className="vcamp-k">{t('Medlem sedan')}</div><div className="vcamp-v" style={{ fontSize: 16 }}>{formatMonthYear(profile.createdAt)}</div></div>

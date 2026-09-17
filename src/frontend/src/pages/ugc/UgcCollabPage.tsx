@@ -243,7 +243,7 @@ function DeliverablesCard({ c, role, has, run, busy }: { c: UgcCollab; role: Ugc
 
   return (
     <div className="card">
-      <div className="sec-head"><h3>{t('Leverans')}</h3>{c.deliverables.length > 0 && <span style={{ fontSize: 13, color: 'var(--muted)' }}>{c.deliverables.length} {t('version(er)')}</span>}</div>
+      <div className="sec-head"><h2>{t('Leverans')}</h2>{c.deliverables.length > 0 && <span style={{ fontSize: 13, color: 'var(--muted)' }}>{c.deliverables.length} {t('version(er)')}</span>}</div>
 
       {c.deliverables.length === 0 && !has('submit') && (
         <div style={{ color: 'var(--muted)', fontSize: 13.5, padding: '8px 0' }}>{role === 'creator' ? t('Ingen video ännu.') : t('Creatorn har inte levererat ännu.')}</div>
@@ -292,7 +292,7 @@ function DeliverablesCard({ c, role, has, run, busy }: { c: UgcCollab; role: Ugc
 function BriefCard({ c }: { c: UgcCollab }) {
   return (
     <div className="card">
-      <div className="sec-head"><h3>{t('Brief')}</h3></div>
+      <div className="sec-head"><h2>{t('Brief')}</h2></div>
       <div style={{ fontSize: 13.5, lineHeight: 1.7, whiteSpace: 'pre-line', wordBreak: 'break-word' }}>{c.briefSnapshot.replace(/\*\*/g, '')}</div>
       {c.productDescription && <div style={{ marginTop: 10, fontSize: 13.5 }}><strong>{t('Produkt')}:</strong> {c.productDescription}{c.productValueOre ? ` (${t('värde')} ${formatOre(c.productValueOre)})` : ''}</div>}
     </div>
@@ -326,7 +326,7 @@ function PaymentCard({ c, role }: { c: UgcCollab; role: UgcRole }) {
   const label: Record<string, string> = { Pending: 'Väntar på betalning', Held: 'Pengarna hålls av VYRLE', Transferred: 'Utbetald till creatorn', Refunded: 'Återbetald', PartiallyRefunded: 'Delad', Failed: 'Misslyckad', NotApplicable: 'Ingen betalning (produktbyte)' };
   return (
     <div className="card">
-      <div className="sec-head"><h3>{t('Betalning')}</h3><span className={`vy-badge ${p.status === 'Held' || p.status === 'Transferred' ? 'pos' : p.status === 'Pending' ? 'pend' : 'neu'}`}>{t(label[p.status] ?? p.status)}</span></div>
+      <div className="sec-head"><h2>{t('Betalning')}</h2><span className={`vy-badge ${p.status === 'Held' || p.status === 'Transferred' ? 'pos' : p.status === 'Pending' ? 'pend' : 'neu'}`}>{t(label[p.status] ?? p.status)}</span></div>
       <div style={{ display: 'grid', gap: 6, fontSize: 13.5 }}>
         {role !== 'creator' && <Row k={t('Företaget betalade')} v={p.brandPaidOre ? formatOre(p.brandPaidOre) : '–'} />}
         <Row k={t('Till creatorn')} v={formatOre(p.creatorAmountOre || c.agreedAmountOre)} />
@@ -344,7 +344,7 @@ function DisputeCard({ c }: { c: UgcCollab }) {
   const d = c.dispute!;
   return (
     <div className="card" style={{ border: '1px solid rgba(207,75,75,.35)', background: 'linear-gradient(160deg,#fff,#FFF3F0)' }}>
-      <div className="sec-head"><h3>{t('Tvist')}</h3><span className={`vy-badge ${d.status === 'Open' ? 'neg' : 'neu'}`}>{d.status === 'Open' ? t('Öppen') : t('Avgjord')}</span></div>
+      <div className="sec-head"><h2>{t('Tvist')}</h2><span className={`vy-badge ${d.status === 'Open' ? 'neg' : 'neu'}`}>{d.status === 'Open' ? t('Öppen') : t('Avgjord')}</span></div>
       <div style={{ fontSize: 13.5, lineHeight: 1.6 }}><strong>{t('Öppnad av')} {d.openedBy === 'Brand' ? c.brandName : c.creatorName}:</strong> {d.reason}</div>
       {d.status === 'Resolved' && (
         <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 12, background: 'rgba(255,255,255,.8)', fontSize: 13.5, lineHeight: 1.6 }}>
@@ -359,7 +359,7 @@ function DisputeCard({ c }: { c: UgcCollab }) {
 function TimelineCard({ c }: { c: UgcCollab }) {
   return (
     <div className="card">
-      <div className="sec-head"><h3>{t('Händelser')}</h3></div>
+      <div className="sec-head"><h2>{t('Händelser')}</h2></div>
       <div style={{ display: 'grid', gap: 8 }}>
         {[...c.events].reverse().map((e, i) => (
           <div key={i} style={{ display: 'flex', gap: 10, fontSize: 12.5, alignItems: 'flex-start' }}>
@@ -394,7 +394,7 @@ function MessagesCard({ id, role }: { id: string; role: UgcRole }) {
 
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
-      <div className="sec-head"><h3>{t('Chatt')}</h3></div>
+      <div className="sec-head"><h2>{t('Chatt')}</h2></div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 360, overflowY: 'auto', padding: '2px 2px 6px' }}>
         {messages.length === 0 && <div style={{ fontSize: 13, color: 'var(--muted)', padding: '10px 0' }}>{t('Inga meddelanden än — frågor om briefen, produkten eller leveransen hör hemma här.')}</div>}
         {messages.map((m) => (

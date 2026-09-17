@@ -167,7 +167,7 @@
 
 /* section title row */
 .vy-app .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-.vy-app .sec-head h3{font-size:16px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:7px}
+.vy-app .sec-head h2,.vy-app .sec-head h3{margin:0;font-size:16px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:7px}
 .vy-app .sec-head .info{color:var(--muted-2)}
 .vy-app .view-all{white-space:nowrap;color:#C26A4A;font-weight:600;font-size:13px;cursor:pointer;border:none;padding:0;border-radius:0;background:none}
 .vy-app .view-all.plain{border:none;padding:0;background:none}
@@ -462,7 +462,7 @@
 .vy-app .bar .cap{color:var(--ink);font-weight:600}
 
 /* ---- section heads ---- */
-.vy-app .sec-head h3{font-weight:600;letter-spacing:-.02em;color:var(--ink)}
+.vy-app .sec-head h2,.vy-app .sec-head h3{font-weight:600;letter-spacing:-.02em;color:var(--ink)}
 .vy-app .view-all{color:#C26A4A;font-weight:600}
 .vy-app .view-all:hover{color:#a8523a}
 

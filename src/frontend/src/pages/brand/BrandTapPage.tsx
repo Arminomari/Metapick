@@ -83,7 +83,7 @@ function TapForm({ tap, onDone }: { tap: TapDto | null; onDone: () => void }) {
 
   return (
     <form className="card" onSubmit={(e) => { e.preventDefault(); setErr(''); save.mutate(); }} style={{ border: '1px solid rgba(241,168,143,.4)', minWidth: 0 }}>
-      <div className="sec-head"><h3>{tap ? t('Redigera kranen') : t('Öppna kranen')}</h3></div>
+      <div className="sec-head"><h2>{tap ? t('Redigera kranen') : t('Öppna kranen')}</h2></div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, minWidth: 0 }}>
         <div style={{ gridColumn: '1 / -1' }}>
           <span style={lbl}>{t('Namn på kranen')}</span>
@@ -276,7 +276,7 @@ export function BrandTapPage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
             <div className="card">
-              <div className="sec-head"><h3>{t('Stående brief')}</h3>{tap.briefUpdatedAt && <span style={{ fontSize: 12, color: 'var(--muted)' }}>{t('Uppdaterad')} {formatDate(tap.briefUpdatedAt)}</span>}</div>
+              <div className="sec-head"><h2>{t('Stående brief')}</h2>{tap.briefUpdatedAt && <span style={{ fontSize: 12, color: 'var(--muted)' }}>{t('Uppdaterad')} {formatDate(tap.briefUpdatedAt)}</span>}</div>
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, whiteSpace: 'pre-line' }}>{tap.brief}</p>
               {tap.contentInstructions && <p style={{ margin: '12px 0 0', fontSize: 13, lineHeight: 1.6, color: 'var(--ink-2)', whiteSpace: 'pre-line' }}>{tap.contentInstructions}</p>}
               <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -286,7 +286,7 @@ export function BrandTapPage() {
               </div>
             </div>
             <div className="card">
-              <div className="sec-head"><h3>{t('Så fylls kranen på')}</h3></div>
+              <div className="sec-head"><h2>{t('Så fylls kranen på')}</h2></div>
               <ol style={{ margin: 0, paddingLeft: 18, fontSize: 13.5, lineHeight: 1.7, color: 'var(--ink-2)' }}>
                 <li>{t('Alla som gjort en kampanj med er är redan medlemmar. Bjud in fler under')} <Link to="/brand/community" style={{ color: '#9c4f31', fontWeight: 700 }}>{t('Community')}</Link>.</li>
                 <li>{t('Medlemmar publicerar med sin tracking-tag — videorna hittas och verifieras automatiskt.')}</li>

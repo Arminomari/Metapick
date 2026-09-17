@@ -187,7 +187,7 @@ export function CreatorLinksPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: 20, alignItems: 'start' }}>
         <div className="card" style={{ minWidth: 0 }}>
-          <div className="sec-head"><h3>{t('Dina kampanjlänkar')}</h3><span style={{ fontSize: 13, color: 'var(--muted)' }}>{live.length} {t('aktiva')}</span></div>
+          <div className="sec-head"><h2>{t('Dina kampanjlänkar')}</h2><span style={{ fontSize: 13, color: 'var(--muted)' }}>{live.length} {t('aktiva')}</span></div>
           {live.length === 0 ? (
             <div style={{ padding: '34px 6px', textAlign: 'center' }}>
               <div style={{ fontWeight: 600 }}>{t('Inga live-länkar ännu')}</div>
@@ -272,7 +272,7 @@ export function CreatorLevelsPage() {
       </div>
 
       <div className="card" style={{ marginBottom: 20 }}>
-        <div className="sec-head"><h3>{t('Stegen')}</h3></div>
+        <div className="sec-head"><h2>{t('Stegen')}</h2></div>
         <div className="lvl-track" style={{ overflowX: 'auto', padding: '6px 0' }}>
           {TIERS.map((tier, i) => (
             <div key={tier.name} className={`lvl-node${i < idx ? ' done' : ''}${i === idx ? ' now' : ''}`} style={{ flex: '1 0 72px' }}>
@@ -285,7 +285,7 @@ export function CreatorLevelsPage() {
       </div>
 
       <div className="card">
-        <div className="sec-head"><h3>{t('Alla nivåer')}</h3></div>
+        <div className="sec-head"><h2>{t('Alla nivåer')}</h2></div>
         <p style={{ margin: '0 0 12px', fontSize: 13.5, lineHeight: 1.6, color: 'var(--muted)' }}>{t('Din nivå bygger på hur mycket du fått utbetalt via VYRLE och låses upp automatiskt.')}</p>
         {TIERS.map((tier, i) => (
           <div key={tier.name} className={`perk${i > idx ? ' locked' : ''}`}>

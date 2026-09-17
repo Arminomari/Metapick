@@ -54,7 +54,7 @@ export function BrandPrHubPage() {
 
       {stats && stats.byCategory.length > 0 && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="sec-head"><h3>{t('Per kategori')}</h3></div>
+          <div className="sec-head"><h2>{t('Per kategori')}</h2></div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {stats.byCategory.map((c) => (
               <button key={c.category} className={`tab${category === c.category ? ' active' : ''}`} onClick={() => { setCategory(category === c.category ? undefined : c.category); setPage(1); }}>

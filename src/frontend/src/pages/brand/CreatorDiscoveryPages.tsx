@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { CATEGORIES } from '@/lib/categories';
 import api from '@/lib/api';
 import { DateInput } from '@/components/ui/DateInput';
 import { MessageCreatorModal } from '@/components/ui/MessageCreatorModal';
@@ -13,7 +14,6 @@ import { ALL_TAGS } from '@/lib/tags';
 import type { CreatorDiscoveryItem, PortfolioItem } from '@/types';
 import { CardSkeleton, PageSkeleton } from '@/components/vyrle/Toast';
 
-const CATEGORIES = ['Övrigt', 'Mode', 'Skönhet', 'Mat', 'Teknik', 'Gaming', 'Sport', 'Musik', 'Resor', 'Livsstil', 'Humor'];
 
 const GRADS = ['linear-gradient(135deg,#FFD8C7,#F1A88F)', 'linear-gradient(135deg,#cdb8f2,#9c7de0)', 'linear-gradient(135deg,#F2C58A,#e0a04e)', 'linear-gradient(135deg,#a9dcc0,#5fb98a)'];
 const grad = (s: string) => GRADS[((s || '').charCodeAt(0) || 0) % GRADS.length];
@@ -176,7 +176,7 @@ export function BrandCreatorDetailPage() {
       </div>
 
       <div className="card" style={{ marginTop: 16, background: 'linear-gradient(160deg,#fff,#FFF6F0)' }}>
-        <div className="sec-head" style={{ flexWrap: 'wrap', gap: 8 }}><h3>{t('Verifierat engagemang')}</h3><span style={{ fontSize: 12, color: 'var(--muted)', minWidth: 0 }}>{t('Uppmätt av VYRLE på kampanjvideos — inte självrapporterat')}</span></div>
+        <div className="sec-head" style={{ flexWrap: 'wrap', gap: 8 }}><h2>{t('Verifierat engagemang')}</h2><span style={{ fontSize: 12, color: 'var(--muted)', minWidth: 0 }}>{t('Uppmätt av VYRLE på kampanjvideos — inte självrapporterat')}</span></div>
         {(creator.totalVerifiedViews ?? 0) > 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
             {[
@@ -200,7 +200,7 @@ export function BrandCreatorDetailPage() {
       {showPr && id && <SendPrOfferForm creatorProfileId={id} onDone={() => setShowPr(false)} />}
 
       <div className="card" style={{ marginTop: 16 }}>
-        <div className="sec-head"><h3>{t('Portfölj')} ({creator.portfolio.length})</h3></div>
+        <div className="sec-head"><h2>{t('Portfölj')} ({creator.portfolio.length})</h2></div>
         {creator.portfolio.length > 0 ? (
           <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
             {creator.portfolio.map((it) => <PortfolioCard key={it.id} item={it} />)}
@@ -212,7 +212,7 @@ export function BrandCreatorDetailPage() {
 
       {creator.recentReviews.length > 0 && (
         <div className="card" style={{ marginTop: 16 }}>
-          <div className="sec-head"><h3>{t('Omdömen')} <Stars value={creator.averageRating} /> <span style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 400 }}>({creator.averageRating.toFixed(1)} {t('av')} {creator.reviewCount})</span></h3></div>
+          <div className="sec-head"><h2>{t('Omdömen')} <Stars value={creator.averageRating} /> <span style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 400 }}>({creator.averageRating.toFixed(1)} {t('av')} {creator.reviewCount})</span></h2></div>
           {creator.recentReviews.map((r) => (
             <div key={r.id} className="list-row" style={{ flexWrap: 'wrap' }}>
               <div className="row-main" style={{ flex: '1 1 180px', minWidth: 0 }}>
@@ -304,7 +304,7 @@ function SendPrOfferForm({ creatorProfileId, onDone }: { creatorProfileId: strin
 
   return (
     <div className="card" style={{ marginTop: 16 }}>
-      <div className="sec-head"><h3>{t('Skicka PR-erbjudande')}</h3></div>
+      <div className="sec-head"><h2>{t('Skicka PR-erbjudande')}</h2></div>
       <form onSubmit={handleSubmit} className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
         <div className="field full"><label>{t('Rubrik')} *</label><input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required placeholder={t('t.ex. Prova vår nya meny')} /></div>
         <div className="field"><label>{t('Typ av erbjudande')}</label>

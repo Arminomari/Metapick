@@ -11,6 +11,7 @@ import { TagSelector } from '@/components/ui/TagSelector';
 import { ChatPanel } from '@/components/ui/ChatPanel';
 import { ReviewSection } from '@/components/ui/ReviewSection';
 import { maskOrgNr } from '@/lib/masks';
+import { CATEGORIES } from '@/lib/categories';
 import { apiError } from '@/hooks/ugc';
 import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
 import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
@@ -152,7 +153,7 @@ export function BrandCampaignListPage() {
         <div className="card">
           {data?.data.length ? (
             <>
-              <div className="sec-head"><h3>{data.totalCount} {data.totalCount === 1 ? t('kampanj') : t('kampanjer')}</h3></div>
+              <div className="sec-head"><h2>{data.totalCount} {data.totalCount === 1 ? t('kampanj') : t('kampanjer')}</h2></div>
               {data.data.map((c) => {
                 const pct = c.budget ? Math.round((c.budgetSpent / c.budget) * 100) : 0;
                 return (
@@ -433,7 +434,7 @@ export function CreateCampaignPage() {
           <div className="field full"><label>{t('Beskrivning')} *</label><textarea value={form.description} onChange={set('description')} required rows={3} /></div>
           <div className="field"><label>{t('Kategori')}</label>
             <select value={form.category} onChange={set('category')}>
-              {['Övrigt', 'Mode', 'Skönhet', 'Mat', 'Teknik', 'Gaming', 'Sport', 'Musik', 'Resor'].map(c => <option key={c} value={c}>{t(c)}</option>)}
+              {CATEGORIES.map(c => <option key={c} value={c}>{t(c)}</option>)}
             </select>
           </div>
           <div className="field"><label>{t('Hashtag')} *</label><input type="text" value={form.requiredHashtag} onChange={set('requiredHashtag')} required placeholder={t('#mittvarumärke')} /></div>
@@ -656,7 +657,7 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
 
       {!['Draft', 'PendingReview'].includes(campaign.status) && applications && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="sec-head"><h3>{t('Ansökningar')} ({applications.totalCount})</h3></div>
+          <div className="sec-head"><h2>{t('Ansökningar')} ({applications.totalCount})</h2></div>
           {applications.data.length ? (
             applications.data.map((a: ApplicationItem) => (
               <div key={a.id} className="list-row" style={{ gap: 14, flexWrap: 'wrap' }}>
@@ -685,7 +686,7 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
       )}
 
       <div className="card" style={{ marginBottom: 16 }}>
-        <div className="sec-head"><h3>{t('Beskrivning')}</h3></div>
+        <div className="sec-head"><h2>{t('Beskrivning')}</h2></div>
         <p className="text-sm text-muted-foreground">{campaign.description}</p>
       </div>
 
@@ -693,13 +694,13 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginBottom: 16 }}>
           {campaign.contentTags?.length > 0 && (
             <div className="card">
-              <div className="sec-head"><h3>{t('Innehållstaggar')}</h3></div>
+              <div className="sec-head"><h2>{t('Innehållstaggar')}</h2></div>
               <div className="tags">{campaign.contentTags.map(tag => <span key={tag} className="tag g">{tag}</span>)}</div>
             </div>
           )}
           {campaign.perks && (
             <div className="card">
-              <div className="sec-head"><h3>{t('Förmåner för creators')}</h3></div>
+              <div className="sec-head"><h2>{t('Förmåner för creators')}</h2></div>
               <p className="text-sm text-muted-foreground" style={{ whiteSpace: 'pre-line' }}>{campaign.perks}</p>
             </div>
           )}
@@ -732,7 +733,7 @@ export function BrandCampaignDetailPage({ campaignId }: { campaignId: string }) 
 
       {!['Draft', 'PendingReview'].includes(campaign.status) && analytics && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="sec-head" style={{ flexWrap: 'wrap', gap: 8 }}><h3>{t('Creator-prestanda')}</h3><span style={{ fontSize: 12, color: '#9c6b1c', fontWeight: 600, minWidth: 0 }}>{t('Videos som inte granskas inom 48 timmar godkänns automatiskt.')}</span></div>
+          <div className="sec-head" style={{ flexWrap: 'wrap', gap: 8 }}><h2>{t('Creator-prestanda')}</h2><span style={{ fontSize: 12, color: '#9c6b1c', fontWeight: 600, minWidth: 0 }}>{t('Videos som inte granskas inom 48 timmar godkänns automatiskt.')}</span></div>
           <div className="space-y-6">
             {analytics.creatorPerformance.map((cp: CreatorPerformance) => {
               const approvedCount = cp.videos.filter(v => v.status === 'Approved').length;
@@ -1091,7 +1092,7 @@ export function BrandSettingsPage() {
 
       {activeTab === 'profile' && (
         <div className="card" style={{ maxWidth: 720, width: '100%', minWidth: 0 }}>
-          <div className="sec-head"><h3>{t('Företagsprofil')}</h3></div>
+          <div className="sec-head"><h2>{t('Företagsprofil')}</h2></div>
           <form onSubmit={handleProfileSave} className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
             <div className="field full">
               <ImagePicker label={t('Logotyp')} shape="rounded" value={profileForm.logoUrl}
@@ -1106,7 +1107,7 @@ export function BrandSettingsPage() {
             </div>
             <div className="field"><label>{t('Bransch')}</label>
               <select value={profileForm.industry} onChange={e => setProfileForm({ ...profileForm, industry: e.target.value })}>
-                {['Övrigt', 'Mode', 'Skönhet', 'Mat & Dryck', 'Teknik', 'Gaming', 'Sport', 'Musik', 'Resor', 'Hälsa'].map(i => <option key={i} value={i}>{t(i)}</option>)}
+                {CATEGORIES.map(i => <option key={i} value={i}>{t(i)}</option>)}
               </select>
             </div>
             <div className="field"><label>{t('Telefon')}</label><input type="tel" value={profileForm.contactPhone} onChange={e => setProfileForm({ ...profileForm, contactPhone: e.target.value })} /></div>
@@ -1126,7 +1127,7 @@ export function BrandSettingsPage() {
       {activeTab === 'security' && <DeleteAccountCard />}
       {activeTab === 'security' && (
         <div className="card" style={{ maxWidth: 720, width: '100%', minWidth: 0 }}>
-          <div className="sec-head"><h3>{t('Byt lösenord')}</h3></div>
+          <div className="sec-head"><h2>{t('Byt lösenord')}</h2></div>
           <form onSubmit={handlePasswordChange} className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
             <div className="field full"><label>{t('Nuvarande lösenord')}</label><input type="password" value={pwForm.currentPassword} required autoComplete="current-password" onChange={e => setPwForm({ ...pwForm, currentPassword: e.target.value })} /></div>
             <div className="field"><label>{t('Nytt lösenord')}</label><input type="password" value={pwForm.newPassword} required autoComplete="new-password" minLength={8} onChange={e => setPwForm({ ...pwForm, newPassword: e.target.value })} /></div>
@@ -1169,12 +1170,12 @@ export function BrandAssignmentDetailPage() {
       </div>
 
       <div className="card" style={{ marginBottom: 16 }}>
-        <div className="sec-head"><h3>{t('Meddelanden')}</h3></div>
+        <div className="sec-head"><h2>{t('Meddelanden')}</h2></div>
         <ChatPanel assignmentId={assignment.id} />
       </div>
 
       <div className="card">
-        <div className="sec-head"><h3>{t('Omdöme')}</h3></div>
+        <div className="sec-head"><h2>{t('Omdöme')}</h2></div>
         <ReviewSection assignmentId={assignment.id} revieweeUserId={assignment.creatorUserId} assignmentCompleted={assignment.status === 'Completed'} />
       </div>
     </section>
@@ -1222,7 +1223,7 @@ function DraftEditCard({ campaign, onDone }: { campaign: any; onDone: () => void
 
   return (
     <form onSubmit={save} className="card" style={{ marginBottom: 16, border: '1px solid rgba(241,168,143,.4)' }}>
-      <div className="sec-head"><h3>{t('Redigera utkast')}</h3></div>
+      <div className="sec-head"><h2>{t('Redigera utkast')}</h2></div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
         <div style={{ gridColumn: '1 / -1' }}><span style={lbl}>{t('Kampanjnamn')}</span><input style={input} required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
         <div style={{ gridColumn: '1 / -1' }}><span style={lbl}>{t('Beskrivning')}</span><textarea style={{ ...input, resize: 'vertical' }} rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>

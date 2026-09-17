@@ -74,7 +74,7 @@ export function BrandCommunityPage() {
 
       {requests.length > 0 && (
         <div className="card" style={{ marginBottom: 16, border: '1px solid rgba(212,155,46,.4)', background: 'linear-gradient(160deg,#fff,#FFF9F0)' }}>
-          <div className="sec-head"><h3>{t('Ansökningar till communityn')}</h3><span className="vy-badge pend">{requests.length}</span></div>
+          <div className="sec-head"><h2>{t('Ansökningar till communityn')}</h2><span className="vy-badge pend">{requests.length}</span></div>
           {requests.map((m) => (
             <div key={m.creatorProfileId} className="list-row" style={{ gap: 14, flexWrap: 'wrap' }}>
               <span role="button" tabIndex={0} onClick={() => navigate(`/brand/creators/${m.creatorProfileId}`)} style={{ cursor: 'pointer', flex: '0 0 auto' }}>
@@ -96,7 +96,7 @@ export function BrandCommunityPage() {
       )}
 
       <div className="card">
-        <div className="sec-head"><h3>{t('Medlemmar')}</h3><span style={{ fontSize: 13, color: 'var(--muted)' }}>{active.length} {t('st')}</span></div>
+        <div className="sec-head"><h2>{t('Medlemmar')}</h2><span style={{ fontSize: 13, color: 'var(--muted)' }}>{active.length} {t('st')}</span></div>
         {isLoading ? <CardSkeleton rows={3} /> : active.length ? active.map((m) => (
           <div key={m.creatorProfileId} className="list-row" style={{ gap: 14, flexWrap: 'wrap' }}>
             <span role="button" tabIndex={0} onClick={() => navigate(`/brand/creators/${m.creatorProfileId}`)} style={{ cursor: 'pointer', flex: '0 0 auto' }}>

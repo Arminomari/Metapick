@@ -74,7 +74,7 @@ export function UgcCreatorHomePage() {
 
       {needsMe.length > 0 && (
         <div className="card" style={{ marginBottom: 16, border: '1px solid rgba(212,155,46,.45)', background: 'linear-gradient(160deg,#fff,#FFF9F0)' }}>
-          <div className="sec-head"><h3>{t('Väntar på dig')}</h3></div>
+          <div className="sec-head"><h2>{t('Väntar på dig')}</h2></div>
           {needsMe.map((c) => <CollabRow key={c.id} c={c} role="creator" onOpen={() => navigate(`/creator/ugc/collabs/${c.id}`)} />)}
         </div>
       )}
@@ -219,7 +219,7 @@ export function CreatorVerificationCard() {
 
   return (
     <div className="card" style={{ maxWidth: 860, marginBottom: 16 }}>
-      <div className="sec-head"><h3>{t('Verifiering')}</h3><span className={`vy-badge ${suspended ? 'neg' : verified ? 'pos' : 'pend'}`}>{suspended ? t('Avstängd') : verified ? t('Verifierad') : t('Inte verifierad')}</span></div>
+      <div className="sec-head"><h2>{t('Verifiering')}</h2><span className={`vy-badge ${suspended ? 'neg' : verified ? 'pos' : 'pend'}`}>{suspended ? t('Avstängd') : verified ? t('Verifierad') : t('Inte verifierad')}</span></div>
       <p style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--ink-2)', margin: 0 }}>{t('Verifieringen görs hos Stripe: du styrker din identitet och kopplar bankkontot som betalda videouppdrag betalas ut till. Det tar några minuter och görs bara en gång. Produktbyten kan du ta utan verifiering.')}</p>
       {payout?.message && !verified && <div style={{ fontSize: 12.5, color: '#9c6b1c', marginTop: 8 }}>{payout.message}</div>}
       {!verified && !suspended && <button className="btn-apply" style={{ ...btn, marginTop: 12 }} disabled={onboard.isPending} onClick={start}>{onboard.isPending ? t('Öppnar…') : p.hasStripeAccount ? t('Fortsätt verifieringen') : t('Verifiera dig')}</button>}
@@ -261,7 +261,7 @@ export function UgcCreatorProfilePage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: 16, alignItems: 'start' }}>
         <div className="card">
-          <div className="sec-head"><h3>{t('Så matchas du')}</h3></div>
+          <div className="sec-head"><h2>{t('Så matchas du')}</h2></div>
           <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
             <div className="field"><label>{t('Kategorier')}</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{UGC_CATEGORIES.map((c) => { const on = form.categories.includes(c); return <button key={c} type="button" className={`tag ${on ? 'g' : ''}`} style={{ cursor: 'pointer', border: on ? undefined : '1px solid rgba(183,188,200,.4)', background: on ? undefined : 'transparent' }} onClick={() => setForm({ ...form, categories: on ? form.categories.filter((x) => x !== c) : [...form.categories, c].slice(0, 6) })}>{c}</button>; })}</div>
@@ -275,7 +275,7 @@ export function UgcCreatorProfilePage() {
         </div>
 
         <div className="card">
-          <div className="sec-head"><h3>{t('Rättigheter')}</h3></div>
+          <div className="sec-head"><h2>{t('Rättigheter')}</h2></div>
           <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
             <label className="checkrow"><input type="checkbox" checked={form.allowPortfolioUse} onChange={(e) => setForm({ ...form, allowPortfolioUse: e.target.checked })} /> {t('VYRLE får visa mina levererade videor i min portfolio och i marknadsföring av tjänsten')}</label>
             <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.55 }}>{t('Du ansvarar själv för skatt på ersättning och på produkter du får i produktbyten. Rättighetspaketet per uppdrag står i kontraktet:')} {Object.values(RIGHTS_LABEL).map((v) => t(v)).join(' · ')}.</div>

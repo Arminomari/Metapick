@@ -306,4 +306,6 @@ export const common: Record<string, string> = {
   'väntar på företagets svar': 'waiting for the brand\'s answer',
   'portfolio': 'portfolio',
   'Support från': 'Support from',
+  'Humor & Nöje': 'Humor & Entertainment',
+  'Tjänster': 'Services',
 };

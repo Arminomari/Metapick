@@ -64,7 +64,7 @@ export function CreatorTapsPage() {
 
       {pending.length > 0 && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="sec-head"><h3>{t('Väntande ansökningar')}</h3><span className="vy-badge pend">{pending.length}</span></div>
+          <div className="sec-head"><h2>{t('Väntande ansökningar')}</h2><span className="vy-badge pend">{pending.length}</span></div>
           <div style={{ display: 'grid', gap: 10 }}>
             {pending.map((r) => (
               <div key={r.brandProfileId} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>

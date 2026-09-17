@@ -44,7 +44,8 @@ public class PortfolioService : IPortfolioService
         var creator = await _creators.Query().FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
         if (creator == null) return Errors.NotFound("Creator profile");
 
-        var validation = Validate(request.Title, request.MediaType, request.MediaUrl, out var mediaType);
+        var validation = Validate(request.Title, request.MediaType, request.MediaUrl, out var mediaType)
+            ?? ValidateOptionalUrl(request.ThumbnailUrl, "Thumbnail URL");
         if (validation != null) return validation;
 
         var maxSort = await _items.Query()
@@ -82,7 +83,8 @@ public class PortfolioService : IPortfolioService
         if (item == null) return Errors.NotFound("Portfolio item", itemId);
         if (item.CreatorProfileId != creator.Id) return Errors.Forbidden("Not your portfolio item");
 
-        var validation = Validate(request.Title, request.MediaType, request.MediaUrl, out var mediaType);
+        var validation = Validate(request.Title, request.MediaType, request.MediaUrl, out var mediaType)
+            ?? ValidateOptionalUrl(request.ThumbnailUrl, "Thumbnail URL");
         if (validation != null) return validation;
 
         item.Title = request.Title.Trim();
@@ -113,6 +115,16 @@ public class PortfolioService : IPortfolioService
         _items.Remove(item);
         await _uow.SaveChangesAsync(ct);
         return true;
+    }
+
+    /// <summary>Optional links still have to be plain http(s) — never javascript:, data: or a bare path.</summary>
+    private static Error? ValidateOptionalUrl(string? url, string name)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return null;
+        return Uri.TryCreate(url.Trim(), UriKind.Absolute, out var uri)
+               && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+            ? null
+            : Errors.Validation($"{name} must be a valid http(s) URL");
     }
 
     private static Error? Validate(string title, string mediaTypeRaw, string mediaUrl, out PortfolioMediaType mediaType)

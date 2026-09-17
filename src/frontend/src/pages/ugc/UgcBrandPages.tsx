@@ -53,7 +53,7 @@ export function UgcBrandHomePage() {
 
       {needsMe.length > 0 && (
         <div className="card" style={{ marginBottom: 16, border: '1px solid rgba(212,155,46,.45)', background: 'linear-gradient(160deg,#fff,#FFF9F0)' }}>
-          <div className="sec-head"><h3>{t('Väntar på dig')}</h3></div>
+          <div className="sec-head"><h2>{t('Väntar på dig')}</h2></div>
           {needsMe.map((c) => <CollabRow key={c.id} c={c} role="brand" onOpen={() => navigate(`/brand/ugc/collabs/${c.id}`)} />)}
         </div>
       )}
@@ -70,7 +70,7 @@ export function UgcBrandHomePage() {
         <>
           {[['Öppna', live], ['Utkast', drafts], ['Stängda', closed]].map(([label, list]) => (list as UgcCampaign[]).length > 0 && (
             <div className="card" key={label as string} style={{ marginBottom: 14 }}>
-              <div className="sec-head"><h3>{t(label as string)}</h3><span style={{ fontSize: 13, color: 'var(--muted)' }}>{(list as UgcCampaign[]).length}</span></div>
+              <div className="sec-head"><h2>{t(label as string)}</h2><span style={{ fontSize: 13, color: 'var(--muted)' }}>{(list as UgcCampaign[]).length}</span></div>
               {(list as UgcCampaign[]).map((c) => (
                 <div key={c.id} className="vcamp" onClick={() => navigate(c.status === 'Draft' ? `/brand/ugc/campaigns/${c.id}/edit` : `/brand/ugc/campaigns/${c.id}`)}>
                   <span className="vcamp-thumb"><span className="brand-mono">{initial(c.title)}</span></span>
@@ -306,7 +306,7 @@ export function UgcCampaignBuilderPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))', gap: 16, alignItems: 'start' }}>
         <div style={{ display: 'grid', gap: 16 }}>
           <div className="card">
-            <div className="sec-head"><h3>{t('Brief')}</h3></div>
+            <div className="sec-head"><h2>{t('Brief')}</h2></div>
             <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
               <div className="field"><label style={lbl('title')}>{t('Titel')} *</label><input style={{ ...input, ...bad('title') }} value={form.title} onChange={(e) => set({ title: e.target.value })} placeholder={t('t.ex. Lunchdeal-video för TikTok')} maxLength={200} /><Err k="title" /></div>
               <div className="field"><label style={lbl('goal')}>{t('Mål')} *</label><textarea rows={2} style={bad('goal')} value={form.brief.goal} onChange={(e) => setBrief({ goal: e.target.value })} placeholder={t('Vad ska videon åstadkomma?')} /><Err k="goal" /></div>
@@ -327,7 +327,7 @@ export function UgcCampaignBuilderPage() {
 
         <div style={{ display: 'grid', gap: 16 }}>
           <div className="card">
-            <div className="sec-head"><h3>{t('Ersättning & rättigheter')}</h3></div>
+            <div className="sec-head"><h2>{t('Ersättning & rättigheter')}</h2></div>
             <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
               <div className="field"><label>{t('Ersättningstyp')}</label>
                 <select value={form.compensation} onChange={(e) => set({ compensation: e.target.value })}>
@@ -361,7 +361,7 @@ export function UgcCampaignBuilderPage() {
           </div>
 
           <div className="card">
-            <div className="sec-head"><h3>{t('Vilka creators')}</h3></div>
+            <div className="sec-head"><h2>{t('Vilka creators')}</h2></div>
             <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
               <div className="field"><label>{t('Region')}</label>
                 <select value={form.region ?? ''} onChange={(e) => set({ region: e.target.value })}><option value="">{t('Var som helst')}</option>{UGC_REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}</select>
@@ -462,7 +462,7 @@ export function UgcBrandCampaignPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: 16, alignItems: 'start' }}>
         <div className="card" style={{ gridColumn: '1 / -1' }}>
-          <div className="sec-head"><h3>{t('Bud')}</h3><span style={{ fontSize: 13, color: 'var(--muted)' }}>{open.length} {t('öppna')} · {t('sorterade på leveranshistorik, geografi och engagemang')}</span></div>
+          <div className="sec-head"><h2>{t('Bud')}</h2><span style={{ fontSize: 13, color: 'var(--muted)' }}>{open.length} {t('öppna')} · {t('sorterade på leveranshistorik, geografi och engagemang')}</span></div>
           {open.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13.5, padding: '8px 0' }}>{c.status === 'Published' ? t('Inga bud ännu — creators som matchar har fått en notis.') : t('Inga öppna bud.')}</div>}
           {open.map((a) => (
             <BidRow key={a.id} a={a} onOpenProfile={() => navigate(`/brand/creators/${a.creatorProfileId}`)}>
@@ -490,11 +490,11 @@ export function UgcBrandCampaignPage() {
         </div>
 
         <div className="card">
-          <div className="sec-head"><h3>{t('Brief')}</h3>{c.briefGeneratedByAi && <span className="vy-badge info">AI</span>}</div>
+          <div className="sec-head"><h2>{t('Brief')}</h2>{c.briefGeneratedByAi && <span className="vy-badge info">AI</span>}</div>
           <BriefView b={c.brief} />
         </div>
         <div className="card">
-          <div className="sec-head"><h3>{t('Målgrupp')}</h3></div>
+          <div className="sec-head"><h2>{t('Målgrupp')}</h2></div>
           <div style={{ fontSize: 13.5, lineHeight: 1.7 }}>
             <div><strong>{t('Region')}:</strong> {c.region || t('Var som helst')}</div>
             <div><strong>{t('Kategorier')}:</strong> {c.categories.length ? c.categories.join(', ') : t('Alla')}</div>
@@ -585,7 +585,7 @@ export function UgcDirectInvitePage() {
       <OrgNumberNotice />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))', gap: 16, alignItems: 'start' }}>
         <div className="card">
-          <div className="sec-head"><h3>{t('Brief')}</h3></div>
+          <div className="sec-head"><h2>{t('Brief')}</h2></div>
           <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
             <div className="field"><label>{t('Titel')} *</label><input style={input} value={form.title} onChange={(e) => set({ title: e.target.value })} /></div>
             <div className="field"><label>{t('Mål')} *</label><textarea rows={2} value={form.brief.goal} onChange={(e) => setBrief({ goal: e.target.value })} /></div>
@@ -601,7 +601,7 @@ export function UgcDirectInvitePage() {
           </div>
         </div>
         <div className="card">
-          <div className="sec-head"><h3>{t('Ersättning & rättigheter')}</h3></div>
+          <div className="sec-head"><h2>{t('Ersättning & rättigheter')}</h2></div>
           <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
             <div className="field"><label>{t('Ersättningstyp')}</label><select value={form.compensation} onChange={(e) => set({ compensation: e.target.value })}>{Object.entries(COMPENSATION_LABEL).map(([k, v]) => <option key={k} value={k}>{t(v)}</option>)}</select></div>
             {paid && <div className="field"><label>{t('Ersättning till creatorn (kr)')}</label><input style={input} inputMode="decimal" value={oreToKronor(form.amountOre)} onChange={(e) => set({ amountOre: kronorToOre(e.target.value) })} /></div>}

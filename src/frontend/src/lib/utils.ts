@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { lang, t } from '@/lib/i18n';
+import { canonicalCategory } from '@/lib/categories';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -49,14 +50,10 @@ export function countryName(code?: string | null): string {
   return COUNTRY_SV[code] ? t(COUNTRY_SV[code]) : code;
 }
 
-// Older accounts stored categories in English; show them like the rest.
-const CATEGORY_ALIAS: Record<string, string> = {
-  Fashion: 'Mode', Beauty: 'Skönhet', Food: 'Mat & Dryck', 'Food & Drink': 'Mat & Dryck', Tech: 'Teknik',
-  Technology: 'Teknik', Travel: 'Resor', Music: 'Musik', Sports: 'Sport', Health: 'Hälsa', Lifestyle: 'Livsstil', Other: 'Övrigt',
-};
+// Older stored names (and English ones) read as today's category.
 export function categoryLabel(value?: string | null): string {
   if (!value) return '';
-  return t(CATEGORY_ALIAS[value] ?? value);
+  return t(canonicalCategory(value));
 }
 
 const PAYOUT_MODEL_SV: Record<string, string> = { Fixed: 'Fast belopp', FixedThreshold: 'Fast belopp', CPM: 'Per visning', Tiered: 'Trappa', Hybrid: 'Hybrid' };

@@ -236,7 +236,7 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
       {/* ── Community feed ── */}
       {(ownView || (p.posts?.length ?? 0) > 0) && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="sec-head"><h3>{t('Uppdateringar')}</h3>{!ownView && <span style={{ fontSize: 13, color: 'var(--muted)' }}>{t('Nytt från')} {p.companyName}</span>}</div>
+          <div className="sec-head"><h2>{t('Uppdateringar')}</h2>{!ownView && <span style={{ fontSize: 13, color: 'var(--muted)' }}>{t('Nytt från')} {p.companyName}</span>}</div>
           {ownView && <PostComposer logoUrl={p.logoUrl} initial={initial} onPosted={() => qc.invalidateQueries({ queryKey: ['brand-public', id] })} />}
           <div style={{ display: 'grid', gap: 12 }}>
             {(p.posts ?? []).map((post) => (
@@ -265,7 +265,7 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
 
       {/* ── Active campaigns ── */}
       <div className="card" style={{ marginBottom: 16 }}>
-        <div className="sec-head"><h3>{t('Aktiva kampanjer')}</h3><span style={{ fontSize: 13, color: 'var(--muted)' }}>{p.activeCampaigns.length} {t('öppna just nu')}</span></div>
+        <div className="sec-head"><h2>{t('Aktiva kampanjer')}</h2><span style={{ fontSize: 13, color: 'var(--muted)' }}>{p.activeCampaigns.length} {t('öppna just nu')}</span></div>
         {p.activeCampaigns.length ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 250px), 1fr))', gap: 14 }}>
             {p.activeCampaigns.map((c) => (
@@ -311,7 +311,7 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
       {/* ── Past campaigns ── */}
       {p.pastCampaigns.length > 0 && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="sec-head"><h3>{t('Tidigare kampanjer')}</h3></div>
+          <div className="sec-head"><h2>{t('Tidigare kampanjer')}</h2></div>
           {p.pastCampaigns.map((c) => (
             <div key={c.id} className="list-row">
               <div className="row-main" style={{ flex: 1, minWidth: 0 }}>
@@ -330,7 +330,7 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
       {/* ── Reviews ── */}
       {p.reviewCount > 0 && (
         <div className="card">
-          <div className="sec-head"><h3>{t('Omdömen från creators')}</h3>
+          <div className="sec-head"><h2>{t('Omdömen från creators')}</h2>
             <span style={{ fontSize: 13, color: 'var(--muted)' }}>{p.averageRating.toFixed(1)} {t('av')} 5 · {p.reviewCount} {p.reviewCount === 1 ? t('omdöme') : t('omdömen')}</span>
           </div>
           {p.recentReviews.map((r) => (
@@ -393,7 +393,7 @@ export function BrandOwnPublicProfilePage() {
       {editing && (
         <form className="card" style={{ marginBottom: 16, border: '1px solid rgba(241,168,143,.4)' }}
           onSubmit={(e) => { e.preventDefault(); void save(); }}>
-          <div className="sec-head"><h3>{t('Redigera profil')}</h3></div>
+          <div className="sec-head"><h2>{t('Redigera profil')}</h2></div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 14 }}>
             <div style={{ gridColumn: '1 / -1' }}>
               <ImagePicker value={form.logoUrl} onChange={(v) => setForm({ ...form, logoUrl: v })} label={t('Logotyp')} shape="rounded" />

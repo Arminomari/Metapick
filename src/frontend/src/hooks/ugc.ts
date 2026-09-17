@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { CATEGORIES } from '@/lib/categories';
 import api from '@/lib/api';
 import { t } from '@/lib/i18n';
 import type { ApiResponse } from '@/types';
@@ -139,7 +140,7 @@ export const COLLAB_TONE: Record<string, string> = {
 };
 export const collabStatusLabel = (s: string) => t(COLLAB_STATUS_SV[s] ?? s);
 export const CREATOR_STATUS_SV: Record<string, string> = { Pending: 'Väntar', Verified: 'Verifierad', Approved: 'Godkänd', Suspended: 'Avstängd' };
-export const UGC_CATEGORIES = ['Mat & Dryck', 'Skönhet', 'Mode', 'Fitness', 'Hem & Inredning', 'Teknik', 'Barn & Familj', 'Resor', 'Nöje', 'Tjänster', 'Övrigt'];
+export const UGC_CATEGORIES: string[] = [...CATEGORIES];
 export const UGC_REGIONS = ['Stockholm', 'Göteborg', 'Malmö', 'Uppsala', 'Linköping', 'Örebro', 'Västerås', 'Helsingborg', 'Norrköping', 'Jönköping', 'Umeå', 'Lund', 'Hela Sverige'];
 
 export const apiError = (e: any, fallback: string) => {

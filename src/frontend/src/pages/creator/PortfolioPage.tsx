@@ -147,7 +147,7 @@ export function CreatorPortfolioPage() {
       {/* ── 2. Omdömen & om mig ── */}
       <div className="vcsplit" style={{ marginTop: 18 }}>
         <div className="card">
-          <div className="sec-head"><h3>{t('Omdömen')}</h3>{reviews && reviews.totalReviews > 0 && <span style={{ fontSize: 13, color: 'var(--muted)' }}>{reviews.averageStars.toFixed(1)} {t('av')} {reviews.totalReviews}</span>}</div>
+          <div className="sec-head"><h2>{t('Omdömen')}</h2>{reviews && reviews.totalReviews > 0 && <span style={{ fontSize: 13, color: 'var(--muted)' }}>{reviews.averageStars.toFixed(1)} {t('av')} {reviews.totalReviews}</span>}</div>
           {reviews && reviews.totalReviews > 0 ? (
             <ReviewList summary={reviews} />
           ) : (
@@ -155,7 +155,7 @@ export function CreatorPortfolioPage() {
           )}
         </div>
         <div className="card">
-          <div className="sec-head"><h3>{t('Om mig')}</h3><Link to="/creator/profile" className="view-all">{t('Redigera')}</Link></div>
+          <div className="sec-head"><h2>{t('Om mig')}</h2><Link to="/creator/profile" className="view-all">{t('Redigera')}</Link></div>
           {profile?.bio
             ? <p style={{ fontSize: 13.5, color: 'var(--ink-2)', lineHeight: 1.6 }}>{profile.bio}</p>
             : <p style={{ fontSize: 13.5, color: 'var(--muted)', lineHeight: 1.6 }}>{t('Lägg till en bio i inställningarna så företag lär känna dig.')}</p>}
@@ -171,7 +171,7 @@ export function CreatorPortfolioPage() {
       {/* ── 3. Företag du jobbat med ── */}
       {brands.length > 0 && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="sec-head"><h3>{t('Företag du jobbat med')}</h3><span style={{ fontSize: 13, color: 'var(--muted)' }}>{brands.length}</span></div>
+          <div className="sec-head"><h2>{t('Företag du jobbat med')}</h2><span style={{ fontSize: 13, color: 'var(--muted)' }}>{brands.length}</span></div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
             {brands.map((b) => (
               <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 14, border: '1px solid rgba(241,168,143,.18)', background: 'rgba(255,255,255,.6)', maxWidth: '100%', minWidth: 0 }}>
@@ -195,7 +195,7 @@ export function CreatorPortfolioPage() {
 
       {showForm && (
         <div className="card" style={{ marginBottom: 16, maxWidth: 860 }}>
-          <div className="sec-head"><h3>{editingId ? t('Redigera arbete') : t('Nytt arbete')}</h3></div>
+          <div className="sec-head"><h2>{editingId ? t('Redigera arbete') : t('Nytt arbete')}</h2></div>
           <form onSubmit={handleSubmit} className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))' }}>
             <div className="field full"><label>{t('Titel')} *</label><input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required placeholder={t('t.ex. Sommarkampanj för X')} /></div>
             <div className="field"><label>{t('Typ av media')}</label><select value={form.mediaType} onChange={(e) => setForm({ ...form, mediaType: e.target.value as PortfolioMediaType })}>{MEDIA_TYPES.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}</select></div>
