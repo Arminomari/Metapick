@@ -220,26 +220,46 @@ export function BrandShell() {
 }
 
 /** Slim amber bar shown until the logged-in user has confirmed their email. */
+const VERIFY_COOLDOWN_S = 60;
+const verifyWait = () => {
+  try { const at = Number(localStorage.getItem('vyrle-verify-sent-at') || 0); return Math.max(0, VERIFY_COOLDOWN_S - Math.floor((Date.now() - at) / 1000)); } catch { return 0; }
+};
 function EmailVerifyBanner() {
   const { data: prof } = useProfile();
-  const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
-  if (!prof || prof.emailVerified) return null;
+  const [failed, setFailed] = useState(false);
+  const [wait, setWait] = useState(verifyWait);
+  const [hidden, setHidden] = useState(() => { try { return sessionStorage.getItem('vyrle-verify-hidden') === '1'; } catch { return false; } });
+
+  // The cooldown survives navigation and reloads, so the link can't be spammed.
+  useEffect(() => {
+    if (wait <= 0) return;
+    const id = window.setInterval(() => setWait(verifyWait()), 1000);
+    return () => window.clearInterval(id);
+  }, [wait]);
+
+  if (!prof || prof.emailVerified || hidden) return null;
 
   const resend = async () => {
-    setBusy(true);
-    try { await api.post('/auth/resend-verification', { email: prof.email }); setSent(true); } catch { /* banner stays; user can retry */ }
+    setBusy(true); setFailed(false);
+    try {
+      await api.post('/auth/resend-verification', { email: prof.email });
+      try { localStorage.setItem('vyrle-verify-sent-at', String(Date.now())); } catch { /* private mode */ }
+      setWait(VERIFY_COOLDOWN_S);
+    } catch { setFailed(true); }
     setBusy(false);
   };
+  const hide = () => { try { sessionStorage.setItem('vyrle-verify-hidden', '1'); } catch { /* private mode */ } setHidden(true); };
+  const linkBtn = { border: 'none', background: 'none', color: '#9c4f31', fontWeight: 700, cursor: 'pointer', fontSize: 13, padding: 0, fontFamily: 'inherit' } as const;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '9px 22px', background: 'rgba(242,197,138,.28)', borderBottom: '1px solid rgba(212,155,46,.35)', fontSize: 13 }}>
-      <span aria-hidden>✉️</span>
+    <div role="status" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '9px 22px', background: 'rgba(242,197,138,.28)', borderBottom: '1px solid rgba(212,155,46,.35)', fontSize: 13 }}>
       <span>{t('Bekräfta din e-postadress — vi har skickat en länk till')} <strong>{prof.email}</strong></span>
-      {sent
-        ? <span style={{ fontWeight: 700, color: '#2f7d52' }}>✓ {t('Skickat! Kolla inkorgen (och skräpposten).')}</span>
-        : <button type="button" onClick={resend} disabled={busy} style={{ border: 'none', background: 'none', color: '#9c4f31', fontWeight: 700, cursor: 'pointer', fontSize: 13, padding: 0, fontFamily: 'inherit' }}>{busy ? t('Skickar…') : t('Skicka länken igen')}</button>}
+      {wait > 0
+        ? <span style={{ fontWeight: 700, color: '#2f7d52' }}>{t('Skickat. Kolla inkorgen och skräpposten.')} <span style={{ fontWeight: 500, color: 'var(--muted)' }}>{t('Skicka igen om')} {wait} s</span></span>
+        : <button type="button" onClick={resend} disabled={busy} style={linkBtn}>{busy ? t('Skickar…') : t('Skicka länken igen')}</button>}
+      {failed && <span style={{ fontWeight: 700, color: '#b3402f' }}>{t('Kunde inte skicka just nu. Försök igen om en stund.')}</span>}
+      <button type="button" onClick={hide} aria-label={t('Dölj')} style={{ ...linkBtn, marginLeft: 'auto', color: 'var(--muted)', fontSize: 16, lineHeight: 1 }}>×</button>
     </div>
   );
 }
-

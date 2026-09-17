@@ -7,6 +7,8 @@ import { BrandCommunityPage } from '@/pages/brand/BrandCommunityPage';
 import { Navigate, Route, BrowserRouter as Router, Routes, useParams } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { VersionGuard } from '@/lib/versionGuard';
+import { homeFor, rememberReturnTo } from '@/lib/session';
+import { NotFoundPage } from '@/pages/NotFoundPage';
 import { SupportThreadPage } from '@/pages/shared/SupportThreadPage';
 import { UgcCollabPage } from '@/pages/ugc/UgcCollabPage';
 import { UgcBrandHomePage, UgcPipelinePage, UgcCampaignBuilderPage, UgcBrandCampaignPage, UgcDirectInvitePage } from '@/pages/ugc/UgcBrandPages';
@@ -55,8 +57,21 @@ const queryClient = new QueryClient({
 
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
   const { isAuthenticated, role } = useAuthStore();
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (allowedRoles && role && !allowedRoles.includes(role)) return <Navigate to="/" replace />;
+  if (!isAuthenticated) {
+    rememberReturnTo(window.location.pathname + window.location.search);
+    return <Navigate to="/login" replace />;
+  }
+  // Wrong area for this role: go to their own home, never out to the marketing page.
+  if (allowedRoles && role && !allowedRoles.includes(role)) return <Navigate to={homeFor(role)} replace />;
+  return <>{children}</>;
+}
+
+/** Login and register are for guests. Someone already signed in goes to their app. */
+function GuestOnly({ children }: { children: React.ReactNode }) {
+  // Decided once on mount: the page itself navigates after a successful login.
+  const [signedIn] = React.useState(() => useAuthStore.getState().isAuthenticated);
+  const role = useAuthStore.getState().role;
+  if (signedIn && role) return <Navigate to={homeFor(role)} replace />;
   return <>{children}</>;
 }
 
@@ -74,8 +89,8 @@ export default function App() {
         <Routes>
           {/* Public landing — the VYRLE marketing site */}
           <Route path="/" element={<VyrleFrame src="/vyrle.html" title="VYRLE" />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
+          <Route path="/register" element={<GuestOnly><RegisterPage /></GuestOnly>} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/verify-email" element={<VerifyEmailPage />} />
@@ -113,6 +128,7 @@ export default function App() {
             <Route path="/brand/ugc/campaigns/:id/edit" element={<UgcCampaignBuilderPage />} />
             <Route path="/brand/ugc/invite" element={<UgcDirectInvitePage />} />
             <Route path="/brand/ugc/collabs/:id" element={<UgcCollabPage />} />
+            <Route path="/brand/*" element={<NotFoundPage inApp />} />
           </Route>
 
           {/* Creator area — VYRLE shell */}
@@ -138,6 +154,7 @@ export default function App() {
             <Route path="/creator/ugc/collabs" element={<UgcPipelinePage role="creator" />} />
             <Route path="/creator/ugc/collabs/:id" element={<UgcCollabPage />} />
             <Route path="/creator/ugc/profile" element={<UgcCreatorProfilePage />} />
+            <Route path="/creator/*" element={<NotFoundPage inApp />} />
           </Route>
 
           {/* Redirect dashboard based on role */}
@@ -145,7 +162,7 @@ export default function App() {
           {/* Mail CTAs land here and bounce to the right shell */}
           <Route path="/messages" element={<MessagesRedirect />} />
           <Route path="/ugc" element={<UgcRedirect />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Router>
     </QueryClientProvider>

@@ -2135,5 +2135,22 @@ section{position:relative}
 
 })();
 </script>
+<script>
+/* Signed-in visitors get a way back into the app instead of "Log in". */
+(function () {
+  try {
+    var raw = localStorage.getItem('creatorpay-auth');
+    var st = raw ? (JSON.parse(raw) || {}).state : null;
+    if (!st || !st.isAuthenticated) return;
+    document.querySelectorAll('a[href="/login"]').forEach(function (a) { a.style.display = 'none'; });
+    document.querySelectorAll('a[href="/register"]').forEach(function (a) {
+      a.setAttribute('href', '/dashboard');
+      var svg = a.querySelector('svg');
+      a.textContent = 'Open app ';
+      if (svg) a.appendChild(svg);
+    });
+  } catch (e) { /* storage blocked: keep the default links */ }
+})();
+</script>
 </body>
 </html>

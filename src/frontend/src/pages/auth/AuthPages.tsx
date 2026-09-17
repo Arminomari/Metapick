@@ -4,6 +4,8 @@ import React, { useEffect, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useLogin, useRegister } from '@/hooks/api';
 import { useAuthStore } from '@/stores/authStore';
+import { postLoginPath, takeSessionExpired } from '@/lib/session';
+import { useTitle } from '@/lib/title';
 import { DateInput } from '@/components/ui/DateInput';
 import { ALL_TAGS } from '@/lib/tags';
 import api from '@/lib/api';
@@ -106,7 +108,7 @@ function useSocialLoginFlow(setError: (msg: string) => void, onNeedsRegistration
       const out = res.data.data;
       if (out.status === 'LoggedIn' && out.auth) {
         authStore.login(out.auth as any);
-        navigate(out.auth.role === 'Admin' ? '/admin' : out.auth.role === 'Brand' ? '/brand' : '/creator');
+        navigate(postLoginPath(out.auth.role));
       } else if (out.status === 'NeedsRegistration' && out.identity) {
         onNeedsRegistration({
           provider: result.provider,
@@ -131,6 +133,8 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const login = useLogin();
+  const [expired] = useState(() => takeSessionExpired());
+  useTitle(t('Logga in'));
   const authStore = useAuthStore();
 
   const onSocialToken = useSocialLoginFlow(setError, (pending) => {
@@ -144,7 +148,7 @@ export function LoginPage() {
     try {
       const data = await login.mutateAsync({ email, password });
       authStore.login(data);
-      navigate(data.role === 'Admin' ? '/admin' : data.role === 'Brand' ? '/brand' : '/creator');
+      navigate(postLoginPath(data.role));
     } catch (err: any) {
       setError(extractApiError(err, t('Fel e-post eller lösenord')));
     }
@@ -154,6 +158,7 @@ export function LoginPage() {
     <AuthShell>
       <h1 className="auth-title">{t('Logga')} <em>{t('in')}</em></h1>
       <p className="auth-sub">{t('Fortsätt där du slutade.')}</p>
+      {expired && <p role="status" style={{ margin: '0 0 14px', padding: '10px 14px', borderRadius: 12, fontSize: 13.5, lineHeight: 1.5, background: 'rgba(242,197,138,.28)', border: '1px solid rgba(212,155,46,.35)', color: '#7a5416' }}>{t('Din session har gått ut. Logga in igen så kommer du tillbaka dit du var.')}</p>}
       <form className="auth-form" onSubmit={handleSubmit}>
         <div className="field"><label htmlFor="li-email">{t('E-post')}</label><input id="li-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" placeholder={t('du@exempel.se')} /></div>
         <div className="field"><label htmlFor="li-pw">{t('Lösenord')}</label>

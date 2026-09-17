@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { onNotify } from '@/lib/notify';
 
 /* ============================================================
    VYRLE toast system — replaces browser alert()/confirm() with
@@ -25,12 +26,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const idRef = useRef(0);
 
+  const lastRef = useRef<{ text: string; at: number }>({ text: '', at: 0 });
+
   const push = useCallback((text: string, kind: ToastKind = 'info') => {
+    // A global error and the call site often report the same failure.
+    if (lastRef.current.text === text && Date.now() - lastRef.current.at < 2500) return;
+    lastRef.current = { text, at: Date.now() };
     const id = ++idRef.current;
     setToasts((t) => [...t.slice(-3), { id, kind, text }]);
     setTimeout(() => setToasts((t) => t.map((x) => (x.id === id ? { ...x, leaving: true } : x))), 3600);
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4000);
   }, []);
+
+  useEffect(() => onNotify((d) => push(d.text, d.kind)), [push]);
 
   return (
     <ToastCtx.Provider value={{ push }}>

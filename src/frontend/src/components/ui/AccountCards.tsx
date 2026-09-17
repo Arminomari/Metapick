@@ -3,13 +3,14 @@ import type { CSSProperties } from 'react';
 import api from '@/lib/api';
 import { useProfile } from '@/hooks/api';
 import { t } from '@/lib/i18n';
+import { useAuthStore } from '@/stores/authStore';
 
 const input: CSSProperties = {
   width: '100%', minWidth: 0, border: '1px solid rgba(241,168,143,.28)', borderRadius: 13,
   padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit',
   background: 'rgba(255,255,255,.75)', color: '#0B0F17',
 };
-const label: CSSProperties = { fontSize: 12, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6, display: 'block' };
+const label: CSSProperties = { fontSize: 13, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 6, display: 'block' };
 const ok: CSSProperties = { marginTop: 10, fontSize: 13, fontWeight: 600, color: '#2f7d52' };
 const bad: CSSProperties = { marginTop: 10, fontSize: 13, fontWeight: 600, color: '#cf4b4b' };
 
@@ -27,7 +28,13 @@ export function ChangePasswordCard() {
     setBusy(true);
     try {
       await api.post('/auth/change-password', { currentPassword: form.current, newPassword: form.next });
-      setMsg(t('Lösenordet är bytt!'));
+      // Changing the password signs out every device. Sign this one straight back in
+      // so the user isn't thrown out a few minutes later without knowing why.
+      try {
+        const email = useAuthStore.getState().email;
+        if (email) { const { data } = await api.post('/auth/login', { email, password: form.next }); useAuthStore.getState().login(data.data); }
+      } catch { /* next expiry shows the normal "session expired" notice */ }
+      setMsg(t('Lösenordet är bytt. Andra enheter har loggats ut.'));
       setForm({ current: '', next: '', confirm: '' });
     } catch (e2: any) {
       setErr(e2?.response?.data?.error?.message ?? t('Kunde inte byta lösenord.'));
@@ -46,8 +53,8 @@ export function ChangePasswordCard() {
           <button type="submit" className="btn-apply" style={{ width: 'auto', maxWidth: '100%', padding: '12px 24px' }} disabled={busy}>{busy ? t('Sparar…') : t('Byt lösenord')}</button>
         </div>
       </form>
-      {msg && <div style={ok}>✓ {msg}</div>}
-      {err && <div style={bad}>{err}</div>}
+      {msg && <div style={ok} role="status">{msg}</div>}
+      {err && <div style={bad} role="alert">{err}</div>}
     </div>
   );
 }
@@ -63,10 +70,15 @@ export function ChangeEmailCard() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMsg(''); setErr('');
+    // Never rely on the browser's own validation alone — a scripted submit skips it.
+    const email = form.email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setErr(t('Ange en giltig e-postadress.')); return; }
+    if (!form.password) { setErr(t('Ange ditt lösenord för att bekräfta bytet.')); return; }
+    if (prof && email.toLowerCase() === prof.email.toLowerCase()) { setErr(t('Det är redan din e-postadress.')); return; }
     setBusy(true);
     try {
-      await api.post('/auth/change-email', { newEmail: form.email, currentPassword: form.password });
-      setMsg(t('E-postadressen är bytt! En verifieringslänk har skickats till den nya adressen — bekräfta för att aktivera den fullt ut.'));
+      await api.post('/auth/change-email', { newEmail: email, currentPassword: form.password });
+      setMsg(t('E-postadressen är bytt. En verifieringslänk har skickats till den nya adressen — bekräfta den för att aktivera adressen fullt ut.'));
       setForm({ email: '', password: '' });
     } catch (e2: any) {
       setErr(e2?.response?.data?.error?.message ?? t('Kunde inte byta e-postadress.'));
@@ -85,8 +97,8 @@ export function ChangeEmailCard() {
           <button type="submit" className="btn-apply" style={{ width: 'auto', maxWidth: '100%', padding: '12px 24px' }} disabled={busy}>{busy ? t('Sparar…') : t('Byt e-post')}</button>
         </div>
       </form>
-      {msg && <div style={ok}>✓ {msg}</div>}
-      {err && <div style={bad}>{err}</div>}
+      {msg && <div style={ok} role="status">{msg}</div>}
+      {err && <div style={bad} role="alert">{err}</div>}
     </div>
   );
 }

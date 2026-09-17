@@ -68,3 +68,11 @@ export const useAuthStore = create<AuthState>()(
     },
   ),
 );
+
+// Another tab logging in, out, or refreshing tokens must reach this one too —
+// otherwise it keeps a rotated (dead) refresh token and gets logged out.
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'creatorpay-auth') void useAuthStore.persist.rehydrate();
+  });
+}
