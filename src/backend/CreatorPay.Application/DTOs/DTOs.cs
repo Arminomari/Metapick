@@ -279,7 +279,13 @@ public record BrandPublicProfileDto(
     // The tap, as creators see it
     bool HasTap = false, decimal TapCpm = 0, string? TapName = null, string? TapBrief = null,
     string? TapHashtag = null, decimal? TapCapPerVideo = null, decimal? TapMonthlyCapPerCreator = null,
-    string? MembershipStatus = null);
+    string? MembershipStatus = null,
+    // Every open tap — a brand can run several with different briefs and rates
+    List<PublicTapDto>? Taps = null);
+
+public record PublicTapDto(
+    Guid Id, string Name, decimal Cpm, string Brief, string RequiredHashtag,
+    decimal? CapPerVideo, decimal? MonthlyCapPerCreator, string Category);
 
 // ──── Application ────
 public record ApplyToCampaignRequest(Guid CampaignId, string? Message);
@@ -399,7 +405,7 @@ public record InviteMemberRequest(Guid CreatorProfileId);
 public record TapSubmissionDto(
     Guid SubmissionId, Guid AssignmentId, string CreatorName, string? CreatorAvatarUrl,
     Guid CreatorProfileId, string VideoUrl, string? VideoId, long Views,
-    DateTime SubmittedAt, int HoursUntilAutoApprove);
+    DateTime SubmittedAt, int HoursUntilAutoApprove, Guid? TapId = null, string? TapName = null);
 public record InviteManyRequest(List<Guid> CreatorProfileIds);
 
 /// <summary>Counts that deserve a red dot in the navigation — things waiting on you.</summary>

@@ -225,7 +225,7 @@ export function BrandShell() {
   } : null);
   const nav: NavItem[] = [
     { label: t('Översikt'), path: '/brand', icon: 'dashboard' },
-    { label: t('Kranen'), path: '/brand/tap', icon: 'earnings', badge: counts?.pendingTapReviews || undefined, tag: counts?.pendingTapReviews ? undefined : t('NY') },
+    { label: t('Kranar'), path: '/brand/tap', icon: 'earnings', badge: counts?.pendingTapReviews || undefined, tag: counts?.pendingTapReviews ? undefined : t('NY') },
     { label: t('Community'), path: '/brand/community', icon: 'creators', badge: counts?.pendingCommunityRequests || undefined },
     { label: t('Statistik'), path: '/brand/analytics', icon: 'analytics' },
     { label: t('Kampanjer'), path: '/brand/campaigns', icon: 'campaigns', badge: counts?.pendingVideoReviews || undefined },

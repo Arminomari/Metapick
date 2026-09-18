@@ -158,9 +158,18 @@ public interface ICommunityService
 
 public interface ITapService
 {
+    /// <summary>The brand's newest open tap — kept for callers that only know about one.</summary>
     Task<Result<TapDto?>> GetBrandTapAsync(Guid brandUserId, CancellationToken ct = default);
+    /// <summary>Every tap the brand has, open ones first.</summary>
+    Task<Result<List<TapDto>>> GetBrandTapsAsync(Guid brandUserId, CancellationToken ct = default);
+    Task<Result<TapDto>> GetBrandTapByIdAsync(Guid brandUserId, Guid tapId, CancellationToken ct = default);
+    Task<Result<TapDto>> CreateTapAsync(Guid brandUserId, UpsertTapRequest request, CancellationToken ct = default);
+    Task<Result<TapDto>> UpdateTapAsync(Guid brandUserId, Guid tapId, UpsertTapRequest request, CancellationToken ct = default);
+    /// <summary>Legacy: updates the newest tap, or opens the first one.</summary>
     Task<Result<TapDto>> UpsertTapAsync(Guid brandUserId, UpsertTapRequest request, CancellationToken ct = default);
-    Task<Result<TapDto>> SetTapStatusAsync(Guid brandUserId, bool active, CancellationToken ct = default);
+    Task<Result<TapDto>> SetTapStatusAsync(Guid brandUserId, Guid? tapId, bool active, CancellationToken ct = default);
+    /// <summary>Closes a tap for good: it disappears for the brand and its creators, history stays.</summary>
+    Task<Result<bool>> CloseTapAsync(Guid brandUserId, Guid tapId, CancellationToken ct = default);
     Task<Result<List<CreatorTapDto>>> GetCreatorTapsAsync(Guid creatorUserId, CancellationToken ct = default);
     Task<Result<List<TapSubmissionDto>>> GetTapSubmissionsAsync(Guid brandUserId, CancellationToken ct = default);
 }

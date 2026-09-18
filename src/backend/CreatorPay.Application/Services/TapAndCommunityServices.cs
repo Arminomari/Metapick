@@ -412,10 +412,17 @@ public class TapService : ITapService
         _audit = audit;
     }
 
-    private async Task<Campaign?> FindTapAsync(Guid brandProfileId, CancellationToken ct) =>
-        await _campaigns.Query()
+    private IQueryable<Campaign> TapsOf(Guid brandProfileId) =>
+        _campaigns.Query()
             .Include(c => c.PayoutRules)
-            .FirstOrDefaultAsync(c => c.BrandProfileId == brandProfileId && c.Kind == CampaignKind.Tap && !c.IsDeleted, ct);
+            .Where(c => c.BrandProfileId == brandProfileId && c.Kind == CampaignKind.Tap && !c.IsDeleted);
+
+    /// <summary>Newest open tap first, then newest of the rest.</summary>
+    private async Task<Campaign?> FindTapAsync(Guid brandProfileId, CancellationToken ct) =>
+        await TapsOf(brandProfileId)
+            .OrderByDescending(c => c.Status == CampaignStatus.Active)
+            .ThenByDescending(c => c.CreatedAt)
+            .FirstOrDefaultAsync(ct);
 
     public async Task<Result<TapDto?>> GetBrandTapAsync(Guid brandUserId, CancellationToken ct = default)
     {
@@ -426,43 +433,112 @@ public class TapService : ITapService
         return await MapAsync(tap, brand.Id, ct);
     }
 
-    public async Task<Result<TapDto>> UpsertTapAsync(Guid brandUserId, UpsertTapRequest request, CancellationToken ct = default)
+    public async Task<Result<List<TapDto>>> GetBrandTapsAsync(Guid brandUserId, CancellationToken ct = default)
+    {
+        var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);
+        if (brand == null) return Errors.NotFound("Brand");
+        var taps = await TapsOf(brand.Id)
+            .OrderByDescending(c => c.Status == CampaignStatus.Active)
+            .ThenByDescending(c => c.CreatedAt)
+            .ToListAsync(ct);
+        var result = new List<TapDto>(taps.Count);
+        foreach (var tap in taps) result.Add(await MapAsync(tap, brand.Id, ct));
+        return result;
+    }
+
+    public async Task<Result<TapDto>> GetBrandTapByIdAsync(Guid brandUserId, Guid tapId, CancellationToken ct = default)
+    {
+        var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);
+        if (brand == null) return Errors.NotFound("Brand");
+        var tap = await TapsOf(brand.Id).FirstOrDefaultAsync(c => c.Id == tapId, ct);
+        if (tap == null) return Errors.NotFound("Tap", tapId);
+        return await MapAsync(tap, brand.Id, ct);
+    }
+
+    public async Task<Result<TapDto>> CreateTapAsync(Guid brandUserId, UpsertTapRequest request, CancellationToken ct = default)
     {
         var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);
         if (brand == null) return Errors.NotFound("Brand");
         if (brand.Status != BrandStatus.Approved)
             return Errors.Forbidden("Kontot måste vara godkänt innan kranen kan öppnas");
 
-        var tap = await FindTapAsync(brand.Id, ct);
-        var isNew = tap == null;
-        if (tap == null)
+        var tap = new Campaign
         {
-            tap = new Campaign
+            BrandProfileId = brand.Id,
+            Kind = CampaignKind.Tap,
+            Country = brand.Country,
+            Category = request.Category?.Trim() is { Length: > 0 } cat ? cat : "Övrigt",
+            PayoutModel = PayoutModel.CPM,
+            MaxCreators = 100_000,
+            RequiredVideoCount = 1,
+            MinViews = 0,
+            StartDate = DateTime.UtcNow.Date,
+            EndDate = DateTime.UtcNow.Date.AddYears(10),
+            Status = CampaignStatus.Active,
+            ModerationStatus = ModerationStatus.Approved,
+            PublishedAt = DateTime.UtcNow,
+            Name = request.Name.Trim(),
+            Description = request.Brief.Trim(),
+            RequiredHashtag = request.RequiredHashtag.Trim().TrimStart('#')
+        };
+        _campaigns.Add(tap);
+        ApplyRequest(tap, request);
+        await _uow.SaveChangesAsync(ct);
+        await _audit.LogAsync(brandUserId, "Tap.Opened", "Campaign", tap.Id);
+
+        await GiveMembersAssignmentsAsync(brand.Id, ct);
+
+        // Everyone in the community hears about a new tap — it is new money for them.
+        var memberUserIds = await _members.Query()
+            .Where(m => m.BrandProfileId == brand.Id && m.Status == CommunityMemberStatus.Active)
+            .Join(_creators.Query(), m => m.CreatorProfileId, c => c.Id, (m, c) => c.UserId)
+            .ToListAsync(ct);
+        foreach (var uid in memberUserIds)
+        {
+            try
             {
-                BrandProfileId = brand.Id,
-                Kind = CampaignKind.Tap,
-                Country = brand.Country,
-                Category = request.Category?.Trim() is { Length: > 0 } cat ? cat : "Övrigt",
-                PayoutModel = PayoutModel.CPM,
-                MaxCreators = 100_000,
-                RequiredVideoCount = 1,
-                MinViews = 0,
-                StartDate = DateTime.UtcNow.Date,
-                EndDate = DateTime.UtcNow.Date.AddYears(10),
-                Status = CampaignStatus.Active,
-                ModerationStatus = ModerationStatus.Approved,
-                PublishedAt = DateTime.UtcNow,
-                Name = request.Name.Trim(),
-                Description = request.Brief.Trim(),
-                RequiredHashtag = request.RequiredHashtag.Trim().TrimStart('#')
-            };
-            _campaigns.Add(tap);
+                await _notifications.SendAsync(uid, NotificationType.SystemMessage,
+                    $"{brand.CompanyName} har öppnat en ny kran, \"{tap.Name}\": {request.Cpm:0} kr per 1 000 views, löpande varje månad. Publicera med din tracking-tag så räknas det.", brand.Id, "Brand");
+            }
+            catch { /* fan-out is best-effort */ }
         }
+
+        return await MapAsync(tap, brand.Id, ct);
+    }
+
+    public async Task<Result<TapDto>> UpdateTapAsync(Guid brandUserId, Guid tapId, UpsertTapRequest request, CancellationToken ct = default)
+    {
+        var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);
+        if (brand == null) return Errors.NotFound("Brand");
+        var tap = await TapsOf(brand.Id).FirstOrDefaultAsync(c => c.Id == tapId, ct);
+        if (tap == null) return Errors.NotFound("Tap", tapId);
 
         tap.Name = request.Name.Trim();
         tap.Description = request.Brief.Trim();
-        tap.ContentInstructions = string.IsNullOrWhiteSpace(request.ContentInstructions) ? null : request.ContentInstructions.Trim();
         tap.RequiredHashtag = request.RequiredHashtag.Trim().TrimStart('#');
+        ApplyRequest(tap, request);
+        await _uow.SaveChangesAsync(ct);
+        await _audit.LogAsync(brandUserId, "Tap.Updated", "Campaign", tap.Id);
+
+        await GiveMembersAssignmentsAsync(brand.Id, ct);
+        return await MapAsync(tap, brand.Id, ct);
+    }
+
+    /// <summary>Legacy single-tap entry point: edits the newest tap, or opens the first.</summary>
+    public async Task<Result<TapDto>> UpsertTapAsync(Guid brandUserId, UpsertTapRequest request, CancellationToken ct = default)
+    {
+        var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);
+        if (brand == null) return Errors.NotFound("Brand");
+        var tap = await FindTapAsync(brand.Id, ct);
+        return tap == null
+            ? await CreateTapAsync(brandUserId, request, ct)
+            : await UpdateTapAsync(brandUserId, tap.Id, request, ct);
+    }
+
+    /// <summary>The settings a brand can change after opening: budget, rate, caps, brief details, category.</summary>
+    private static void ApplyRequest(Campaign tap, UpsertTapRequest request)
+    {
+        tap.ContentInstructions = string.IsNullOrWhiteSpace(request.ContentInstructions) ? null : request.ContentInstructions.Trim();
         tap.MonthlyBudget = request.MonthlyBudget;
         tap.Budget = request.MonthlyBudget;
         tap.PayoutCapPerVideo = request.PayoutCapPerVideo is > 0 ? request.PayoutCapPerVideo : null;
@@ -491,49 +567,52 @@ public class TapService : ITapService
             cpmRule.Amount = request.Cpm;
             cpmRule.MaxPayoutPerCreator = request.MonthlyCapPerCreator;
         }
+    }
 
-        await _uow.SaveChangesAsync(ct);
-        await _audit.LogAsync(brandUserId, isNew ? "Tap.Opened" : "Tap.Updated", "Campaign", tap.Id);
-
-        // Everyone already in the community gets their assignment now.
+    /// <summary>Everyone already in the community gets an assignment on every open tap.</summary>
+    private async Task GiveMembersAssignmentsAsync(Guid brandProfileId, CancellationToken ct)
+    {
         var memberIds = await _members.Query()
-            .Where(m => m.BrandProfileId == brand.Id && m.Status == CommunityMemberStatus.Active)
+            .Where(m => m.BrandProfileId == brandProfileId && m.Status == CommunityMemberStatus.Active)
             .Select(m => m.CreatorProfileId)
             .ToListAsync(ct);
         foreach (var cid in memberIds)
-            await _community.EnsureTapAssignmentsAsync(brand.Id, cid, ct);
+            await _community.EnsureTapAssignmentsAsync(brandProfileId, cid, ct);
         await _uow.SaveChangesAsync(ct);
-
-        if (isNew)
-        {
-            var memberUserIds = await _members.Query()
-                .Where(m => m.BrandProfileId == brand.Id && m.Status == CommunityMemberStatus.Active)
-                .Join(_creators.Query(), m => m.CreatorProfileId, c => c.Id, (m, c) => c.UserId)
-                .ToListAsync(ct);
-            foreach (var uid in memberUserIds)
-            {
-                try
-                {
-                    await _notifications.SendAsync(uid, NotificationType.SystemMessage,
-                        $"{brand.CompanyName} har öppnat sin kran: {request.Cpm:0} kr per 1 000 views, löpande varje månad. Publicera med din tracking-tag så räknas det.", brand.Id, "Brand");
-                }
-                catch { /* fan-out is best-effort */ }
-            }
-        }
-
-        return await MapAsync(tap, brand.Id, ct);
     }
 
-    public async Task<Result<TapDto>> SetTapStatusAsync(Guid brandUserId, bool active, CancellationToken ct = default)
+    public async Task<Result<TapDto>> SetTapStatusAsync(Guid brandUserId, Guid? tapId, bool active, CancellationToken ct = default)
     {
         var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);
         if (brand == null) return Errors.NotFound("Brand");
-        var tap = await FindTapAsync(brand.Id, ct);
+        var tap = tapId.HasValue
+            ? await TapsOf(brand.Id).FirstOrDefaultAsync(c => c.Id == tapId.Value, ct)
+            : await FindTapAsync(brand.Id, ct);
         if (tap == null) return Errors.NotFound("Tap");
         tap.Status = active ? CampaignStatus.Active : CampaignStatus.Paused;
         await _uow.SaveChangesAsync(ct);
         await _audit.LogAsync(brandUserId, active ? "Tap.Resumed" : "Tap.Paused", "Campaign", tap.Id);
+        if (active) await GiveMembersAssignmentsAsync(brand.Id, ct);
         return await MapAsync(tap, brand.Id, ct);
+    }
+
+    public async Task<Result<bool>> CloseTapAsync(Guid brandUserId, Guid tapId, CancellationToken ct = default)
+    {
+        var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);
+        if (brand == null) return Errors.NotFound("Brand");
+        var tap = await TapsOf(brand.Id).FirstOrDefaultAsync(c => c.Id == tapId, ct);
+        if (tap == null) return Errors.NotFound("Tap", tapId);
+
+        // Soft delete: accruals and payouts already made stay on the books.
+        tap.Status = CampaignStatus.Completed;
+        tap.IsDeleted = true;
+        var open = await _assignments.Query()
+            .Where(a => a.CampaignId == tap.Id && (a.Status == AssignmentStatus.Active || a.Status == AssignmentStatus.Paused))
+            .ToListAsync(ct);
+        foreach (var a in open) a.Status = AssignmentStatus.Completed;
+        await _uow.SaveChangesAsync(ct);
+        await _audit.LogAsync(brandUserId, "Tap.Closed", "Campaign", tap.Id);
+        return true;
     }
 
     private async Task<TapDto> MapAsync(Campaign tap, Guid brandProfileId, CancellationToken ct)
@@ -556,13 +635,14 @@ public class TapService : ITapService
     {
         var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);
         if (brand == null) return Errors.NotFound("Brand");
-        var tap = await FindTapAsync(brand.Id, ct);
-        if (tap == null) return new List<TapSubmissionDto>();
+        var tapIds = await TapsOf(brand.Id).Select(c => c.Id).ToListAsync(ct);
+        if (tapIds.Count == 0) return new List<TapSubmissionDto>();
 
         var pending = await _submissions.Query()
             .Include(s => s.Assignment).ThenInclude(a => a.CreatorProfile)
+            .Include(s => s.Assignment).ThenInclude(a => a.Campaign)
             .Include(s => s.SocialPost)
-            .Where(s => s.Assignment.CampaignId == tap.Id && s.Status == SubmissionStatus.Pending)
+            .Where(s => tapIds.Contains(s.Assignment.CampaignId) && s.Status == SubmissionStatus.Pending)
             .OrderBy(s => s.CreatedAt)
             .ToListAsync(ct);
 
@@ -573,7 +653,8 @@ public class TapService : ITapService
             s.TikTokVideoUrl, s.TikTokVideoId,
             s.SocialPost?.LatestViewCount ?? 0,
             s.CreatedAt,
-            Math.Max(0, 48 - (int)(DateTime.UtcNow - s.CreatedAt).TotalHours))).ToList();
+            Math.Max(0, 48 - (int)(DateTime.UtcNow - s.CreatedAt).TotalHours),
+            s.Assignment.CampaignId, s.Assignment.Campaign.Name)).ToList();
     }
 
     public async Task<Result<List<CreatorTapDto>>> GetCreatorTapsAsync(Guid creatorUserId, CancellationToken ct = default)

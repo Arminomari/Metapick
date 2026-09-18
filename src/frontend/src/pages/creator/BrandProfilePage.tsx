@@ -31,6 +31,7 @@ interface BrandPublicProfile {
   hasTap?: boolean; tapCpm?: number; tapName?: string | null; tapBrief?: string | null;
   tapHashtag?: string | null; tapCapPerVideo?: number | null; tapMonthlyCapPerCreator?: number | null;
   membershipStatus?: string | null;
+  taps?: { id: string; name: string; cpm: number; brief: string; requiredHashtag: string; capPerVideo?: number | null; monthlyCapPerCreator?: number | null; category: string }[] | null;
 }
 
 const ago = (iso: string): string => {
@@ -120,6 +121,7 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
   );
 
   const initial = (p.companyName[0] || '?').toUpperCase();
+  const openTaps = p.taps?.length ? p.taps : (p.hasTap ? [{ id: 'main', name: p.tapName ?? '', cpm: p.tapCpm, brief: p.tapBrief ?? '', requiredHashtag: p.tapHashtag ?? '', capPerVideo: p.tapCapPerVideo, monthlyCapPerCreator: p.tapMonthlyCapPerCreator, category: '' }] : []);
 
   return (
     <section className="view active reveal">
@@ -193,18 +195,23 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
         <div className="card" style={{ marginBottom: 16, background: 'linear-gradient(160deg,#fff,#FFF6F0)', border: '1px solid rgba(241,168,143,.4)' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, flexWrap: 'wrap' }}>
             <div style={{ flex: '1 1 240px', minWidth: 0 }}>
-              <div style={{ fontWeight: 800, fontSize: 16 }}>{t('Kranen är öppen')}{p.tapName ? ` · ${p.tapName}` : ''}</div>
-              <div style={{ fontSize: 13.5, color: 'var(--ink-2)', marginTop: 3, lineHeight: 1.55 }}>
-                <strong>{p.tapCpm} kr / 1 000 views</strong> {t('löpande varje månad')}
-                {p.tapCapPerVideo ? ` · ${t('max')} ${formatCurrency(p.tapCapPerVideo)} / video` : ''}
-                {p.tapMonthlyCapPerCreator ? ` · ${t('max')} ${formatCurrency(p.tapMonthlyCapPerCreator)} / ${t('mån')}` : ''}
-                {p.tapHashtag ? ` · #${p.tapHashtag}` : ''}
-              </div>
-              {p.tapBrief && <p style={{ margin: '10px 0 0', fontSize: 13.5, lineHeight: 1.6, color: 'var(--ink-2)', whiteSpace: 'pre-line' }}>{p.tapBrief}</p>}
+              <div style={{ fontWeight: 800, fontSize: 16 }}>{openTaps.length > 1 ? `${openTaps.length} ${t('kranar är öppna')}` : t('Kranen är öppen')}</div>
+              {openTaps.map((k) => (
+                <div key={k.id} style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(241,168,143,.2)' }}>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>{k.name}</div>
+                  <div style={{ fontSize: 13.5, color: 'var(--ink-2)', marginTop: 3, lineHeight: 1.55 }}>
+                    <strong>{k.cpm} kr / 1 000 views</strong> {t('löpande varje månad')}
+                    {k.capPerVideo ? ` · ${t('max')} ${formatCurrency(k.capPerVideo)} / video` : ''}
+                    {k.monthlyCapPerCreator ? ` · ${t('max')} ${formatCurrency(k.monthlyCapPerCreator)} / ${t('mån')}` : ''}
+                    {k.requiredHashtag ? ` · #${k.requiredHashtag}` : ''}
+                  </div>
+                  {k.brief && <p style={{ margin: '8px 0 0', fontSize: 13.5, lineHeight: 1.6, color: 'var(--ink-2)', whiteSpace: 'pre-line' }}>{k.brief}</p>}
+                </div>
+              ))}
             </div>
             <div style={{ flex: '0 0 auto' }}>
               {p.membershipStatus === 'Active' ? (
-                <span className="vy-badge pos">{t('Du är medlem — kranen är din')}</span>
+                <span className="vy-badge pos">{t('Du är medlem — kranarna är dina')}</span>
               ) : p.membershipStatus === 'Requested' ? (
                 <div style={{ display: 'grid', gap: 6, justifyItems: 'end' }}>
                   <span className="vy-badge pend">{t('Ansökan skickad — väntar på svar')}</span>

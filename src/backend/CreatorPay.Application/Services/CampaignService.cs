@@ -943,10 +943,17 @@ public class CampaignService : ICampaignService
             .ToListAsync(ct);
 
         // The tap as creators see it, plus where the viewer stands with it.
-        var tap = await _campaigns.Query()
+        var openTaps = await _campaigns.Query()
             .Include(c => c.PayoutRules)
-            .FirstOrDefaultAsync(c => c.BrandProfileId == brandProfileId && c.Kind == CampaignKind.Tap
-                && c.Status == CampaignStatus.Active && !c.IsDeleted, ct);
+            .Where(c => c.BrandProfileId == brandProfileId && c.Kind == CampaignKind.Tap
+                && c.Status == CampaignStatus.Active && !c.IsDeleted)
+            .OrderByDescending(c => c.CreatedAt)
+            .ToListAsync(ct);
+        var tap = openTaps.FirstOrDefault();
+        var publicTaps = openTaps.Select(x => new PublicTapDto(
+            x.Id, x.Name,
+            x.PayoutRules.Where(r => r.PayoutType == PayoutType.CPM).Select(r => r.Amount).FirstOrDefault(),
+            x.Description, x.RequiredHashtag, x.PayoutCapPerVideo, x.MonthlyCapPerCreator, x.Category)).ToList();
         var membership = viewerCreator == null ? null : await _communityMembers.Query()
             .Where(m => m.BrandProfileId == brandProfileId && m.CreatorProfileId == viewerCreator.Id)
             .Select(m => m.Status.ToString())
@@ -965,7 +972,8 @@ public class CampaignService : ICampaignService
             tap == null ? 0 : tap.PayoutRules.Where(r => r.PayoutType == PayoutType.CPM).Select(r => r.Amount).FirstOrDefault(),
             tap?.Name, tap?.Description, tap?.RequiredHashtag,
             tap?.PayoutCapPerVideo, tap?.MonthlyCapPerCreator,
-            membership);
+            membership,
+            publicTaps);
     }
 
     public async Task<Result<bool>> SetBrandFollowAsync(Guid viewerUserId, Guid brandProfileId, bool follow, CancellationToken ct = default)

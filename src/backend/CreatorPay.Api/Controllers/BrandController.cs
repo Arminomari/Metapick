@@ -82,22 +82,51 @@ public class BrandTapController : BaseController
     private readonly ITapService _taps;
     public BrandTapController(ITapService taps) => _taps = taps;
 
+    /// <summary>Den senast öppnade kranen (äldre klienter som bara känner till en)</summary>
     [HttpGet]
     public async Task<IActionResult> Get(CancellationToken ct)
         => ToActionResult(await _taps.GetBrandTapAsync(GetUserId(), ct));
 
+    /// <summary>Alla företagets kranar, öppna först</summary>
+    [HttpGet("all")]
+    public async Task<IActionResult> All(CancellationToken ct)
+        => ToActionResult(await _taps.GetBrandTapsAsync(GetUserId(), ct));
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetOne(Guid id, CancellationToken ct)
+        => ToActionResult(await _taps.GetBrandTapByIdAsync(GetUserId(), id, ct));
+
+    /// <summary>Öppna en ny kran</summary>
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] UpsertTapRequest request, CancellationToken ct)
+        => ToActionResult(await _taps.CreateTapAsync(GetUserId(), request, ct));
+
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpsertTapRequest request, CancellationToken ct)
+        => ToActionResult(await _taps.UpdateTapAsync(GetUserId(), id, request, ct));
+
+    /// <summary>Äldre klienter: uppdaterar den senaste kranen eller öppnar den första</summary>
     [HttpPut]
     public async Task<IActionResult> Upsert([FromBody] UpsertTapRequest request, CancellationToken ct)
         => ToActionResult(await _taps.UpsertTapAsync(GetUserId(), request, ct));
 
-    /// <summary>Videos i kranen som väntar på granskning</summary>
+    /// <summary>Videos i kranarna som väntar på granskning</summary>
     [HttpGet("submissions")]
     public async Task<IActionResult> Submissions(CancellationToken ct)
         => ToActionResult(await _taps.GetTapSubmissionsAsync(GetUserId(), ct));
 
+    [HttpPost("{id:guid}/status")]
+    public async Task<IActionResult> SetStatusOf(Guid id, [FromQuery] bool active, CancellationToken ct)
+        => ToActionResult(await _taps.SetTapStatusAsync(GetUserId(), id, active, ct));
+
     [HttpPost("status")]
     public async Task<IActionResult> SetStatus([FromQuery] bool active, CancellationToken ct)
-        => ToActionResult(await _taps.SetTapStatusAsync(GetUserId(), active, ct));
+        => ToActionResult(await _taps.SetTapStatusAsync(GetUserId(), null, active, ct));
+
+    /// <summary>Stäng en kran för gott</summary>
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Close(Guid id, CancellationToken ct)
+        => ToActionResult(await _taps.CloseTapAsync(GetUserId(), id, ct));
 }
 
 /// <summary>Varumärkets creator-community — medlemskap = rätten att hämta ur kranen.</summary>
