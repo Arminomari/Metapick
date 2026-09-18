@@ -13,7 +13,7 @@ export default {
         paper:           'hsl(var(--paper))',
         ivory:           'hsl(var(--ivory))',
         sand:            'hsl(var(--sand))',
-        graphite:        'hsl(var(--graphite))',
+        graphite:        'hsl(var(--graphite))',  
         primary:     { DEFAULT: 'hsl(var(--primary))',     foreground: 'hsl(var(--primary-foreground))' },
         secondary:   { DEFAULT: 'hsl(var(--secondary))',   foreground: 'hsl(var(--secondary-foreground))' },
         destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
