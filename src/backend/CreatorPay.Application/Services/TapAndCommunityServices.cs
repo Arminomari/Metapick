@@ -89,11 +89,12 @@ public class CommunityService : ICommunityService
             .FirstOrDefaultAsync(c => c.Id == creatorProfileId && c.Status == CreatorStatus.Approved, ct);
         if (creator == null) return Errors.NotFound("Creator", creatorProfileId);
 
-        var member = await EnsureMemberAsync(brand.Id, creator.Id, CommunityMemberSource.Invited, ct);
+        var member = await InviteMemberAsync(brand.Id, creator.Id, ct);
         await _uow.SaveChangesAsync(ct);
         await _audit.LogAsync(brandUserId, "Community.Invited", "CreatorProfile", creator.Id);
-        await _notifications.SendAsync(creator.UserId, NotificationType.SystemMessage,
-            $"{brand.CompanyName} har bjudit in dig till sitt creator-community. Du kan nu hämta ur deras kran — kolla Mina kampanjer.", brand.Id, "Brand");
+        if (member.Status == CommunityMemberStatus.Invited)
+            await _notifications.SendAsync(creator.UserId, NotificationType.CommunityInvite,
+                $"{brand.CompanyName} har bjudit in dig till sitt creator-community. Acceptera så kan du hämta ur deras kranar.", brand.Id, "CommunityInvite");
 
         return new CommunityMemberDto(creator.Id, creator.DisplayName, creator.AvatarUrl,
             creator.TikTokAccount?.TikTokUsername, creator.TikTokAccount?.FollowerCount ?? 0,
@@ -112,19 +113,21 @@ public class CommunityService : ICommunityService
             .ToListAsync(ct);
 
         var invited = 0;
+        var toNotify = new List<Guid>();
         foreach (var creator in creators)
         {
-            await EnsureMemberAsync(brand.Id, creator.Id, CommunityMemberSource.Invited, ct);
+            var member = await InviteMemberAsync(brand.Id, creator.Id, ct);
             invited++;
+            if (member.Status == CommunityMemberStatus.Invited) toNotify.Add(creator.UserId);
         }
         await _uow.SaveChangesAsync(ct);
 
-        foreach (var creator in creators)
+        foreach (var uid in toNotify)
         {
             try
             {
-                await _notifications.SendAsync(creator.UserId, NotificationType.SystemMessage,
-                    $"{brand.CompanyName} har bjudit in dig till sitt creator-community. Du kan nu hämta ur deras kran — kolla Mina kampanjer.", brand.Id, "Brand");
+                await _notifications.SendAsync(uid, NotificationType.CommunityInvite,
+                    $"{brand.CompanyName} har bjudit in dig till sitt creator-community. Acceptera så kan du hämta ur deras kranar.", brand.Id, "CommunityInvite");
             }
             catch { /* one failure must not stop the batch */ }
         }
@@ -263,7 +266,7 @@ public class CommunityService : ICommunityService
             .Include(m => m.BrandProfile)
             // Requested rows ride along so the creator can see (and withdraw) what is still waiting.
             .Where(m => m.CreatorProfileId == creator.Id
-                && (m.Status == CommunityMemberStatus.Active || m.Status == CommunityMemberStatus.Requested))
+                && (m.Status == CommunityMemberStatus.Active || m.Status == CommunityMemberStatus.Requested || m.Status == CommunityMemberStatus.Invited))
             .OrderByDescending(m => m.JoinedAt)
             .ToListAsync(ct);
         var brandIds = rows.Select(r => r.BrandProfileId).ToList();
@@ -276,6 +279,69 @@ public class CommunityService : ICommunityService
         return rows.Select(r => new MyCommunityDto(
             r.BrandProfileId, r.BrandProfile.CompanyName, r.BrandProfile.LogoUrl,
             r.Source.ToString(), r.JoinedAt, hasTap.Contains(r.BrandProfileId), r.Status.ToString())).ToList();
+    }
+
+    /// <summary>
+    /// The brand asks; nothing is granted until the creator says yes. A creator
+    /// who already asked to join is simply let in — both sides agree.
+    /// Caller saves.
+    /// </summary>
+    private async Task<BrandCommunityMember> InviteMemberAsync(Guid brandProfileId, Guid creatorProfileId, CancellationToken ct)
+    {
+        var member = await _members.Query()
+            .FirstOrDefaultAsync(m => m.BrandProfileId == brandProfileId && m.CreatorProfileId == creatorProfileId, ct);
+        if (member is { Status: CommunityMemberStatus.Active }) return member;
+        if (member is { Status: CommunityMemberStatus.Requested })
+            return await EnsureMemberAsync(brandProfileId, creatorProfileId, CommunityMemberSource.Joined, ct);
+        if (member == null)
+        {
+            member = new BrandCommunityMember { BrandProfileId = brandProfileId, CreatorProfileId = creatorProfileId };
+            _members.Add(member);
+        }
+        member.Source = CommunityMemberSource.Invited;
+        member.Status = CommunityMemberStatus.Invited;
+        member.JoinedAt = DateTime.UtcNow;
+        return member;
+    }
+
+    public async Task<Result<bool>> AcceptInvitationAsync(Guid creatorUserId, Guid brandProfileId, CancellationToken ct = default)
+    {
+        var creator = await _creators.Query().FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
+        if (creator == null) return Errors.NotFound("Creator");
+        var member = await _members.Query()
+            .FirstOrDefaultAsync(m => m.BrandProfileId == brandProfileId && m.CreatorProfileId == creator.Id, ct);
+        if (member == null || member.Status != CommunityMemberStatus.Invited)
+            return Errors.Conflict("Det finns ingen öppen inbjudan att svara på.");
+
+        await EnsureMemberAsync(brandProfileId, creator.Id, CommunityMemberSource.Invited, ct);
+        await _uow.SaveChangesAsync(ct);
+        await _audit.LogAsync(creatorUserId, "Community.InviteAccepted", "BrandProfile", brandProfileId);
+
+        var brand = await _brands.Query().FirstOrDefaultAsync(b => b.Id == brandProfileId, ct);
+        if (brand != null)
+        {
+            try
+            {
+                await _notifications.SendAsync(brand.UserId, NotificationType.SystemMessage,
+                    $"{creator.DisplayName} tackade ja till inbjudan och är nu med i ert community.", creator.Id, "Community");
+            }
+            catch { /* membership is what matters */ }
+        }
+        return true;
+    }
+
+    public async Task<Result<bool>> DeclineInvitationAsync(Guid creatorUserId, Guid brandProfileId, CancellationToken ct = default)
+    {
+        var creator = await _creators.Query().FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
+        if (creator == null) return Errors.NotFound("Creator");
+        var member = await _members.Query()
+            .FirstOrDefaultAsync(m => m.BrandProfileId == brandProfileId && m.CreatorProfileId == creator.Id, ct);
+        if (member == null || member.Status != CommunityMemberStatus.Invited)
+            return Errors.Conflict("Det finns ingen öppen inbjudan att svara på.");
+        member.Status = CommunityMemberStatus.Left;
+        await _uow.SaveChangesAsync(ct);
+        await _audit.LogAsync(creatorUserId, "Community.InviteDeclined", "BrandProfile", brandProfileId);
+        return true;
     }
 
     /// <summary>

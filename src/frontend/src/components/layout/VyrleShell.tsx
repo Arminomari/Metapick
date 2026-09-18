@@ -194,7 +194,7 @@ export function CreatorShell() {
     { label: t('Översikt'), path: '/creator', icon: 'dashboard' },
     { label: t('Upptäck'), path: '/creator/browse', icon: 'discover' },
     { label: t('Mina kampanjer'), path: '/creator/assignments', icon: 'campaigns', badge: counts?.awaitingYourVideo || undefined },
-    { label: t('Kranar'), path: '/creator/taps', icon: 'tap' },
+    { label: t('Kranar'), path: '/creator/taps', icon: 'tap', badge: counts?.pendingCommunityInvites || undefined },
     { label: t('Videouppdrag'), path: '/creator/ugc', icon: 'video', badge: ugcCount || undefined, tag: ugcCount ? undefined : t('NY') },
     { label: t('Portfolio'), path: '/creator/portfolio', icon: 'portfolio' },
     { label: t('Statistik'), path: '/creator/analytics', icon: 'analytics' },

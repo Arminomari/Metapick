@@ -409,7 +409,8 @@ public record TapSubmissionDto(
 public record InviteManyRequest(List<Guid> CreatorProfileIds);
 
 /// <summary>Counts that deserve a red dot in the navigation — things waiting on you.</summary>
-public record ActionCountsDto(int PendingApplications, int PendingVideoReviews, int AwaitingYourVideo, int PendingCommunityRequests = 0, int PendingTapReviews = 0, int UnreadSupport = 0);
+public record ActionCountsDto(int PendingApplications, int PendingVideoReviews, int AwaitingYourVideo, int PendingCommunityRequests = 0, int PendingTapReviews = 0, int UnreadSupport = 0,
+    int PendingCommunityInvites = 0);
 
 // ── Admin ↔ user messages ──────────────────────────────────────────
 public record SupportMessageDto(

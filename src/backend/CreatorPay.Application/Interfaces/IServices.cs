@@ -151,6 +151,9 @@ public interface ICommunityService
     Task<Result<bool>> RespondToRequestAsync(Guid brandUserId, Guid creatorProfileId, bool approve, CancellationToken ct = default);
     Task<Result<bool>> RemoveAsync(Guid brandUserId, Guid creatorProfileId, CancellationToken ct = default);
     Task<Result<bool>> LeaveAsync(Guid creatorUserId, Guid brandProfileId, CancellationToken ct = default);
+    /// <summary>An invited creator says yes: membership becomes active and every open tap gets an assignment.</summary>
+    Task<Result<bool>> AcceptInvitationAsync(Guid creatorUserId, Guid brandProfileId, CancellationToken ct = default);
+    Task<Result<bool>> DeclineInvitationAsync(Guid creatorUserId, Guid brandProfileId, CancellationToken ct = default);
     Task<Result<List<MyCommunityDto>>> GetMyCommunitiesAsync(Guid creatorUserId, CancellationToken ct = default);
     Task<BrandCommunityMember> EnsureMemberAsync(Guid brandProfileId, Guid creatorProfileId, CommunityMemberSource source, CancellationToken ct = default);
     Task EnsureTapAssignmentsAsync(Guid brandProfileId, Guid creatorProfileId, CancellationToken ct = default);

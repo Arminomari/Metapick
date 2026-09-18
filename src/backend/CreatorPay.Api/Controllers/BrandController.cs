@@ -185,4 +185,15 @@ public class CreatorTapController : BaseController
     [HttpDelete("communities/{brandProfileId:guid}")]
     public async Task<IActionResult> Leave(Guid brandProfileId, CancellationToken ct)
         => ToActionResult(await _community.LeaveAsync(GetUserId(), brandProfileId, ct));
+
+    /// <summary>Tacka ja till en inbjudan</summary>
+    [HttpPost("communities/{brandProfileId:guid}/accept")]
+    public async Task<IActionResult> AcceptInvitation(Guid brandProfileId, CancellationToken ct)
+        => ToActionResult(await _community.AcceptInvitationAsync(GetUserId(), brandProfileId, ct));
+
+    /// <summary>Tacka nej till en inbjudan</summary>
+    [HttpPost("communities/{brandProfileId:guid}/decline")]
+    public async Task<IActionResult> DeclineInvitation(Guid brandProfileId, CancellationToken ct)
+        => ToActionResult(await _community.DeclineInvitationAsync(GetUserId(), brandProfileId, ct));
+
 }

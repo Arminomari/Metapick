@@ -722,7 +722,10 @@ public class AssignmentService : IAssignmentService
                 && a.Campaign.EndDate >= today
                 && !a.SocialPosts.Any(p => p.IsActive), ct);
 
-        return new ActionCountsDto(0, 0, awaiting, 0, 0, unreadSupport);
+        var invites = await _communityRows.Query()
+            .CountAsync(m => m.CreatorProfileId == creator.Id && m.Status == CommunityMemberStatus.Invited, ct);
+
+        return new ActionCountsDto(0, 0, awaiting, 0, 0, unreadSupport, invites);
     }
 
     /// <summary>

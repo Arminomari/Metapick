@@ -51,9 +51,10 @@ export function BrandCommunityPage() {
   });
 
   const requests = members.filter((m) => m.status === 'Requested');
-  const auto = members.filter((m) => m.source === 'AutoQualified').length;
-  const invited = members.filter((m) => m.source === 'Invited').length;
-  const active = members.filter((m) => m.status !== 'Requested');
+  const invitedRows = members.filter((m) => m.status === 'Invited');
+  const active = members.filter((m) => m.status === 'Active');
+  const auto = active.filter((m) => m.source === 'AutoQualified').length;
+  const invited = invitedRows.length;
   const totalEarned = members.reduce((s, m) => s + m.lifetimeEarned, 0);
 
   return (
@@ -69,7 +70,7 @@ export function BrandCommunityPage() {
       <div className="stat-row">
         <div className="card stat"><div className="top"><div><div className="lbl">{t('Medlemmar')}</div><div className="val">{active.length}</div></div></div></div>
         <div className="card stat"><div className="top"><div><div className="lbl">{t('Auto-kvalificerade')}</div><div className="val">{auto}</div></div></div></div>
-        <div className="card stat"><div className="top"><div><div className="lbl">{t('Inbjudna')}</div><div className="val">{invited}</div></div></div></div>
+        <div className="card stat"><div className="top"><div><div className="lbl">{t('Inbjudna, väntar på svar')}</div><div className="val">{invited}</div></div></div></div>
         <div className="card stat"><div className="top"><div><div className="lbl">{t('Intjänat av communityn')}</div><div className="val">{formatCurrency(totalEarned)}</div></div></div></div>
       </div>
 
@@ -91,6 +92,28 @@ export function BrandCommunityPage() {
                 <button className="btn-apply" style={{ width: 'auto', padding: '8px 16px', fontSize: 12.5 }} onClick={() => respond.mutate({ id: m.creatorProfileId, approve: true })} disabled={respond.isPending}>✓ {t('Godkänn')}</button>
                 <ConfirmButton style={{ padding: '8px 16px', fontSize: 12.5 }} onConfirm={() => respond.mutate({ id: m.creatorProfileId, approve: false })} disabled={respond.isPending}>{t('Neka')}</ConfirmButton>
               </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {invitedRows.length > 0 && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="sec-head"><h2>{t('Inbjudna, väntar på svar')}</h2><span style={{ fontSize: 13, color: 'var(--muted)' }}>{invitedRows.length} {t('st')}</span></div>
+          {invitedRows.map((m) => (
+            <div key={m.creatorProfileId} className="list-row" style={{ gap: 14, flexWrap: 'wrap' }}>
+              <span role="button" tabIndex={0} onClick={() => navigate(`/brand/creators/${m.creatorProfileId}`)} style={{ cursor: 'pointer', flex: '0 0 auto' }}>
+                {m.avatarUrl
+                  ? <img src={m.avatarUrl} alt="" style={{ width: 42, height: 42, borderRadius: 12, objectFit: 'cover' }} />
+                  : <span className="mono" style={{ background: grad(m.displayName) }}>{(m.displayName[0] || '?').toUpperCase()}</span>}
+              </span>
+              <div className="row-main" style={{ flex: '1 1 200px', minWidth: 0 }}>
+                <div className="t"><span style={{ cursor: 'pointer' }} onClick={() => navigate(`/brand/creators/${m.creatorProfileId}`)}>{m.displayName}</span>{m.tikTokUsername && <span style={{ fontSize: 12, color: '#9c4f31', fontWeight: 600, marginLeft: 8 }}>@{m.tikTokUsername}</span>}</div>
+                <div className="s">{t('Inbjuden')} {formatDate(m.joinedAt)} · {t('creatorn har inte svarat än')}</div>
+              </div>
+              <button className="btn-outline" style={{ padding: '8px 14px', fontSize: 12.5, ...(armed === m.creatorProfileId ? { borderColor: 'var(--red)', color: 'var(--red)', fontWeight: 600 } : {}) }} onClick={() => handleRemove(m.creatorProfileId)}>
+                {armed === m.creatorProfileId ? t('Säker? Klicka igen') : t('Dra tillbaka')}
+              </button>
             </div>
           ))}
         </div>

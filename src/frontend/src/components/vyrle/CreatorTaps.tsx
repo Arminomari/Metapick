@@ -23,7 +23,16 @@ export function useMyCommunities() {
   });
 }
 
-/** Tap/community applications the brand has not answered yet. */
+/** Invitations from brands the creator has not answered yet. */
+export function usePendingCommunityInvites() {
+  return useQuery({
+    queryKey: ['my-communities'],
+    queryFn: fetchCommunities,
+    select: (rows) => rows.filter((r) => r.status === 'Invited'),
+    refetchInterval: 120000,
+  });
+}
+
 export function usePendingCommunityRequests() {
   return useQuery({
     queryKey: ['my-communities'],

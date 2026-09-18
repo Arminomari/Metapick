@@ -86,6 +86,17 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
     },
     onError: (e: any) => toast.push(e?.response?.data?.error?.message ?? t('Kunde inte ta tillbaka ansökan'), 'error'),
   });
+  const answerInvite = useMutation({
+    mutationFn: async (accept: boolean) => (await api.post(`/creator/communities/${id}/${accept ? 'accept' : 'decline'}`)).data,
+    onSuccess: (_d, accept) => {
+      qc.invalidateQueries({ queryKey: ['brand-public', id] });
+      qc.invalidateQueries({ queryKey: ['my-communities'] });
+      qc.invalidateQueries({ queryKey: ['creator-taps'] });
+      qc.invalidateQueries({ queryKey: ['action-counts'] });
+      toast.push(accept ? t('Du är med i communityn — deras öppna kranar finns nu under Kranar.') : t('Inbjudan avböjd'), 'success');
+    },
+    onError: (e: any) => toast.push(e?.response?.data?.error?.message ?? t('Kunde inte svara på inbjudan'), 'error'),
+  });
   const joinTap = useMutation({
     mutationFn: async () => (await api.post(`/creator/communities/${id}/request`)).data.data,
     onSuccess: () => {
@@ -212,6 +223,14 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
             <div style={{ flex: '0 0 auto' }}>
               {p.membershipStatus === 'Active' ? (
                 <span className="vy-badge pos">{t('Du är medlem — kranarna är dina')}</span>
+              ) : p.membershipStatus === 'Invited' ? (
+                <div style={{ display: 'grid', gap: 8, maxWidth: 280 }}>
+                  <div style={{ fontSize: 13, lineHeight: 1.5 }}><strong>{p.companyName}</strong> {t('har bjudit in dig till sitt community. Tackar du ja kan du hämta ur deras öppna kranar direkt.')}</div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <button type="button" className="btn-apply" style={{ width: 'auto', padding: '10px 18px' }} disabled={answerInvite.isPending} onClick={() => answerInvite.mutate(true)}>{t('Acceptera')}</button>
+                    <button type="button" className="btn-outline" style={{ padding: '10px 16px' }} disabled={answerInvite.isPending} onClick={() => answerInvite.mutate(false)}>{t('Avböj')}</button>
+                  </div>
+                </div>
               ) : p.membershipStatus === 'Requested' ? (
                 <div style={{ display: 'grid', gap: 6, justifyItems: 'end' }}>
                   <span className="vy-badge pend">{t('Ansökan skickad — väntar på svar')}</span>
@@ -232,7 +251,7 @@ export function BrandProfilePage({ brandId, ownView, onEdit }: { brandId?: strin
               )}
             </div>
           </div>
-          {p.membershipStatus !== 'Active' && p.membershipStatus !== 'Requested' && (
+          {p.membershipStatus !== 'Active' && p.membershipStatus !== 'Requested' && p.membershipStatus !== 'Invited' && (
             <div style={{ marginTop: 10, fontSize: 12.5, color: 'var(--muted)' }}>
               {t('Medlemmar i communityn kan publicera när de vill och få betalt per verifierad view — företaget godkänner din ansökan först.')}
             </div>

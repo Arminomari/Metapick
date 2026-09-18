@@ -3,7 +3,7 @@ import { t } from '@/lib/i18n';
 import { formatCurrency, formatNumber, formatDate } from '@/lib/utils';
 import { CardSkeleton } from '@/components/vyrle/Toast';
 import { CopyButton } from '@/components/ui/CopyButton';
-import { useCreatorTaps, usePendingCommunityRequests, type CreatorTap } from '@/components/vyrle/CreatorTaps';
+import { useCreatorTaps, usePendingCommunityRequests, usePendingCommunityInvites, type CreatorTap } from '@/components/vyrle/CreatorTaps';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { useToast } from '@/components/vyrle/Toast';
@@ -22,6 +22,15 @@ export function CreatorTapsPage() {
   const navigate = useNavigate();
   const { data: taps = [], isLoading } = useCreatorTaps();
   const { data: pending = [] } = usePendingCommunityRequests();
+  const { data: invites = [] } = usePendingCommunityInvites();
+  const answer = useMutation({
+    mutationFn: async ({ id, accept }: { id: string; accept: boolean }) => (await api.post(`/creator/communities/${id}/${accept ? 'accept' : 'decline'}`)).data,
+    onSuccess: (_d, v) => {
+      qc.invalidateQueries({ queryKey: ['my-communities'] }); qc.invalidateQueries({ queryKey: ['creator-taps'] }); qc.invalidateQueries({ queryKey: ['action-counts'] }); qc.invalidateQueries({ queryKey: ['brand-public'] });
+      toast.push(v.accept ? t('Du är med i communityn — deras öppna kranar finns nu här.') : t('Inbjudan avböjd'), 'success');
+    },
+    onError: (e: any) => toast.push(e?.response?.data?.error?.message ?? t('Kunde inte svara på inbjudan'), 'error'),
+  });
   const qc = useQueryClient();
   const toast = useToast();
   const withdraw = useMutation({
@@ -61,6 +70,29 @@ export function CreatorTapsPage() {
           <div className="vstat-sub"><span className="vmut">{taps.length > 0 ? `${t('av')} ${taps.length}` : t('inga kranar än')}</span></div>
         </div>
       </div>
+
+      {invites.length > 0 && (
+        <div className="card" style={{ marginBottom: 16, border: '1px solid rgba(241,168,143,.5)', background: 'linear-gradient(160deg,#fff,#FFF6F0)' }}>
+          <div className="sec-head"><h2>{t('Inbjudningar')}</h2><span className="vy-badge neg">{invites.length}</span></div>
+          <div style={{ display: 'grid', gap: 10 }}>
+            {invites.map((r) => (
+              <div key={r.brandProfileId} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                {r.brandLogoUrl
+                  ? <img src={r.brandLogoUrl} alt="" style={{ width: 40, height: 40, borderRadius: 12, objectFit: 'cover' }} />
+                  : <span className="mono" style={{ background: 'linear-gradient(135deg,#FFD8C7,#F1A88F)' }}>{(r.brandName[0] || '?').toUpperCase()}</span>}
+                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                  <button type="button" className="view-all" style={{ fontWeight: 700, fontSize: 14 }} onClick={() => navigate(`/creator/brands/${r.brandProfileId}`)}>{r.brandName}</button>
+                  <div style={{ fontSize: 12.5, color: 'var(--muted)' }}>{t('vill ha dig i sitt creator-community')} · {formatDate(r.joinedAt)}{r.hasActiveTap ? ` · ${t('har öppen kran')}` : ''}</div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button type="button" className="btn-apply" style={{ width: 'auto', padding: '9px 16px', fontSize: 12.5 }} disabled={answer.isPending} onClick={() => answer.mutate({ id: r.brandProfileId, accept: true })}>{t('Acceptera')}</button>
+                  <button type="button" className="btn-outline" style={{ padding: '9px 14px', fontSize: 12.5 }} disabled={answer.isPending} onClick={() => answer.mutate({ id: r.brandProfileId, accept: false })}>{t('Avböj')}</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {pending.length > 0 && (
         <div className="card" style={{ marginBottom: 16 }}>

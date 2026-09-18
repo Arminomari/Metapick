@@ -544,6 +544,7 @@ public class NotificationService : INotificationService
         NotificationType.SubmissionRejected,
         NotificationType.PayoutReady,
         NotificationType.PayoutCompleted,
+        NotificationType.CommunityInvite,
         NotificationType.PrOfferReceived,
         // UGC-marknadsplatsen: allt som kräver att någon gör något går även som mejl
         NotificationType.UgcCampaignMatch, NotificationType.UgcNewApplication, NotificationType.UgcHired,
@@ -562,6 +563,7 @@ public class NotificationService : INotificationService
         NotificationType.PayoutReady => ("Öppna Intäkter", "/creator/earnings"),
         NotificationType.PayoutCompleted => ("Öppna Intäkter", "/creator/earnings"),
         NotificationType.PrOfferReceived => ("Öppna PR-hubben", "/creator/pr"),
+        NotificationType.CommunityInvite => ("Svara på inbjudan", "/creator/taps"),
         NotificationType.UgcCampaignMatch => ("Se uppdraget", "/creator/ugc"),
         NotificationType.UgcNewApplication => ("Se buden", "/brand/ugc"),
         NotificationType.UgcHired => ("Öppna uppdraget", "/creator/ugc/collabs"),
@@ -594,6 +596,7 @@ public class NotificationService : INotificationService
         NotificationType.SubmissionApproved => "Innehåll godkänt",
         NotificationType.SubmissionRejected => "Innehåll nekat",
         NotificationType.PrOfferReceived => "Nytt PR-erbjudande",
+        NotificationType.CommunityInvite => "Inbjudan till community",
         NotificationType.PrOfferAccepted => "PR-erbjudande accepterat",
         NotificationType.PrOfferDeclined => "PR-erbjudande avböjt",
         NotificationType.UgcCampaignMatch => "Nytt videouppdrag som passar dig",

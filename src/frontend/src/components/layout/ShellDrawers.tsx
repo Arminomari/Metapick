@@ -80,6 +80,7 @@ function notifTarget(n: NotifLike, role: string | null): string | null {
     case 'UgcProfile': return '/creator/ugc/profile';
     case 'SupportThread': return brand ? '/brand/messages?tab=support' : creator ? '/creator/messages?tab=support' : '/messages';
     case 'SupportUser': return admin && id ? `/admin?section=users&threadUser=${id}` : '/messages';
+    case 'CommunityInvite': return '/creator/taps';
     case 'Brand': return id ? `/creator/brands/${id}` : '/creator/browse';
     case 'BrandFollowers': return '/brand/public-profile';
     case 'Community': return '/brand/community';

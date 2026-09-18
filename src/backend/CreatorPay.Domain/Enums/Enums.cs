@@ -60,7 +60,10 @@ public enum NotificationType
     // ── UGC-marknadsplatsen ──
     UgcCampaignMatch = 20, UgcNewApplication = 21, UgcHired = 22, UgcContractAccepted = 23,
     UgcDelivered = 24, UgcRevisionRequested = 25, UgcApproved = 26, UgcPaid = 27,
-    UgcDeadlineReminder = 28, UgcAutoApproveReminder = 29, UgcDispute = 30, UgcCancelled = 31
+    UgcDeadlineReminder = 28, UgcAutoApproveReminder = 29, UgcDispute = 30, UgcCancelled = 31,
+
+    // ── Community ──
+    CommunityInvite = 32
 }
 
 // ── Portfolio & PR Hub ─────────────────────────────────
