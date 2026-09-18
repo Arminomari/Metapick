@@ -283,7 +283,7 @@ public sealed class UgcCollabService : IUgcCollabService
         if (me == null || !UgcVerificationRule.CanApply(me.Status, collab.Compensation, me.PayoutOnboardingComplete, me.HasFTax, _settings.RequireFTaxForPaid))
             return Errors.Forbidden(me?.Status == UgcCreatorStatus.Suspended ? "Ditt konto på marknadsplatsen är avstängt."
                 : me == null || me.Status == UgcCreatorStatus.Pending ? "Din profil granskas av VYRLE. Du kan acceptera så fort den är klar."
-                : "Verifiera dig under Inställningar innan du tar betalda uppdrag.");
+                : "Betalda uppdrag kräver F-skatt.");
 
         if (!UgcMapper.IsFunded(collab)) return Errors.Conflict("Företaget har inte betalat ännu — du får en notis så fort pengarna är på plats.");
 

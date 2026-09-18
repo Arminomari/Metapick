@@ -199,7 +199,7 @@ public class UgcVerificationRuleTests
     [Theory]
     [InlineData(UgcCreatorStatus.Pending, UgcCompensationType.ProductExchange, true, true, false, false)]
     [InlineData(UgcCreatorStatus.Verified, UgcCompensationType.ProductExchange, false, false, true, true)]
-    [InlineData(UgcCreatorStatus.Verified, UgcCompensationType.Paid, false, true, false, false)]   // no payout account
+    [InlineData(UgcCreatorStatus.Verified, UgcCompensationType.Paid, false, true, false, true)]    // no payout account yet — applying is still fine
     [InlineData(UgcCreatorStatus.Verified, UgcCompensationType.Paid, true, false, false, true)]    // F-tax not required
     [InlineData(UgcCreatorStatus.Verified, UgcCompensationType.Paid, true, false, true, false)]    // F-tax required, missing
     [InlineData(UgcCreatorStatus.Approved, UgcCompensationType.PaidPlusProduct, true, true, true, true)]

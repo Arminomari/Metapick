@@ -27,13 +27,17 @@ public static class UgcVerificationRule
     public static bool ShouldSuspend(int strikes, UgcVerificationThresholds thresholds)
         => strikes >= thresholds.StrikesToSuspend;
 
-    /// <summary>May this creator take the work? Product exchange is open to anyone Verified/Approved; paid work needs the Stripe verification.</summary>
+    /// <summary>
+    /// May this creator take the work? Anyone Verified/Approved may. The Stripe
+    /// verification is optional and only matters when money is paid out: an
+    /// approved job waits for it, it never stops an application.
+    /// </summary>
     public static bool CanApply(UgcCreatorStatus status, UgcCompensationType compensation,
         bool payoutOnboardingComplete, bool hasFTax, bool requireFTaxForPaid)
     {
+        _ = payoutOnboardingComplete;
         if (status is not (UgcCreatorStatus.Verified or UgcCreatorStatus.Approved)) return false;
         if (compensation == UgcCompensationType.ProductExchange) return true;
-        if (!payoutOnboardingComplete) return false;
         if (requireFTaxForPaid && !hasFTax) return false;
         return true;
     }

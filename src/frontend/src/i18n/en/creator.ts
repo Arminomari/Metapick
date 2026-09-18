@@ -632,4 +632,9 @@ export const creator: Record<string, string> = {
   'Inbjudningar': 'Invitations',
   'vill ha dig i sitt creator-community': 'wants you in their creator community',
   'har öppen kran': 'has an open tap',
+  'Godkänd. Verifiera dig hos Stripe under Inställningar så betalas ersättningen ut.': 'Approved. Verify with Stripe under Settings and the payment goes out.',
+  'Du kan ansöka om betalda uppdrag och produktbyten. Verifiera dig hos Stripe när du vill — det behövs först när ett uppdrag ska betalas ut.': 'You can apply for paid jobs and product exchanges. Verify with Stripe whenever you like — it is only needed when a job is paid out.',
+  'Verifiera dig för utbetalning': 'Verify for payouts',
+  'Valfri': 'Optional',
+  'Valfritt. Du kan söka och ta uppdrag utan verifiering. När ett betalt uppdrag godkänns behöver pengarna någonstans att ta vägen: verifiera dig hos Stripe (identitet och bankkonto, några minuter, en gång) så betalas det ut automatiskt.': 'Optional. You can apply for and take jobs without verifying. When a paid job is approved the money needs somewhere to go: verify with Stripe (identity and bank account, a few minutes, once) and it is paid out automatically.',
 };

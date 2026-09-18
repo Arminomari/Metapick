@@ -68,7 +68,6 @@ public sealed class UgcApplicationService : IUgcApplicationService
             {
                 UgcCreatorStatus.Suspended => "Ditt konto på marknadsplatsen är avstängt.",
                 UgcCreatorStatus.Pending => "Din profil granskas av VYRLE. Du kan ansöka så fort den är klar.",
-                _ when !me.PayoutOnboardingComplete => "Verifiera dig under Inställningar innan du tar betalda uppdrag.",
                 _ => "Betalda uppdrag kräver F-skatt.",
             });
 

@@ -53,7 +53,6 @@ public static class UgcMapper
         {
             UgcCreatorStatus.Suspended => "Ditt konto på marknadsplatsen är avstängt.",
             UgcCreatorStatus.Pending => "Din profil granskas av VYRLE. Du kan ansöka så fort den är klar.",
-            _ when !p.PayoutOnboardingComplete => "Verifiera dig under Inställningar för att kunna ta betalda uppdrag. Produktbyten kan du ansöka om direkt.",
             _ when s.RequireFTaxForPaid && !p.HasFTax => "Betalda uppdrag kräver F-skatt.",
             _ => null,
         };

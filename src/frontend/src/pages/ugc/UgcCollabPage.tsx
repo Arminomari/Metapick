@@ -126,7 +126,7 @@ function StatusLine({ c, role }: { c: UgcCollab; role: UgcRole }) {
     case 'RevisionRequested':
       text = `${t('Revision')} ${c.revisionCount}/${c.maxRevisions}` + (c.deadlineAt ? ` · ${t('ny leverans senast')} ${formatDateTime(c.deadlineAt)}` : '');
       break;
-    case 'Approved': text = t('Godkänd — utbetalningen är på väg.'); break;
+    case 'Approved': text = role === 'creator' && c.payment?.lastError?.includes('verifierat') ? t('Godkänd. Verifiera dig hos Stripe under Inställningar så betalas ersättningen ut.') : t('Godkänd — utbetalningen är på väg.'); break;
     case 'Paid': text = `${t('Betald')} ${c.paidAt ? formatDate(c.paidAt) : ''}`; break;
     case 'Cancelled': text = `${t('Avbrutet')}${c.cancelReason ? ': ' + c.cancelReason : ''}${c.noShow ? ' · ' + t('utebliven leverans') : ''}`; break;
     case 'Disputed': text = t('Tvist öppen — VYRLE granskar leveransen mot briefen.'); break;

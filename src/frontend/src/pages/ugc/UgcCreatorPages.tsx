@@ -60,14 +60,14 @@ export function UgcCreatorHomePage() {
         <div className="card" style={{ marginBottom: 16, border: blocked ? '1px solid rgba(212,155,46,.45)' : undefined, background: blocked ? 'linear-gradient(160deg,#fff,#FFF9F0)' : undefined }}>
           <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ flex: '1 1 240px', fontSize: 13.5, lineHeight: 1.5 }}>
-              {profile.blocker ?? t('Du kan ansöka om betalda uppdrag och produktbyten.')}
+              {profile.blocker ?? (profile.payoutOnboardingComplete ? t('Du kan ansöka om betalda uppdrag och produktbyten.') : t('Du kan ansöka om betalda uppdrag och produktbyten. Verifiera dig hos Stripe när du vill — det behövs först när ett uppdrag ska betalas ut.'))}
             </div>
             <div style={{ display: 'flex', gap: 14, fontSize: 12.5, color: 'var(--muted)', flexWrap: 'wrap' }}>
               <span>{profile.deliveredCount} {t('leveranser')}</span>
               {profile.ratingCount > 0 && <span>★ {profile.averageRating.toFixed(1)}</span>}
               <span>{formatOre(earned)} {t('tjänat')}</span>
             </div>
-            {!profile.payoutOnboardingComplete && profile.status !== 'Suspended' && <button className="btn-apply" style={{ ...btn, padding: '9px 16px', fontSize: 12.5 }} onClick={() => navigate('/creator/profile')}>{t('Verifiera dig')}</button>}
+            {!profile.payoutOnboardingComplete && profile.status !== 'Suspended' && <button className="btn-outline" style={{ ...btn, padding: '9px 16px', fontSize: 12.5 }} onClick={() => navigate('/creator/profile')}>{t('Verifiera dig för utbetalning')}</button>}
           </div>
         </div>
       )}
@@ -219,8 +219,8 @@ export function CreatorVerificationCard() {
 
   return (
     <div className="card" style={{ maxWidth: 860, marginBottom: 16 }}>
-      <div className="sec-head"><h2>{t('Verifiering')}</h2><span className={`vy-badge ${suspended ? 'neg' : verified ? 'pos' : 'pend'}`}>{suspended ? t('Avstängd') : verified ? t('Verifierad') : t('Inte verifierad')}</span></div>
-      <p style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--ink-2)', margin: 0 }}>{t('Verifieringen görs hos Stripe: du styrker din identitet och kopplar bankkontot som betalda videouppdrag betalas ut till. Det tar några minuter och görs bara en gång. Produktbyten kan du ta utan verifiering.')}</p>
+      <div className="sec-head"><h2>{t('Verifiering')}</h2><span className={`vy-badge ${suspended ? 'neg' : verified ? 'pos' : 'pend'}`}>{suspended ? t('Avstängd') : verified ? t('Verifierad') : t('Valfri')}</span></div>
+      <p style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--ink-2)', margin: 0 }}>{t('Valfritt. Du kan söka och ta uppdrag utan verifiering. När ett betalt uppdrag godkänns behöver pengarna någonstans att ta vägen: verifiera dig hos Stripe (identitet och bankkonto, några minuter, en gång) så betalas det ut automatiskt.')}</p>
       {payout?.message && !verified && <div style={{ fontSize: 12.5, color: '#9c6b1c', marginTop: 8 }}>{payout.message}</div>}
       {!verified && !suspended && <button className="btn-apply" style={{ ...btn, marginTop: 12 }} disabled={onboard.isPending} onClick={start}>{onboard.isPending ? t('Öppnar…') : p.hasStripeAccount ? t('Fortsätt verifieringen') : t('Verifiera dig')}</button>}
       {tax && (

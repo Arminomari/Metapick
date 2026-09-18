@@ -73,7 +73,7 @@ public sealed class UgcSettlementService
 
         if (string.IsNullOrEmpty(creator.StripeConnectAccountId))
         {
-            payment.LastError = "Creatorn har inte slutfört utbetalningsregistreringen.";
+            payment.LastError = "Creatorn har inte verifierat sig hos Stripe ännu — utbetalningen görs så fort det är klart.";
             return false;
         }
 
@@ -153,7 +153,7 @@ public sealed class UgcSettlementService
         }
         if (string.IsNullOrEmpty(creator.StripeConnectAccountId))
         {
-            payment.LastError = "Creatorn har inte slutfört utbetalningsregistreringen.";
+            payment.LastError = "Creatorn har inte verifierat sig hos Stripe ännu — utbetalningen görs så fort det är klart.";
             return false;
         }
 
