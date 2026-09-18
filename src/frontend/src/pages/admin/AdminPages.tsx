@@ -7,7 +7,6 @@ import { useUgcAdminOverview } from '@/hooks/ugc';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import api from '@/lib/api';
-import { useTriggerSync } from '@/hooks/api';
 import type { ApiResponse, PagedResult } from '@/types';
 import { formatCurrency, formatDate, formatNumber } from '@/lib/utils';
 import { t } from '@/lib/i18n';
@@ -377,7 +376,6 @@ export function AdminDashboardPage() {
   const { data: ugcOverview } = useUgcAdminOverview();
   const ugcBadge = (ugcOverview?.pendingVerification ?? 0) + (ugcOverview?.verifiedAwaitingApproval ?? 0) + (ugcOverview?.openDisputes ?? 0);
   const unreadReplies = (supportThreads ?? []).reduce((s, th) => s + th.unreadFromUser, 0);
-  const triggerSync = useTriggerSync();
 
   const { data: campaignsData, isLoading: campaignsLoading, isError: campaignsError, error: campaignsErrorObj } = usePendingCampaigns(page);
   const approveCampaign = useApproveCampaign();
@@ -442,12 +440,6 @@ export function AdminDashboardPage() {
             <p style={{ color: '#6E7480', fontSize: '.9rem' }}>{t('Statistik, användare, kampanjer, utbetalningar och säkerhet')}</p>
           </div>
           <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
-            <button
-            onClick={() => triggerSync.mutate()}
-            disabled={triggerSync.isPending}
-            style={{ padding: '.5rem 1rem', borderRadius: '.5rem', border: '1px solid #7c3aed', background: '#6a4ea8', color: '#fff', cursor: 'pointer', fontSize: '.8rem', fontWeight: 600, opacity: triggerSync.isPending ? 0.6 : 1 }}>
-            {triggerSync.isPending ? t('Synkar…') : triggerSync.isSuccess ? t('✓ Synk startad!') : t('Synka TikTok nu')}
-            </button>
             <button
               onClick={() => { logout(); window.location.href = '/login'; }}
               style={{ padding: '.5rem 1rem', borderRadius: 980, border: '1px solid rgba(207,75,75,.4)', background: 'rgba(255,255,255,.7)', color: '#cf4b4b', cursor: 'pointer', fontSize: '.8rem', fontWeight: 600 }}>
