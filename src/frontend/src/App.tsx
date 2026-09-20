@@ -1,57 +1,58 @@
 import React from 'react';
 import { FEATURES } from '@/lib/features';
-import { BrandProfilePage, BrandOwnPublicProfilePage } from '@/pages/creator/BrandProfilePage';
-import { CreatorTapsPage } from '@/pages/creator/CreatorTapsPage';
-import { BrandTapPage } from '@/pages/brand/BrandTapPage';
-import { BrandCommunityPage } from '@/pages/brand/BrandCommunityPage';
-import { Navigate, Route, BrowserRouter as Router, Routes, useParams } from 'react-router-dom';
+import { Navigate, Route, BrowserRouter as Router, Routes, useLocation, useParams } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { VersionGuard } from '@/lib/versionGuard';
 import { homeFor, rememberReturnTo } from '@/lib/session';
 import { NotFoundPage } from '@/pages/NotFoundPage';
-import { SupportThreadPage } from '@/pages/shared/SupportThreadPage';
-import { UgcCollabPage } from '@/pages/ugc/UgcCollabPage';
-import { UgcBrandHomePage, UgcPipelinePage, UgcCampaignBuilderPage, UgcBrandCampaignPage, UgcDirectInvitePage } from '@/pages/ugc/UgcBrandPages';
-import { UgcCreatorHomePage, UgcCreatorApplicationsPage, UgcCreatorProfilePage } from '@/pages/ugc/UgcCreatorPages';
+import { ToastProvider } from '@/components/vyrle/Toast';
 import { useAuthStore } from '@/stores/authStore';
-import { CreatorShell, BrandShell } from '@/components/layout/VyrleShell';
+import { useAssignmentDetail } from '@/hooks/api';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage } from '@/pages/auth/AuthPages';
 import { TikTokCallbackPage } from '@/pages/auth/TikTokCallbackPage';
 import { TikTokSigninPage } from '@/pages/auth/TikTokSigninPage';
 import { TermsPage, PrivacyPage } from '@/pages/LegalPages';
 import { AdminDashboardPage } from '@/pages/admin/AdminPages';
-import { BrandStudioDashboard } from '@/pages/brand/BrandStudio';
-import { BrandCampaignListPage, BrandCampaignDetailPage, CreateCampaignPage, BrandApplicationsPage, BrandSettingsPage, BrandAssignmentDetailPage } from '@/pages/brand/BrandPages';
-import { DiscoverCreatorsPage, BrandCreatorDetailPage } from '@/pages/brand/CreatorDiscoveryPages';
-import { BrandPrHubPage } from '@/pages/brand/PrHubPage';
-import { BrandAnalyticsPage } from '@/pages/brand/AnalyticsPage';
-import { CreatorStudioDashboard } from '@/pages/creator/CreatorStudio';
-import { BrowseCampaignsPage, CreatorAssignmentsPage, AssignmentDetailPage, EarningsPage, CreatorProfilePage } from '@/pages/creator/CreatorPages';
-import { CreatorPortfolioPage } from '@/pages/creator/PortfolioPage';
-import { CreatorPrInboxPage } from '@/pages/creator/PrInboxPage';
-import { CreatorAnalyticsPage, CreatorLinksPage, CreatorLevelsPage, CreatorSavedPage } from '@/pages/creator/CreatorExtraPages';
+import { DesignPreviewPage } from '@/pages/DesignPreview';
+
+// ── The redesigned app (Phase 4) ─────────────────────────
+import { CreatorShell, BrandShell } from '@/components/app/AppShell';
+import { NotificationsScreen } from '@/screens/shared/NotificationsScreen';
+import { MessagesScreen } from '@/screens/shared/MessagesScreen';
+import { CollabScreen } from '@/screens/shared/CollabScreen';
+import { BrandPublicScreen } from '@/screens/shared/BrandPublicScreen';
+import { NotFoundScreen } from '@/screens/shared/NotFoundScreen';
+import { CreatorHomeScreen } from '@/screens/creator/HomeScreen';
+import { CreatorWorkScreen } from '@/screens/creator/WorkScreen';
+import { CreatorCampaignDetailScreen } from '@/screens/creator/CampaignDetailScreen';
+import { AssignmentScreen } from '@/screens/creator/AssignmentScreen';
+import { CreatorOrderScreen } from '@/screens/creator/OrderScreen';
+import { CreatorProfileScreen, CreatorProfileEditScreen } from '@/screens/creator/ProfileScreen';
+import { EarningsScreen, VerificationScreen } from '@/screens/creator/EarningsScreen';
+import { CreatorAnalyticsScreen } from '@/screens/creator/AnalyticsScreen';
+import { LevelsScreen, SavedScreen, SettingsScreen, SettingsTikTokScreen, SettingsUgcScreen, SettingsAccountScreen, LinksScreen } from '@/screens/creator/MoreScreens';
+import { BrandHomeScreen } from '@/screens/brand/HomeScreen';
+import { BrandProgramsScreen } from '@/screens/brand/ProgramsScreen';
+import { BrandCreatorsScreen } from '@/screens/brand/CreatorsScreen';
+import { BrandCreatorDetailScreen } from '@/screens/brand/CreatorDetailScreen';
+import { TapDetailScreen, TapFormScreen } from '@/screens/brand/TapScreens';
+import { BrandCampaignDetailScreen, CampaignCreatorScreen } from '@/screens/brand/CampaignScreens';
+import { CampaignFormScreen } from '@/screens/brand/CampaignFormScreen';
+import { ReviewQueueScreen } from '@/screens/brand/ReviewQueueScreen';
+import { BrandOrderDetailScreen, BrandOrderFormScreen } from '@/screens/brand/OrderScreens';
+import { BrandProfileScreen, BrandProfileEditScreen } from '@/screens/brand/ProfileScreen';
+import { BrandAnalyticsScreen } from '@/screens/brand/AnalyticsScreen';
+import { BrandSettingsScreen, BrandSettingsAccountScreen } from '@/screens/brand/SettingsScreen';
 
 function VyrleFrame({ src, title }: { src: string; title: string }) {
-  return (
-    <iframe
-      src={src}
-      title={title}
-      style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', border: 'none' }}
-    />
-  );
+  return <iframe src={src} title={title} style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', border: 'none' }} />;
 }
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: {
-      staleTime: 30_000,
-      retry: 1,
-      throwOnError: false,
-    },
-    mutations: {
-      throwOnError: false,
-    },
+    queries: { staleTime: 30_000, retry: 1, throwOnError: false },
+    mutations: { throwOnError: false },
   },
 });
 
@@ -61,23 +62,41 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
     rememberReturnTo(window.location.pathname + window.location.search);
     return <Navigate to="/login" replace />;
   }
-  // Wrong area for this role: go to their own home, never out to the marketing page.
   if (allowedRoles && role && !allowedRoles.includes(role)) return <Navigate to={homeFor(role)} replace />;
   return <>{children}</>;
 }
 
 /** Login and register are for guests. Someone already signed in goes to their app. */
 function GuestOnly({ children }: { children: React.ReactNode }) {
-  // Decided once on mount: the page itself navigates after a successful login.
   const [signedIn] = React.useState(() => useAuthStore.getState().isAuthenticated);
   const role = useAuthStore.getState().role;
   if (signedIn && role) return <Navigate to={homeFor(role)} replace />;
   return <>{children}</>;
 }
 
-function CampaignDetailWrapper() {
-  const { id } = useParams<{ id: string }>();
-  return <BrandCampaignDetailPage campaignId={id!} />;
+/** Old links keep working: same query string, new path. */
+function Moved({ to }: { to: string }) {
+  const loc = useLocation();
+  const [path, query] = to.split('?');
+  const merged = new URLSearchParams(loc.search);
+  new URLSearchParams(query ?? '').forEach((v, k) => merged.set(k, v));
+  const qs = merged.toString();
+  return <Navigate to={`${path}${qs ? `?${qs}` : ''}${loc.hash}`} replace />;
+}
+
+/** `/brand/assignments/:id` used to be an orphan; it now lives under its campaign. */
+function BrandAssignmentMoved() {
+  const { id = '' } = useParams<{ id: string }>();
+  const { data } = useAssignmentDetail(id);
+  if (!data) return null;
+  return <Navigate to={`/brand/campaigns/${data.campaignId}/creators/${id}`} replace />;
+}
+
+/** Stripe sends creators back to the profile with `?onboarding=done`; the verification screen handles it. */
+function OnboardingAware({ children }: { children: React.ReactNode }) {
+  const loc = useLocation();
+  if (new URLSearchParams(loc.search).has('onboarding')) return <Navigate to={`/creator/earnings/verification${loc.search}`} replace />;
+  return <>{children}</>;
 }
 
 export default function App() {
@@ -97,65 +116,83 @@ export default function App() {
           <Route path="/auth/tiktok/signin" element={<TikTokSigninPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/design" element={<DesignPreviewPage />} />
           <Route path="/auth/tiktok/callback" element={<ProtectedRoute allowedRoles={['Creator']}><TikTokCallbackPage /></ProtectedRoute>} />
 
-          {/* Admin — standalone layout */}
+          {/* Admin — standalone layout, unchanged */}
           <Route path="/admin" element={<ProtectedRoute allowedRoles={['Admin']}><AdminDashboardPage /></ProtectedRoute>} />
-          <Route path="/admin/ugc/collabs/:id" element={<ProtectedRoute allowedRoles={['Admin']}><div className="vy-app" style={{ padding: 'clamp(1rem, 4vw, 2rem)', maxWidth: 1160, margin: '0 auto' }}><UgcCollabPage /></div></ProtectedRoute>} />
+          <Route path="/admin/ugc/collabs/:id" element={<ProtectedRoute allowedRoles={['Admin']}><div className="ds-root"><ToastProvider><CollabScreen /></ToastProvider></div></ProtectedRoute>} />
 
-          {/* Brand area — VYRLE shell */}
+          {/* Brand */}
           <Route element={<ProtectedRoute allowedRoles={['Brand']}><BrandShell /></ProtectedRoute>}>
-            <Route path="/brand" element={<BrandStudioDashboard />} />
-            <Route path="/brand/analytics" element={<BrandAnalyticsPage />} />
-            <Route path="/brand/campaigns" element={<BrandCampaignListPage />} />
-            <Route path="/brand/campaigns/new" element={<CreateCampaignPage />} />
-            <Route path="/brand/campaigns/:id" element={<CampaignDetailWrapper />} />
-            <Route path="/brand/applications" element={<BrandApplicationsPage />} />
-            <Route path="/brand/creators" element={<DiscoverCreatorsPage />} />
-            <Route path="/brand/creators/:id" element={<BrandCreatorDetailPage />} />
-            <Route path="/brand/pr" element={<BrandPrHubPage />} />
-            <Route path="/brand/public-profile" element={<BrandOwnPublicProfilePage />} />
-            <Route path="/brand/tap" element={<BrandTapPage />} />
-            <Route path="/brand/community" element={<BrandCommunityPage />} />
-            <Route path="/brand/settings" element={<BrandSettingsPage />} />
-            <Route path="/brand/assignments/:id" element={<BrandAssignmentDetailPage />} />
-            <Route path="/brand/messages" element={<SupportThreadPage />} />
-            {/* UGC-marknadsplatsen: Beställ video */}
-            <Route path="/brand/ugc" element={<UgcBrandHomePage />} />
-            <Route path="/brand/ugc/pipeline" element={<UgcPipelinePage role="brand" />} />
-            <Route path="/brand/ugc/campaigns/new" element={<UgcCampaignBuilderPage />} />
-            <Route path="/brand/ugc/campaigns/:id" element={<UgcBrandCampaignPage />} />
-            <Route path="/brand/ugc/campaigns/:id/edit" element={<UgcCampaignBuilderPage />} />
-            <Route path="/brand/ugc/invite" element={<UgcDirectInvitePage />} />
-            <Route path="/brand/ugc/collabs/:id" element={<UgcCollabPage />} />
-            <Route path="/brand/*" element={<NotFoundPage inApp />} />
+            <Route path="/brand" element={<BrandHomeScreen />} />
+            <Route path="/brand/notifications" element={<NotificationsScreen />} />
+            <Route path="/brand/campaigns" element={<BrandProgramsScreen />} />
+            <Route path="/brand/campaigns/new" element={<CampaignFormScreen />} />
+            <Route path="/brand/campaigns/:id" element={<BrandCampaignDetailScreen />} />
+            <Route path="/brand/campaigns/:id/creators/:assignmentId" element={<CampaignCreatorScreen />} />
+            <Route path="/brand/tap/new" element={<TapFormScreen />} />
+            <Route path="/brand/tap/:id" element={<TapDetailScreen />} />
+            <Route path="/brand/tap/:id/edit" element={<TapFormScreen />} />
+            <Route path="/brand/review" element={<ReviewQueueScreen />} />
+            <Route path="/brand/creators" element={<BrandCreatorsScreen />} />
+            <Route path="/brand/creators/:id" element={<BrandCreatorDetailScreen />} />
+            <Route path="/brand/ugc/campaigns/new" element={<BrandOrderFormScreen />} />
+            <Route path="/brand/ugc/campaigns/:id" element={<BrandOrderDetailScreen />} />
+            <Route path="/brand/ugc/campaigns/:id/edit" element={<BrandOrderFormScreen />} />
+            <Route path="/brand/ugc/collabs/:id" element={<CollabScreen />} />
+            <Route path="/brand/messages" element={<MessagesScreen />} />
+            <Route path="/brand/profile" element={<BrandProfileScreen />} />
+            <Route path="/brand/profile/edit" element={<BrandProfileEditScreen />} />
+            <Route path="/brand/analytics" element={<BrandAnalyticsScreen />} />
+            <Route path="/brand/settings" element={<BrandSettingsScreen />} />
+            <Route path="/brand/settings/account" element={<BrandSettingsAccountScreen />} />
+            {/* Old addresses */}
+            <Route path="/brand/tap" element={<Moved to="/brand/campaigns?tab=taps" />} />
+            <Route path="/brand/community" element={<Moved to="/brand/creators?tab=community" />} />
+            <Route path="/brand/applications" element={<Moved to="/brand/creators?tab=applications" />} />
+            <Route path="/brand/ugc" element={<Moved to="/brand/campaigns?tab=orders" />} />
+            <Route path="/brand/ugc/pipeline" element={<Moved to="/brand/campaigns?tab=orders" />} />
+            <Route path="/brand/ugc/invite" element={<Moved to="/brand/ugc/campaigns/new" />} />
+            <Route path="/brand/pr" element={<Moved to="/brand/messages?tab=offers" />} />
+            <Route path="/brand/public-profile" element={<Moved to="/brand/profile" />} />
+            <Route path="/brand/assignments/:id" element={<BrandAssignmentMoved />} />
+            <Route path="/brand/*" element={<NotFoundScreen />} />
           </Route>
 
-          {/* Creator area — VYRLE shell */}
+          {/* Creator */}
           <Route element={<ProtectedRoute allowedRoles={['Creator']}><CreatorShell /></ProtectedRoute>}>
-            <Route path="/creator" element={<CreatorStudioDashboard />} />
-            <Route path="/creator/browse" element={<BrowseCampaignsPage />} />
-            <Route path="/creator/assignments" element={<CreatorAssignmentsPage />} />
-            <Route path="/creator/assignments/:id" element={<AssignmentDetailPage />} />
-            <Route path="/creator/portfolio" element={<CreatorPortfolioPage />} />
-            <Route path="/creator/analytics" element={<CreatorAnalyticsPage />} />
-            <Route path="/creator/pr" element={<CreatorPrInboxPage />} />
-            {FEATURES.linkTree && <Route path="/creator/links" element={<CreatorLinksPage />} />}
-            <Route path="/creator/brands/:id" element={<BrandProfilePage />} />
-            <Route path="/creator/taps" element={<CreatorTapsPage />} />
-            <Route path="/creator/earnings" element={<EarningsPage />} />
-            <Route path="/creator/levels" element={<CreatorLevelsPage />} />
-            <Route path="/creator/saved" element={<CreatorSavedPage />} />
-            <Route path="/creator/settings" element={<CreatorProfilePage />} />
-            <Route path="/creator/profile" element={<CreatorProfilePage />} />
-            <Route path="/creator/messages" element={<SupportThreadPage />} />
-            {/* UGC-marknadsplatsen: Videouppdrag */}
-            <Route path="/creator/ugc" element={<UgcCreatorHomePage />} />
-            <Route path="/creator/ugc/applications" element={<UgcCreatorApplicationsPage />} />
-            <Route path="/creator/ugc/collabs" element={<UgcPipelinePage role="creator" />} />
-            <Route path="/creator/ugc/collabs/:id" element={<UgcCollabPage />} />
-            <Route path="/creator/ugc/profile" element={<UgcCreatorProfilePage />} />
-            <Route path="/creator/*" element={<NotFoundPage inApp />} />
+            <Route path="/creator" element={<CreatorHomeScreen />} />
+            <Route path="/creator/notifications" element={<NotificationsScreen />} />
+            <Route path="/creator/assignments" element={<CreatorWorkScreen segment="mine" />} />
+            <Route path="/creator/browse" element={<CreatorWorkScreen segment="discover" />} />
+            <Route path="/creator/campaigns/:id" element={<CreatorCampaignDetailScreen />} />
+            <Route path="/creator/assignments/:id" element={<AssignmentScreen />} />
+            <Route path="/creator/ugc/orders/:id" element={<CreatorOrderScreen />} />
+            <Route path="/creator/ugc/collabs/:id" element={<CollabScreen />} />
+            <Route path="/creator/brands/:id" element={<BrandPublicScreen />} />
+            <Route path="/creator/messages" element={<MessagesScreen />} />
+            <Route path="/creator/profile" element={<OnboardingAware><CreatorProfileScreen /></OnboardingAware>} />
+            <Route path="/creator/profile/edit" element={<CreatorProfileEditScreen />} />
+            <Route path="/creator/earnings" element={<EarningsScreen />} />
+            <Route path="/creator/earnings/verification" element={<VerificationScreen />} />
+            <Route path="/creator/analytics" element={<CreatorAnalyticsScreen />} />
+            <Route path="/creator/levels" element={<LevelsScreen />} />
+            <Route path="/creator/saved" element={<SavedScreen />} />
+            <Route path="/creator/settings" element={<OnboardingAware><SettingsScreen /></OnboardingAware>} />
+            <Route path="/creator/settings/tiktok" element={<SettingsTikTokScreen />} />
+            <Route path="/creator/settings/ugc" element={<SettingsUgcScreen />} />
+            <Route path="/creator/settings/account" element={<SettingsAccountScreen />} />
+            {FEATURES.linkTree && <Route path="/creator/links" element={<LinksScreen />} />}
+            {/* Old addresses */}
+            <Route path="/creator/taps" element={<Moved to="/creator/assignments#kranar" />} />
+            <Route path="/creator/ugc" element={<Moved to="/creator/browse?type=video" />} />
+            <Route path="/creator/ugc/applications" element={<Moved to="/creator/assignments#ansokta" />} />
+            <Route path="/creator/ugc/collabs" element={<Moved to="/creator/assignments#video" />} />
+            <Route path="/creator/ugc/profile" element={<Moved to="/creator/settings/ugc" />} />
+            <Route path="/creator/pr" element={<Moved to="/creator/messages?tab=requests" />} />
+            <Route path="/creator/portfolio" element={<Moved to="/creator/profile" />} />
+            <Route path="/creator/*" element={<NotFoundScreen />} />
           </Route>
 
           {/* Redirect dashboard based on role */}
@@ -175,8 +212,8 @@ function UgcRedirect() {
   const { isAuthenticated, role } = useAuthStore();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   switch (role) {
-    case 'Brand': return <Navigate to="/brand/ugc/pipeline" replace />;
-    case 'Creator': return <Navigate to="/creator/ugc/collabs" replace />;
+    case 'Brand': return <Navigate to="/brand/campaigns?tab=orders" replace />;
+    case 'Creator': return <Navigate to="/creator/assignments#video" replace />;
     case 'Admin': return <Navigate to="/admin?section=ugc" replace />;
     default: return <Navigate to="/" replace />;
   }

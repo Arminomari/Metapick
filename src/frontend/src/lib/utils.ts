@@ -17,6 +17,11 @@ export function formatCurrency(amount: number, currency = 'SEK'): string {
   return new Intl.NumberFormat(LOCALE, { style: 'currency', currency }).format(amount);
 }
 
+/** Whole kronor unless there are öre: "1 070 kr", "620,50 kr". For tiles and list rows. */
+export function money(amount: number, currency = 'SEK'): string {
+  return new Intl.NumberFormat(LOCALE, { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(amount);
+}
+
 export function formatNumber(n: number): string {
   return new Intl.NumberFormat(LOCALE).format(n);
 }

@@ -5,6 +5,7 @@ import { creator } from './creator';
 import { brand } from './brand';
 import { components } from './components';
 import { admin } from './admin';
+import { app } from './app';
 
 /**
  * Merged Swedish→English dictionary. One namespace file per page/area —
@@ -19,4 +20,5 @@ export const EN: Record<string, string> = {
   ...brand,
   ...components,
   ...admin,
+  ...app,
 };

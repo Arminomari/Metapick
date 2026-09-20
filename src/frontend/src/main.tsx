@@ -4,6 +4,7 @@ import App from './App';
 import './index.css';
 import './styles/vyrle.css';
 import './styles/vyrle.extra.css';
+import './styles/ds.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
