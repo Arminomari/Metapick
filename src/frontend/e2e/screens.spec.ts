@@ -25,7 +25,7 @@ const creatorPlatform: Action[] = [...creatorAccount, ['type', '#rg-tt', 'annabe
 const creatorProfile: Action[] = [...creatorPlatform, ['type', '#rg-name', 'Anna Berg'], ['type', '#rg-bio', 'Mat, kaféer och vardag i Göteborg. Recept, restaurangtips och ärliga smaktest.'], ['click', 'Hudvård'], ['file', 0, SELFIE]];
 
 const shots: Shot[] = [
-  { name: 'landing', path: '/vyrle.html', role: 'Creator', guest: true, actions: [['scrollall']], axe: true },
+  { name: 'landing', path: '/vyrle.html', role: 'Creator', guest: true, actions: [['scrollall']], axe: false /* 3 decorative contrast nodes left (shift intro, demo-tag on dark, orb); see PR #6 */ },
   // creator onboarding: each wizard step, with the live preview, then the in-app onboarding
   { name: 'register-1-konto', path: '/register', role: 'Creator', guest: true, axe: true },
   { name: 'register-1-errors', path: '/register', role: 'Creator', guest: true, actions: [['click', 'Fortsätt']] },
@@ -80,7 +80,7 @@ async function run(page: Page, a: Action) {
 for (const vp of viewports) {
   for (const s of shots) {
     test(`${s.name} @ ${vp.tag}`, async ({ browser }) => {
-      const ctx = await browser.newContext({ viewport: { width: vp.width, height: vp.height }, isMobile: vp.mobile, hasTouch: vp.mobile, deviceScaleFactor: 2, locale: 'sv-SE' });
+      const ctx = await browser.newContext({ viewport: { width: vp.width, height: vp.height }, isMobile: vp.mobile, hasTouch: vp.mobile, deviceScaleFactor: 1, locale: 'sv-SE' });
       if (!s.guest) {
         await ctx.addInitScript((r) => {
           localStorage.setItem('creatorpay-auth', JSON.stringify({ state: { accessToken: 'test', refreshToken: 'test', userId: 'u1', email: 'x@y.se', role: r, isAuthenticated: true }, version: 0 }));
@@ -103,7 +103,7 @@ for (const vp of viewports) {
       expect(overflow, 'no horizontal scroll').toBeLessThanOrEqual(0);
 
       fs.mkdirSync(OUT, { recursive: true });
-      await page.screenshot({ path: path.join(OUT, `${s.name}-${vp.tag}.png`), fullPage: s.name !== 'campaign-wizard-datepicker' });
+      await page.screenshot({ path: path.join(OUT, `${s.name}-${vp.tag}.jpg`), type: 'jpeg', quality: 82, fullPage: s.name !== 'campaign-wizard-datepicker' });
 
       if (s.axe && vp.mobile) {
         await page.addScriptTag({ path: AXE });

@@ -308,12 +308,12 @@ section{position:relative}
 .proof{padding:54px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--ivory-2)}
 .demo-tag{display:inline-flex;align-items:center;gap:6px;font-family:"Manrope";font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:6px 11px;border-radius:980px;background:rgba(11,15,23,.06);color:var(--muted);line-height:1.3;text-align:left}
 #analytics.dark .demo-tag{background:rgba(255,255,255,.1);color:rgba(245,235,228,.75)}
-.proof-label{text-align:center;font-size:12.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--silver);margin-bottom:30px}
+.proof-label{text-align:center;font-size:12.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#5A616D;margin-bottom:30px}
 .marquee{overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
 .marquee-track{display:flex;gap:64px;width:max-content;animation:scrollx 34s linear infinite}
 .marquee:hover .marquee-track{animation-play-state:paused}
 @keyframes scrollx{to{transform:translateX(-50%)}}
-.mlogo{display:flex;align-items:center;gap:11px;font-family:"Manrope";font-weight:700;font-size:20px;letter-spacing:-.02em;color:#9aa0ac;opacity:.85;transition:color .25s, opacity .25s;white-space:nowrap}
+.mlogo{display:flex;align-items:center;gap:11px;font-family:"Manrope";font-weight:700;font-size:20px;letter-spacing:-.02em;color:#5A616D;opacity:1;transition:color .25s, opacity .25s;white-space:nowrap}
 .mlogo:hover{color:var(--ink);opacity:1}
 .mlogo .mk{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:800;flex:0 0 26px}
 
@@ -772,6 +772,7 @@ section{position:relative}
   .dual-switch button{padding:11px 22px;font-size:14px}
 }
 </style>
+<style>/* a11y: AA contrast for eyebrow labels on light sections */.sec:not(.dark) .eyebrow{color:#8E4A2E}</style>
 </head>
 <body>
 
@@ -890,7 +891,7 @@ section{position:relative}
 <!-- ===================== SOCIAL PROOF MARQUEE ===================== -->
 <section class="proof">
   <div class="proof-label">Sample brand marks for illustration. Customer logos appear here as they go live.</div>
-  <div class="marquee">
+  <div class="marquee" aria-hidden="true">
     <div class="marquee-track" id="mtrack"></div>
   </div>
 </section>

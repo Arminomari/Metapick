@@ -3,7 +3,7 @@ import { defineConfig } from '@playwright/test';
 /**
  * Screenshot + a11y suite. Uses the installed Chrome (no browser download) and
  * the Vite dev server; every /api call is answered from e2e/fixtures.ts.
- *   npm run screens        → docs/screens/pw/<page>-<desktop|mobile>.png + a11y-*.json
+ *   npm run screens        → docs/screens/pw/<page>-<desktop|mobile>.jpg + a11y-*.json
  */
 export default defineConfig({
   testDir: './e2e',
