@@ -289,15 +289,7 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
         _badges = badges;
     }
 
-    /// <summary>Platform-verified performance per creator, from campaign/tap assignments that ran.</summary>
-    private sealed record PerfStats(long Views, decimal Earned, int Completed, int Approved, int Decided, int VerifiedPosts, DateTime? MetricsUpdatedAt, DateTime? LastActive)
-    {
-        public static readonly PerfStats Empty = new(0, 0, 0, 0, 0, 0, null, null);
-        public decimal Epm => Views > 0 ? Math.Round(Earned / Views * 1000m, 2) : 0m;
-        public double ApprovalRate => Decided > 0 ? Math.Round(Approved * 100.0 / Decided, 1) : 0;
-    }
-
-    private async Task<Dictionary<Guid, PerfStats>> PerfStatsAsync(List<Guid> creatorIds, CancellationToken ct)
+    private async Task<Dictionary<Guid, CreatorPerformance>> PerfStatsAsync(List<Guid> creatorIds, CancellationToken ct)
     {
         if (creatorIds.Count == 0) return new();
         var counted = _assignments.Query()
@@ -334,13 +326,13 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
             })
             .ToDictionaryAsync(x => x.Id, ct);
 
-        var result = new Dictionary<Guid, PerfStats>();
+        var result = new Dictionary<Guid, CreatorPerformance>();
         foreach (var id in creatorIds)
         {
             totals.TryGetValue(id, out var t);
             decisions.TryGetValue(id, out var d);
             posts.TryGetValue(id, out var p);
-            result[id] = new PerfStats(
+            result[id] = new CreatorPerformance(
                 t?.Views ?? 0, t?.Earned ?? 0, t?.Completed ?? 0,
                 d?.Approved ?? 0, d?.Decided ?? 0,
                 p?.Verified ?? 0, p?.Updated,
@@ -351,7 +343,9 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
 
     public async Task<Result<PagedResult<CreatorDiscoveryDto>>> SearchAsync(
         string? search, string? category, string? country, int? minFollowers,
-        string? tag, bool? openToPrOffers, string? sort, int page, int pageSize, CancellationToken ct = default)
+        string? tag, bool? openToPrOffers, string? sort, int page, int pageSize,
+        long? minVerifiedViews = null, double? minApprovalRate = null, bool? onlyWithResults = null,
+        CancellationToken ct = default)
     {
         // Only approved creators with an OAuth-verified TikTok connection are
         // discoverable by brands (CreatorVisibility): a typed handle proves nothing.
@@ -401,21 +395,17 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
             .ToDictionaryAsync(x => x.UserId, ct);
 
         var perf = await PerfStatsAsync(candidates.Select(c => c.Id).ToList(), ct);
-        PerfStats P(CreatorProfile c) => perf.GetValueOrDefault(c.Id, PerfStats.Empty);
+        CreatorPerformance P(CreatorProfile c) => perf.GetValueOrDefault(c.Id, CreatorPerformance.Empty);
         var topThreshold = await _badges.TopCreatorThresholdAsync(ct);
 
-        // Ranking is by verified performance; followers are a tie-breaker, never the primary signal.
-        candidates = (sort?.ToLower()) switch
-        {
-            "followers" => candidates.OrderByDescending(c => c.TikTokAccount.VerifiedFollowers()).ThenByDescending(c => P(c).Views).ToList(),
-            "rating"    => candidates.OrderByDescending(c => ratings.TryGetValue(c.UserId, out var r) ? r.Avg : 0)
-                                     .ThenByDescending(c => P(c).Views).ToList(),
-            "recent"    => candidates.OrderByDescending(c => c.CreatedAt).ToList(),
-            "epm"       => candidates.OrderByDescending(c => P(c).Epm).ThenByDescending(c => P(c).Views).ToList(),
-            "approval"  => candidates.OrderByDescending(c => P(c).ApprovalRate).ThenByDescending(c => P(c).Decided).ToList(),
-            "active"    => candidates.OrderByDescending(c => P(c).LastActive ?? DateTime.MinValue).ToList(),
-            _           => candidates.OrderByDescending(c => P(c).Views).ThenByDescending(c => c.TikTokAccount.VerifiedFollowers()).ToList(),
-        };
+        // Verified-data filters: views and decisions from campaign videos only.
+        candidates = candidates.Where(c => CreatorRanking.Passes(P(c), minVerifiedViews, minApprovalRate, onlyWithResults == true)).ToList();
+
+        // Ranking is by verified performance; followers are a tie-breaker, never the primary signal (CreatorRanking).
+        candidates = CreatorRanking.Order(candidates, sort,
+            P, c => c.TikTokAccount.VerifiedFollowers(),
+            c => ratings.TryGetValue(c.UserId, out var r) ? r.Avg : 0,
+            c => c.CreatedAt).ToList();
 
         var totalCount = candidates.Count;
         var pageItems = candidates.Skip((page - 1) * pageSize).Take(pageSize).ToList();
@@ -442,10 +432,10 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
                 r != null ? Math.Round(r.Avg, 1) : 0, r?.Count ?? 0,
                 p.Completed,
                 c.OpenToPrOffers,
-                p.Views, p.Earned, p.Epm, p.Approved, p.Decided, p.ApprovalRate,
+                p.VerifiedViews, p.Earned, p.Epm, p.Approved, p.Decided, p.ApprovalRate,
                 p.MetricsUpdatedAt, p.LastActive,
                 CreatorBadges.IsVerifiedCreator(c.TikTokAccount.IsVerified(), p.VerifiedPosts),
-                CreatorBadges.IsTopCreator(p.Views, p.VerifiedPosts, topThreshold));
+                CreatorBadges.IsTopCreator(p.VerifiedViews, p.VerifiedPosts, topThreshold));
         }).ToList();
 
         return new PagedResult<CreatorDiscoveryDto>
@@ -506,7 +496,7 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
             ? Math.Round((tLikes + tComments + tShares) * 100.0 / tViews, 1)
             : 0;
 
-        var perf = (await PerfStatsAsync([creator.Id], ct)).GetValueOrDefault(creator.Id, PerfStats.Empty);
+        var perf = (await PerfStatsAsync([creator.Id], ct)).GetValueOrDefault(creator.Id, CreatorPerformance.Empty);
         var paid = await _payouts.Query()
             .Where(p => p.CreatorProfileId == creator.Id && p.Status == PayoutStatus.Completed)
             .SumAsync(p => (decimal?)p.RequestedAmount, ct) ?? 0m;
@@ -527,6 +517,6 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
             CreatorLevels.For(paid).Name,
             creator.CoverUrl,
             CreatorBadges.IsVerifiedCreator(creator.TikTokAccount.IsVerified(), perf.VerifiedPosts),
-            CreatorBadges.IsTopCreator(perf.Views, perf.VerifiedPosts, topThreshold));
+            CreatorBadges.IsTopCreator(perf.VerifiedViews, perf.VerifiedPosts, topThreshold));
     }
 }

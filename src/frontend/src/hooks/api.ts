@@ -697,6 +697,8 @@ export function useDeletePortfolioItem() {
 export function useCreatorSearch(params: {
   search?: string; category?: string; country?: string; minFollowers?: number;
   tag?: string; openToPrOffers?: boolean; sort?: string; page?: number;
+  /** Verified-data filters: views/decisions from campaign videos only (CreatorRanking on the server). */
+  minVerifiedViews?: number; minApprovalRate?: number; onlyWithResults?: boolean;
 }) {
   return useQuery({
     queryKey: ['creator-search', params],
