@@ -47,6 +47,10 @@ export interface CreatorProfile {
   dateOfBirth?: string | null;
   /** Wide 3:1 banner; a gradient is shown when empty. */
   coverUrl?: string | null;
+  /** Server rule (CreatorVisibility): approved AND OAuth-connected TikTok. */
+  visibleToBrands: boolean;
+  /** Why brands cannot see the profile yet; null when visible. */
+  visibilityBlocker?: string | null;
 }
 
 // ── Portfolio ──────────────────────────────────────────

@@ -1,19 +1,14 @@
-import { maskOrgNr, maskPhone } from '@/lib/masks';
 import { LangSwitcher, t } from '@/lib/i18n';
 import React, { useEffect, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useLogin, useRegister } from '@/hooks/api';
+import { useLogin } from '@/hooks/api';
 import { useAuthStore } from '@/stores/authStore';
 import { postLoginPath, takeSessionExpired } from '@/lib/session';
 import { useTitle } from '@/lib/title';
-import { DateInput } from '@/components/ui/DateInput';
-import { ALL_TAGS } from '@/lib/tags';
-import { CATEGORIES } from '@/lib/categories';
 import api from '@/lib/api';
 import { SocialButtons } from '@/components/auth/SocialButtons';
-import { ImagePicker } from '@/components/auth/ImagePicker';
 import {
-  clearSocialSignup, readSocialSignup, stashSocialSignup,
+  stashSocialSignup,
   type PendingSocialSignup, type SocialTokenResult,
 } from '@/lib/socialAuth';
 
@@ -22,20 +17,20 @@ const STAR_PATH = 'M12 1.5c.7 5.6 2.9 7.8 8.5 8.5 .9.1 .9 1.4 0 1.5-5.6.7-7.8 2.
 const Star = ({ fill }: { fill: string }) => (
   <svg className="brand-star" width="26" height="26" viewBox="0 0 24 24" fill={fill} aria-hidden="true"><path d={STAR_PATH} /></svg>
 );
-const Arrow = () => (
+export const Arrow = () => (
   <span className="auth-arrow"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg></span>
 );
-const Check = () => (
+export const Check = () => (
   <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 7" /></svg>
 );
-const SmallCheck = () => (
+export const SmallCheck = () => (
   <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 7" /></svg>
 );
 
-const INDUSTRIES = ['Mode & Kläder', 'Skönhet & Hudvård', 'Mat & Dryck', 'Teknik & Appar', 'Gaming', 'Sport & Hälsa', 'Resor', 'Inredning & Hem', 'Finans', 'Utbildning', 'Underhållning', 'Övrigt'];
-const COUNTRIES: [string, string][] = [['SE', 'Sverige'], ['NO', 'Norge'], ['DK', 'Danmark'], ['FI', 'Finland']];
+export const INDUSTRIES = ['Mode & Kläder', 'Skönhet & Hudvård', 'Mat & Dryck', 'Teknik & Appar', 'Gaming', 'Sport & Hälsa', 'Resor', 'Inredning & Hem', 'Finans', 'Utbildning', 'Underhållning', 'Övrigt'];
+export const COUNTRIES: [string, string][] = [['SE', 'Sverige'], ['NO', 'Norge'], ['DK', 'Danmark'], ['FI', 'Finland']];
 
-function AuthShell({ children, wide }: { children: ReactNode; wide?: boolean }) {
+export function AuthShell({ children, wide, className }: { children: ReactNode; wide?: boolean; className?: string }) {
   return (
     <div className="vy-app">
       <div className="auth-split">
@@ -70,7 +65,7 @@ function AuthShell({ children, wide }: { children: ReactNode; wide?: boolean }) 
 
         <main className="auth-main" style={{ position: 'relative' }}>
           <div style={{ position: 'absolute', top: 16, right: 18, zIndex: 5 }}><LangSwitcher /></div>
-          <div className={`card${wide ? ' auth-card-lg' : ''}`}>
+          <div className={`card${wide ? ' auth-card-lg' : ''}${className ? ` ${className}` : ''}`}>
             <div className="auth-lockup"><Star fill="#0B0F17" /> VYRLE</div>
             {children}
           </div>
@@ -87,7 +82,7 @@ interface SocialLoginOut {
   identity?: { provider: string; email: string; firstName?: string | null; lastName?: string | null; pictureUrl?: string | null } | null;
 }
 
-function extractApiError(err: any, fallback: string): string {
+export function extractApiError(err: any, fallback: string): string {
   if (!err?.response) return t('Kunde inte nå servern. Försök igen om en stund.');
   if (err.response.status === 429) return t('För många försök. Vänta en minut och försök igen.');
   const resp = err.response.data;
@@ -98,7 +93,7 @@ function extractApiError(err: any, fallback: string): string {
   return resp?.error?.message || resp?.title || fallback;
 }
 
-function useSocialLoginFlow(setError: (msg: string) => void, onNeedsRegistration: (p: PendingSocialSignup) => void) {
+export function useSocialLoginFlow(setError: (msg: string) => void, onNeedsRegistration: (p: PendingSocialSignup) => void) {
   const navigate = useNavigate();
   const authStore = useAuthStore();
   return async (result: SocialTokenResult) => {
@@ -180,454 +175,8 @@ export function LoginPage() {
 }
 
 /* ───────────────────────── Register (wizard) ───────────────────────── */
-type Role = 'Creator' | 'Brand';
-
-interface WizardForm {
-  role: Role;
-  email: string; password: string;
-  firstName: string; lastName: string;
-  // creator
-  displayName: string; bio: string; category: string; country: string; dateOfBirth: string;
-  avatarUrl: string | null;
-  selfieUrl: string | null;
-  tikTokUsername: string;
-  instagramUsername: string; website: string;
-  profileTags: string[]; openToPrOffers: boolean;
-  // brand
-  companyName: string; organizationNumber: string; industry: string; contactPhone: string;
-  description: string; logoUrl: string | null;
-}
-
-const STEP_LABELS: Record<Role, string[]> = {
-  Creator: ['Kontotyp', 'Konto', 'Profil', 'Räckvidd', 'Expertis'],
-  Brand: ['Kontotyp', 'Konto', 'Företag', 'Kontakt'],
-};
-
-
-export function RegisterPage() {
-  const [searchParams] = useSearchParams();
-  const defaultRole: Role = searchParams.get('role') === 'Brand' ? 'Brand' : 'Creator';
-  const fromSocial = searchParams.get('social') === '1';
-
-  const [social, setSocial] = useState<PendingSocialSignup | null>(() => (fromSocial ? readSocialSignup() : null));
-  // Social signups still start at role choice (Kontotyp) — brands sign in with Google too.
-  const [step, setStep] = useState(0);
-  const [form, setForm] = useState<WizardForm>(() => ({
-    role: defaultRole,
-    email: social?.email ?? '', password: '',
-    firstName: social?.firstName ?? '', lastName: social?.lastName ?? '',
-    displayName: social?.firstName ?? '', bio: '', category: 'Övrigt', country: 'SE', dateOfBirth: '',
-    avatarUrl: social?.pictureUrl ?? null,
-    selfieUrl: null,
-    tikTokUsername: '',
-    instagramUsername: '', website: '',
-    profileTags: [], openToPrOffers: true,
-    companyName: '', organizationNumber: '', industry: 'Övrigt', contactPhone: '',
-    description: '', logoUrl: null,
-  }));
-  const [showPw, setShowPw] = useState(false);
-  const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const register = useRegister();
-
-  const onSocialToken = useSocialLoginFlow(setError, (pending) => {
-    stashSocialSignup(pending);
-    setSocial(pending);
-    setForm((f) => ({
-      ...f,
-      email: pending.email,
-      firstName: f.firstName || pending.firstName || '',
-      lastName: f.lastName || pending.lastName || '',
-      displayName: f.displayName || pending.firstName || '',
-      avatarUrl: f.avatarUrl ?? pending.pictureUrl ?? null,
-    }));
-  });
-
-  const steps = STEP_LABELS[form.role];
-  const isLast = step === steps.length - 1;
-
-  const set = (key: keyof WizardForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
-    setForm((f) => ({ ...f, [key]: e.target.value }));
-
-  const toggleTag = (tag: string) =>
-    setForm((f) => ({
-      ...f,
-      profileTags: f.profileTags.includes(tag) ? f.profileTags.filter((t) => t !== tag) : [...f.profileTags, tag],
-    }));
-
-  const pw = form.password;
-  const pwRules: [boolean, string][] = [
-    [/[A-Z]/.test(pw), t('Versal (A–Z)')], [/[a-z]/.test(pw), t('Gemen (a–z)')], [/[0-9]/.test(pw), t('Siffra (0–9)')], [pw.length >= 8, t('Minst 8 tecken')],
-  ];
-  const pwOk = pwRules.every(([ok]) => ok);
-
-  const [emailTaken, setEmailTaken] = useState(false);
-  const [tiktokTaken, setTiktokTaken] = useState(false);
-  const checkTikTok = async () => {
-    const v = form.tikTokUsername.trim().replace(/^@/, '');
-    if (!v) return;
-    try {
-      const res = await api.post('/auth/check-tiktok', { username: v });
-      setTiktokTaken(res.data.data === false);
-    } catch { /* final submit still guards */ }
-  };
-  const checkEmail = async () => {
-    const v = form.email.trim();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) return;
-    try {
-      const res = await api.post('/auth/check-email', { email: v });
-      setEmailTaken(res.data.data === false);
-    } catch { /* offline or rate-limited — the final submit still guards */ }
-  };
-
-  const validateStep = (): string | null => {
-    const label = steps[step];
-    if (label === 'Konto') {
-      if (social) return null;
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email.trim())) return t('Ange en giltig e-postadress');
-      if (emailTaken) return t('E-postadressen används redan — logga in istället.');
-      if (!pwOk) return t('Lösenordet uppfyller inte alla krav');
-      return null;
-    }
-    if (label === 'Profil') {
-      if (!form.displayName.trim()) return t('Visningsnamn krävs');
-      if (form.bio.trim().length < 20) return t('Skriv minst 20 tecken i din bio — varumärken läser den först av allt');
-      if (!form.selfieUrl) return t('Selfie krävs — den används för att verifiera att du är en riktig person.');
-      return null;
-    }
-    if (label === 'Räckvidd') {
-      if (!form.tikTokUsername.trim()) return t('TikTok-användarnamn krävs');
-      if (tiktokTaken) return t('Det här TikTok-kontot är redan kopplat till ett annat VYRLE-konto.');
-      return null;
-    }
-    if (label === 'Expertis') {
-      if (form.profileTags.length === 0) return t('Välj minst en expertis-tagg');
-      return null;
-    }
-    if (label === 'Företag') {
-      if (!form.companyName.trim()) return t('Företagsnamn krävs');
-      if (!/^\d{6}-?\d{4}$/.test(form.organizationNumber.trim())) return t('Ange organisationsnummer i formatet XXXXXX-XXXX');
-      return null;
-    }
-    return null;
-  };
-
-  const next = () => {
-    const err = validateStep();
-    if (err) { setError(err); return; }
-    setError('');
-    setStep((s) => Math.min(s + 1, steps.length - 1));
-  };
-  const back = () => { setError(''); setStep((s) => Math.max(s - 1, 0)); };
-
-  const handleSubmit = async () => {
-    const err = validateStep();
-    if (err) { setError(err); return; }
-    setError('');
-    setSubmitting(true);
-
-    const common = {
-      role: form.role,
-      firstName: form.firstName.trim() || null,
-      lastName: form.lastName.trim() || null,
-      companyName: form.companyName.trim() || null,
-      organizationNumber: form.organizationNumber.trim() || null,
-      contactPhone: form.contactPhone.trim() || null,
-      displayName: form.displayName.trim() || null,
-      country: form.country,
-      bio: form.bio.trim() || null,
-      category: form.category,
-      tikTokUsername: form.tikTokUsername.trim() || null,
-      dateOfBirth: form.dateOfBirth || null,
-      profileTags: form.profileTags.length > 0 ? form.profileTags : null,
-      instagramUsername: form.instagramUsername.trim() || null,
-      avatarUrl: form.avatarUrl,
-      selfieUrl: form.selfieUrl,
-      website: form.website.trim() || null,
-      industry: form.industry,
-      logoUrl: form.logoUrl,
-      description: form.description.trim() || null,
-    };
-
-    try {
-      if (social) {
-        await api.post('/auth/social/register', { provider: social.provider, token: social.token, email: form.email.trim() || null, ...common });
-        clearSocialSignup();
-      } else {
-        await register.mutateAsync({ email: form.email.trim(), password: form.password, ...common });
-      }
-      setSubmitted(true);
-    } catch (err: any) {
-      console.error('Register error:', err?.response?.status, err?.response?.data ?? err?.message);
-      setError(extractApiError(err, t('Registreringen misslyckades. Försök igen.')));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  if (submitted) return <PendingApprovalPage email={social?.email ?? form.email.trim()} />;
-
-  const stepLabel = steps[step];
-
-  return (
-    <AuthShell wide>
-      <h1 className="auth-title">{t('Skapa')} <em>{t('konto')}</em></h1>
-      <p className="auth-sub">{step === 0 ? t('Vem är du? Vi anpassar resten efter ditt svar.') : t('Vi granskar och godkänner din profil innan du går live, oftast inom 1–2 arbetsdagar.')}</p>
-
-      <div className="wiz-track" role="list" aria-label={t('Registreringssteg')} style={{ flexWrap: 'wrap', rowGap: 6, minWidth: 0 }}>
-        {steps.map((label, i) => (
-          <React.Fragment key={label}>
-            {i > 0 && <span className={`wiz-conn${i <= step ? ' done' : ''}`} aria-hidden="true" />}
-            <div className={`wiz-step${i === step ? ' cur' : ''}${i < step ? ' done' : ''}`} role="listitem" aria-current={i === step ? 'step' : undefined}>
-              <span className="wiz-dot">{i < step ? <SmallCheck /> : i + 1}</span>
-              <span className="wiz-lbl">{t(label)}</span>
-            </div>
-          </React.Fragment>
-        ))}
-      </div>
-      <div className="wiz-meta">{t('Steg')} {step + 1} {t('av')} {steps.length} · {t(stepLabel)}</div>
-
-      <div className="auth-form">
-        {/* ── Step: Kontotyp ── */}
-        {stepLabel === 'Kontotyp' && (
-          <div className="wiz-pane" key="role">
-            <div className="role-cards" role="radiogroup" aria-label={t('Kontotyp')}>
-              <button type="button" role="radio" aria-checked={form.role === 'Creator'} className={`role-card${form.role === 'Creator' ? ' on' : ''}`} onClick={() => setForm((f) => ({ ...f, role: 'Creator' }))}>
-                <span className="rc-check"><SmallCheck /></span>
-                <div className="rc-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 7l-7 5 7 5V7z" /><rect x="1" y="5" width="15" height="14" rx="2" /></svg></div>
-                <div className="rc-t">{t('Jag är creator')}</div>
-                <div className="rc-d">{t('Hitta betalda kampanjer, visa upp ditt innehåll och få betalt per visning.')}</div>
-              </button>
-              <button type="button" role="radio" aria-checked={form.role === 'Brand'} className={`role-card${form.role === 'Brand' ? ' on' : ''}`} onClick={() => setForm((f) => ({ ...f, role: 'Brand' }))}>
-                <span className="rc-check"><SmallCheck /></span>
-                <div className="rc-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M9 22V12h6v10" /></svg></div>
-                <div className="rc-t">{t('Jag är varumärke')}</div>
-                <div className="rc-d">{t('Skapa kampanjer, hitta rätt creators och betala bara för verifierade visningar.')}</div>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ── Step: Konto ── */}
-        {stepLabel === 'Konto' && (
-          <div className="wiz-pane" key="account" style={{ display: 'flex', flexDirection: 'column', gap: 17 }}>
-            {social ? (
-              <>
-              <div className="social-chip">
-                <Check />
-                <span>
-                  {t('Inloggad via')} <b>{social.provider}</b>{social.email ? <> {t('som')} <b>{social.email}</b></> : null} {t('— inget lösenord behövs.')}{' '}
-                  <button type="button" className="auth-link" style={{ background: 'none', border: 'none', padding: 0, font: 'inherit' }}
-                    onClick={() => { clearSocialSignup(); setSocial(null); }}>
-                    {t('Använd e-post i stället')}
-                  </button>
-                </span>
-              </div>
-              {social.provider === 'TikTok' && (
-                <div className="field"><label htmlFor="rg-email-tt">{t('E-post')} *</label>
-                  <input id="rg-email-tt" type="email" value={form.email} onChange={(e) => { setEmailTaken(false); setForm((f) => ({ ...f, email: e.target.value })); }} onBlur={checkEmail} required autoComplete="email" placeholder={t('du@exempel.se')} />
-                  {emailTaken && (
-                    <div className="auth-err" style={{ marginTop: 6 }}>{t('E-postadressen används redan.')} <Link to="/login" style={{ fontWeight: 700 }}>{t('Logga in istället?')}</Link></div>
-                  )}
-                </div>
-              )}
-              </>
-            ) : (
-              <>
-                <div className="field"><label htmlFor="rg-email">{t('E-post')} *</label><input id="rg-email" type="email" value={form.email} onChange={(e) => { setEmailTaken(false); setForm((f) => ({ ...f, email: e.target.value })); }} onBlur={checkEmail} required autoComplete="email" placeholder={t('du@exempel.se')} />
-                  {emailTaken && (
-                    <div className="auth-err" style={{ marginTop: 6 }}>{t('E-postadressen används redan.')} <Link to="/login" style={{ fontWeight: 700 }}>{t('Logga in istället?')}</Link></div>
-                  )}</div>
-                <div className="field"><label htmlFor="rg-pw">{t('Lösenord')} *</label>
-                  <div className="auth-pw-wrap">
-                    <input id="rg-pw" type={showPw ? 'text' : 'password'} value={form.password} onChange={set('password')} required minLength={8} autoComplete="new-password" placeholder={t('Minst 8 tecken')} />
-                    <EyeButton on={showPw} onClick={() => setShowPw((v) => !v)} />
-                  </div>
-                  <div className="auth-rules">
-                    {pwRules.map(([ok, label]) => (
-                      <span key={label} className={`auth-rule${ok ? ' ok' : ''}`}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">{ok ? <path d="m5 12 4 4L19 7" /> : <circle cx="12" cy="12" r="9" />}</svg>{label}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: 16, minWidth: 0 }}>
-              <div className="field"><label htmlFor="rg-fn">{form.role === 'Brand' ? t('Förnamn (kontaktperson)') : t('Förnamn')}</label><input id="rg-fn" type="text" value={form.firstName} onChange={set('firstName')} autoComplete="given-name" /></div>
-              <div className="field"><label htmlFor="rg-ln">{t('Efternamn')}</label><input id="rg-ln" type="text" value={form.lastName} onChange={set('lastName')} autoComplete="family-name" /></div>
-            </div>
-            {!social && <SocialButtons onToken={onSocialToken} />}
-          </div>
-        )}
-
-        {/* ── Step: Profil (creator) ── */}
-        {stepLabel === 'Profil' && (
-          <div className="wiz-pane" key="profile" style={{ display: 'flex', flexDirection: 'column', gap: 17 }}>
-            <ImagePicker
-              label={t('Profilbild')}
-              value={form.avatarUrl}
-              onChange={(v) => setForm((f) => ({ ...f, avatarUrl: v }))}
-              hint={t('Varumärken ser den först — ett tydligt ansikte ökar dina chanser.')}
-            />
-            <ImagePicker
-              label={`${t('Selfie för verifiering')} *`}
-              value={form.selfieUrl}
-              onChange={(v) => setForm((f) => ({ ...f, selfieUrl: v }))}
-              capture
-              hint={t('Ta en selfie med framkameran. Visas ALDRIG offentligt — används endast av vårt team för att verifiera att du är en riktig person.')}
-            />
-            <div className="field"><label htmlFor="rg-name">{t('Visningsnamn')} *</label><input id="rg-name" type="text" value={form.displayName} onChange={set('displayName')} required placeholder={t('Ditt namn eller alias')} /></div>
-            <div className="field"><label htmlFor="rg-bio">{t('Bio')} *</label><textarea id="rg-bio" value={form.bio} onChange={set('bio')} required rows={3} placeholder={t('Berätta om dig och ditt innehåll — varför ska varumärken samarbeta med dig?')} />
-              <div className="auth-hint">{form.bio.trim().length}/20 {t('tecken minimum')}</div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: 16, minWidth: 0 }}>
-              <div className="field"><label htmlFor="rg-cat">{t('Kategori')} *</label>
-                <select id="rg-cat" value={form.category} onChange={set('category')} required>
-                  {CATEGORIES.map((c) => <option key={c} value={c}>{t(c)}</option>)}
-                </select>
-              </div>
-              <div className="field"><label htmlFor="rg-country">{t('Land')} *</label>
-                <select id="rg-country" value={form.country} onChange={set('country')} required>
-                  {COUNTRIES.map(([code, name]) => <option key={code} value={code}>{t(name)}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="field"><label>{t('Födelsedatum')}</label><DateInput value={form.dateOfBirth} onChange={(v) => setForm((f) => ({ ...f, dateOfBirth: v }))} className="" max={new Date(Date.now() - 13 * 365.25 * 86400000).toISOString().slice(0, 10)} /></div>
-          </div>
-        )}
-
-        {/* ── Step: Räckvidd (creator) ── */}
-        {stepLabel === 'Räckvidd' && (
-          <div className="wiz-pane" key="reach" style={{ display: 'flex', flexDirection: 'column', gap: 17 }}>
-            <div className="field"><label htmlFor="rg-tt">{t('TikTok-användarnamn')} *</label>
-              <div className="auth-at"><span>@</span><input id="rg-tt" type="text" value={form.tikTokUsername} onChange={(e) => { setTiktokTaken(false); setForm((f) => ({ ...f, tikTokUsername: e.target.value })); }} onBlur={checkTikTok} required placeholder={t('dittanvändarnamn')} /></div>
-              {tiktokTaken && (
-                <div className="auth-err" style={{ marginTop: 6 }}>{t('Det här TikTok-kontot är redan kopplat till ett annat VYRLE-konto.')}</div>
-              )}
-              <div className="auth-hint">{t('Efter godkännande kopplar du kontot via TikTok för automatisk visningsverifiering.')}</div>
-            </div>
-            <div className="field"><label htmlFor="rg-ig">{t('Instagram-användarnamn')}</label>
-              <div className="auth-at"><span>@</span><input id="rg-ig" type="text" value={form.instagramUsername} onChange={set('instagramUsername')} placeholder={t('dittinstagram')} /></div>
-            </div>
-            <div className="field"><label htmlFor="rg-web">{t('Webbplats / Linktree')}</label><input id="rg-web" type="url" value={form.website} onChange={set('website')} placeholder="https://…" /></div>
-          </div>
-        )}
-
-        {/* ── Step: Expertis (creator, last) ── */}
-        {stepLabel === 'Expertis' && (
-          <div className="wiz-pane" key="tags" style={{ display: 'flex', flexDirection: 'column', gap: 17 }}>
-            <div className="field"><label>{t('Expertis-taggar * — vad är du bra på?')}</label>
-              <div className="auth-tagbox">
-                <div className="auth-tags">
-                  {ALL_TAGS.map((tag) => (
-                    <button key={tag} type="button" className={`auth-tag${form.profileTags.includes(tag) ? ' on' : ''}`} onClick={() => toggleTag(tag)}>
-                      {form.profileTags.includes(tag) ? '✓ ' : ''}{t(tag)}
-                    </button>
-                  ))}
-                </div>
-                <div className="auth-hint" style={{ marginTop: 10 }}>{form.profileTags.length === 0 ? t('Välj minst en tagg') : `${t('Valt:')} ${form.profileTags.length} ${t('tagg(ar)')}`}</div>
-              </div>
-            </div>
-            <label className="checkrow" htmlFor="rg-pr">
-              <input id="rg-pr" type="checkbox" checked={form.openToPrOffers} onChange={(e) => setForm((f) => ({ ...f, openToPrOffers: e.target.checked }))} />
-              {t('Öppen för direkta PR-erbjudanden från varumärken')}
-            </label>
-            <RegisterSummary form={form} social={social} />
-          </div>
-        )}
-
-        {/* ── Step: Företag (brand) ── */}
-        {stepLabel === 'Företag' && (
-          <div className="wiz-pane" key="company" style={{ display: 'flex', flexDirection: 'column', gap: 17 }}>
-            <ImagePicker
-              label={t('Logotyp')}
-              shape="rounded"
-              value={form.logoUrl}
-              onChange={(v) => setForm((f) => ({ ...f, logoUrl: v }))}
-              hint={t('Visas för creators på era kampanjer.')}
-            />
-            <div className="field"><label htmlFor="rg-co">{t('Företagsnamn')} *</label><input id="rg-co" type="text" value={form.companyName} onChange={set('companyName')} required autoComplete="organization" /></div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: 16, minWidth: 0 }}>
-              <div className="field"><label htmlFor="rg-org">{t('Organisationsnummer')} *</label><input id="rg-org" type="text" inputMode="numeric" value={form.organizationNumber} onChange={(e) => setForm((f) => ({ ...f, organizationNumber: maskOrgNr(e.target.value) }))} required placeholder="556677-8899" /><span style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 4 }}>{t('10 siffror — strecket sätts automatiskt')}</span></div>
-              <div className="field"><label htmlFor="rg-ind">{t('Bransch')} *</label>
-                <select id="rg-ind" value={form.industry} onChange={set('industry')} required>
-                  {INDUSTRIES.map((i) => <option key={i} value={i}>{t(i)}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="field"><label htmlFor="rg-bweb">{t('Webbplats')}</label><input id="rg-bweb" type="url" value={form.website} onChange={set('website')} placeholder={t('https://erforetag.se')} /></div>
-          </div>
-        )}
-
-        {/* ── Step: Kontakt (brand, last) ── */}
-        {stepLabel === 'Kontakt' && (
-          <div className="wiz-pane" key="contact" style={{ display: 'flex', flexDirection: 'column', gap: 17 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: 16, minWidth: 0 }}>
-              <div className="field"><label htmlFor="rg-phone">{t('Kontakttelefon')}</label><input id="rg-phone" type="tel" value={form.contactPhone} onChange={(e) => setForm((f) => ({ ...f, contactPhone: maskPhone(e.target.value) }))} placeholder="070-123 45 67" autoComplete="tel" /></div>
-              <div className="field"><label htmlFor="rg-bcountry">{t('Land')} *</label>
-                <select id="rg-bcountry" value={form.country} onChange={set('country')} required>
-                  {COUNTRIES.map(([code, name]) => <option key={code} value={code}>{t(name)}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="field"><label htmlFor="rg-desc">{t('Om företaget')}</label><textarea id="rg-desc" value={form.description} onChange={set('description')} rows={3} placeholder={t('Vad gör ni, och vilken typ av creators letar ni efter? Creators ser detta på era kampanjer.')} /></div>
-            <RegisterSummary form={form} social={social} />
-          </div>
-        )}
-
-        {error && <p className="auth-err" role="alert">{error}</p>}
-
-        <div className="wiz-nav" style={{ flexWrap: 'wrap', minWidth: 0 }}>
-          {step > 0 && (
-            <button type="button" className="btn-back" onClick={back} disabled={submitting} style={{ maxWidth: '100%' }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M11 18l-6-6 6-6" /></svg>
-              {t('Tillbaka')}
-            </button>
-          )}
-          {isLast ? (
-            <button type="button" className="btn-apply" onClick={handleSubmit} disabled={submitting} style={{ opacity: submitting ? 0.7 : 1 }}>
-              {submitting ? t('Skickar…') : <>{t('Skicka ansökan')} <Arrow /></>}
-            </button>
-          ) : (
-            <button type="button" className="btn-apply" onClick={next}>
-              {t('Fortsätt')} <Arrow />
-            </button>
-          )}
-        </div>
-        {isLast && <p className="auth-consent">{t('Genom att skicka in godkänner du våra')} <a className="auth-link" href="/terms" target="_blank" rel="noreferrer">{t('villkor')}</a> {t('och vår')} <a className="auth-link" href="/privacy" target="_blank" rel="noreferrer">{t('integritetspolicy')}</a>. {t('Kontot granskas av en administratör innan du kan logga in.')}</p>}
-      </div>
-      <p className="auth-foot">{t('Har redan konto?')} <a href="/login" className="auth-link">{t('Logga in')}</a></p>
-    </AuthShell>
-  );
-}
-
-function RegisterSummary({ form, social }: { form: WizardForm; social: PendingSocialSignup | null }) {
-  const rows: [string, string][] = form.role === 'Creator'
-    ? [
-        [t('Konto'), social ? `${social.email} (via ${social.provider})` : form.email],
-        [t('Visningsnamn'), form.displayName || '—'],
-        [t('Kategori'), `${t(form.category)} · ${form.country}`],
-        ['TikTok', form.tikTokUsername ? `@${form.tikTokUsername.replace(/^@/, '')}` : '—'],
-      ]
-    : [
-        [t('Konto'), social ? `${social.email} (via ${social.provider})` : form.email],
-        [t('Företag'), form.companyName || '—'],
-        [t('Org.nr'), form.organizationNumber || '—'],
-        [t('Bransch'), `${t(form.industry)} · ${form.country}`],
-      ];
-  return (
-    <div className="sum-box" aria-label={t('Sammanfattning')}>
-      {rows.map(([l, v]) => (
-        <div className="sum-row" key={l}><span className="sr-l">{l}</span><span className="sr-v">{v}</span></div>
-      ))}
-    </div>
-  );
-}
-
 /* ───────────────────────── Pending ───────────────────────── */
-export function PendingApprovalPage({ email }: { email?: string }) {
+export function PendingApprovalPage({ email, tikTokLinked }: { email?: string; tikTokLinked?: boolean }) {
   const navigate = useNavigate();
   return (
     <AuthShell>
@@ -640,16 +189,21 @@ export function PendingApprovalPage({ email }: { email?: string }) {
             {t('Vi har skickat ett bekräftelsemejl till')} {email ? <strong>{email}</strong> : t('din e-postadress')} — {t('klicka på länken i mejlet för att verifiera din adress. Hittar du det inte? Kolla skräpposten.')}
           </span>
         </div>
-        <div style={{ background: 'rgba(237,225,255,.35)', border: '1px solid rgba(157,139,196,.2)', borderRadius: 14, padding: 14, margin: '0 0 20px', fontSize: 12.5, color: 'var(--muted)' }}>
+        <div style={{ background: 'rgba(237,225,255,.35)', border: '1px solid rgba(157,139,196,.2)', borderRadius: 14, padding: 14, margin: '0 0 10px', fontSize: 12.5, color: 'var(--muted)' }}>
           {t('Du får ett meddelande när ditt konto har godkänts.')}
         </div>
+        {tikTokLinked === false && (
+          <div style={{ background: 'rgba(237,225,255,.35)', border: '1px solid rgba(157,139,196,.2)', borderRadius: 14, padding: 14, margin: '0 0 20px', fontSize: 12.5, color: 'var(--muted)', textAlign: 'left' }}>
+            <strong style={{ color: 'var(--ink)' }}>{t('Nästa steg efter godkännandet:')}</strong> {t('koppla ditt TikTok-konto. Profilen visas inte för företag förrän det är gjort, och det är så dina views blir verifierade.')}
+          </div>
+        )}
         <button onClick={() => navigate('/login')} className="btn-outline" style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>{t('Till inloggningen')}</button>
       </div>
     </AuthShell>
   );
 }
 
-function EyeButton({ on, onClick }: { on: boolean; onClick: () => void }) {
+export function EyeButton({ on, onClick }: { on: boolean; onClick: () => void }) {
   return (
     <button type="button" className="auth-eye" onClick={onClick} aria-label={on ? t('Dölj lösenord') : t('Visa lösenord')}>
       {on ? (

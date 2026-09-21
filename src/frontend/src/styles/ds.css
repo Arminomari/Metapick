@@ -459,3 +459,32 @@ button.ds-tag { border: none; font: inherit; cursor: pointer; min-height: 32px; 
 .ds-checklist-mark { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--ds-line-strong); display: inline-flex; align-items: center; justify-content: center; flex: 0 0 22px; color: #fff; }
 .ds-checklist li.done .ds-checklist-mark { background: var(--ds-ok, #1F7A4D); border-color: transparent; }
 .ds-checklist li.done .ds-grow { text-decoration: line-through; }
+
+/* ── Date picker (replaces the native date input everywhere) ───────── */
+.ds-datepicker { position: relative; min-width: 0; }
+.ds-datepicker-btn { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--ds-line-strong, #CFCFD6); border-radius: var(--ds-r, 12px); background: var(--ds-card, #fff); color: var(--ds-ink, #111114); font: inherit; font-size: 15px; text-align: left; cursor: pointer; }
+.ds-datepicker-btn:focus-visible { outline: none; border-color: var(--ds-accent, #B5502C); box-shadow: 0 0 0 3px var(--ds-accent-soft, #FBEEE8); }
+.ds-datepicker-btn:disabled { opacity: .6; cursor: default; }
+.ds-datepicker-btn svg { flex: 0 0 auto; color: var(--ds-ink-2, #5F5F68); }
+.ds-datepicker-btn .ds-muted { color: var(--ds-ink-3, #8E8E96); }
+.ds-field--error .ds-datepicker-btn { border-color: var(--ds-bad, #B3261E); }
+.ds-datepicker-backdrop { display: none; }
+.ds-datepicker-pop { position: absolute; z-index: 95; top: calc(100% + 6px); left: 0; width: 304px; max-width: calc(100vw - 32px); padding: 12px; background: var(--ds-card, #fff); border: 1px solid var(--ds-line, #E6E6EA); border-radius: 16px; box-shadow: 0 12px 32px rgba(17,17,20,.16); color: var(--ds-ink, #111114); }
+.ds-datepicker-head { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-bottom: 8px; }
+.ds-datepicker-title { display: flex; gap: 2px; min-width: 0; }
+.ds-datepicker-title select { font: inherit; font-weight: 600; font-size: 14px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: inherit; padding: 4px 2px; max-width: 128px; }
+.ds-datepicker-title select:hover, .ds-datepicker-title select:focus-visible { border-color: var(--ds-line-strong, #CFCFD6); outline: none; }
+.ds-datepicker-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.ds-datepicker-dow { text-align: center; font-size: 11px; font-weight: 600; color: var(--ds-ink-3, #8E8E96); padding: 4px 0; }
+.ds-datepicker-day { min-height: 38px; border: 0; border-radius: 10px; background: transparent; font: inherit; font-size: 14px; color: inherit; cursor: pointer; }
+.ds-datepicker-day:hover { background: var(--ds-neutral-soft, #ECECF0); }
+.ds-datepicker-day:disabled { color: var(--ds-ink-3, #8E8E96); cursor: default; background: transparent; }
+.ds-datepicker-day.today { box-shadow: inset 0 0 0 1px var(--ds-line-strong, #CFCFD6); }
+.ds-datepicker-day.on { background: var(--ds-accent, #B5502C); color: #fff; font-weight: 700; }
+.ds-datepicker-clear { margin-top: 8px; border: 0; background: none; font: inherit; font-size: 13px; font-weight: 600; color: var(--ds-ink-2, #5F5F68); cursor: pointer; padding: 6px 0; min-height: 36px; }
+@media (max-width: 599px) {
+  /* A sheet on phones: full width, thumb-reachable, above the tab bar. */
+  .ds-datepicker-backdrop { display: block; position: fixed; inset: 0; background: rgba(17,17,20,.45); z-index: 94; }
+  .ds-datepicker-pop { position: fixed; left: 0; right: 0; bottom: 0; top: auto; width: auto; max-width: none; border-radius: 20px 20px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); box-shadow: 0 -12px 32px rgba(17,17,20,.2); }
+  .ds-datepicker-day { min-height: 44px; }
+}

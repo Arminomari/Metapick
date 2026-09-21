@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { t, statusLabel } from '@/lib/i18n';
 import { money, formatDate, formatNumber, categoryLabel, payoutModelLabel } from '@/lib/utils';
-import { useCampaignDetail, useCampaignAnalytics, useCampaignApplications, usePublishCampaign, useAssignmentDetail, useApproveSubmission, useRejectSubmission, useMarkManualPayoutSent } from '@/hooks/api';
+import { useBrandProfile, useCampaignDetail, useCampaignAnalytics, useCampaignApplications, usePublishCampaign, useAssignmentDetail, useApproveSubmission, useRejectSubmission, useMarkManualPayoutSent } from '@/hooks/api';
 import { useToast } from '@/components/vyrle/Toast';
 import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
 import { DateInput } from '@/components/ui/DateInput';
@@ -20,6 +20,8 @@ const PAYOUT_LABEL: Record<string, string> = { ReadyForManualPayment: 'Redo att 
 
 export function BrandCampaignDetailScreen() {
   const { id = '' } = useParams<{ id: string }>();
+  const { data: brandProfile } = useBrandProfile();
+  const orgVerified = !!brandProfile?.orgVerified;
   const navigate = useNavigate();
   const qc = useQueryClient();
   const toast = useToast();
@@ -91,7 +93,9 @@ export function BrandCampaignDetailScreen() {
         </Card>
       </Section>
 
-      {c.status === 'Draft' && <StickyAction><Button full loading={publish.isPending} onClick={() => publish.mutateAsync(id).then(() => toast.push(t('Skickad för granskning'), 'success')).catch((e) => toast.push(apiMessage(e, t('Kunde inte skicka')), 'error'))}>{t('Skicka för granskning')}</Button></StickyAction>}
+      {c.status === 'Draft' && (orgVerified
+        ? <StickyAction><Button full loading={publish.isPending} onClick={() => publish.mutateAsync(id).then(() => toast.push(t('Skickad för granskning'), 'success')).catch((e) => toast.push(apiMessage(e, t('Kunde inte skicka')), 'error'))}>{t('Skicka för granskning')}</Button></StickyAction>
+        : <Card><p className="ds-body" style={{ fontWeight: 600 }}>{t('Kampanjen kan inte skickas in än')}</p><p className="ds-caption ds-muted">{t('Organisationsnumret måste vara verifierat innan en kampanj går live. Det tar en minut på företagsprofilen.')}</p><div style={{ marginTop: 8 }}><Button variant="secondary" size="sm" to="/brand/profile/edit">{t('Verifiera organisationsnumret')}</Button></div></Card>)}
       {c.status === 'Completed' && <StickyAction><Button full to="/brand/tap/new">{t('Öppna kranen')}</Button></StickyAction>}
       {!draftish && c.status !== 'Completed' && pendingVideos > 0 && <StickyAction><Button full to={`/brand/review?campaign=${id}`}>{t('Granska videor')} ({pendingVideos})</Button></StickyAction>}
 
@@ -112,7 +116,7 @@ export function BrandCampaignDetailScreen() {
         <Field label={t('Kampanjnamn')}><input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
         <Field label={t('Beskrivning')}><textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></Field>
         <div className="ds-kv"><Field label={t('Maximal kostnad (kr)')}><input type="number" min={1} value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} /></Field><Field label={t('Max antal creators')}><input type="number" min={1} value={form.maxCreators} onChange={(e) => setForm({ ...form, maxCreators: e.target.value })} /></Field></div>
-        <div className="ds-kv"><Field label={t('Startdatum')}><DateInput value={form.startDate} onChange={(v) => setForm({ ...form, startDate: v })} className="ds-input" /></Field><Field label={t('Slutdatum')}><DateInput value={form.endDate} onChange={(v) => setForm({ ...form, endDate: v })} className="ds-input" /></Field></div>
+        <div className="ds-kv"><Field label={t('Startdatum')}><DateInput value={form.startDate} onChange={(v) => setForm({ ...form, startDate: v })} /></Field><Field label={t('Slutdatum')}><DateInput value={form.endDate} onChange={(v) => setForm({ ...form, endDate: v })} /></Field></div>
       </BottomSheet>
     </Page>
   );

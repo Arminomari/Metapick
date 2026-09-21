@@ -3,6 +3,7 @@ using CreatorPay.Application.Services;
 using CreatorPay.Domain.Common;
 using CreatorPay.Domain.Entities;
 using CreatorPay.Domain.Enums;
+using CreatorPay.Domain.Ugc;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace CreatorPay.Tests;
@@ -416,5 +417,27 @@ public class DataIntegrityTests
         Assert.Null(PortfolioService.MapToDto(other, verified).VerifiedViews);   // not a verified campaign video
         Assert.Null(PortfolioService.MapToDto(image, verified).VerifiedViews);
         Assert.Null(PortfolioService.MapToDto(own, null).VerifiedViews);
+    }
+
+    // ── Visibility (block C) ────────────────────────────────────────────
+
+    [Fact]
+    public void Profile_is_visible_to_brands_only_when_approved_and_oauth_connected()
+    {
+        Assert.False(CreatorVisibility.IsVisibleToBrands(CreatorStatus.Pending, tikTokVerified: true));
+        Assert.False(CreatorVisibility.IsVisibleToBrands(CreatorStatus.Approved, tikTokVerified: false));
+        Assert.True(CreatorVisibility.IsVisibleToBrands(CreatorStatus.Approved, tikTokVerified: true));
+        Assert.Null(CreatorVisibility.Blocker(CreatorStatus.Approved, tikTokVerified: true));
+        Assert.Contains("TikTok", CreatorVisibility.Blocker(CreatorStatus.Approved, tikTokVerified: false));
+        Assert.Contains("granskas", CreatorVisibility.Blocker(CreatorStatus.Pending, tikTokVerified: true));
+    }
+
+    [Fact]
+    public void Ugc_publish_is_denied_until_the_org_number_is_verified()
+    {
+        var denied = UgcCampaignStateMachine.Check(UgcCampaignStatus.Draft, UgcCampaignStatus.Published, UgcActor.Brand, brandHasOrgNumber: false);
+        Assert.False(denied.Allowed);
+        Assert.Contains("Verifiera", denied.Reason);
+        Assert.True(UgcCampaignStateMachine.Check(UgcCampaignStatus.Draft, UgcCampaignStatus.Published, UgcActor.Brand, brandHasOrgNumber: true).Allowed);
     }
 }

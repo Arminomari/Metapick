@@ -9,7 +9,8 @@ import { ToastProvider } from '@/components/vyrle/Toast';
 import { useAuthStore } from '@/stores/authStore';
 import { useAssignmentDetail } from '@/hooks/api';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage } from '@/pages/auth/AuthPages';
+import { LoginPage, ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage } from '@/pages/auth/AuthPages';
+import { RegisterPage } from '@/pages/auth/RegisterPage';
 import { TikTokCallbackPage } from '@/pages/auth/TikTokCallbackPage';
 import { TikTokSigninPage } from '@/pages/auth/TikTokSigninPage';
 import { TermsPage, PrivacyPage } from '@/pages/LegalPages';
@@ -24,6 +25,7 @@ import { CollabScreen } from '@/screens/shared/CollabScreen';
 import { BrandPublicScreen } from '@/screens/shared/BrandPublicScreen';
 import { NotFoundScreen } from '@/screens/shared/NotFoundScreen';
 import { CreatorHomeScreen } from '@/screens/creator/HomeScreen';
+import { CreatorOnboardingScreen } from '@/screens/creator/OnboardingScreen';
 import { CreatorWorkScreen } from '@/screens/creator/WorkScreen';
 import { CreatorCampaignDetailScreen } from '@/screens/creator/CampaignDetailScreen';
 import { AssignmentScreen } from '@/screens/creator/AssignmentScreen';
@@ -163,6 +165,7 @@ export default function App() {
           {/* Creator */}
           <Route element={<ProtectedRoute allowedRoles={['Creator']}><CreatorShell /></ProtectedRoute>}>
             <Route path="/creator" element={<CreatorHomeScreen />} />
+            <Route path="/creator/onboarding" element={<CreatorOnboardingScreen />} />
             <Route path="/creator/notifications" element={<NotificationsScreen />} />
             <Route path="/creator/assignments" element={<CreatorWorkScreen segment="mine" />} />
             <Route path="/creator/browse" element={<CreatorWorkScreen segment="discover" />} />

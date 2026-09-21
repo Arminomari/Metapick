@@ -37,7 +37,7 @@ public class CreatorPayFactory : WebApplicationFactory<CreatorPay.Api.ApiMarker>
             // Never call the EU VIES registry from tests.
             var registry = services.Where(d => d.ServiceType == typeof(CreatorPay.Application.Interfaces.IOrgNumberRegistry)).ToList();
             foreach (var d in registry) services.Remove(d);
-            services.AddSingleton<CreatorPay.Application.Interfaces.IOrgNumberRegistry, CreatorPay.Infrastructure.Services.NullOrgNumberRegistry>();
+            services.AddSingleton<CreatorPay.Application.Interfaces.IOrgNumberRegistry, TestOrgNumberRegistry>();
 
             // Add test PostgreSQL
             services.AddDbContext<AppDbContext>(options =>
@@ -55,4 +55,12 @@ public class CreatorPayFactory : WebApplicationFactory<CreatorPay.Api.ApiMarker>
     {
         await _postgres.DisposeAsync();
     }
+}
+
+/// <summary>Stands in for VIES in tests: every Luhn-valid number counts as registered.</summary>
+public sealed class TestOrgNumberRegistry : CreatorPay.Application.Interfaces.IOrgNumberRegistry
+{
+    public Task<CreatorPay.Application.Interfaces.OrgRegistryResult> LookupAsync(string tenDigitOrgNumber, CancellationToken ct = default)
+        => Task.FromResult(new CreatorPay.Application.Interfaces.OrgRegistryResult(
+            CreatorPay.Domain.Common.OrgNumber.IsValid(tenDigitOrgNumber), "TESTBOLAG AB", "Test"));
 }
