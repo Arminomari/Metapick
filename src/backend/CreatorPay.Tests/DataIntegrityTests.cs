@@ -354,7 +354,9 @@ public class DataIntegrityTests
             new() { CreatorProfileId = creator.Id, RequestedAmount = 9_999m, Status = PayoutStatus.Rejected, PayoutMethod = "Swish", PayoutDetailsEncrypted = "" },
         };
 
-        var s = CreatorAnalyticsCalculator.Compute(creator, [a], payouts, [], prValueDeclared: 300m, availableToWithdraw: 370m, Now);
+        var s = CreatorAnalyticsCalculator.Compute(creator, [a], payouts, [], prValueDeclared: 300m, availableToWithdraw: 370m, Now, topCreatorThreshold: null);
+        Assert.False(s.VerifiedCreator);         // typed handle
+        Assert.False(s.TopCreator);
 
         Assert.Equal(27_500, s.TotalVerifiedViews);
         Assert.Equal(1_070m, s.TotalEarned);
@@ -370,5 +372,49 @@ public class DataIntegrityTests
         Assert.Equal(Math.Round(1_070m / 27_500m * 1000m, 2), s.EarningsPerThousandViews);
         Assert.Single(s.TopBrands);
         Assert.Equal("Café X", s.TopBrands[0].BrandName);
+    }
+
+    // ── Badges (block B) ────────────────────────────────────────────────
+
+    [Fact]
+    public void Verified_creator_needs_oauth_and_a_verified_video()
+    {
+        Assert.False(CreatorBadges.IsVerifiedCreator(tikTokVerified: false, verifiedPosts: 5));
+        Assert.False(CreatorBadges.IsVerifiedCreator(tikTokVerified: true, verifiedPosts: 0));
+        Assert.True(CreatorBadges.IsVerifiedCreator(tikTokVerified: true, verifiedPosts: 1));
+    }
+
+    [Fact]
+    public void Top_creator_is_the_top_decile_of_a_real_population()
+    {
+        Assert.Null(CreatorBadges.TopCreatorThreshold([50_000, 40_000, 30_000]));   // too few creators for a percentile
+        var population = Enumerable.Range(1, 20).Select(i => (long)i * 1000).ToList(); // 1 000 … 20 000
+        var threshold = CreatorBadges.TopCreatorThreshold(population);
+        Assert.Equal(19_000, threshold);                                            // top 10 % of 20 = 2 creators
+        Assert.True(CreatorBadges.IsTopCreator(19_000, verifiedPosts: 3, threshold));
+        Assert.False(CreatorBadges.IsTopCreator(19_000, verifiedPosts: 2, threshold)); // one viral video is not a body of work
+        Assert.False(CreatorBadges.IsTopCreator(18_000, verifiedPosts: 9, threshold));
+        Assert.False(CreatorBadges.IsTopCreator(1_000_000, verifiedPosts: 9, null));
+        Assert.Null(CreatorBadges.TopCreatorThreshold(Enumerable.Repeat(0L, 50).ToList())); // zeros are not a population
+    }
+
+    [Fact]
+    public void Portfolio_engagement_only_from_the_creators_own_verified_video()
+    {
+        Assert.Equal("7300000000000000001", CreatorBadges.TikTokVideoId("https://www.tiktok.com/@anna/video/7300000000000000001?lang=sv"));
+        Assert.Null(CreatorBadges.TikTokVideoId("https://www.instagram.com/p/abc/"));
+
+        var verified = new Dictionary<string, CreatorBadgeService.VerifiedPost>
+        {
+            ["7300000000000000001"] = new("7300000000000000001", 32_000, 1_200, Now),
+        };
+        var own = new PortfolioItem { Title = "x", MediaType = PortfolioMediaType.TikTok, MediaUrl = "https://www.tiktok.com/@anna/video/7300000000000000001" };
+        var other = new PortfolioItem { Title = "y", MediaType = PortfolioMediaType.TikTok, MediaUrl = "https://www.tiktok.com/@anna/video/7300000000000000009" };
+        var image = new PortfolioItem { Title = "z", MediaType = PortfolioMediaType.Image, MediaUrl = "https://a/b.jpg" };
+
+        Assert.Equal(32_000, PortfolioService.MapToDto(own, verified).VerifiedViews);
+        Assert.Null(PortfolioService.MapToDto(other, verified).VerifiedViews);   // not a verified campaign video
+        Assert.Null(PortfolioService.MapToDto(image, verified).VerifiedViews);
+        Assert.Null(PortfolioService.MapToDto(own, null).VerifiedViews);
     }
 }

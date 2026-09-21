@@ -551,7 +551,7 @@ export function useBrandProfile() {
 export function useUpdateBrandProfile() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { companyName: string; website?: string; industry: string; description?: string; contactPhone?: string; logoUrl?: string | null; organizationNumber?: string | null }) => {
+    mutationFn: async (data: { companyName: string; website?: string; industry: string; description?: string; contactPhone?: string; logoUrl?: string | null; organizationNumber?: string | null; coverUrl?: string | null }) => {
       const res = await api.put('/brand/profile', data);
       return res.data.data;
     },
@@ -835,7 +835,7 @@ export function useWithdrawPrOffer() {
 // ── Brand profile (with organisation-number verification state) ──
 export interface BrandProfile {
   id: string; companyName: string; organizationNumber?: string | null; website?: string; industry: string; description?: string;
-  contactPhone?: string; status: string; logoUrl?: string | null;
+  contactPhone?: string; status: string; logoUrl?: string | null; coverUrl?: string | null;
   /** SYSTEM_COMPUTED: set by the VIES registry check or an admin, never by the form. */
   orgVerified: boolean; orgVerifiedAt?: string | null; orgVerifiedName?: string | null; orgVerificationSource?: string | null; orgVerificationCheckedAt?: string | null;
 }

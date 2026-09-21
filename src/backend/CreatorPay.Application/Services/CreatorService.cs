@@ -121,6 +121,12 @@ public class CreatorService : ICreatorService
                 return Errors.Validation("Profilbilden är ogiltig eller för stor");
             creator.AvatarUrl = string.IsNullOrWhiteSpace(request.AvatarUrl) ? null : request.AvatarUrl.Trim();
         }
+        if (request.CoverUrl != null)
+        {
+            if (!MediaValidation.IsValidImageRef(request.CoverUrl))
+                return Errors.Validation("Omslagsbilden är ogiltig eller för stor");
+            creator.CoverUrl = string.IsNullOrWhiteSpace(request.CoverUrl) ? null : request.CoverUrl.Trim();
+        }
         // Reach numbers are never taken from the form — followers come with the
         // TikTok connection, and there is no honest source for the rest yet.
         if (request.InstagramUsername != null)
@@ -238,7 +244,7 @@ public class CreatorService : ICreatorService
             c.TikTokAccount != null && c.TikTokAccount.IsActive, c.TikTokAccount.IsVerified(),
             c.TikTokAccount?.TikTokUsername, c.CreatedAt,
             c.ProfileTags?.ToList() ?? [],
-            c.InstagramUsername, c.Website, c.OpenToPrOffers, c.DateOfBirth);
+            c.InstagramUsername, c.Website, c.OpenToPrOffers, c.DateOfBirth, c.CoverUrl);
 
     private async Task<CreatorProfile?> GetOrCreateCreatorProfileAsync(Guid userId)
     {

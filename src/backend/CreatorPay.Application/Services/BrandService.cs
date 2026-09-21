@@ -66,6 +66,13 @@ public class BrandService : IBrandService
             brand.LogoUrl = MediaValidation.Normalize(request.LogoUrl);
         }
 
+        if (request.CoverUrl != null)
+        {
+            if (!MediaValidation.IsValidImageRef(request.CoverUrl))
+                return Errors.Validation("Omslagsbilden är ogiltig eller för stor");
+            brand.CoverUrl = MediaValidation.Normalize(request.CoverUrl);
+        }
+
         if (brand.OrganizationNumber != null && (numberChanged || !brand.OrgVerified))
             await TryVerifyAsync(brand, numberChanged);
 
@@ -156,5 +163,6 @@ public class BrandService : IBrandService
         new(b.Id, b.CompanyName, b.OrganizationNumber, b.Website,
             b.Industry, b.Country, b.Description, b.LogoUrl,
             b.ContactPhone, b.Status.ToString(), b.CreatedAt,
-            b.OrgVerified, b.OrgVerifiedAt, b.OrgVerifiedName, b.OrgVerificationSource, b.OrgVerificationCheckedAt);
+            b.OrgVerified, b.OrgVerifiedAt, b.OrgVerifiedName, b.OrgVerificationSource, b.OrgVerificationCheckedAt,
+            b.CoverUrl);
 }

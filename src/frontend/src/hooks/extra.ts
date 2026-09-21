@@ -76,6 +76,7 @@ export interface BrandPublicProfile {
   /** Registry-verified organisation number — never inferred from the number being present. */
   orgVerified: boolean;
   metricsUpdatedAt?: string | null;
+  coverUrl?: string | null;
   taps?: { id: string; name: string; cpm: number; brief: string; requiredHashtag: string; capPerVideo?: number | null; monthlyCapPerCreator?: number | null; category: string }[] | null;
 }
 export const useBrandPublicProfile = (id?: string) => useQuery({

@@ -103,4 +103,8 @@ public record CreatorAnalyticsDto(
     bool TikTokVerified, string? TikTokUsername, int Followers, DateTime? FollowersSyncedAt,
     // Rows
     List<CreatorCampaignRowDto> Campaigns,
-    List<CreatorBrandRowDto> TopBrands);
+    List<CreatorBrandRowDto> TopBrands,
+    // Brand decisions on submitted videos
+    int ApprovedVideos = 0, int TotalVideos = 0, double? ApprovalRate = null,
+    // Badges (CreatorBadges rules)
+    bool VerifiedCreator = false, bool TopCreator = false);

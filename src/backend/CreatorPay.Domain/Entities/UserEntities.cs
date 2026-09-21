@@ -57,6 +57,8 @@ public class BrandProfile : SoftDeletableEntity
     public string Country { get; set; } = null!;
     public string? Description { get; set; }
     public string? LogoUrl { get; set; }
+    /// <summary>Wide (3:1) profile banner chosen by the brand; a gradient is shown when empty.</summary>
+    public string? CoverUrl { get; set; }
     public string? ContactPhone { get; set; }
     public BrandStatus Status { get; set; } = BrandStatus.Pending;
     public Guid? ReviewedBy { get; set; }
@@ -78,6 +80,8 @@ public class CreatorProfile : SoftDeletableEntity
     public string Country { get; set; } = null!;
     public string Language { get; set; } = "sv";
     public string? AvatarUrl { get; set; }
+    /// <summary>Wide (3:1) profile banner chosen by the creator; a gradient is shown when empty.</summary>
+    public string? CoverUrl { get; set; }
     /// <summary>Identity-verification selfie — admin eyes only, never public.</summary>
     public string? SelfieUrl { get; set; }
     public DateOnly? DateOfBirth { get; set; }

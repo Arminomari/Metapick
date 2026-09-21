@@ -96,10 +96,10 @@ export function StatRow({ children, cols }: { children: React.ReactNode; cols?: 
 }
 
 /* ── Avatar ───────────────────────────────────────────────── */
-export function Avatar({ src, name, size = 'md', rounded }: { src?: string | null; name: string; size?: 'sm' | 'md' | 'lg' | 'xl'; rounded?: boolean }) {
+export function Avatar({ src, name, size = 'md', rounded, gradient }: { src?: string | null; name: string; size?: 'sm' | 'md' | 'lg' | 'xl'; rounded?: boolean; gradient?: boolean }) {
   const initial = (name?.trim()[0] || '?').toUpperCase();
   return (
-    <span className={cx('ds-avatar', `ds-avatar--${size}`, rounded && 'ds-avatar--rounded')} aria-hidden>
+    <span className={cx('ds-avatar', `ds-avatar--${size}`, rounded && 'ds-avatar--rounded', gradient && !src && 'ds-avatar--gradient')} aria-hidden>
       {src ? <img src={src} alt="" /> : initial}
     </span>
   );

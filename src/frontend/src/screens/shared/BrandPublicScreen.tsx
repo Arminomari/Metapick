@@ -11,6 +11,7 @@ import { money, formatDate, formatNumber, categoryLabel, countryName, payoutSumm
 import { useMyApplications } from '@/hooks/api';
 import { useBrandPublicProfile } from '@/hooks/extra';
 import { SourceNote } from '@/components/app/SourceNote';
+import { ProfileHero } from '@/components/app/ProfileHero';
 import { useToast } from '@/components/vyrle/Toast';
 import { Avatar, Badge, BottomSheet, Button, Card, List, ListRow, Page, PageHead, Section, SkeletonList, StatRow, StatTile, StickyAction } from '@/components/ds';
 import { MoreMenu, ago, apiMessage } from '@/components/app/common';
@@ -22,7 +23,6 @@ export function BrandPublicView({ id, ownView, onDeletePost }: { id: string; own
   const toast = useToast();
   const { data: p, isLoading } = useBrandPublicProfile(id);
   const { data: myApps } = useMyApplications();
-  const [more, setMore] = useState(false);
   const [past, setPast] = useState(false);
   const [confirmJoin, setConfirmJoin] = useState(false);
   const bust = () => { ['brand-public', 'my-communities', 'creator-taps', 'action-counts'].forEach((k) => qc.invalidateQueries({ queryKey: [k] })); };
@@ -39,28 +39,25 @@ export function BrandPublicView({ id, ownView, onDeletePost }: { id: string; own
 
   return (
     <>
-      <Card>
-        <div className="ds-row" style={{ alignItems: 'flex-start', gap: 14 }}>
-          <Avatar name={p.companyName} src={p.logoUrl} size="xl" rounded />
-          <div className="ds-grow">
-            <div className="ds-heading">{p.companyName}</div>
-            <div className="ds-caption ds-muted">{categoryLabel(p.industry)} · {countryName(p.country)} · {t('sedan')} {new Date(p.memberSince).getFullYear()}</div>
-            {p.orgVerified ? <div style={{ marginTop: 6 }}><Badge tone="ok">{t('Verifierat företag')}</Badge></div> : ownView ? <div style={{ marginTop: 6 }}><Badge tone="neutral">{t('Org.nr ej verifierat')}</Badge></div> : null}
-          </div>
-        </div>
+      <ProfileHero coverUrl={p.coverUrl} avatarUrl={p.logoUrl} name={p.companyName} rounded
+        meta={<>{categoryLabel(p.industry)} · {countryName(p.country)} · {t('sedan')} {new Date(p.memberSince).getFullYear()}</>}
+        badges={p.orgVerified ? <Badge tone="ok">{t('Verifierat företag')}</Badge> : ownView ? <Badge tone="neutral">{t('Org.nr ej verifierat')}</Badge> : undefined}>
         {p.description && <p className="ds-body" style={{ marginTop: 12 }}>{p.description}</p>}
         <div style={{ marginTop: 14 }}>
           <StatRow cols={3}>
-            <StatTile plain label={t('Följare')} value={formatNumber(p.followerCount)} />
-            <StatTile plain label={t('Aktiva kampanjer')} value={String(p.activeCampaignCount)} />
+            <StatTile plain label={t('Verifierade views')} value={formatNumber(p.totalVerifiedViews)} />
+            <StatTile plain label={t('Ambassadörer')} value={String(p.creatorsWorkedWith)} />
             <StatTile plain label={t('Betyg')} value={p.reviewCount > 0 ? p.averageRating.toFixed(1) : '–'} hint={p.reviewCount > 0 ? `${p.reviewCount} ${t('omdömen')}` : undefined} />
           </StatRow>
           <SourceNote source="tiktok" at={p.metricsUpdatedAt} scope={t('alla kampanjvideos')} />
-          {more && <><div className="ds-divider" /><StatRow cols={3}><StatTile plain label={t('Genomförda')} value={String(p.completedCampaignCount)} /><StatTile plain label={t('Totala views')} value={formatNumber(p.totalVerifiedViews)} /><StatTile plain label={t('Ambassadörer')} value={String(p.creatorsWorkedWith)} /></StatRow></>}
-          <Button variant="ghost" size="sm" onClick={() => setMore((v) => !v)}>{more ? t('Visa mindre') : t('Visa mer')}</Button>
+          <div className="ds-facts" style={{ marginTop: 10 }}>
+            <div className="ds-fact"><span>{t('Aktiva kampanjer')}</span><span className="ds-num">{p.activeCampaignCount}</span></div>
+            <div className="ds-fact"><span>{t('Genomförda')}</span><span className="ds-num">{p.completedCampaignCount}</span></div>
+            <div className="ds-fact"><span>{t('Följare på VYRLE')}</span><span className="ds-num">{formatNumber(p.followerCount)}</span></div>
+          </div>
         </div>
-        {!ownView && <div className="ds-row" style={{ marginTop: 8 }}><Button variant={p.isFollowing ? 'secondary' : 'primary'} full={!p.hasTap} onClick={() => follow.mutate(!p.isFollowing)} loading={follow.isPending}>{p.isFollowing ? t('Följer') : t('Följ')}</Button>{p.website && <Button variant="secondary" size="sm" onClick={() => window.open(p.website!, '_blank', 'noopener')}>{t('Webbplats')}</Button>}</div>}
-      </Card>
+        {!ownView && <div className="ds-row" style={{ marginTop: 14 }}><Button variant={p.isFollowing ? 'secondary' : 'primary'} full={!p.hasTap} onClick={() => follow.mutate(!p.isFollowing)} loading={follow.isPending}>{p.isFollowing ? t('Följer') : t('Följ')}</Button>{p.website && <Button variant="secondary" size="sm" onClick={() => window.open(p.website!, '_blank', 'noopener')}>{t('Webbplats')}</Button>}</div>}
+      </ProfileHero>
 
       {taps.length > 0 && (
         <Section title={taps.length > 1 ? `${taps.length} ${t('kranar är öppna')}` : t('Kranen är öppen')}>
