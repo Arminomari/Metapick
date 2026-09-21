@@ -41,7 +41,7 @@ export function TapDetailScreen() {
         <div style={{ marginTop: 12 }}><Meter value={tap.monthSpent} max={tap.monthlyBudget} tone={pct >= 100 ? 'bad' : 'accent'} left={`${money(tap.monthSpent)} ${t('av')} ${money(tap.monthlyBudget)} ${t('denna månad')}`} right={pct >= 100 ? t('Slut — öppnar den 1:a') : `${money(tap.monthRemaining)} ${t('kvar')}`} /></div>
         <div style={{ marginTop: 12 }}>
           <StatRow cols={3}>
-            <StatTile plain label={t('Views')} value={formatNumber(tap.monthViews)} hint={t('denna månad')} />
+            <StatTile plain label={t('Views')} count={tap.monthViews} format={formatNumber} hint={t('denna månad')} />
             <StatTile plain label={t('Aktiva creators')} value={String(tap.activeCreatorsThisMonth)} hint={`${tap.memberCount} ${t('medlemmar')}`} />
             <StatTile plain label={t('Att granska')} value={String(pending.length)} />
           </StatRow>

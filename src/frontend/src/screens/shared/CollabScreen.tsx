@@ -180,7 +180,7 @@ function Deliverables({ c, role, canSubmit }: { c: UgcCollab; role: UgcRole; can
   const upload = () => { if (!file) return; setPct(0); submit.mutate({ file, comment, onProgress: setPct }, { onSuccess: () => { toast.push(t('Videon är levererad! Företaget har nu 5 dagar på sig att granska.'), 'success'); setFile(null); setComment(''); }, onError: (e) => toast.push(apiError(e, t('Uppladdningen misslyckades')), 'error') }); };
   return (
     <Section title={t('Leverans')}>
-      {c.deliverables.length === 0 && !canSubmit && <Card><p className="ds-body ds-muted">{role === 'creator' ? t('Ingen video ännu.') : t('Creatorn har inte levererat ännu.')}</p></Card>}
+      {c.deliverables.length === 0 && !canSubmit && <Card><EmptyState title={role === 'creator' ? t('Ingen video ännu.') : t('Creatorn har inte levererat ännu.')} /></Card>}
       {c.deliverables.map((d, i) => (
         <Card key={d.id}>
           <div className="ds-row ds-row--wrap"><Badge tone={i === 0 ? 'accent' : 'neutral'}>{t('Version')} {d.version}</Badge><span className="ds-caption ds-muted">{formatDateTime(d.createdAt)} · {Math.max(1, Math.round(d.fileSizeBytes / 1024 / 1024))} MB</span>{d.fileUrl && <a className="ds-link ds-caption" style={{ marginLeft: 'auto' }} href={fileUrl(d.fileUrl)} download>{t('Ladda ner')}</a>}</div>

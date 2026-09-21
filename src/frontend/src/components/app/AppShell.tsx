@@ -5,6 +5,7 @@
  */
 import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { MotionProvider, PageTransition } from '@/components/motion';
 import { Home, Briefcase, Users, Plus, MessageCircle, User, Video, Upload, Image, Droplets, Megaphone, Clapperboard, PenSquare } from 'lucide-react';
 import api from '@/lib/api';
 import { t } from '@/lib/i18n';
@@ -98,12 +99,14 @@ export function CreatorShell() {
   ];
   return (
     <div className="ds-root">
+      <MotionProvider>
       <ToastProvider>
         <EmailVerifyBanner />
-        <Outlet />
+        <PageTransition><Outlet /></PageTransition>
         <TabBar items={items} current={current} action={{ label: t('Lägg till'), icon: <Plus />, onClick: () => setAdd(true) }} brand={<Link to="/creator" style={{ color: 'inherit' }}>VYRLE</Link>} />
         <CreatorAddSheet open={add} onClose={() => setAdd(false)} />
       </ToastProvider>
+      </MotionProvider>
     </div>
   );
 }
@@ -147,12 +150,14 @@ export function BrandShell() {
   ];
   return (
     <div className="ds-root">
+      <MotionProvider>
       <ToastProvider>
         <EmailVerifyBanner />
-        <Outlet />
+        <PageTransition><Outlet /></PageTransition>
         <TabBar items={items} current={current} action={{ label: t('Skapa'), icon: <Plus />, onClick: () => setCreate(true) }} brand={<Link to="/brand" style={{ color: 'inherit' }}>VYRLE</Link>} />
         <BrandCreateSheet open={create} onClose={() => setCreate(false)} />
       </ToastProvider>
+      </MotionProvider>
     </div>
   );
 }

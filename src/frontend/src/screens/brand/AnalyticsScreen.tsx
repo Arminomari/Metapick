@@ -55,10 +55,10 @@ export function BrandAnalyticsScreen() {
         <Card><EmptyState title={t('Ingen analys än')} description={t('Öppna en kran eller lansera en kampanj så börjar vi mäta visningar, engagemang och CPM.')} action={<Button to="/brand/tap/new">{t('Öppna en kran')}</Button>} /></Card>
       ) : seg === 'overview' ? (
         <>
-          {s.totalViews === 0 && <Card><p className="ds-body ds-muted">{t('Inga verifierade visningar ännu. Analysen fylls i så snart creators content går live.')}</p></Card>}
+          {s.totalViews === 0 && <Card><EmptyState description={t('Inga verifierade visningar ännu. Analysen fylls i så snart creators content går live.')} /></Card>}
           <StatRow cols={4}>
-            <StatTile label={t('Visningar')} value={formatNumber(s.totalViews)} hint={`${s.creators} ${t('creators')} · ${s.verifiedPosts} ${t('verifierade videor')}`} />
-            <StatTile label={t('Spend')} value={money(s.totalSpent)} hint={`${money(s.remainingBudget)} ${t('kvar i pågående')}`} />
+            <StatTile label={t('Visningar')} count={s.totalViews} format={formatNumber} hint={`${s.creators} ${t('creators')} · ${s.verifiedPosts} ${t('verifierade videor')}`} />
+            <StatTile label={t('Spend')} count={s.totalSpent} format={money} hint={`${money(s.remainingBudget)} ${t('kvar i pågående')}`} />
             <StatTile label="CPM" value={orDash(s.cpm, kr2)} hint={t('kostnad / 1 000 visn.')} />
             <StatTile label={t('Snitt / post')} value={orDash(s.avgViewsPerPost, short)} hint={`${formatNumber(s.views24h)} ${t('senaste dygnet')}`} />
           </StatRow>
@@ -85,7 +85,7 @@ export function BrandAnalyticsScreen() {
         <>
           <Section title={t('Visningar per kampanj')}><Card>{chartRows.length >= 2 ? <LineChart values={chartRows.map((x) => x.views)} labels={chartRows.map((x) => x.name)} fmt={short} /> : <p className="ds-body ds-muted">{t('Kör fler kampanjer så ritas din visningstrend här.')}</p>}</Card></Section>
           <Section title={t('Bästa creators')} action={<Button variant="ghost" size="sm" to="/brand/creators?tab=find">{t('Hitta fler')}</Button>}>
-            {s.bestCreators.length === 0 ? <Card><p className="ds-body ds-muted">{t('Inga creators med data än.')}</p></Card> : <List>{s.bestCreators.map((c) => <ListRow key={c.creatorProfileId} leading={<Avatar name={c.displayName} src={c.avatarUrl} size="sm" />} title={c.displayName} subtitle={`${orDash(c.costPerThousand, kr2)} / 1K · ${money(c.payout)}`} value={`${formatNumber(c.views)} views`} to={`/brand/campaigns/${c.campaignId}/creators/${c.assignmentId}`} />)}</List>}
+            {s.bestCreators.length === 0 ? <Card><EmptyState title={t('Inga creators med data än.')} /></Card> : <List>{s.bestCreators.map((c) => <ListRow key={c.creatorProfileId} leading={<Avatar name={c.displayName} src={c.avatarUrl} size="sm" />} title={c.displayName} subtitle={`${orDash(c.costPerThousand, kr2)} / 1K · ${money(c.payout)}`} value={`${formatNumber(c.views)} views`} to={`/brand/campaigns/${c.campaignId}/creators/${c.assignmentId}`} />)}</List>}
           </Section>
           <Section title={t('Kvalitetssignaler')}><Card><Bars rows={[{ label: t('Engagement rate'), value: clamp((s.engagementRate ?? 0) * 8), display: orDash(s.engagementRate, pct) }, { label: t('Share rate'), value: clamp((s.shareRate ?? 0) * 40), display: orDash(s.shareRate, pct) }, { label: t('Klickfrekvens'), value: clamp((s.clickThroughRate ?? 0) * 20), display: orDash(s.clickThroughRate, pct) }, { label: t('Viral rate (100K+)'), value: clamp((s.viralRate ?? 0) * 10), display: orDash(s.viralRate, (v) => `${v.toFixed(1)} %`) }]} /><div className="ds-facts" style={{ marginTop: 12 }}><div className="ds-fact"><span>{t('Videor över 100K / 500K / 1M')}</span><span className="ds-num">{s.videosOver100K} / {s.videosOver500K} / {s.videosOver1M}</span></div></div><SourceNote source="tiktok" at={s.metricsUpdatedAt} scope={t('verifierade videor')} /></Card></Section>
           {s.byCategory.length > 0 && <Section title={t('Per nisch')}><List>{s.byCategory.map((n) => <ListRow key={n.category} title={n.category} subtitle={`${formatNumber(n.views)} views · ER ${orDash(n.engagementRate, pct)}`} value={`${orDash(n.cpm, kr2)} CPM`} chevron={false} />)}</List></Section>}
@@ -105,14 +105,14 @@ export function BrandAnalyticsScreen() {
           <Section title={t('Prestanda per videolängd')}><Card>{s.durationBuckets.some((b) => b.count > 0) ? <Bars rows={s.durationBuckets.filter((b) => b.count > 0).map((b) => ({ label: `${b.label} · ${b.count} ${t('videor')}`, value: b.avgViews, display: short(b.avgViews) }))} /> : <p className="ds-body ds-muted">{t('Videolängd registreras när posts synkas från TikTok.')}</p>}</Card></Section>
           <Section title={t('Bästa publiceringstid')}><Card>{s.dayparts.some((b) => b.count > 0) ? <Bars rows={[...s.dayparts].filter((b) => b.count > 0).sort((a, b) => b.avgViews - a.avgViews).map((b) => ({ label: `${b.label} · ${b.count} ${t('videor')}`, value: b.avgViews, display: short(b.avgViews) }))} /> : <p className="ds-body ds-muted">{t('Publiceringstid registreras när posts synkas från TikTok.')}</p>}<p className="ds-caption ds-muted" style={{ marginTop: 8 }}>{t('Tidszon')}: {s.timezone}</p></Card></Section>
           <Section title={t('Topp-hashtags')}><Card>{s.topHashtags.length ? <div className="ds-tags">{s.topHashtags.map((tg) => <span key={tg.tag} className="ds-tag">#{tg.tag} · {short(tg.views)} · {tg.count}×</span>)}</div> : <p className="ds-body ds-muted">{t('Hashtags läses ur posternas captions vid synk.')}</p>}</Card></Section>
-          <Section title="Instagram"><Card><p className="ds-body ds-muted">{t('Instagram-data hämtas inte automatiskt ännu.')}</p></Card></Section>
+          <Section title="Instagram"><Card><EmptyState title={t('Instagram-data hämtas inte automatiskt ännu.')} /></Card></Section>
         </>
       ) : (
         <>
           <StatRow cols={4}>
-            <StatTile label={t('Budget')} value={money(s.totalBudget)} hint={`${s.campaignsInScope} ${t('kampanjer')}`} />
-            <StatTile label={t('Spenderat')} value={money(s.totalSpent)} hint={s.totalBudget > 0 ? `${Math.round((s.totalSpent / s.totalBudget) * 100)} %` : '–'} />
-            <StatTile label={t('Kranar / mån')} value={money(tapBudget)} hint={`${money(tapSpent)} ${t('använt')}`} />
+            <StatTile label={t('Budget')} count={s.totalBudget} format={money} hint={`${s.campaignsInScope} ${t('kampanjer')}`} />
+            <StatTile label={t('Spenderat')} count={s.totalSpent} format={money} hint={s.totalBudget > 0 ? `${Math.round((s.totalSpent / s.totalBudget) * 100)} %` : '–'} />
+            <StatTile label={t('Kranar / mån')} count={tapBudget} format={money} hint={`${money(tapSpent)} ${t('använt')}`} />
             <StatTile label={t('Videouppdrag')} value={formatOre(ugcSpent)} hint={t('betalt totalt')} />
           </StatRow>
           <SourceNote source="ledger" at={s.calculatedAt} scope={s.scope} />

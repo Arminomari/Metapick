@@ -7,6 +7,8 @@
 import React, { useEffect, useId, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { CountUp, staggerContainer, staggerItem } from '@/components/motion';
 import { ChevronRight, X } from 'lucide-react';
 import { useTitle } from '@/lib/title';
 import { statusLabel } from '@/lib/i18n';
@@ -49,7 +51,7 @@ export function StickyAction({ children }: { children: React.ReactNode }) {
 /* ── Card ─────────────────────────────────────────────────── */
 export function Card({ title, action, flush, elevated, className, children, ...rest }: React.HTMLAttributes<HTMLDivElement> & { title?: React.ReactNode; action?: React.ReactNode; flush?: boolean; elevated?: boolean }) {
   return (
-    <div className={cx('ds-card', flush && 'ds-card--flush', elevated && 'ds-card--elevated', className)} {...rest}>
+    <div className={cx('ds-card', flush && 'ds-card--flush', elevated && 'ds-card--elevated', rest.onClick && 'ds-card--lift', className)} {...rest}>
       {(title || action) && <div className="ds-card-head"><h3 className="ds-heading">{title}</h3>{action}</div>}
       {children}
     </div>
@@ -82,17 +84,22 @@ export function Section({ title, action, children }: { title?: React.ReactNode; 
 }
 
 /* ── StatTile ─────────────────────────────────────────────── */
-export function StatTile({ label, value, hint, accent, plain }: { label: string; value: React.ReactNode; hint?: React.ReactNode; accent?: boolean; plain?: boolean }) {
+/**
+ * A number tile. Pass `count` + `format` for a SYSTEM_COMPUTED number and it
+ * counts up on first paint (plain render under reduced motion); `value` is for
+ * already-formatted or non-numeric content.
+ */
+export function StatTile({ label, value, count, format, hint, accent, plain }: { label: string; value?: React.ReactNode; count?: number; format?: (n: number) => string; hint?: React.ReactNode; accent?: boolean; plain?: boolean }) {
   return (
-    <div className={cx('ds-stat', accent && 'ds-stat--accent', plain && 'ds-stat--plain')}>
-      <div className="ds-stat-value ds-num">{value}</div>
+    <motion.div className={cx('ds-stat', accent && 'ds-stat--accent', plain && 'ds-stat--plain')} variants={staggerItem}>
+      <div className="ds-stat-value ds-num">{count != null ? <CountUp value={count} format={format ?? String} /> : value}</div>
       <div className="ds-stat-label">{label}</div>
       {hint && <div className="ds-stat-hint">{hint}</div>}
-    </div>
+    </motion.div>
   );
 }
 export function StatRow({ children, cols }: { children: React.ReactNode; cols?: 3 | 4 }) {
-  return <div className={cx('ds-stat-row', cols === 3 && 'ds-stat-row--3', cols === 4 && 'ds-stat-row--4')}>{children}</div>;
+  return <motion.div className={cx('ds-stat-row', cols === 3 && 'ds-stat-row--3', cols === 4 && 'ds-stat-row--4')} variants={staggerContainer} initial="hidden" animate="show">{children}</motion.div>;
 }
 
 /* ── Avatar ───────────────────────────────────────────────── */
@@ -144,6 +151,7 @@ export interface ListRowProps {
   onClick?: () => void;
   className?: string;
 }
+const MotionLink = motion(Link);
 export function ListRow({ leading, title, badge, subtitle, wrapSubtitle, value, trailing, chevron, to, onClick, className }: ListRowProps) {
   const interactive = Boolean(to || onClick);
   const cls = cx('ds-listrow', interactive && 'ds-listrow--interactive', className);
@@ -163,12 +171,12 @@ export function ListRow({ leading, title, badge, subtitle, wrapSubtitle, value, 
       )}
     </>
   );
-  if (to) return <Link to={to} className={cls}>{body}</Link>;
-  if (onClick) return <button type="button" className={cls} onClick={onClick}>{body}</button>;
-  return <div className={cls}>{body}</div>;
+  if (to) return <MotionLink to={to} className={cls} variants={staggerItem}>{body}</MotionLink>;
+  if (onClick) return <motion.button type="button" className={cls} onClick={onClick} variants={staggerItem}>{body}</motion.button>;
+  return <motion.div className={cls} variants={staggerItem}>{body}</motion.div>;
 }
 export function List({ children, plain, className }: { children: React.ReactNode; plain?: boolean; className?: string }) {
-  return <div className={cx('ds-list', plain && 'ds-list--plain', className)}>{children}</div>;
+  return <motion.div className={cx('ds-list', plain && 'ds-list--plain', className)} variants={staggerContainer} initial="hidden" animate="show">{children}</motion.div>;
 }
 
 /* ── SegmentedControl ─────────────────────────────────────── */
@@ -214,11 +222,11 @@ export function Meter({ value, max, tone, left, right }: { value: number; max: n
 }
 
 /* ── EmptyState ───────────────────────────────────────────── */
-export function EmptyState({ icon, title, description, action }: { icon?: React.ReactNode; title: string; description?: string; action?: React.ReactNode }) {
+export function EmptyState({ icon, title, description, action }: { icon?: React.ReactNode; title?: string; description?: string; action?: React.ReactNode }) {
   return (
     <div className="ds-empty">
       {icon && <div className="ds-empty-icon">{icon}</div>}
-      <h3 className="ds-heading">{title}</h3>
+      {title && <h3 className="ds-heading">{title}</h3>}
       {description && <p className="ds-body">{description}</p>}
       {action}
     </div>

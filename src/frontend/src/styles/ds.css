@@ -488,3 +488,11 @@ button.ds-tag { border: none; font: inherit; cursor: pointer; min-height: 32px; 
   .ds-datepicker-pop { position: fixed; left: 0; right: 0; bottom: 0; top: auto; width: auto; max-width: none; border-radius: 20px 20px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); box-shadow: 0 -12px 32px rgba(17,17,20,.2); }
   .ds-datepicker-day { min-height: 44px; }
 }
+
+/* ── Motion (block D): hover lift only with a real pointer and no reduced-motion request ── */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .ds-card--lift { transition: transform .18s cubic-bezier(.16,1,.3,1), box-shadow .18s; cursor: pointer; }
+  .ds-card--lift:hover { transform: translateY(-2px); box-shadow: var(--ds-shadow); }
+  .ds-listrow--interactive { transition: background-color .12s; }
+}
+.ds-empty .ds-heading { overflow-wrap: anywhere; }

@@ -55,8 +55,8 @@ export function BrandHomeScreen() {
         {loadingAnalytics ? <SkeletonStats n={3} /> : (
           <>
             <StatRow cols={3}>
-              <StatTile label={t('Spenderat')} value={money(spend)} />
-              <StatTile label={t('Views')} value={formatNumber(views)} />
+              <StatTile label={t('Spenderat')} count={spend} format={money} />
+              <StatTile label={t('Views')} count={views} format={formatNumber} />
               <StatTile label={t('Aktiva creators')} value={String(creators)} />
             </StatRow>
             <SourceNote source="tiktok" at={stats?.metricsUpdatedAt} scope={stats?.scope} />
