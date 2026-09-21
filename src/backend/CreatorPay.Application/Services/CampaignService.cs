@@ -1,6 +1,7 @@
 using CreatorPay.Application.Common;
 using CreatorPay.Application.DTOs;
 using CreatorPay.Application.Interfaces;
+using CreatorPay.Domain.Common;
 using CreatorPay.Domain.Entities;
 using CreatorPay.Domain.Enums;
 using CreatorPay.Domain.Interfaces;
@@ -306,16 +307,30 @@ public class CampaignService : ICampaignService
         return MapToDetail(campaign, approvedCount, totalViews);
     }
 
-    public async Task<Result<CampaignDetailDto>> GetCampaignAsync(Guid campaignId, CancellationToken ct = default)
+    public async Task<Result<CampaignDetailDto>> GetCampaignAsync(Guid campaignId, Guid userId, string role, CancellationToken ct = default)
     {
         var campaign = await _campaigns.Query()
+            .Include(c => c.BrandProfile)
             .Include(c => c.Requirements)
             .Include(c => c.Rules)
             .Include(c => c.PayoutRules)
-            .Include(c => c.Assignments)
+            .Include(c => c.Assignments).ThenInclude(a => a.CreatorProfile)
+            .Include(c => c.Applications).ThenInclude(a => a.CreatorProfile)
             .FirstOrDefaultAsync(c => c.Id == campaignId && !c.IsDeleted, ct);
 
         if (campaign == null) return Errors.NotFound("Campaign", campaignId);
+
+        // Budget and spend are the brand's business: the owner and admins see
+        // everything; a creator only sees a campaign that is open to browse or
+        // one they applied to or work in. Everyone else gets "not found".
+        var isOwner = campaign.BrandProfile?.UserId == userId;
+        if (!isOwner && role != "Admin")
+        {
+            var browseable = campaign.Status is CampaignStatus.Active or CampaignStatus.Paused or CampaignStatus.Completed;
+            var participant = campaign.Assignments.Any(a => a.CreatorProfile?.UserId == userId)
+                || campaign.Applications.Any(a => a.CreatorProfile?.UserId == userId);
+            if (!browseable && !participant) return Errors.NotFound("Campaign", campaignId);
+        }
 
         var approvedCount = campaign.Assignments.Count(a => a.Status == AssignmentStatus.Active);
         var totalViews = campaign.Assignments.Sum(a => a.TotalVerifiedViews);
@@ -589,6 +604,9 @@ public class CampaignService : ICampaignService
 
         if (campaign == null) return Errors.NotFound("Campaign", campaignId);
 
+        var now = DateTime.UtcNow;
+        var reviewHours = ReviewPolicy.DefaultAutoApproveHours;
+
         var creatorPerf = campaign.Assignments
             .Where(a => a.Status == AssignmentStatus.Active || a.Status == AssignmentStatus.Completed)
             .Select(a => {
@@ -596,20 +614,26 @@ public class CampaignService : ICampaignService
 
                 var videos = a.SocialPosts
                     .Where(sp => sp.IsActive)
-                    .Select(sp => new CreatorVideoDto(
-                        sp.SubmissionId, sp.TikTokUrl, sp.TikTokVideoId, sp.LatestViewCount, 0,
+                    .Select(sp =>
+                    {
+                        CreatorSubmission? sub = null;
+                        if (sp.SubmissionId.HasValue) submissionDict.TryGetValue(sp.SubmissionId.Value, out sub);
                         // The brand's approval decision is the primary status; the
                         // TikTok verification status only shows until a decision.
-                        sp.SubmissionId.HasValue && submissionDict.TryGetValue(sp.SubmissionId.Value, out var subStatus)
-                            && (subStatus.Status == SubmissionStatus.Approved || subStatus.Status == SubmissionStatus.Rejected)
-                            ? subStatus.Status.ToString()
-                            : sp.VerificationStatus.ToString(),
-                        sp.SubmissionId.HasValue && submissionDict.TryGetValue(sp.SubmissionId.Value, out var sub)
-                            ? sub.RejectionReason
-                            : null,
-                        sp.DiscoveredAt,
-                        sp.LatestLikeCount, sp.LatestCommentCount, sp.LatestShareCount,
-                        sp.Duration, sp.PublishedAt, ExtractHashtags(sp.Caption)))
+                        var decided = sub != null && (sub.Status == SubmissionStatus.Approved || sub.Status == SubmissionStatus.Rejected);
+                        var pendingDecision = sub != null && sub.Status == SubmissionStatus.Pending;
+                        return new CreatorVideoDto(
+                            sp.SubmissionId, sp.TikTokUrl, sp.TikTokVideoId, sp.LatestViewCount, 0,
+                            decided ? sub!.Status.ToString() : sp.VerificationStatus.ToString(),
+                            sub?.RejectionReason,
+                            sp.DiscoveredAt,
+                            sp.LatestLikeCount, sp.LatestCommentCount, sp.LatestShareCount,
+                            sp.Duration, sp.PublishedAt,
+                            // Hashtags only from a caption TikTok returned — never from the creator's notes.
+                            ExtractHashtags(sp.MetricsUpdatedAt.HasValue ? sp.Caption : null),
+                            sp.VerificationStatus == VerificationStatus.Verified, sp.MetricsUpdatedAt,
+                            pendingDecision ? ReviewPolicy.AutoApproveAt(sub!.CreatedAt, reviewHours) : null);
+                    })
                     .ToList();
 
                 // Also include submissions that don't yet have a SocialPost
@@ -617,7 +641,8 @@ public class CampaignService : ICampaignService
                     .Where(s => !a.SocialPosts.Any(sp => sp.SubmissionId == s.Id))
                     .Select(s => new CreatorVideoDto(
                         s.Id, s.TikTokVideoUrl, s.TikTokVideoId, 0, 0,
-                        s.Status.ToString(), s.RejectionReason, s.CreatedAt))
+                        s.Status.ToString(), s.RejectionReason, s.CreatedAt,
+                        AutoApproveAt: s.Status == SubmissionStatus.Pending ? ReviewPolicy.AutoApproveAt(s.CreatedAt, reviewHours) : null))
                     .ToList();
 
                 videos.AddRange(submissionOnlyVideos);
@@ -652,33 +677,36 @@ public class CampaignService : ICampaignService
             })
             .ToList();
 
-        // Engagement aggregates across every active discovered post in the campaign.
+        // Engagement aggregates over VERIFIED posts only — the same scope as the
+        // views that pay out, so likes never come from a video views ignore.
         var activePosts = campaign.Assignments
             .Where(a => a.Status == AssignmentStatus.Active || a.Status == AssignmentStatus.Completed)
             .SelectMany(a => a.SocialPosts.Where(sp => sp.IsActive))
             .ToList();
+        var verifiedPosts = activePosts.Where(sp => sp.VerificationStatus == VerificationStatus.Verified).ToList();
 
-        var totalLikes = activePosts.Sum(sp => sp.LatestLikeCount);
-        var totalComments = activePosts.Sum(sp => sp.LatestCommentCount);
-        var totalShares = activePosts.Sum(sp => sp.LatestShareCount);
-        var totalPosts = activePosts.Count;
+        var totalLikes = verifiedPosts.Sum(sp => sp.LatestLikeCount);
+        var totalComments = verifiedPosts.Sum(sp => sp.LatestCommentCount);
+        var totalShares = verifiedPosts.Sum(sp => sp.LatestShareCount);
         // Views gained since the previous daily snapshot (24h velocity). 0 until there are at least two snapshots.
-        var views24h = activePosts.Sum(sp => {
+        var views24h = verifiedPosts.Sum(sp => {
             var snaps = sp.MetricSnapshots.OrderByDescending(m => m.SnapshotDate).Take(2).ToList();
             return snaps.Count >= 2 ? Math.Max(0, snaps[0].ViewCount - snaps[1].ViewCount) : 0;
         });
 
+        var spent = LiveSpent(campaign);
         return new CampaignAnalyticsDto(
             campaign.Id,
             creatorPerf.Sum(c => c.Views),
             creatorPerf.Sum(c => c.Clicks),
             creatorPerf.Count,
             creatorPerf.Sum(c => c.PayoutAmount),
-            campaign.BudgetSpent,
-            campaign.Budget - campaign.BudgetSpent - campaign.BudgetReserved,
+            spent,
+            Math.Max(0, campaign.Budget - spent - campaign.BudgetReserved),
             creatorPerf,
             totalLikes, totalComments, totalShares, 0 /* saves: not exposed by TikTok API */,
-            views24h, totalPosts);
+            views24h, activePosts.Count,
+            verifiedPosts.Count, activePosts.Max(sp => sp.MetricsUpdatedAt), now, reviewHours);
     }
 
     // Pull #hashtags out of a stored caption (lowercased, de-duped, capped).
@@ -954,6 +982,13 @@ public class CampaignService : ICampaignService
             x.Id, x.Name,
             x.PayoutRules.Where(r => r.PayoutType == PayoutType.CPM).Select(r => r.Amount).FirstOrDefault(),
             x.Description, x.RequiredHashtag, x.PayoutCapPerVideo, x.MonthlyCapPerCreator, x.Category)).ToList();
+        // Latest TikTok refresh behind the view figures on this page.
+        var metricsUpdatedAt = await _campaigns.Query()
+            .Where(c => c.BrandProfileId == brandProfileId && !c.IsDeleted)
+            .SelectMany(c => c.Assignments)
+            .SelectMany(a => a.SocialPosts)
+            .Where(sp => sp.IsActive)
+            .MaxAsync(sp => sp.MetricsUpdatedAt, ct);
         var membership = viewerCreator == null ? null : await _communityMembers.Query()
             .Where(m => m.BrandProfileId == brandProfileId && m.CreatorProfileId == viewerCreator.Id)
             .Select(m => m.Status.ToString())
@@ -973,7 +1008,8 @@ public class CampaignService : ICampaignService
             tap?.Name, tap?.Description, tap?.RequiredHashtag,
             tap?.PayoutCapPerVideo, tap?.MonthlyCapPerCreator,
             membership,
-            publicTaps);
+            publicTaps,
+            brand.OrgVerified, metricsUpdatedAt);
     }
 
     public async Task<Result<bool>> SetBrandFollowAsync(Guid viewerUserId, Guid brandProfileId, bool follow, CancellationToken ct = default)

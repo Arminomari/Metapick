@@ -22,7 +22,7 @@ public class CampaignController : BaseController
     /// <summary>Hämta kampanj-detaljer</summary>
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get(Guid id, CancellationToken ct)
-        => ToActionResult(await _campaigns.GetCampaignAsync(id, ct));
+        => ToActionResult(await _campaigns.GetCampaignAsync(id, GetUserId(), GetUserRole(), ct));
 
     /// <summary>Uppdatera draft-kampanj (Brand)</summary>
     [HttpPut("{id:guid}")]

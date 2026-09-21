@@ -126,7 +126,7 @@ public sealed class UgcApplicationService : IUgcApplicationService
         var campaign = await _campaigns.Query().FirstOrDefaultAsync(c => c.Id == campaignId && c.BrandProfileId == brand.Id, ct);
         if (campaign == null) return Errors.NotFound("Campaign", campaignId);
 
-        var apps = await _applications.Query().Include(a => a.CreatorProfile)
+        var apps = await _applications.Query().Include(a => a.CreatorProfile).ThenInclude(c => c.TikTokAccount)
             .Where(a => a.CampaignId == campaignId).ToListAsync(ct);
         var ids = apps.Select(a => a.CreatorProfileId).ToList();
         var profiles = await _ugcCreators.Query().Where(p => ids.Contains(p.CreatorProfileId)).ToListAsync(ct);
@@ -170,7 +170,7 @@ public sealed class UgcApplicationService : IUgcApplicationService
         if (hired + 1 >= app.Campaign.Slots)
         {
             UgcCampaignStateMachine.Apply(app.Campaign, UgcCampaignStatus.Closed, UgcActor.System, now, true);
-            var others = await _applications.Query().Include(a => a.CreatorProfile)
+            var others = await _applications.Query().Include(a => a.CreatorProfile).ThenInclude(c => c.TikTokAccount)
                 .Where(a => a.CampaignId == app.CampaignId && a.Id != app.Id
                     && (a.Status == UgcApplicationStatus.Applied || a.Status == UgcApplicationStatus.Preselected)).ToListAsync(ct);
             foreach (var o in others)
@@ -211,7 +211,7 @@ public sealed class UgcApplicationService : IUgcApplicationService
     {
         var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);
         if (brand == null) return (null, null, Errors.NotFound("Brand"));
-        var app = await _applications.Query().Include(a => a.Campaign).Include(a => a.CreatorProfile)
+        var app = await _applications.Query().Include(a => a.Campaign).Include(a => a.CreatorProfile).ThenInclude(c => c.TikTokAccount)
             .FirstOrDefaultAsync(a => a.Id == applicationId && a.Campaign.BrandProfileId == brand.Id, ct);
         if (app == null) return (brand, null, Errors.NotFound("Application", applicationId));
         return (brand, app, null);

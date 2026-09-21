@@ -168,7 +168,7 @@ interface AdminCreatorFull {
   registeredAt: string; lastLoginAt?: string | null;
   creatorProfileId: string; displayName: string; bio?: string | null; category: string; country: string; language: string;
   avatarUrl?: string | null; website?: string | null; dateOfBirth?: string | null; profileTags: string[];
-  followerCount: number; averageViews?: number | null; instagramUsername?: string | null; instagramFollowerCount: number;
+  followerCount: number; instagramUsername?: string | null;
   profileStatus: string;
   tikTokUsername?: string | null; tikTokConnected: boolean; tikTokOAuth: boolean; tikTokFollowerCount: number; tikTokLastSync?: string | null;
   selfieUrl?: string | null;

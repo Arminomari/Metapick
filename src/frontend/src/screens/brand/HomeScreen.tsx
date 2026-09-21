@@ -4,7 +4,8 @@
  */
 import { t } from '@/lib/i18n';
 import { money, formatNumber, categoryLabel, formatDate } from '@/lib/utils';
-import { useActionCounts, useBrandAnalytics, useBrandCampaigns, useBrandProfile } from '@/hooks/api';
+import { useActionCounts, useBrandAnalyticsSummary, useBrandCampaigns, useBrandProfile } from '@/hooks/api';
+import { SourceNote } from '@/components/app/SourceNote';
 import { useUgcBrandCampaigns, useUgcCollabs, formatOre, COMPENSATION_LABEL } from '@/hooks/ugc';
 import { useBrandTaps } from '@/hooks/extra';
 import { Avatar, Badge, Button, Card, EmptyState, List, ListRow, Page, PageHead, Section, SkeletonList, SkeletonStats, StatRow, StatTile, statusTone } from '@/components/ds';
@@ -14,23 +15,24 @@ import { statusLabel } from '@/lib/i18n';
 export function BrandHomeScreen() {
   const { data: profile } = useBrandProfile();
   const { data: counts } = useActionCounts('brand');
-  const { campaigns: aCampaigns, analytics, isLoading: loadingAnalytics } = useBrandAnalytics();
+  const { data: stats, isLoading: loadingAnalytics } = useBrandAnalyticsSummary();
   const { data: campaignsRes, isLoading } = useBrandCampaigns();
   const { data: taps = [] } = useBrandTaps();
   const { data: orders = [] } = useUgcBrandCampaigns();
   const { data: collabs = [] } = useUgcCollabs('brand');
 
-  const spend = analytics.reduce((s, a) => s + a.budgetSpent, 0);
-  const views = analytics.reduce((s, a) => s + a.totalViews, 0);
-  const creators = analytics.reduce((s, a) => s + a.totalCreators, 0);
+  // Server-computed over active, paused and completed campaigns; drafts never count.
+  const spend = stats?.totalSpent ?? 0;
+  const views = stats?.totalViews ?? 0;
+  const creators = stats?.creators ?? 0;
   const videosToReview = (counts?.pendingTapReviews ?? 0) + (counts?.pendingVideoReviews ?? 0);
   const needsMe = collabs.filter((c) => c.needsMyAction);
   const ordersWithBids = orders.filter((o) => o.pendingApplicationCount > 0);
   const orgMissing = !!profile && !profile.organizationNumber;
   const hasTodo = videosToReview + (counts?.pendingApplications ?? 0) + (counts?.pendingCommunityRequests ?? 0) + needsMe.length + ordersWithBids.length + (orgMissing ? 1 : 0) > 0;
   const campaigns = campaignsRes?.data ?? [];
-  const recentVideos = analytics.flatMap((a) => a.creatorPerformance.flatMap((cp) => cp.videos.filter((v) => v.status === 'Approved').map((v) => ({ ...v, creator: cp.displayName, assignmentId: cp.assignmentId, campaignId: a.campaignId, campaignName: aCampaigns.find((c) => c.id === a.campaignId)?.name ?? '' }))))
-    .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)).slice(0, 3);
+  const recentVideos = stats?.recentContent ?? [];
+  const campaignName = (id: string) => stats?.campaigns.find((c) => c.campaignId === id)?.name ?? '';
 
   return (
     <Page>
@@ -40,7 +42,7 @@ export function BrandHomeScreen() {
         <Section title={t('Behöver dig')}>
           <List>
             {orgMissing && <ListRow leading={<Avatar name="!" size="sm" />} title={t('Organisationsnummer saknas')} subtitle={t('Krävs för att beställa video')} to="/brand/profile/edit" />}
-            {videosToReview > 0 && <ListRow leading={<Avatar name={String(videosToReview)} size="sm" />} title={`${videosToReview} ${videosToReview === 1 ? t('video att granska') : t('videor att granska')}`} subtitle={t('Godkänns automatiskt efter 48 timmar')} to="/brand/review" />}
+            {videosToReview > 0 && <ListRow leading={<Avatar name={String(videosToReview)} size="sm" />} title={`${videosToReview} ${videosToReview === 1 ? t('video att granska') : t('videor att granska')}`} subtitle={counts?.reviewWindowHours ? `${t('Godkänns automatiskt efter')} ${counts.reviewWindowHours} ${t('timmar')}` : t('Godkänns automatiskt om de inte granskas i tid')} to="/brand/review" />}
             {(counts?.pendingApplications ?? 0) > 0 && <ListRow leading={<Avatar name={String(counts!.pendingApplications)} size="sm" />} title={`${counts!.pendingApplications} ${counts!.pendingApplications === 1 ? t('ansökan') : t('ansökningar')}`} subtitle={t('Creators vill vara med i dina kampanjer')} to="/brand/creators?tab=applications" />}
             {(counts?.pendingCommunityRequests ?? 0) > 0 && <ListRow leading={<Avatar name={String(counts!.pendingCommunityRequests)} size="sm" />} title={`${counts!.pendingCommunityRequests} ${t('vill gå med i communityn')}`} to="/brand/creators?tab=community" />}
             {ordersWithBids.map((o) => <ListRow key={o.id} leading={<Avatar name={String(o.pendingApplicationCount)} size="sm" />} title={`${o.pendingApplicationCount} ${t('nya bud')}`} subtitle={o.title} to={`/brand/ugc/campaigns/${o.id}`} />)}
@@ -51,11 +53,14 @@ export function BrandHomeScreen() {
 
       <Section title={t('Just nu')} action={<Button variant="ghost" size="sm" to="/brand/analytics">{t('Statistik')}</Button>}>
         {loadingAnalytics ? <SkeletonStats n={3} /> : (
-          <StatRow cols={3}>
-            <StatTile label={t('Spenderat')} value={money(spend)} />
-            <StatTile label={t('Views')} value={formatNumber(views)} />
-            <StatTile label={t('Aktiva creators')} value={String(creators)} />
-          </StatRow>
+          <>
+            <StatRow cols={3}>
+              <StatTile label={t('Spenderat')} value={money(spend)} />
+              <StatTile label={t('Views')} value={formatNumber(views)} />
+              <StatTile label={t('Aktiva creators')} value={String(creators)} />
+            </StatRow>
+            <SourceNote source="tiktok" at={stats?.metricsUpdatedAt} scope={stats?.scope} />
+          </>
         )}
       </Section>
 
@@ -65,7 +70,7 @@ export function BrandHomeScreen() {
         ) : (
           <List>
             {taps.slice(0, 3).map((tap) => {
-              const pct = tap.monthlyBudget > 0 ? Math.min(100, Math.round((tap.monthSpent / tap.monthlyBudget) * 100)) : 0;
+              const pct = tap.monthUsedPercent;
               return <ListRow key={tap.id} leading={<Avatar name={tap.name} rounded />} title={tap.name} badge={<Badge tone={tap.status === 'Active' ? 'ok' : 'neutral'}>{tap.status === 'Active' ? t('Öppen') : t('Pausad')}</Badge>} subtitle={`${money(tap.monthSpent)} ${t('av')} ${money(tap.monthlyBudget)} ${t('denna månad')} · ${tap.activeCreatorsThisMonth} ${t('creators')}`} wrapSubtitle value={`${pct} %`} to={`/brand/tap/${tap.id}`} />;
             })}
           </List>
@@ -98,7 +103,7 @@ export function BrandHomeScreen() {
         <Section title={t('Senaste från communityn')}>
           <List>
             {recentVideos.map((v, i) => (
-              <ListRow key={i} leading={<Avatar name={v.creator} size="sm" />} title={v.creator} subtitle={`${v.campaignName} · ${formatDate(v.createdAt)}`} value={`${formatNumber(v.views)} views`} to={`/brand/campaigns/${v.campaignId}/creators/${v.assignmentId}`} />
+              <ListRow key={i} leading={<Avatar name={v.creatorName} size="sm" />} title={v.creatorName} subtitle={`${campaignName(v.campaignId)}${v.publishedAt ? ` · ${formatDate(v.publishedAt)}` : ''}`} value={`${formatNumber(v.views)} views`} to={`/brand/campaigns/${v.campaignId}/creators/${v.assignmentId}`} />
             ))}
           </List>
         </Section>

@@ -8,6 +8,7 @@ using CreatorPay.Domain.Enums;
 using CreatorPay.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using CreatorPay.Domain.Common;
 
 namespace CreatorPay.Application.Services;
 
@@ -291,7 +292,9 @@ public class ApplicationService : IApplicationService
         var dtos = items.Select(a => MapToDto(a, a.CreatorProfile.DisplayName, a.Campaign.Name,
             a.CreatorProfile.TikTokAccount?.TikTokUsername, a.CreatorProfile.Category, a.CreatorProfile.Bio,
             a.CreatorProfile.AvatarUrl,
-            Math.Max(a.CreatorProfile.FollowerCount, a.CreatorProfile.TikTokAccount?.FollowerCount ?? 0))).ToList();
+            // Followers shown to the brand only when the TikTok connection is OAuth-verified.
+            a.CreatorProfile.TikTokAccount.VerifiedFollowers(),
+            a.CreatorProfile.TikTokAccount.IsVerified(), a.CreatorProfile.TikTokAccount.FollowersSyncedAt())).ToList();
         return new PagedResult<ApplicationDto>
         {
             Data = dtos, Page = page, PageSize = pageSize, TotalCount = totalCount
@@ -351,10 +354,12 @@ public class ApplicationService : IApplicationService
 
     private static ApplicationDto MapToDto(CampaignApplication a, string creatorName, string campaignName,
         string? tikTokUsername = null, string? creatorCategory = null, string? creatorBio = null,
-        string? creatorAvatarUrl = null, long followerCount = 0) =>
+        string? creatorAvatarUrl = null, long followerCount = 0,
+        bool tikTokVerified = false, DateTime? followersSyncedAt = null) =>
         new(a.Id, a.CampaignId, campaignName, a.CreatorProfileId, creatorName,
             a.Message, a.Status.ToString(), a.RejectionReason, a.ReviewedAt, a.CreatedAt,
-            tikTokUsername, creatorCategory, creatorBio, creatorAvatarUrl, followerCount);
+            tikTokUsername, creatorCategory, creatorBio, creatorAvatarUrl, followerCount,
+            tikTokVerified, followersSyncedAt);
 
     /// <summary>Returns true when a DbUpdateException wraps a DB unique-constraint violation.</summary>
     private static bool IsUniqueConstraintViolation(DbUpdateException ex)
@@ -603,7 +608,8 @@ public class AssignmentService : IAssignmentService
                 SubmissionId = submission.Id,
                 TikTokVideoId = videoId,
                 TikTokUrl = canonicalUrl,
-                Caption = request.Notes,
+                // The creator's notes are not a caption: hashtags and captions come from TikTok at sync.
+                Caption = null,
                 PublishedAt = DateTime.UtcNow,
                 VerificationStatus = VerificationStatus.Pending,
                 DiscoveredAt = DateTime.UtcNow
@@ -856,10 +862,11 @@ public class AssignmentService : IAssignmentService
             a.SocialPosts?.Where(sp => sp.IsActive).Select(sp => new SocialPostInfoDto(
                 sp.Id, sp.TikTokUrl, sp.TikTokVideoId, sp.LatestViewCount,
                 sp.LatestLikeCount, sp.LatestCommentCount, sp.LatestShareCount,
-                sp.VerificationStatus.ToString(), sp.DiscoveredAt)).ToList() ?? [],
+                sp.VerificationStatus.ToString(), sp.DiscoveredAt, sp.MetricsUpdatedAt)).ToList() ?? [],
             a.AssignedAt, a.CompletedAt,
             a.Campaign.BrandProfile.UserId, a.CreatorProfile.UserId, goalReached,
-            a.Campaign.Kind == CampaignKind.Tap);
+            a.Campaign.Kind == CampaignKind.Tap,
+            a.SocialPosts?.Where(sp => sp.IsActive).Max(sp => sp.MetricsUpdatedAt));
 
     private static SubmissionDto MapSubmission(CreatorSubmission s) =>
         new(s.Id, s.AssignmentId, s.TikTokVideoUrl, s.TikTokVideoId,

@@ -36,6 +36,8 @@ public class SocialPost : BaseEntity
     public long LatestShareCount { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime DiscoveredAt { get; set; } = DateTime.UtcNow;
+    /// <summary>When the Latest* counters were last refreshed from TikTok. Null = never synced (manual submission only).</summary>
+    public DateTime? MetricsUpdatedAt { get; set; }
 
     // Navigation
     public CreatorCampaignAssignment Assignment { get; set; } = null!;

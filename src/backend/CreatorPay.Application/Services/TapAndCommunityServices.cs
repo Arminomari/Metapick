@@ -6,6 +6,7 @@ using CreatorPay.Domain.Entities;
 using CreatorPay.Domain.Enums;
 using CreatorPay.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using CreatorPay.Domain.Common;
 
 namespace CreatorPay.Application.Services;
 
@@ -75,9 +76,10 @@ public class CommunityService : ICommunityService
             byCreator.TryGetValue(r.CreatorProfileId, out var e);
             return new CommunityMemberDto(
                 r.CreatorProfileId, r.CreatorProfile.DisplayName, r.CreatorProfile.AvatarUrl,
-                r.CreatorProfile.TikTokAccount?.TikTokUsername, r.CreatorProfile.TikTokAccount?.FollowerCount ?? 0,
+                r.CreatorProfile.TikTokAccount?.TikTokUsername, r.CreatorProfile.TikTokAccount.VerifiedFollowers(),
                 r.Status.ToString(), r.Source.ToString(), r.JoinedAt,
-                e?.Earned ?? 0, e?.Views ?? 0, e?.Jobs ?? 0);
+                e?.Earned ?? 0, e?.Views ?? 0, e?.Jobs ?? 0,
+                r.CreatorProfile.TikTokAccount.IsVerified(), r.CreatorProfile.TikTokAccount.FollowersSyncedAt());
         }).ToList();
     }
 
@@ -97,8 +99,9 @@ public class CommunityService : ICommunityService
                 $"{brand.CompanyName} har bjudit in dig till sitt creator-community. Acceptera så kan du hämta ur deras kranar.", brand.Id, "CommunityInvite");
 
         return new CommunityMemberDto(creator.Id, creator.DisplayName, creator.AvatarUrl,
-            creator.TikTokAccount?.TikTokUsername, creator.TikTokAccount?.FollowerCount ?? 0,
-            member.Status.ToString(), member.Source.ToString(), member.JoinedAt, 0, 0, 0);
+            creator.TikTokAccount?.TikTokUsername, creator.TikTokAccount.VerifiedFollowers(),
+            member.Status.ToString(), member.Source.ToString(), member.JoinedAt, 0, 0, 0,
+            creator.TikTokAccount.IsVerified(), creator.TikTokAccount.FollowersSyncedAt());
     }
 
     /// <summary>Invites many creators in one go — the bulk path from the community page.</summary>
@@ -690,8 +693,13 @@ public class TapService : ITapService
             tap.Id, tap.Name, tap.Status.ToString(), tap.MonthlyBudget, TapAccrualService.CpmOf(tap),
             tap.PayoutCapPerVideo, tap.MonthlyCapPerCreator,
             tap.Description, tap.ContentInstructions, tap.RequiredHashtag, tap.Category,
-            s.Spent, s.Remaining, s.Views, s.ActiveCreators, memberCount, tap.BriefUpdatedAt, tap.CreatedAt);
+            s.Spent, s.Remaining, s.Views, s.ActiveCreators, memberCount, tap.BriefUpdatedAt, tap.CreatedAt,
+            UsedPercent(s.Spent, tap.MonthlyBudget), DateTime.UtcNow);
     }
+
+    /// <summary>Share of the monthly budget consumed, 0–100. Computed here so no screen does its own division.</summary>
+    internal static int UsedPercent(decimal spent, decimal budget)
+        => budget > 0 ? (int)Math.Clamp(Math.Round(spent / budget * 100m), 0, 100) : 0;
 
     /// <summary>
     /// Videos from the tap waiting for the brand — the tap never appears in the
@@ -719,8 +727,9 @@ public class TapService : ITapService
             s.TikTokVideoUrl, s.TikTokVideoId,
             s.SocialPost?.LatestViewCount ?? 0,
             s.CreatedAt,
-            Math.Max(0, 48 - (int)(DateTime.UtcNow - s.CreatedAt).TotalHours),
-            s.Assignment.CampaignId, s.Assignment.Campaign.Name)).ToList();
+            ReviewPolicy.HoursUntilAutoApprove(s.CreatedAt, DateTime.UtcNow),
+            s.Assignment.CampaignId, s.Assignment.Campaign.Name,
+            ReviewPolicy.AutoApproveAt(s.CreatedAt), s.SocialPost?.MetricsUpdatedAt)).ToList();
     }
 
     public async Task<Result<List<CreatorTapDto>>> GetCreatorTapsAsync(Guid creatorUserId, CancellationToken ct = default)
@@ -754,7 +763,8 @@ public class TapService : ITapService
                 tap.Description, tap.ContentInstructions, tap.RequiredHashtag,
                 TapAccrualService.CpmOf(tap), tap.PayoutCapPerVideo, tap.MonthlyCapPerCreator,
                 my?.Amount ?? 0, my?.Views ?? 0, a.CurrentPayoutAmount,
-                s.Budget, s.Spent, tap.BriefUpdatedAt));
+                s.Budget, s.Spent, tap.BriefUpdatedAt,
+                UsedPercent(s.Spent, s.Budget), now));
         }
         return result;
     }

@@ -5,11 +5,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Clapperboard, Gift, MessageCircle } from 'lucide-react';
 import api from '@/lib/api';
 import { t } from '@/lib/i18n';
-import { formatNumber } from '@/lib/utils';
+import { formatNumber, money } from '@/lib/utils';
 import { CATEGORIES, canonicalCategory } from '@/lib/categories';
 import { useCreatorPublicProfile, useCreatePrOffer } from '@/hooks/api';
 import { useCommunityMembers } from '@/hooks/extra';
 import { useToast } from '@/components/vyrle/Toast';
+import { SourceNote } from '@/components/app/SourceNote';
 import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
 import { DateInput } from '@/components/ui/DateInput';
 import { Avatar, Badge, BottomSheet, Button, Card, EmptyState, Field, Page, PageHead, Section, SkeletonList, StatRow, StatTile } from '@/components/ds';
@@ -90,7 +91,6 @@ export function BrandCreatorDetailScreen() {
 
   if (isLoading) return <Page><PageHead title="" back={{ onClick: () => navigate(-1) }} /><SkeletonList rows={3} /></Page>;
   if (!c) return <Page><PageHead title={t('Creator')} back={{ onClick: () => navigate(-1) }} /><Card><EmptyState title={t('Creatorn hittades inte')} description={t('Profilen kan ha tagits bort eller inte godkänts.')} /></Card></Page>;
-  const followers = Math.max(c.followerCount, c.tikTokFollowerCount, c.instagramFollowerCount);
 
   return (
     <Page>
@@ -114,10 +114,11 @@ export function BrandCreatorDetailScreen() {
         {c.profileTags.length > 0 && <div className="ds-tags" style={{ marginTop: 10 }}>{c.profileTags.map((tg) => <span key={tg} className="ds-tag">{tg}</span>)}</div>}
         <div style={{ marginTop: 14 }}>
           <StatRow cols={3}>
-            <StatTile plain label={t('Följare')} value={formatNumber(followers)} />
-            <StatTile plain label={t('Snittvisningar')} value={c.averageViews ? formatNumber(c.averageViews) : '–'} />
+            <StatTile plain label={t('Verifierade views')} value={formatNumber(c.totalVerifiedViews)} hint={c.totalVideos > 0 ? `${Math.round(c.approvalRate)} % ${t('godkända')}` : undefined} />
+            <StatTile plain label={t('Följare')} value={c.tikTokVerified ? formatNumber(c.tikTokFollowerCount) : '–'} hint={c.tikTokVerified ? 'TikTok' : t('TikTok ej verifierat')} />
             <StatTile plain label={t('Betyg')} value={c.reviewCount > 0 ? c.averageRating.toFixed(1) : '–'} hint={c.reviewCount > 0 ? `${c.reviewCount} ${t('omdömen')}` : undefined} />
           </StatRow>
+          <SourceNote source="tiktok" at={c.metricsUpdatedAt} scope={t('alla kampanjvideos')} />
         </div>
         <div className="ds-stack" style={{ marginTop: 14 }}>
           {membership?.status === 'Active' ? <Badge tone="ok">{t('I ditt community')}</Badge>
@@ -132,8 +133,8 @@ export function BrandCreatorDetailScreen() {
         </div>
       </Card>
 
-      <Section title={t('Verifierat på VYRLE')} action={<Button variant="ghost" size="sm" onClick={() => setMore((v) => !v)}>{more ? t('Dölj') : t('Visa mer')}</Button>}>
-        {more && ((c.totalVerifiedViews ?? 0) > 0 ? (
+      <Section title={c.totalVerifiedViews > 0 ? t('Verifierat på VYRLE') : t('Kampanjdata')} action={<Button variant="ghost" size="sm" onClick={() => setMore((v) => !v)}>{more ? t('Dölj') : t('Visa mer')}</Button>}>
+        {more && (c.totalVerifiedViews > 0 ? (
           <Card>
             <StatRow cols={3}>
               <StatTile plain label={t('Views')} value={formatNumber(c.totalVerifiedViews ?? 0)} />
@@ -144,9 +145,11 @@ export function BrandCreatorDetailScreen() {
             <StatRow cols={3}>
               <StatTile plain label={t('Kommentarer')} value={formatNumber(c.totalComments ?? 0)} />
               <StatTile plain label={t('Delningar')} value={formatNumber(c.totalShares ?? 0)} />
-              <StatTile plain label={t('Kampanjer')} value={String(c.completedCampaigns)} />
+              <StatTile plain label={t('Samarbeten')} value={String(c.completedCampaigns)} />
             </StatRow>
+            <div className="ds-facts" style={{ marginTop: 12 }}><div className="ds-fact"><span>{t('Intäkt / 1K views')}</span><span className="ds-num">{money(c.earningsPerThousandViews)}</span></div><div className="ds-fact"><span>{t('Godkännandegrad')}</span><span className="ds-num">{c.totalVideos > 0 ? `${Math.round(c.approvalRate)} % (${c.approvedVideos}/${c.totalVideos})` : '–'}</span></div><div className="ds-fact"><span>{t('Nivå')}</span><span>{c.level}</span></div></div>
             <p className="ds-caption ds-muted" style={{ marginTop: 8 }}>{t('Uppmätt av VYRLE på kampanjvideos — inte självrapporterat.')}</p>
+            <SourceNote source="vyrle" at={c.metricsUpdatedAt} scope={`${c.verifiedPostCount} ${t('verifierade videor, alla kampanjer')}`} />
           </Card>
         ) : <Card><p className="ds-body ds-muted">{t('Inga verifierade kampanjvideos ännu — siffrorna dyker upp när creatorn kört sin första kampanj.')}</p></Card>)}
       </Section>
@@ -159,7 +162,7 @@ export function BrandCreatorDetailScreen() {
                 {it.mediaType === 'TikTok' ? <div className="ds-embed"><TikTokEmbed videoUrl={it.mediaUrl} compact /></div>
                   : <a href={it.mediaUrl} target="_blank" rel="noopener noreferrer" className="ds-media">{(it.thumbnailUrl || it.mediaType === 'Image') ? <img src={it.thumbnailUrl || it.mediaUrl} alt="" /> : <span className="ds-caption" style={{ padding: 12, textAlign: 'center' }}>{it.title}</span>}{it.isFeatured && <span className="ds-media-tag">{t('Utvald')}</span>}</a>}
                 <div className="ds-caption" style={{ marginTop: 4, fontWeight: 600 }}>{it.title}</div>
-                {it.brandName && <div className="ds-caption ds-muted">{it.brandName}</div>}
+                {it.brandName && <div className="ds-caption ds-muted">{it.brandName} · {it.brandVerified ? t('verifierat samarbete') : t('ej verifierat')}</div>}
               </div>
             ))}
           </div>

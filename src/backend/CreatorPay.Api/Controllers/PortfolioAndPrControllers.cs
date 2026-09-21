@@ -18,6 +18,11 @@ public class PortfolioController : BaseController
     public async Task<IActionResult> GetMine(CancellationToken ct)
         => ToActionResult(await _portfolio.GetMyPortfolioAsync(GetUserId(), ct));
 
+    /// <summary>Verifierade samarbeten som ett portföljobjekt kan kopplas till</summary>
+    [HttpGet("collaborations")]
+    public async Task<IActionResult> Collaborations(CancellationToken ct)
+        => ToActionResult(await _portfolio.GetMyCollaborationsAsync(GetUserId(), ct));
+
     /// <summary>Lägg till ett portföljobjekt</summary>
     [HttpPost]
     public async Task<IActionResult> Add([FromBody] CreatePortfolioItemRequest request, CancellationToken ct)

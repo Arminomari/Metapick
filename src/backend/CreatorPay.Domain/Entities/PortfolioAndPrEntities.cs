@@ -17,10 +17,17 @@ public class PortfolioItem : BaseEntity
     public string MediaUrl { get; set; } = null!;
     public string? ThumbnailUrl { get; set; }
     public string? Category { get; set; }
-    /// <summary>Brand/restaurant this work was made for (optional case-study label).</summary>
+    /// <summary>
+    /// Brand this work was made for. When <see cref="CampaignId"/> or
+    /// <see cref="UgcCollabId"/> is set the name is copied from that real VYRLE
+    /// collaboration and the item counts as verified; otherwise it is the
+    /// creator's own unverified claim.
+    /// </summary>
     public string? BrandName { get; set; }
-    public long? Views { get; set; }
-    public long? Likes { get; set; }
+    public Guid? BrandProfileId { get; set; }
+    public Guid? CampaignId { get; set; }
+    public Guid? UgcCollabId { get; set; }
+    public bool BrandVerified => CampaignId.HasValue || UgcCollabId.HasValue;
     public int SortOrder { get; set; }
     public bool IsFeatured { get; set; }
 

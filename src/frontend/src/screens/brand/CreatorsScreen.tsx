@@ -113,7 +113,7 @@ function InviteSheet({ open, onClose, existing }: { open: boolean; onClose: () =
             <label key={c.id} className="ds-listrow" style={{ cursor: 'pointer', minHeight: 56 }}>
               <input type="checkbox" checked={picked.includes(c.id)} onChange={() => setPicked((p) => p.includes(c.id) ? p.filter((x) => x !== c.id) : [...p, c.id])} style={{ width: 20, height: 20, accentColor: 'var(--ds-accent)' }} />
               <Avatar name={c.displayName} src={c.avatarUrl} size="sm" />
-              <div className="ds-listrow-main"><div className="ds-listrow-title"><span>{c.displayName}</span></div><div className="ds-listrow-sub">{c.category}{c.tikTokUsername ? ` · @${c.tikTokUsername}` : ''} · {formatNumber(c.followerCount ?? 0)} {t('följare')}</div></div>
+              <div className="ds-listrow-main"><div className="ds-listrow-title"><span>{c.displayName}</span></div><div className="ds-listrow-sub">{c.category}{c.tikTokUsername ? ` · @${c.tikTokUsername}` : ''} · {c.tikTokVerified ? `${formatNumber(c.tikTokFollowerCount)} ${t('följare')}` : t('TikTok ej verifierat')}</div></div>
             </label>
           ))}
         </List>
@@ -127,7 +127,7 @@ function Find() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [input, setInput] = useState('');
-  const [f, setF] = useState({ category: '', country: '', minFollowers: '', tag: '', openToPrOffers: false, sort: 'followers' });
+  const [f, setF] = useState({ category: '', country: '', minFollowers: '', tag: '', openToPrOffers: false, sort: 'views' });
   const [draft, setDraft] = useState(f);
   const [filters, setFilters] = useState(false);
   const [page, setPage] = useState(1);
@@ -145,19 +145,20 @@ function Find() {
           <span className="ds-caption ds-muted">{plural(data.totalCount, t('creator'), t('creators'))}</span>
           <List>
             {data.data.map((c) => {
-              const followers = Math.max(c.followerCount, c.tikTokFollowerCount, c.instagramFollowerCount);
-              return <ListRow key={c.id} leading={<Avatar name={c.displayName} src={c.avatarUrl} />} title={c.displayName} badge={c.openToPrOffers ? <Badge tone="ok">{t('Öppen för PR')}</Badge> : undefined} subtitle={`${c.category} · ${c.country} · ${formatNumber(followers)} ${t('följare')}${c.reviewCount > 0 ? ` · ★ ${c.averageRating.toFixed(1)}` : ''}`} onClick={() => navigate(`/brand/creators/${c.id}`)} />;
+              // Verified performance first; followers only from an OAuth-verified TikTok connection.
+              const followers = c.tikTokVerified ? `${formatNumber(c.tikTokFollowerCount)} ${t('följare')}` : t('TikTok ej verifierat');
+              return <ListRow key={c.id} leading={<Avatar name={c.displayName} src={c.avatarUrl} />} title={c.displayName} badge={c.tikTokVerified ? <Badge tone="ok">{t('Verifierad')}</Badge> : c.openToPrOffers ? <Badge tone="neutral">{t('Öppen för PR')}</Badge> : undefined} subtitle={`${formatNumber(c.totalVerifiedViews)} ${t('verifierade views')} · ${followers} · ${c.category}${c.reviewCount > 0 ? ` · ★ ${c.averageRating.toFixed(1)}` : ''}`} wrapSubtitle onClick={() => navigate(`/brand/creators/${c.id}`)} />;
             })}
           </List>
           {pages > 1 && <div className="ds-row" style={{ justifyContent: 'space-between' }}><Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>{t('Föregående')}</Button><span className="ds-caption ds-muted">{page} / {pages}</span><Button variant="secondary" size="sm" disabled={page >= pages} onClick={() => setPage(page + 1)}>{t('Nästa')}</Button></div>}
         </>
       )}
-      <BottomSheet open={filters} onClose={() => setFilters(false)} title={t('Filter')} footer={<><Button variant="secondary" onClick={() => { setDraft({ category: '', country: '', minFollowers: '', tag: '', openToPrOffers: false, sort: 'followers' }); }}>{t('Rensa')}</Button><Button onClick={() => { setF(draft); setPage(1); setFilters(false); }}>{t('Visa resultat')}</Button></>}>
+      <BottomSheet open={filters} onClose={() => setFilters(false)} title={t('Filter')} footer={<><Button variant="secondary" onClick={() => { setDraft({ category: '', country: '', minFollowers: '', tag: '', openToPrOffers: false, sort: 'views' }); }}>{t('Rensa')}</Button><Button onClick={() => { setF(draft); setPage(1); setFilters(false); }}>{t('Visa resultat')}</Button></>}>
         <Field label={t('Kategori')}><select value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })}><option value="">{t('Alla')}</option>{CATEGORIES.map((c) => <option key={c} value={c}>{t(c)}</option>)}</select></Field>
         <Field label={t('Land')}><select value={draft.country} onChange={(e) => setDraft({ ...draft, country: e.target.value })}><option value="">{t('Alla')}</option><option value="SE">{t('Sverige')}</option><option value="NO">{t('Norge')}</option><option value="DK">{t('Danmark')}</option><option value="FI">{t('Finland')}</option></select></Field>
-        <Field label={t('Minst antal följare')}><input inputMode="numeric" value={draft.minFollowers} onChange={(e) => setDraft({ ...draft, minFollowers: e.target.value.replace(/\D/g, '') })} placeholder="5000" /></Field>
+        <Field label={t('Minst antal följare')} hint={t('Räknar bara TikTok-konton kopplade via OAuth.')}><input inputMode="numeric" value={draft.minFollowers} onChange={(e) => setDraft({ ...draft, minFollowers: e.target.value.replace(/\D/g, '') })} placeholder="5000" /></Field>
         <Field label={t('Expertis')}><select value={draft.tag} onChange={(e) => setDraft({ ...draft, tag: e.target.value })}><option value="">{t('Alla taggar')}</option>{ALL_TAGS.map((tg) => <option key={tg} value={tg}>{tg}</option>)}</select></Field>
-        <Field label={t('Sortera')}><select value={draft.sort} onChange={(e) => setDraft({ ...draft, sort: e.target.value })}><option value="followers">{t('Flest följare')}</option><option value="rating">{t('Högst betyg')}</option><option value="views">{t('Snittvisningar')}</option><option value="recent">{t('Senast tillkomna')}</option></select></Field>
+        <Field label={t('Sortera')}><select value={draft.sort} onChange={(e) => setDraft({ ...draft, sort: e.target.value })}><option value="views">{t('Flest verifierade views')}</option><option value="epm">{t('Bäst intäkt / 1K views')}</option><option value="approval">{t('Högst godkännandegrad')}</option><option value="active">{t('Senast aktiva')}</option><option value="rating">{t('Högst betyg')}</option><option value="followers">{t('Flest följare (verifierade)')}</option><option value="recent">{t('Senast tillkomna')}</option></select></Field>
         <Checkbox label={t('Endast öppna för PR-erbjudanden')} checked={draft.openToPrOffers} onChange={(e) => setDraft({ ...draft, openToPrOffers: e.target.checked })} />
       </BottomSheet>
     </>

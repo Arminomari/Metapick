@@ -22,6 +22,16 @@ public class BrandController : BaseController
     [HttpPut("profile")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateBrandProfileRequest request)
         => ToActionResult(await _brands.UpdateProfileAsync(GetUserId(), request));
+
+    /// <summary>Kör registerkontrollen av organisationsnumret igen</summary>
+    [HttpPost("profile/verify-org")]
+    public async Task<IActionResult> VerifyOrg()
+        => ToActionResult(await _brands.VerifyOrgAsync(GetUserId()));
+
+    /// <summary>Serverberäknad statistik över företagets kampanjer (aktiva, pausade, avslutade)</summary>
+    [HttpGet("analytics/summary")]
+    public async Task<IActionResult> AnalyticsSummary([FromServices] IBrandAnalyticsService analytics, CancellationToken ct)
+        => ToActionResult(await analytics.GetSummaryAsync(GetUserId(), ct));
 }
 
 /// <summary>Community-inlägg på företagets profil.</summary>

@@ -11,8 +11,8 @@ import { FEATURES } from '@/lib/features';
 import { CATEGORIES } from '@/lib/categories';
 import { ALL_TAGS } from '@/lib/tags';
 import { useAuthStore } from '@/stores/authStore';
-import { useCreatorProfile, useUpdateCreatorProfile, useUserReviews, usePortfolio, useAddPortfolioItem, useUpdatePortfolioItem, useDeletePortfolioItem, useCreatorAssignments, useCreatorPayouts, useTikTokStatus } from '@/hooks/api';
-import { usePayables } from '@/hooks/extra';
+import { useCreatorProfile, useUpdateCreatorProfile, useUserReviews, usePortfolio, useAddPortfolioItem, useUpdatePortfolioItem, useDeletePortfolioItem, useTikTokStatus, useCreatorAnalytics, useCreatorCollaborations } from '@/hooks/api';
+import { SourceNote } from '@/components/app/SourceNote';
 import { useToast } from '@/components/vyrle/Toast';
 import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
 import { ImagePicker } from '@/components/auth/ImagePicker';
@@ -23,17 +23,24 @@ import { MoreMenu, NotifBell, apiMessage } from '@/components/app/common';
 import { ReviewList } from '@/components/app/Reviews';
 import { money } from '@/lib/utils';
 
-export const TIERS = [{ name: 'Rising', min: 0 }, { name: 'Established', min: 5000 }, { name: 'Pro', min: 25000 }, { name: 'Elite', min: 100000 }, { name: 'Icon', min: 500000 }];
-/** Lifetime paid-out amount. Payout requests are "Completed" when paid; the old page looked for "Paid" and always read 0. */
+/** Creator level as the server computed it from money actually paid out; the ladder comes with it. */
 export function useLevel() {
-  const { data: pay } = useCreatorPayouts(undefined, 1);
-  const paid = (pay?.data ?? []).filter((p) => p.status === 'Completed' || p.status === 'Paid').reduce((s, p) => s + p.amount, 0);
-  let idx = 0; for (let i = 0; i < TIERS.length; i++) if (paid >= TIERS[i].min) idx = i;
-  return { paid, idx, tier: TIERS[idx], next: TIERS[idx + 1] };
+  const { data } = useCreatorAnalytics();
+  const l = data?.level;
+  return {
+    paid: l?.totalPaid ?? 0,
+    idx: l?.index ?? 0,
+    tier: { name: l?.name ?? 'Rising', min: l?.minPaid ?? 0 },
+    next: l?.nextName != null ? { name: l.nextName, min: l.nextMinPaid ?? 0 } : undefined,
+    tiers: (l?.tiers ?? []).map((x) => ({ name: x.name, min: x.minPaid })),
+    progress: l?.progressPercent ?? 0,
+    loaded: !!l,
+  };
 }
 
 const MEDIA: { value: PortfolioMediaType; label: string }[] = [{ value: 'TikTok', label: t('TikTok-video') }, { value: 'Instagram', label: t('Instagram-inlägg') }, { value: 'Video', label: t('Video (länk)') }, { value: 'Image', label: t('Bild') }, { value: 'Link', label: t('Annan länk') }];
-const emptyItem = { title: '', description: '', mediaType: 'TikTok' as PortfolioMediaType, mediaUrl: '', thumbnailUrl: '', category: '', brandName: '', isFeatured: false };
+const emptyItem = { title: '', description: '', mediaType: 'TikTok' as PortfolioMediaType, mediaUrl: '', thumbnailUrl: '', category: '', brandName: '', isFeatured: false, link: '' };
+const linkKey = (kind: string, id: string) => `${kind}:${id}`;
 
 export function CreatorProfileScreen() {
   const navigate = useNavigate();
@@ -43,8 +50,8 @@ export function CreatorProfileScreen() {
   const { data: p, isLoading } = useCreatorProfile();
   const { data: items = [] } = usePortfolio();
   const { data: reviews } = useUserReviews(p?.userId ?? '');
-  const { data: asg } = useCreatorAssignments(undefined, 1, 100);
-  const { data: payables = [] } = usePayables();
+  const { data: stats } = useCreatorAnalytics();
+  const { data: collabs = [] } = useCreatorCollaborations();
   const add = useAddPortfolioItem();
   const update = useUpdatePortfolioItem();
   const remove = useDeletePortfolioItem();
@@ -54,20 +61,22 @@ export function CreatorProfileScreen() {
   useEffect(() => { if (params.get('add') === '1') { setEditing({ form: { ...emptyItem } }); const n = new URLSearchParams(params); n.delete('add'); setParams(n, { replace: true }); } /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [params.get('add')]);
   if (isLoading || !p) return <Page><PageHead title={t('Profil')} /><SkeletonList rows={3} /></Page>;
 
-  const views = (asg?.data ?? []).reduce((s, a) => s + a.totalVerifiedViews, 0);
-  const available = payables.reduce((s, x) => s + x.available, 0);
+  const views = stats?.totalVerifiedViews ?? 0;
+  const available = stats?.availableToWithdraw ?? 0;
   const saveItem = async () => {
     if (!editing) return; setError('');
     const f = editing.form;
     if (!f.title.trim()) { setError(t('Titel krävs')); return; }
     try { new URL(f.mediaUrl); } catch { setError(t('Media-URL måste vara en giltig länk (https://…)')); return; }
-    const payload = { title: f.title.trim(), description: f.description.trim() || undefined, mediaType: f.mediaType, mediaUrl: f.mediaUrl.trim(), thumbnailUrl: f.thumbnailUrl.trim() || undefined, category: f.category.trim() || undefined, brandName: f.brandName.trim() || undefined, isFeatured: f.isFeatured };
+    // A linked collaboration makes the brand verified; only an unlinked item keeps the typed name.
+    const [linkKind, linkId] = f.link ? f.link.split(':') : ['', ''];
+    const payload = { title: f.title.trim(), description: f.description.trim() || undefined, mediaType: f.mediaType, mediaUrl: f.mediaUrl.trim(), thumbnailUrl: f.thumbnailUrl.trim() || undefined, category: f.category.trim() || undefined, brandName: f.link ? undefined : (f.brandName.trim() || undefined), isFeatured: f.isFeatured, campaignId: linkKind === 'Campaign' || linkKind === 'Tap' ? linkId : null, ugcCollabId: linkKind === 'Ugc' ? linkId : null };
     try {
       if (editing.id) await update.mutateAsync({ id: editing.id, ...payload, sortOrder: items.find((i) => i.id === editing.id)?.sortOrder ?? 0 }); else await add.mutateAsync(payload);
       setEditing(null); toast.push(t('Sparat'), 'success');
     } catch (e) { setError(apiMessage(e, t('Kunde inte spara'))); }
   };
-  const startEdit = (it: PortfolioItem) => setEditing({ id: it.id, form: { title: it.title, description: it.description ?? '', mediaType: it.mediaType, mediaUrl: it.mediaUrl, thumbnailUrl: it.thumbnailUrl ?? '', category: it.category ?? '', brandName: it.brandName ?? '', isFeatured: it.isFeatured } });
+  const startEdit = (it: PortfolioItem) => setEditing({ id: it.id, form: { title: it.title, description: it.description ?? '', mediaType: it.mediaType, mediaUrl: it.mediaUrl, thumbnailUrl: it.thumbnailUrl ?? '', category: it.category ?? '', brandName: it.brandName ?? '', isFeatured: it.isFeatured, link: it.campaignId ? linkKey(collabs.find((c) => c.id === it.campaignId)?.kind ?? 'Campaign', it.campaignId) : it.ugcCollabId ? linkKey('Ugc', it.ugcCollabId) : '' } });
 
   return (
     <Page>
@@ -85,15 +94,16 @@ export function CreatorProfileScreen() {
         {p.profileTags.length > 0 && <div className="ds-tags" style={{ marginTop: 10 }}>{p.profileTags.map((tg) => <span key={tg} className="ds-tag">{tg}</span>)}</div>}
         <div style={{ marginTop: 14 }}>
           <StatRow cols={3}>
-            <StatTile plain label={t('Följare')} value={formatNumber(p.followerCount)} />
             <StatTile plain label={t('Verifierade views')} value={formatNumber(views)} />
+            <StatTile plain label={t('Följare')} value={p.tikTokVerified ? formatNumber(p.followerCount) : '–'} hint={p.tikTokVerified ? 'TikTok' : t('TikTok ej verifierat')} />
             <StatTile plain label={t('Omdöme')} value={reviews && reviews.totalReviews > 0 ? reviews.averageStars.toFixed(1) : '–'} hint={reviews && reviews.totalReviews > 0 ? `${reviews.totalReviews} ${t('omdömen')}` : undefined} />
           </StatRow>
+          <SourceNote source="tiktok" at={stats?.metricsUpdatedAt} scope={t('alla dina kampanjvideos')} />
         </div>
-        <div className="ds-row" style={{ marginTop: 14 }}>
+        <div className="ds-row ds-row--wrap" style={{ marginTop: 14 }}>
           <Button variant="secondary" full onClick={() => navigate('/creator/profile/edit')}>{t('Redigera profil')}</Button>
           {p.tikTokUsername && <Button variant="secondary" size="sm" onClick={() => window.open(`https://www.tiktok.com/@${p.tikTokUsername}`, '_blank', 'noopener')}>TikTok</Button>}
-          {p.instagramUsername && <Button variant="secondary" size="sm" onClick={() => window.open(`https://www.instagram.com/${p.instagramUsername}`, '_blank', 'noopener')}>Instagram</Button>}
+          {p.instagramUsername && <Button variant="secondary" size="sm" onClick={() => window.open(`https://www.instagram.com/${p.instagramUsername}`, '_blank', 'noopener')}>{`Instagram · ${t('ej verifierad')}`}</Button>}
         </div>
       </Card>
 
@@ -105,7 +115,7 @@ export function CreatorProfileScreen() {
                 {it.mediaType === 'TikTok' ? <div className="ds-embed"><TikTokEmbed videoUrl={it.mediaUrl} compact /></div>
                   : <a href={it.mediaUrl} target="_blank" rel="noopener noreferrer" className="ds-media">{(it.thumbnailUrl || it.mediaType === 'Image') ? <img src={it.thumbnailUrl || it.mediaUrl} alt="" /> : <span className="ds-caption" style={{ padding: 12, textAlign: 'center' }}>{it.title}</span>}{it.isFeatured && <span className="ds-media-tag">{t('Utvald')}</span>}</a>}
                 <div className="ds-row" style={{ marginTop: 2 }}>
-                  <div className="ds-grow"><div className="ds-caption" style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</div>{it.brandName && <div className="ds-caption ds-muted">{it.brandName}</div>}</div>
+                  <div className="ds-grow"><div className="ds-caption" style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</div>{it.brandName && <div className="ds-caption ds-muted">{it.brandName} · {it.brandVerified ? t('verifierat samarbete') : t('ej verifierat')}</div>}</div>
                   <MoreMenu title={it.title} items={[{ label: t('Redigera'), onClick: () => startEdit(it) }, { label: t('Ta bort'), danger: true, onClick: () => remove.mutate(it.id, { onSuccess: () => toast.push(t('Borttaget ur portföljen'), 'success'), onError: () => toast.push(t('Kunde inte ta bort'), 'error') }) }]} />
                 </div>
               </div>
@@ -136,7 +146,8 @@ export function CreatorProfileScreen() {
             <Field label={t('Beskrivning')}><textarea rows={2} value={editing.form.description} onChange={(e) => setEditing({ ...editing, form: { ...editing.form, description: e.target.value } })} placeholder={t('Vad gjorde du? Vilket resultat?')} /></Field>
             <div className="ds-kv">
               <Field label={t('Kategori')}><input value={editing.form.category} onChange={(e) => setEditing({ ...editing, form: { ...editing.form, category: e.target.value } })} /></Field>
-              <Field label={t('Varumärke')}><input value={editing.form.brandName} onChange={(e) => setEditing({ ...editing, form: { ...editing.form, brandName: e.target.value } })} /></Field>
+              <Field label={t('Samarbete')} hint={t('Välj ett samarbete på VYRLE så visas varumärket som verifierat. Fritext visas alltid som ej verifierat.')}><select value={editing.form.link} onChange={(e) => setEditing({ ...editing, form: { ...editing.form, link: e.target.value } })}><option value="">{t('Inget VYRLE-samarbete (fritext)')}</option>{collabs.map((c) => <option key={linkKey(c.kind, c.id)} value={linkKey(c.kind, c.id)}>{c.brandName} · {c.title}</option>)}</select></Field>
+              {!editing.form.link && <Field label={`${t('Varumärke')} (${t('ej verifierat')})`}><input value={editing.form.brandName} onChange={(e) => setEditing({ ...editing, form: { ...editing.form, brandName: e.target.value } })} placeholder={t('Valfritt')} /></Field>}
             </div>
             <Checkbox label={t('Markera som utvald (visas först)')} checked={editing.form.isFeatured} onChange={(e) => setEditing({ ...editing, form: { ...editing.form, isFeatured: e.target.checked } })} />
           </>

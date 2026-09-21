@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { t } from '@/lib/i18n';
 import { formatDate, formatNumber, money } from '@/lib/utils';
 import { useBrandProfile, useCreatorPublicProfile } from '@/hooks/api';
-import { useUgcBrandCampaign, useSaveUgcCampaign, useUgcCampaignAction, useUgcCampaignApplications, useUgcApplicationDecision, useUgcDirectInvite, formatOre, kronorToOre, oreToKronor, COMPENSATION_LABEL, RIGHTS_LABEL, RIGHTS_HINT, UGC_CATEGORIES, UGC_REGIONS, apiError, type UgcBrief, type UpsertUgcCampaign, type UgcApplication } from '@/hooks/ugc';
+import { useUgcBrandCampaign, useSaveUgcCampaign, useUgcCampaignAction, useUgcCampaignApplications, useUgcApplicationDecision, useUgcDirectInvite, formatOre, kronorToOre, oreToKronor, COMPENSATION_LABEL, RIGHTS_LABEL, RIGHTS_HINT, UGC_CATEGORIES, UGC_REGIONS, apiError, useUgcSettings, type UgcBrief, type UpsertUgcCampaign, type UgcApplication } from '@/hooks/ugc';
 import { useToast } from '@/components/vyrle/Toast';
 import { Avatar, Badge, BottomSheet, Button, Card, Field, List, ListRow, Page, PageHead, Section, SkeletonList, StatRow, StatTile, StickyAction } from '@/components/ds';
 import { MoreMenu } from '@/components/app/common';
@@ -19,8 +19,11 @@ function ListField({ label, values, onChange, placeholder }: { label: string; va
   return <Field label={label} hint={t('En per rad')}><textarea rows={Math.min(5, Math.max(2, text.split('\n').length))} value={text} onChange={(e) => { setText(e.target.value); onChange(toLines(e.target.value)); }} placeholder={placeholder} /></Field>;
 }
 function FeeNote({ amountOre }: { amountOre: number }) {
-  const fee = Math.round(amountOre * 0.15);
-  return <p className="ds-caption ds-muted">{t('Vid')} {formatOre(amountOre)} {t('till creatorn betalar ni')} <strong>{formatOre(amountOre + fee)}</strong> {t('inkl. VYRLE:s avgift')} (15 %). {t('Creatorn får exakt sitt bud.')}</p>;
+  // The fee percent comes from server settings — the same value the contract is generated with.
+  const { data: settings } = useUgcSettings();
+  if (settings == null) return null;
+  const fee = Math.round((amountOre * settings.feePercent) / 100);
+  return <p className="ds-caption ds-muted">{t('Vid')} {formatOre(amountOre)} {t('till creatorn betalar ni')} <strong>{formatOre(amountOre + fee)}</strong> {t('inkl. VYRLE:s avgift')} ({settings.feePercent} %). {t('Creatorn får exakt sitt bud.')}</p>;
 }
 function OrgNotice() {
   const { data: profile } = useBrandProfile();

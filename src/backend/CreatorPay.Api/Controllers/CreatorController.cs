@@ -30,6 +30,12 @@ public class CreatorController : BaseController
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateCreatorProfileRequest request)
         => ToActionResult(await _creators.UpdateProfileAsync(GetUserId(), request));
 
+    /// <summary>Serverberäknad statistik: verifierade views, intäkter, nivå</summary>
+    [HttpGet("analytics")]
+    [Authorize(Policy = "CreatorOnly")]
+    public async Task<IActionResult> Analytics([FromServices] ICreatorAnalyticsService analytics, CancellationToken ct)
+        => ToActionResult(await analytics.GetAsync(GetUserId(), ct));
+
     /// <summary>Get TikTok OAuth authorization URL</summary>
     [HttpGet("tiktok/auth-url")]
     [Authorize(Policy = "CreatorOnly")]

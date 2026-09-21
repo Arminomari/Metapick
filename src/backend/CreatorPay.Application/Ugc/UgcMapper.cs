@@ -1,6 +1,7 @@
 using CreatorPay.Domain.Entities;
 using CreatorPay.Domain.Enums;
 using CreatorPay.Domain.Ugc;
+using CreatorPay.Domain.Common;
 
 namespace CreatorPay.Application.Ugc;
 
@@ -29,21 +30,25 @@ public static class UgcMapper
 
     public static UgcCampaignDto Campaign(UgcCampaign c, string brandName, string? brandLogo,
         int hired, int applications, int pending,
-        UgcApplication? mine = null, Guid? myCollabId = null) => new(
+        UgcApplication? mine = null, Guid? myCollabId = null, decimal feePercent = UgcFeeCalculator.DefaultFeePercent) => new(
         c.Id, c.BrandProfileId, brandName, brandLogo, c.Title, Brief(c), c.BriefGeneratedByAi,
         c.Region, c.Categories, c.MinFollowers, c.MaxFollowers,
         c.Compensation.ToString(), c.BudgetMinOre, c.BudgetMaxOre, c.ProductDescription, c.ProductValueOre,
         c.RightsPackage.ToString(), c.DeadlineDays, c.Slots,
         hired, applications, pending,
         c.Status.ToString(), c.PublishedAt, c.ClosedAt, c.CreatedAt,
-        mine?.Status.ToString(), mine?.Id, mine?.BidOre, myCollabId);
+        mine?.Status.ToString(), mine?.Id, mine?.BidOre, myCollabId, feePercent);
 
     public static UgcApplicationDto Application(UgcApplication a, UgcCampaign campaign, CreatorProfile creator, UgcCreatorProfile? ugc, Guid? collabId) => new(
         a.Id, a.CampaignId, campaign.Title,
         a.CreatorProfileId, creator.DisplayName, creator.AvatarUrl, creator.Category,
-        ugc?.City, ugc?.Region, Math.Max(creator.FollowerCount, ugc?.FollowerSnapshot ?? 0), ugc?.LikeFollowerRatio ?? 0,
+        ugc?.City, ugc?.Region,
+        // Followers only from a verified TikTok connection; a typed handle shows 0.
+        creator.TikTokAccount.IsVerified() ? Math.Max(creator.TikTokAccount!.FollowerCount, ugc?.FollowerSnapshot ?? 0) : 0,
+        ugc?.LikeFollowerRatio ?? 0,
         ugc?.DeliveredCount ?? 0, ugc?.OnTimeCount ?? 0, ugc?.AverageRating ?? 0, ugc?.RatingCount ?? 0, (ugc?.Status ?? UgcCreatorStatus.Pending).ToString(),
-        a.BidOre, a.Pitch, a.Status.ToString(), a.CreatedAt, a.DecidedAt, a.DecisionNote, collabId);
+        a.BidOre, a.Pitch, a.Status.ToString(), a.CreatedAt, a.DecidedAt, a.DecisionNote, collabId,
+        creator.TikTokAccount.IsVerified(), ugc?.SocialSnapshotAt);
 
     public static UgcCreatorProfileDto CreatorProfile(CreatorProfile c, UgcCreatorProfile p, UgcSettings s)
     {

@@ -25,6 +25,8 @@ export interface UgcCampaign {
   deadlineDays: number; slots: number; hiredCount: number; applicationCount: number; pendingApplicationCount: number;
   status: 'Draft' | 'Published' | 'Closed'; publishedAt?: string | null; closedAt?: string | null; createdAt: string;
   myApplicationStatus?: string | null; myApplicationId?: string | null; myBidOre?: number | null; myCollabId?: string | null;
+  /** Platform fee the brand pays on top — from server settings. */
+  feePercent: number;
 }
 
 export interface UpsertUgcCampaign {
@@ -37,6 +39,7 @@ export interface UgcApplication {
   id: string; campaignId: string; campaignTitle: string; creatorProfileId: string; creatorName: string; creatorAvatarUrl?: string | null;
   creatorCategory?: string | null; city?: string | null; region?: string | null; followers: number; likeFollowerRatio: number;
   deliveredCount: number; onTimeCount: number; averageRating: number; ratingCount: number; creatorStatus: string;
+  tikTokVerified: boolean; socialSnapshotAt?: string | null;
   bidOre: number; pitch: string; status: 'Applied' | 'Preselected' | 'Hired' | 'Rejected' | 'Withdrawn';
   createdAt: string; decidedAt?: string | null; decisionNote?: string | null; collabId?: string | null;
 }
@@ -283,3 +286,11 @@ export function useUgcAdminMarkFunded() {
   const qc = useQueryClient();
   return useMutation({ mutationFn: ({ id, reason }: { id: string; reason?: string }) => post<UgcCollab>(`/ugc/admin/collabs/${id}/mark-funded`, { reason }), onSuccess: () => qc.invalidateQueries({ queryKey: ['ugc'] }) });
 }
+
+/** Non-secret marketplace settings: the fee percent and deadlines the forms explain. */
+export interface UgcPublicSettings { feePercent: number; autoApproveDays: number; revisionDeadlineDays: number; maxRevisions: number }
+export const useUgcSettings = () => useQuery({
+  queryKey: ['ugc-settings'],
+  queryFn: async () => (await api.get<ApiResponse<UgcPublicSettings>>('/ugc/settings')).data.data,
+  staleTime: 600_000,
+});

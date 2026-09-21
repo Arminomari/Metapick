@@ -5,10 +5,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { BarChart3, LogOut, Settings } from 'lucide-react';
 import api from '@/lib/api';
 import { t, statusLabel } from '@/lib/i18n';
+import { formatDate } from '@/lib/utils';
 import { maskOrgNr } from '@/lib/masks';
 import { CATEGORIES } from '@/lib/categories';
 import { useAuthStore } from '@/stores/authStore';
-import { useBrandProfile, useUpdateBrandProfile } from '@/hooks/api';
+import { useBrandProfile, useUpdateBrandProfile, useVerifyOrg } from '@/hooks/api';
 import { useToast } from '@/components/vyrle/Toast';
 import { ImagePicker } from '@/components/auth/ImagePicker';
 import { Badge, BottomSheet, Button, Card, Field, List, ListRow, Page, PageHead, SkeletonList } from '@/components/ds';
@@ -43,12 +44,21 @@ export function BrandProfileScreen() {
   const { data: profile, isLoading } = useBrandProfile();
   const [post, setPost] = useState(params.get('post') === '1');
   useEffect(() => { if (params.get('post') === '1') { setPost(true); const n = new URLSearchParams(params); n.delete('post'); setParams(n, { replace: true }); } /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [params.get('post')]);
+  const verify = useVerifyOrg();
   const del = useMutation({ mutationFn: async (postId: string) => api.delete(`/brand/posts/${postId}`), onSuccess: () => { qc.invalidateQueries({ queryKey: ['brand-public'] }); toast.push(t('Inlägget är borttaget'), 'success'); }, onError: (e) => toast.push(apiMessage(e, t('Kunde inte ta bort')), 'error') });
   if (isLoading || !profile?.id) return <Page><PageHead title={t('Profil')} /><SkeletonList rows={3} /></Page>;
   return (
     <Page>
       <PageHead title={t('Profil')} actions={<NotifBell />} />
-      <div className="ds-row ds-row--wrap"><Badge tone={profile.status === 'Approved' ? 'ok' : 'warn'}>{statusLabel(profile.status)}</Badge>{!profile.organizationNumber && <Badge tone="warn">{t('Org.nr saknas')}</Badge>}<Button variant="ghost" size="sm" onClick={() => navigate('/brand/profile/edit')}>{t('Redigera profil')}</Button></div>
+      <div className="ds-row ds-row--wrap"><Badge tone={profile.status === 'Approved' ? 'ok' : 'warn'}>{statusLabel(profile.status)}</Badge>{!profile.organizationNumber ? <Badge tone="warn">{t('Org.nr saknas')}</Badge> : profile.orgVerified ? <Badge tone="ok">{t('Org.nr verifierat')}</Badge> : <Badge tone="warn">{t('Org.nr ej verifierat')}</Badge>}<Button variant="ghost" size="sm" onClick={() => navigate('/brand/profile/edit')}>{t('Redigera profil')}</Button></div>
+      {profile.organizationNumber && !profile.orgVerified && (
+        <Card>
+          <p className="ds-body">{t('Organisationsnumret kontrolleras mot momsregistret (VIES). Verifieringen krävs för att beställa video och visa "Verifierat företag".')}</p>
+          {profile.orgVerificationCheckedAt && <p className="ds-caption ds-muted" style={{ marginTop: 6 }}>{t('Senast kontrollerat')} {formatDate(profile.orgVerificationCheckedAt)}</p>}
+          <div style={{ marginTop: 10 }}><Button variant="secondary" loading={verify.isPending} onClick={() => verify.mutate(undefined, { onSuccess: () => toast.push(t('Organisationsnumret är verifierat'), 'success'), onError: (e) => toast.push(apiMessage(e, t('Kunde inte verifiera')), 'error') })}>{t('Verifiera igen')}</Button></div>
+        </Card>
+      )}
+      {profile.orgVerified && profile.orgVerifiedName && <p className="ds-caption ds-muted">{t('Registrerat namn')}: {profile.orgVerifiedName} · {profile.orgVerificationSource === 'Admin' ? t('verifierat av VYRLE') : t('verifierat mot momsregistret')}{profile.orgVerifiedAt ? ` · ${formatDate(profile.orgVerifiedAt)}` : ''}</p>}
       <BrandPublicView id={profile.id} ownView onDeletePost={(id) => del.mutate(id)} />
       <List>
         <ListRow leading={<BarChart3 />} title={t('Statistik')} to="/brand/analytics" />

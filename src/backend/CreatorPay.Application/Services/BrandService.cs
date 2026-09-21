@@ -1,10 +1,12 @@
 using CreatorPay.Application.Common;
 using CreatorPay.Application.DTOs;
 using CreatorPay.Application.Interfaces;
+using CreatorPay.Domain.Common;
 using CreatorPay.Domain.Entities;
 using CreatorPay.Domain.Enums;
 using CreatorPay.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace CreatorPay.Application.Services;
 
@@ -12,11 +14,15 @@ public class BrandService : IBrandService
 {
     private readonly IRepository<BrandProfile> _brands;
     private readonly IUnitOfWork _uow;
+    private readonly OrgVerificationService _orgVerification;
+    private readonly ILogger<BrandService> _logger;
 
-    public BrandService(IRepository<BrandProfile> brands, IUnitOfWork uow)
+    public BrandService(IRepository<BrandProfile> brands, IUnitOfWork uow, OrgVerificationService orgVerification, ILogger<BrandService> logger)
     {
         _brands = brands;
         _uow = uow;
+        _orgVerification = orgVerification;
+        _logger = logger;
     }
 
     public async Task<Result<BrandProfileDto>> GetProfileAsync(Guid userId)
@@ -39,12 +45,18 @@ public class BrandService : IBrandService
 
         // Org.nr is what lets a brand order video; it is normalised to XXXXXX-XXXX
         // and never blanked from here (leave the field empty to keep the old one).
+        // The number itself is user input; whether it is VERIFIED is decided by
+        // OrgVerificationService against the registry, never by this form.
+        var numberChanged = false;
         if (!string.IsNullOrWhiteSpace(request.OrganizationNumber))
         {
-            var digits = new string(request.OrganizationNumber.Where(char.IsDigit).ToArray());
-            if (digits.Length != 10)
+            var normalized = OrgNumber.Normalize(request.OrganizationNumber);
+            if (normalized == null)
                 return Errors.Validation("Organisationsnummer ska vara 10 siffror (XXXXXX-XXXX).");
-            brand.OrganizationNumber = $"{digits[..6]}-{digits[6..]}";
+            if (!OrgNumber.IsValid(normalized))
+                return Errors.Validation("Organisationsnumret är inte giltigt — kontrollsiffran stämmer inte.");
+            numberChanged = !string.Equals(brand.OrganizationNumber, normalized, StringComparison.Ordinal);
+            brand.OrganizationNumber = normalized;
         }
         if (request.LogoUrl != null)
         {
@@ -54,7 +66,38 @@ public class BrandService : IBrandService
             brand.LogoUrl = MediaValidation.Normalize(request.LogoUrl);
         }
 
+        if (brand.OrganizationNumber != null && (numberChanged || !brand.OrgVerified))
+            await TryVerifyAsync(brand, numberChanged);
+
         await _uow.SaveChangesAsync();
+        return MapToDto(brand);
+    }
+
+    /// <summary>Re-runs the registry check on demand (the "Verifiera igen" button).</summary>
+    public async Task<Result<BrandProfileDto>> VerifyOrgAsync(Guid userId)
+    {
+        var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == userId);
+        if (brand == null) return Errors.NotFound("Brand profile");
+        if (string.IsNullOrWhiteSpace(brand.OrganizationNumber))
+            return Errors.Validation("Lägg till organisationsnummer först.");
+
+        var outcome = await _orgVerification.VerifyAsync(brand, numberChanged: false);
+        await _uow.SaveChangesAsync();
+        if (!outcome.Verified) return Errors.Validation(outcome.Message);
+        return MapToDto(brand);
+    }
+
+    /// <summary>Admin decision after seeing registration documents; the only path besides the registry.</summary>
+    public async Task<Result<BrandProfileDto>> SetOrgVerifiedByAdminAsync(Guid brandId, Guid adminId, bool verified, string? registeredName)
+    {
+        var brand = await _brands.Query().FirstOrDefaultAsync(b => b.Id == brandId);
+        if (brand == null) return Errors.NotFound("Brand");
+        if (verified && string.IsNullOrWhiteSpace(brand.OrganizationNumber))
+            return Errors.Validation("Företaget saknar organisationsnummer.");
+        OrgVerificationService.SetByAdmin(brand, verified, registeredName);
+        brand.ReviewedBy = adminId;
+        await _uow.SaveChangesAsync();
+        _logger.LogInformation("Admin {AdminId} set OrgVerified={Verified} for brand {BrandId}", adminId, verified, brandId);
         return MapToDto(brand);
     }
 
@@ -84,6 +127,9 @@ public class BrandService : IBrandService
         brand.Status = BrandStatus.Approved;
         brand.ReviewedBy = adminId;
         brand.ReviewedAt = DateTime.UtcNow;
+        // Approval is a good moment to retry the registry if the number is still unverified.
+        if (!brand.OrgVerified && brand.OrganizationNumber != null)
+            await TryVerifyAsync(brand, numberChanged: false);
         await _uow.SaveChangesAsync();
         return MapToDto(brand);
     }
@@ -100,8 +146,15 @@ public class BrandService : IBrandService
         return MapToDto(brand);
     }
 
-    private static BrandProfileDto MapToDto(BrandProfile b) =>
+    private async Task TryVerifyAsync(BrandProfile brand, bool numberChanged)
+    {
+        try { await _orgVerification.VerifyAsync(brand, numberChanged); }
+        catch (Exception ex) { _logger.LogWarning(ex, "Org verification failed for brand {BrandId}", brand.Id); }
+    }
+
+    internal static BrandProfileDto MapToDto(BrandProfile b) =>
         new(b.Id, b.CompanyName, b.OrganizationNumber, b.Website,
             b.Industry, b.Country, b.Description, b.LogoUrl,
-            b.ContactPhone, b.Status.ToString(), b.CreatedAt);
+            b.ContactPhone, b.Status.ToString(), b.CreatedAt,
+            b.OrgVerified, b.OrgVerifiedAt, b.OrgVerifiedName, b.OrgVerificationSource, b.OrgVerificationCheckedAt);
 }

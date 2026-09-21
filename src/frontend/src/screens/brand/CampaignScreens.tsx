@@ -154,7 +154,7 @@ export function CampaignCreatorScreen() {
       <Section title={t('Videor')}>
         {videos.length === 0 ? <Card><p className="ds-body ds-muted">{t('Inga videor ännu')}</p></Card> : videos.map((v, i) => {
           const pend = v.submissionId && !['Approved', 'Rejected'].includes(v.status);
-          const hours = Math.max(0, 48 - Math.floor((Date.now() - +new Date(v.createdAt)) / 3600000));
+          const hours = v.autoApproveAt ? Math.max(0, Math.ceil((+new Date(v.autoApproveAt) - Date.now()) / 3600000)) : 0;
           return (
             <Card key={i}>
               <div className="ds-row ds-row--wrap"><StatusBadge status={v.status} /><span className="ds-caption ds-muted">{formatNumber(v.views)} views · {formatDate(v.createdAt)}</span>{pend && <span className="ds-caption" style={{ color: 'var(--ds-warn)', fontWeight: 600 }}>{hours > 0 ? `${t('auto-godkänns om')} ${hours} ${t('tim')}` : t('auto-godkänns inom kort')}</span>}</div>

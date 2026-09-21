@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueries, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import type { ChatConversationDto } from '@/types';
+import type { BrandAnalyticsSummary, CreatorAnalytics, CreatorCollaboration, UpdateCreatorProfileInput, PortfolioItemInput } from '@/types';
 import api from '@/lib/api';
 import type {
   ApiResponse,
@@ -76,7 +77,7 @@ export function useCreatorProfile() {
 export function useUpdateCreatorProfile() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (data: Partial<CreatorProfile> & { tikTokUsername?: string; dateOfBirth?: string }) => {
+    mutationFn: async (data: UpdateCreatorProfileInput) => {
       const res = await api.put<ApiResponse<CreatorProfile>>('/creator/profile', data);
       return res.data.data;
     },
@@ -541,7 +542,7 @@ export function useBrandProfile() {
   return useQuery({
     queryKey: ['brand-profile'],
     queryFn: async () => {
-      const res = await api.get<ApiResponse<{ id: string; companyName: string; organizationNumber?: string | null; website?: string; industry: string; description?: string; contactPhone?: string; status: string; logoUrl?: string | null }>>('/brand/profile');
+      const res = await api.get<ApiResponse<BrandProfile>>('/brand/profile');
       return res.data.data;
     },
   });
@@ -663,7 +664,7 @@ export function usePortfolio() {
 export function useAddPortfolioItem() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (data: Partial<PortfolioItem>) => {
+    mutationFn: async (data: PortfolioItemInput) => {
       const res = await api.post<ApiResponse<PortfolioItem>>('/creator/portfolio', data);
       return res.data.data;
     },
@@ -674,7 +675,7 @@ export function useAddPortfolioItem() {
 export function useUpdatePortfolioItem() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...data }: Partial<PortfolioItem> & { id: string }) => {
+    mutationFn: async ({ id, ...data }: PortfolioItemInput & { id: string }) => {
       const res = await api.put<ApiResponse<PortfolioItem>>(`/creator/portfolio/${id}`, data);
       return res.data.data;
     },
@@ -766,7 +767,7 @@ export function useReceivedPrOffers(status?: string, page = 1) {
   });
 }
 
-export interface ActionCounts { pendingApplications: number; pendingVideoReviews: number; awaitingYourVideo: number; pendingCommunityRequests: number; pendingTapReviews: number; unreadSupport: number; pendingCommunityInvites?: number }
+export interface ActionCounts { pendingApplications: number; pendingVideoReviews: number; awaitingYourVideo: number; pendingCommunityRequests: number; pendingTapReviews: number; unreadSupport: number; pendingCommunityInvites?: number; reviewWindowHours?: number }
 
 /** Red-dot counts for the sidebar — refreshed often enough to feel live. */
 export function useActionCounts(role: 'brand' | 'creator' | null) {
@@ -828,5 +829,49 @@ export function useWithdrawPrOffer() {
       qc.invalidateQueries({ queryKey: ['pr-sent'] });
       qc.invalidateQueries({ queryKey: ['pr-stats'] });
     },
+  });
+}
+
+// ── Brand profile (with organisation-number verification state) ──
+export interface BrandProfile {
+  id: string; companyName: string; organizationNumber?: string | null; website?: string; industry: string; description?: string;
+  contactPhone?: string; status: string; logoUrl?: string | null;
+  /** SYSTEM_COMPUTED: set by the VIES registry check or an admin, never by the form. */
+  orgVerified: boolean; orgVerifiedAt?: string | null; orgVerifiedName?: string | null; orgVerificationSource?: string | null; orgVerificationCheckedAt?: string | null;
+}
+
+/** Re-run the organisation-number registry check ("Verifiera igen"). */
+export function useVerifyOrg() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => (await api.post<ApiResponse<BrandProfile>>('/brand/profile/verify-org')).data.data,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['brand-profile'] }); qc.invalidateQueries({ queryKey: ['brand-public'] }); },
+  });
+}
+
+// ── Server-computed analytics ──
+/** Brand-wide summary: verified posts only, drafts never counted, insights gated on sample size. */
+export function useBrandAnalyticsSummary() {
+  return useQuery({
+    queryKey: ['brand-analytics-summary'],
+    queryFn: async () => (await api.get<ApiResponse<BrandAnalyticsSummary>>('/brand/analytics/summary')).data.data,
+    staleTime: 30_000,
+  });
+}
+
+/** Creator-wide summary: verified views, payout ledger, level. */
+export function useCreatorAnalytics() {
+  return useQuery({
+    queryKey: ['creator-analytics'],
+    queryFn: async () => (await api.get<ApiResponse<CreatorAnalytics>>('/creator/analytics')).data.data,
+    staleTime: 30_000,
+  });
+}
+
+/** Real collaborations a portfolio item can be attached to. */
+export function useCreatorCollaborations() {
+  return useQuery({
+    queryKey: ['creator-collaborations'],
+    queryFn: async () => (await api.get<ApiResponse<CreatorCollaboration[]>>('/creator/portfolio/collaborations')).data.data,
   });
 }

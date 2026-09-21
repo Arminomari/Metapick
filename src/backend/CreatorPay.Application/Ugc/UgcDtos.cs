@@ -35,7 +35,9 @@ public record UgcCampaignDto(
     string RightsPackage, int DeadlineDays, int Slots,
     int HiredCount, int ApplicationCount, int PendingApplicationCount,
     string Status, DateTime? PublishedAt, DateTime? ClosedAt, DateTime CreatedAt,
-    string? MyApplicationStatus = null, Guid? MyApplicationId = null, long? MyBidOre = null, Guid? MyCollabId = null);
+    string? MyApplicationStatus = null, Guid? MyApplicationId = null, long? MyBidOre = null, Guid? MyCollabId = null,
+    // The platform fee the brand pays on top of the creator amount — from server settings, never a client literal.
+    decimal FeePercent = 15m);
 
 public record UpsertUgcCampaignRequest(
     string Title, UgcBriefDto Brief,
@@ -46,12 +48,16 @@ public record UpsertUgcCampaignRequest(
 public record GenerateUgcBriefRequest(string? Goal, string? ProductOrService, string? Audience, string? Tone, string? Extra);
 
 // ── Application (bid) ──────────────────────────────────────────────
+/// <summary>Non-secret marketplace settings the client needs to explain prices and deadlines.</summary>
+public record UgcPublicSettingsDto(decimal FeePercent, int AutoApproveDays, int RevisionDeadlineDays, int MaxRevisions);
+
 public record UgcApplicationDto(
     Guid Id, Guid CampaignId, string CampaignTitle,
     Guid CreatorProfileId, string CreatorName, string? CreatorAvatarUrl, string? CreatorCategory,
     string? City, string? Region, int Followers, decimal LikeFollowerRatio,
     int DeliveredCount, int OnTimeCount, decimal AverageRating, int RatingCount, string CreatorStatus,
-    long BidOre, string Pitch, string Status, DateTime CreatedAt, DateTime? DecidedAt, string? DecisionNote, Guid? CollabId);
+    long BidOre, string Pitch, string Status, DateTime CreatedAt, DateTime? DecidedAt, string? DecisionNote, Guid? CollabId,
+    bool TikTokVerified = false, DateTime? SocialSnapshotAt = null);
 
 public record ApplyToUgcCampaignRequest(long BidOre, string Pitch);
 public record DecideUgcApplicationRequest(string? Note);

@@ -37,13 +37,14 @@ public sealed class UgcCampaignService : IUgcCampaignService
     private readonly INotificationService _notify;
     private readonly IUgcBriefGenerator _brief;
     private readonly ILogger<UgcCampaignService> _logger;
+    private readonly UgcSettings _settings;
 
     public UgcCampaignService(IRepository<UgcCampaign> campaigns, IRepository<UgcApplication> applications, IRepository<UgcCollab> collabs,
         IRepository<BrandProfile> brands, IRepository<CreatorProfile> creators, IRepository<UgcCreatorProfile> ugcCreators,
-        IUnitOfWork uow, INotificationService notify, IUgcBriefGenerator brief, ILogger<UgcCampaignService> logger)
+        IUnitOfWork uow, INotificationService notify, IUgcBriefGenerator brief, ILogger<UgcCampaignService> logger, UgcSettings settings)
     {
         _campaigns = campaigns; _applications = applications; _collabs = collabs; _brands = brands; _creators = creators;
-        _ugcCreators = ugcCreators; _uow = uow; _notify = notify; _brief = brief; _logger = logger;
+        _ugcCreators = ugcCreators; _uow = uow; _notify = notify; _brief = brief; _logger = logger; _settings = settings;
     }
 
     // ── Brand ──────────────────────────────────────────────────────
@@ -59,7 +60,7 @@ public sealed class UgcCampaignService : IUgcCampaignService
         Apply(c, r, comp, rights);
         _campaigns.Add(c);
         await _uow.SaveChangesAsync(ct);
-        return UgcMapper.Campaign(c, brand.CompanyName, brand.LogoUrl, 0, 0, 0);
+        return UgcMapper.Campaign(c, brand.CompanyName, brand.LogoUrl, 0, 0, 0, feePercent: _settings.PlatformFeePercent);
     }
 
     public async Task<Result<UgcCampaignDto>> UpdateAsync(Guid brandUserId, Guid id, UpsertUgcCampaignRequest r, CancellationToken ct = default)
@@ -215,7 +216,7 @@ public sealed class UgcCampaignService : IUgcCampaignService
         var apps = await _applications.Query().Where(a => a.CampaignId == c.Id).GroupBy(a => 1)
             .Select(g => new { Total = g.Count(), Pending = g.Count(a => a.Status == UgcApplicationStatus.Applied || a.Status == UgcApplicationStatus.Preselected) })
             .FirstOrDefaultAsync(ct);
-        return UgcMapper.Campaign(c, brand.CompanyName, brand.LogoUrl, hired, apps?.Total ?? 0, apps?.Pending ?? 0, mine, myCollab);
+        return UgcMapper.Campaign(c, brand.CompanyName, brand.LogoUrl, hired, apps?.Total ?? 0, apps?.Pending ?? 0, mine, myCollab, _settings.PlatformFeePercent);
     }
 
     internal static bool Matches(UgcCampaign c, UgcCreatorProfile me, CreatorProfile creator)

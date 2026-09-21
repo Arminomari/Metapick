@@ -62,6 +62,10 @@ public interface IBrandService
     Task<Result<PagedResult<BrandListDto>>> ListBrandsAsync(string? status, int page, int pageSize);
     Task<Result<BrandProfileDto>> ApproveBrandAsync(Guid brandId, Guid adminId);
     Task<Result<BrandProfileDto>> RejectBrandAsync(Guid brandId, Guid adminId, string reason);
+    /// <summary>Re-runs the organisation-number registry check for the brand's own profile.</summary>
+    Task<Result<BrandProfileDto>> VerifyOrgAsync(Guid userId);
+    /// <summary>Admin sets OrgVerified after seeing documents; the only path besides the registry.</summary>
+    Task<Result<BrandProfileDto>> SetOrgVerifiedByAdminAsync(Guid brandId, Guid adminId, bool verified, string? registeredName);
 }
 
 public interface ICreatorService
@@ -78,6 +82,7 @@ public interface ICreatorService
 public interface IPortfolioService
 {
     Task<Result<List<PortfolioItemDto>>> GetMyPortfolioAsync(Guid creatorUserId, CancellationToken ct = default);
+    Task<Result<List<CreatorCollaborationDto>>> GetMyCollaborationsAsync(Guid creatorUserId, CancellationToken ct = default);
     Task<Result<PortfolioItemDto>> AddItemAsync(Guid creatorUserId, CreatePortfolioItemRequest request, CancellationToken ct = default);
     Task<Result<PortfolioItemDto>> UpdateItemAsync(Guid itemId, Guid creatorUserId, UpdatePortfolioItemRequest request, CancellationToken ct = default);
     Task<Result<bool>> DeleteItemAsync(Guid itemId, Guid creatorUserId, CancellationToken ct = default);
@@ -111,7 +116,8 @@ public interface ICampaignService
     Task<Result<CampaignDetailDto>> PublishCampaignAsync(Guid campaignId, Guid brandUserId, CancellationToken ct = default);
     Task<Result<CampaignDetailDto>> PauseCampaignAsync(Guid campaignId, Guid userId, CancellationToken ct = default);
     Task<Result<CampaignDetailDto>> ResumeCampaignAsync(Guid campaignId, Guid userId, CancellationToken ct = default);
-    Task<Result<CampaignDetailDto>> GetCampaignAsync(Guid campaignId, CancellationToken ct = default);
+    /// <summary>Owner and admin see everything; a creator only a browseable campaign or one they take part in.</summary>
+    Task<Result<CampaignDetailDto>> GetCampaignAsync(Guid campaignId, Guid userId, string role, CancellationToken ct = default);
     Task<Result<PagedResult<CampaignListDto>>> ListBrandCampaignsAsync(Guid brandUserId, string? status, int page, int pageSize, CancellationToken ct = default);
     Task<Result<PagedResult<CampaignBrowseDto>>> BrowseCampaignsAsync(string? category, string? country, int page, int pageSize, CancellationToken ct = default);
     Task<Result<CursorPagedResult<CampaignBrowseDto>>> BrowseCampaignsWithCursorAsync(string? category, string? country, string? cursor, int pageSize, CancellationToken ct = default);

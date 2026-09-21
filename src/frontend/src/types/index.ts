@@ -31,17 +31,20 @@ export interface CreatorProfile {
   country: string;
   language: string;
   avatarUrl?: string;
+  /** TikTok followers from the OAuth connection; 0 and tikTokVerified=false for a typed handle. */
   followerCount: number;
-  averageViews?: number;
+  followersSyncedAt?: string | null;
   status: string;
   tikTokConnected: boolean;
+  tikTokVerified: boolean;
   tikTokUsername?: string;
   createdAt: string;
   profileTags: string[];
+  /** A plain link the creator typed. No Instagram numbers exist anywhere. */
   instagramUsername?: string;
-  instagramFollowerCount: number;
   website?: string;
   openToPrOffers: boolean;
+  dateOfBirth?: string | null;
 }
 
 // ── Portfolio ──────────────────────────────────────────
@@ -56,8 +59,11 @@ export interface PortfolioItem {
   thumbnailUrl?: string;
   category?: string;
   brandName?: string;
-  views?: number;
-  likes?: number;
+  /** True when linked to a real VYRLE collaboration; otherwise the brand is the creator's own claim. */
+  brandVerified: boolean;
+  brandProfileId?: string | null;
+  campaignId?: string | null;
+  ugcCollabId?: string | null;
   sortOrder: number;
   isFeatured: boolean;
   createdAt: string;
@@ -73,27 +79,29 @@ export interface CreatorDiscoveryItem {
   country: string;
   language: string;
   avatarUrl?: string;
-  followerCount: number;
-  averageViews?: number;
   tikTokConnected: boolean;
+  tikTokVerified: boolean;
   tikTokUsername?: string;
   tikTokFollowerCount: number;
+  followersSyncedAt?: string | null;
   instagramUsername?: string;
-  instagramFollowerCount: number;
   profileTags: string[];
   portfolioItemCount: number;
   averageRating: number;
   reviewCount: number;
   completedCampaigns: number;
   openToPrOffers: boolean;
+  totalVerifiedViews: number;
+  totalEarned: number;
+  earningsPerThousandViews: number;
+  approvedVideos: number;
+  totalVideos: number;
+  approvalRate: number;
+  metricsUpdatedAt?: string | null;
+  lastActiveAt?: string | null;
 }
 
 export interface CreatorPublicProfile {
-  totalVerifiedViews?: number;
-  totalLikes?: number;
-  totalComments?: number;
-  totalShares?: number;
-  engagementRate?: number;
   id: string;
   userId: string;
   displayName: string;
@@ -103,13 +111,12 @@ export interface CreatorPublicProfile {
   language: string;
   avatarUrl?: string;
   website?: string;
-  followerCount: number;
-  averageViews?: number;
   tikTokConnected: boolean;
+  tikTokVerified: boolean;
   tikTokUsername?: string;
   tikTokFollowerCount: number;
+  followersSyncedAt?: string | null;
   instagramUsername?: string;
-  instagramFollowerCount: number;
   profileTags: string[];
   openToPrOffers: boolean;
   portfolio: PortfolioItem[];
@@ -118,6 +125,20 @@ export interface CreatorPublicProfile {
   recentReviews: ReviewDto[];
   completedCampaigns: number;
   createdAt: string;
+  /** "Verifierat på VYRLE": every Verified campaign/tap video, all time. */
+  totalVerifiedViews: number;
+  totalLikes: number;
+  totalComments: number;
+  totalShares: number;
+  engagementRate: number;
+  verifiedPostCount: number;
+  metricsUpdatedAt?: string | null;
+  totalEarned: number;
+  earningsPerThousandViews: number;
+  approvedVideos: number;
+  totalVideos: number;
+  approvalRate: number;
+  level: string;
 }
 
 // ── PR Hub ─────────────────────────────────────────────
@@ -338,6 +359,7 @@ export interface AssignmentDetail {
   isTap?: boolean;
   brandUserId: string;
   creatorUserId: string;
+  metricsUpdatedAt?: string | null;
 }
 
 export interface SocialPostInfo {
@@ -350,6 +372,7 @@ export interface SocialPostInfo {
   shares: number;
   status: string;
   discoveredAt: string;
+  metricsUpdatedAt?: string | null;
 }
 
 export interface TrackingTag {
@@ -442,6 +465,10 @@ export interface CampaignAnalytics {
   totalSaves: number;
   views24h: number;
   totalPosts: number;
+  verifiedPosts: number;
+  metricsUpdatedAt?: string | null;
+  calculatedAt?: string | null;
+  reviewWindowHours: number;
 }
 
 export interface PayoutMethodInfo {
@@ -501,6 +528,11 @@ export interface CreatorVideo {
   durationSeconds?: number | null;
   publishedAt?: string | null;
   hashtags?: string[];
+  /** Counts toward views and payout. */
+  verified: boolean;
+  metricsUpdatedAt?: string | null;
+  /** Set while the brand's decision is pending. */
+  autoApproveAt?: string | null;
 }
 
 // ── API response wrapper ───────────────────────────────
@@ -566,3 +598,46 @@ export interface ChatMessageDto {
 export interface SendMessageRequest {
   body: string;
 }
+
+// ── Server-computed analytics (see backend AnalyticsDtos.cs) ─────
+export interface Insight { kind: 'LowestCpmCampaign' | 'BestDuration' | 'BestDaypart' | string; subject: string; value: number; sampleSize: number; unit: string }
+export interface InsightThresholds { minVideosPerBucket: number; minBuckets: number; minCampaignsForCpm: number; minViewsPerCampaignForCpm: number }
+export interface BucketRow { key: string; label: string; count: number; views: number; avgViews: number }
+export interface HashtagRow { tag: string; count: number; views: number }
+export interface CategoryRow { category: string; campaigns: number; views: number; spent: number; cpm?: number | null; engagementRate?: number | null }
+export interface BrandCampaignRow { campaignId: string; name: string; category: string; status: string; running: boolean; budget: number; spent: number; remaining: number; views: number; clicks: number; creators: number; verifiedPosts: number; cpm?: number | null; metricsUpdatedAt?: string | null }
+export interface BrandCreatorRow { creatorProfileId: string; assignmentId: string; campaignId: string; displayName: string; avatarUrl?: string | null; views: number; payout: number; costPerThousand?: number | null; tikTokVerified: boolean }
+export interface BrandVideoRow { campaignId: string; assignmentId: string; creatorName: string; videoUrl: string; views: number; likes: number; comments: number; shares: number; durationSeconds?: number | null; publishedAt?: string | null; metricsUpdatedAt?: string | null }
+export interface BrandAnalyticsSummary {
+  calculatedAt: string; metricsUpdatedAt?: string | null; scope: string; campaignsInScope: number; runningCampaigns: number;
+  totalBudget: number; totalSpent: number; remainingBudget: number;
+  totalViews: number; views24h: number; verifiedPosts: number; totalPosts: number; creators: number;
+  totalLikes: number; totalComments: number; totalShares: number; totalClicks: number;
+  cpm?: number | null; avgViewsPerPost?: number | null; engagementRate?: number | null; shareRate?: number | null; clickThroughRate?: number | null;
+  costPerClick?: number | null; costPerEngagement?: number | null; costPerPost?: number | null; costPerShare?: number | null; costPerView?: number | null;
+  attentionScore?: number | null; attentionScoreFormula: string; attentionScoreMinPosts: number; attentionScoreMinViews: number;
+  videosOver100K: number; videosOver500K: number; videosOver1M: number; viralRate?: number | null;
+  campaigns: BrandCampaignRow[]; bestCreators: BrandCreatorRow[]; topContent: BrandVideoRow[]; recentContent: BrandVideoRow[];
+  durationBuckets: BucketRow[]; dayparts: BucketRow[]; topHashtags: HashtagRow[]; byCategory: CategoryRow[];
+  insights: Insight[]; thresholds: InsightThresholds; lowData: boolean; timezone: string;
+}
+export interface CreatorCampaignRow { assignmentId: string; campaignId: string; campaignName: string; brandProfileId: string; brandName: string; status: string; isTap: boolean; views: number; clicks: number; earned: number; assignedAt: string; metricsUpdatedAt?: string | null }
+export interface CreatorBrandRow { brandProfileId: string; brandName: string; earned: number; views: number }
+export interface CreatorLevelTier { index: number; name: string; minPaid: number }
+export interface CreatorLevel { index: number; name: string; minPaid: number; totalPaid: number; nextName?: string | null; nextMinPaid?: number | null; progressPercent: number; tiers: CreatorLevelTier[] }
+export interface CreatorAnalytics {
+  calculatedAt: string; metricsUpdatedAt?: string | null;
+  totalVerifiedViews: number; totalClicks: number; clickThroughRate?: number | null; verifiedPosts: number;
+  activeAssignments: number; completedAssignments: number; avgViewsPerAssignment?: number | null;
+  totalEarned: number; earningsPerThousandViews?: number | null;
+  paidOut: number; approved: number; pending: number; accrued: number; availableToWithdraw: number;
+  payoutCount: number; avgPayout?: number | null; paidShare?: number | null;
+  tapsThisMonth: number; tapsLifetime: number; tapsCount: number;
+  prValueDeclared: number;
+  level: CreatorLevel;
+  tikTokVerified: boolean; tikTokUsername?: string | null; followers: number; followersSyncedAt?: string | null;
+  campaigns: CreatorCampaignRow[]; topBrands: CreatorBrandRow[];
+}
+export interface CreatorCollaboration { kind: 'Campaign' | 'Tap' | 'Ugc'; id: string; brandProfileId: string; brandName: string; title: string; status: string; at: string }
+export interface UpdateCreatorProfileInput { displayName: string; bio?: string; category: string; country: string; language: string; tikTokUsername?: string; dateOfBirth?: string; profileTags?: string[]; avatarUrl?: string; instagramUsername?: string; website?: string; openToPrOffers?: boolean }
+export interface PortfolioItemInput { title: string; description?: string; mediaType: PortfolioMediaType; mediaUrl: string; thumbnailUrl?: string; category?: string; brandName?: string; isFeatured: boolean; campaignId?: string | null; ugcCollabId?: string | null; sortOrder?: number }
