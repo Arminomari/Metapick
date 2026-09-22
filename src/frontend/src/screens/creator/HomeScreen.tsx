@@ -82,9 +82,9 @@ export function CreatorHomeScreen() {
         {isLoading || loadingStats ? <SkeletonStats n={3} /> : (
           <>
             <StatRow cols={3}>
-              <StatTile label={t('Intjänat')} value={money(earned)} />
-              <StatTile label={t('Views')} value={formatNumber(views)} />
-              <StatTile label={t('Att hämta ut')} value={money(available)} accent={available > 0} />
+              <StatTile label={t('Intjänat')} count={earned} format={money} />
+              <StatTile label={t('Views')} count={views} format={formatNumber} />
+              <StatTile label={t('Att hämta ut')} count={available} format={money} accent={available > 0} />
             </StatRow>
             <SourceNote source="tiktok" at={stats?.metricsUpdatedAt} scope={t('alla dina kampanjvideos')} />
           </>

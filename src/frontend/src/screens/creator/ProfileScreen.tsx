@@ -20,7 +20,7 @@ import { useToast } from '@/components/vyrle/Toast';
 import { ImagePicker } from '@/components/auth/ImagePicker';
 import { DateInput } from '@/components/ui/DateInput';
 import type { PortfolioItem, PortfolioMediaType } from '@/types';
-import { Badge, BottomSheet, Button, Card, Checkbox, Field, List, ListRow, Page, PageHead, Section, SkeletonList, StatRow, StatTile } from '@/components/ds';
+import { Badge, BottomSheet, Button, Card, Checkbox, Field, List, ListRow, Page, PageHead, Section, SkeletonList, StatRow, StatTile, EmptyState } from '@/components/ds';
 import { MoreMenu, NotifBell, apiMessage } from '@/components/app/common';
 import { ReviewList } from '@/components/app/Reviews';
 import { money } from '@/lib/utils';
@@ -95,7 +95,7 @@ export function CreatorProfileScreen() {
         {p.profileTags.length > 0 && <div className="ds-tags" style={{ marginTop: 10 }}>{p.profileTags.map((tg) => <span key={tg} className="ds-tag">{tg}</span>)}</div>}
         <div style={{ marginTop: 14 }}>
           <StatRow cols={3}>
-            <StatTile plain label={t('Verifierade views')} value={formatNumber(views)} />
+            <StatTile plain label={t('Verifierade views')} count={views} format={formatNumber} />
             <StatTile plain label={t('Intäkt / 1K views')} value={stats?.earningsPerThousandViews != null ? money(stats.earningsPerThousandViews) : '–'} />
             <StatTile plain label={t('Godkänt')} value={stats?.approvalRate != null ? `${Math.round(stats.approvalRate)} %` : '–'} hint={stats?.totalVideos ? `${stats.approvedVideos}/${stats.totalVideos} ${t('videor')}` : undefined} />
           </StatRow>
@@ -130,7 +130,7 @@ export function CreatorProfileScreen() {
       ]} />
 
       <Section title={t('Portfolio')} action={<Button variant="ghost" size="sm" onClick={() => setEditing({ form: { ...emptyItem } })}>{t('Lägg till')}</Button>}>
-        {items.length === 0 ? <Card><p className="ds-body ds-muted">{t('Lägg till dina bästa videor och samarbeten så företag kan se vad du kan.')}</p></Card> : (
+        {items.length === 0 ? <Card><EmptyState description={t('Lägg till dina bästa videor och samarbeten så företag kan se vad du kan.')} /></Card> : (
           <PortfolioGrid items={items} menu={(it) => <MoreMenu title={it.title} items={[{ label: t('Redigera'), onClick: () => startEdit(it) }, { label: t('Ta bort'), danger: true, onClick: () => remove.mutate(it.id, { onSuccess: () => toast.push(t('Borttaget ur portföljen'), 'success'), onError: () => toast.push(t('Kunde inte ta bort'), 'error') }) }]} />} />
         )}
       </Section>

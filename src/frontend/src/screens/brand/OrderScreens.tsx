@@ -6,7 +6,7 @@ import { formatDate, formatNumber, money } from '@/lib/utils';
 import { useBrandProfile, useCreatorPublicProfile } from '@/hooks/api';
 import { useUgcBrandCampaign, useSaveUgcCampaign, useUgcCampaignAction, useUgcCampaignApplications, useUgcApplicationDecision, useUgcDirectInvite, formatOre, kronorToOre, oreToKronor, COMPENSATION_LABEL, RIGHTS_LABEL, RIGHTS_HINT, UGC_CATEGORIES, UGC_REGIONS, apiError, useUgcSettings, type UgcBrief, type UpsertUgcCampaign, type UgcApplication } from '@/hooks/ugc';
 import { useToast } from '@/components/vyrle/Toast';
-import { Avatar, Badge, BottomSheet, Button, Card, Field, List, ListRow, Page, PageHead, Section, SkeletonList, StatRow, StatTile, StickyAction } from '@/components/ds';
+import { Avatar, Badge, BottomSheet, Button, Card, Field, List, ListRow, Page, PageHead, Section, SkeletonList, StatRow, StatTile, StickyAction, EmptyState } from '@/components/ds';
 import { MoreMenu } from '@/components/app/common';
 import { BriefView } from '@/screens/creator/OrderScreen';
 
@@ -70,7 +70,7 @@ export function BrandOrderDetailScreen() {
       </StatRow>
 
       <Section title={`${t('Bud')} (${open.length})`}>
-        {open.length === 0 ? <Card><p className="ds-body ds-muted">{c.status === 'Published' ? t('Inga bud ännu — creators som matchar har fått en notis.') : t('Inga öppna bud.')}</p></Card> : open.map((a) => (
+        {open.length === 0 ? <Card><EmptyState title={c.status === 'Published' ? t('Inga bud ännu — creators som matchar har fått en notis.') : t('Inga öppna bud.')} /></Card> : open.map((a) => (
           <Card key={a.id}>
             <ListRow className="ds-listrow--flush" leading={<Avatar name={a.creatorName} src={a.creatorAvatarUrl} />} title={a.creatorName} badge={a.status === 'Preselected' ? <Badge tone="accent">{t('Favorit')}</Badge> : a.creatorStatus === 'Approved' ? <Badge tone="ok">{t('Godkänd av VYRLE')}</Badge> : undefined} subtitle={`${formatNumber(a.followers)} ${t('följare')} · ${a.deliveredCount} ${t('leveranser')}${a.deliveredCount > 0 ? ` · ${Math.round((a.onTimeCount / a.deliveredCount) * 100)} % ${t('i tid')}` : ''}${a.ratingCount > 0 ? ` · ★ ${a.averageRating.toFixed(1)}` : ''}${a.city || a.region ? ` · ${a.city || a.region}` : ''}`} wrapSubtitle value={a.bidOre > 0 ? formatOre(a.bidOre) : undefined} chevron onClick={() => navigate(`/brand/creators/${a.creatorProfileId}`)} />
             <p className="ds-prose ds-muted" style={{ marginTop: 6 }}>“{a.pitch}”</p>

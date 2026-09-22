@@ -13,7 +13,7 @@ import { useBrandPublicProfile } from '@/hooks/extra';
 import { SourceNote } from '@/components/app/SourceNote';
 import { ProfileHero } from '@/components/app/ProfileHero';
 import { useToast } from '@/components/vyrle/Toast';
-import { Avatar, Badge, BottomSheet, Button, Card, List, ListRow, Page, PageHead, Section, SkeletonList, StatRow, StatTile, StickyAction } from '@/components/ds';
+import { Avatar, Badge, BottomSheet, Button, Card, List, ListRow, Page, PageHead, Section, SkeletonList, StatRow, StatTile, StickyAction, EmptyState } from '@/components/ds';
 import { MoreMenu, ago, apiMessage } from '@/components/app/common';
 import { ReviewList } from '@/components/app/Reviews';
 
@@ -32,7 +32,7 @@ export function BrandPublicView({ id, ownView, onDeletePost }: { id: string; own
   const answer = useMutation({ mutationFn: async (accept: boolean) => (await api.post(`/creator/communities/${id}/${accept ? 'accept' : 'decline'}`)).data, onSuccess: (_d, accept) => { bust(); toast.push(accept ? t('Du är med i communityn — deras öppna kranar finns under Kampanjer.') : t('Inbjudan avböjd'), 'success'); }, onError: (e) => toast.push(apiMessage(e, t('Kunde inte svara på inbjudan')), 'error') });
 
   if (isLoading) return <SkeletonList rows={3} />;
-  if (!p) return <Card><p className="ds-body ds-muted">{t('Företaget hittades inte')}</p></Card>;
+  if (!p) return <Card><EmptyState title={t('Företaget hittades inte')} /></Card>;
   const appStatus = new Map((myApps?.data ?? []).map((a) => [a.campaignId, a.status]));
   const taps = p.taps?.length ? p.taps : (p.hasTap ? [{ id: 'main', name: p.tapName ?? '', cpm: p.tapCpm ?? 0, brief: p.tapBrief ?? '', requiredHashtag: p.tapHashtag ?? '', capPerVideo: p.tapCapPerVideo, monthlyCapPerCreator: p.tapMonthlyCapPerCreator, category: '' }] : []);
   const m = p.membershipStatus;
@@ -45,7 +45,7 @@ export function BrandPublicView({ id, ownView, onDeletePost }: { id: string; own
         {p.description && <p className="ds-body" style={{ marginTop: 12 }}>{p.description}</p>}
         <div style={{ marginTop: 14 }}>
           <StatRow cols={3}>
-            <StatTile plain label={t('Verifierade views')} value={formatNumber(p.totalVerifiedViews)} />
+            <StatTile plain label={t('Verifierade views')} count={p.totalVerifiedViews} format={formatNumber} />
             <StatTile plain label={t('Ambassadörer')} value={String(p.creatorsWorkedWith)} />
             <StatTile plain label={t('Betyg')} value={p.reviewCount > 0 ? p.averageRating.toFixed(1) : '–'} hint={p.reviewCount > 0 ? `${p.reviewCount} ${t('omdömen')}` : undefined} />
           </StatRow>
@@ -77,7 +77,7 @@ export function BrandPublicView({ id, ownView, onDeletePost }: { id: string; own
 
       {(ownView || (p.posts?.length ?? 0) > 0) && (
         <Section title={t('Uppdateringar')}>
-          {(p.posts ?? []).length === 0 && <Card><p className="ds-body ds-muted">{t('Inga inlägg ännu — skriv ditt första via + så når du alla följare direkt.')}</p></Card>}
+          {(p.posts ?? []).length === 0 && <Card><EmptyState title={t('Inga inlägg ännu')} description={t('Skriv ditt första via + så når du alla följare direkt.')} /></Card>}
           {(p.posts ?? []).map((post) => (
             <Card key={post.id}>
               <div className="ds-row"><Avatar name={p.companyName} src={p.logoUrl} size="sm" rounded /><div className="ds-grow"><div className="ds-body" style={{ fontWeight: 600 }}>{p.companyName}</div><div className="ds-caption ds-muted">{ago(post.createdAt)}</div></div>{ownView && onDeletePost && <MoreMenu items={[{ label: t('Ta bort inlägget'), danger: true, onClick: () => onDeletePost(post.id) }]} />}</div>
@@ -89,7 +89,7 @@ export function BrandPublicView({ id, ownView, onDeletePost }: { id: string; own
       )}
 
       <Section title={t('Aktiva kampanjer')}>
-        {p.activeCampaigns.length === 0 ? <Card><p className="ds-body ds-muted">{t('Inga öppna kampanjer just nu — följ företaget så ser du när nästa släpps.')}</p></Card> : (
+        {p.activeCampaigns.length === 0 ? <Card><EmptyState title={t('Inga öppna kampanjer just nu')} description={t('Följ företaget så ser du när nästa släpps.')} /></Card> : (
           <List>
             {p.activeCampaigns.map((c) => {
               const s = appStatus.get(c.id);

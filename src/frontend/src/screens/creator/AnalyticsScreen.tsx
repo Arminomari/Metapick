@@ -36,9 +36,9 @@ export function CreatorAnalyticsScreen() {
       ) : seg === 'overview' ? (
         <>
           <StatRow cols={4}>
-            <StatTile label={t('Verifierade views')} value={formatNumber(s.totalVerifiedViews)} hint={`${s.verifiedPosts} ${s.verifiedPosts === 1 ? t('verifierad video') : t('verifierade videor')}`} />
-            <StatTile label={t('Intäkter')} value={money(s.totalEarned)} hint={`${orDash(s.earningsPerThousandViews, money)} / 1K views`} />
-            <StatTile label={t('Spårade klick')} value={formatNumber(s.totalClicks)} hint={`${orDash(s.clickThroughRate, (v) => v.toFixed(2) + ' %')} ${t('klickfrekvens')}`} />
+            <StatTile label={t('Verifierade views')} count={s.totalVerifiedViews} format={formatNumber} hint={`${s.verifiedPosts} ${s.verifiedPosts === 1 ? t('verifierad video') : t('verifierade videor')}`} />
+            <StatTile label={t('Intäkter')} count={s.totalEarned} format={money} hint={`${orDash(s.earningsPerThousandViews, money)} / 1K views`} />
+            <StatTile label={t('Spårade klick')} count={s.totalClicks} format={formatNumber} hint={`${orDash(s.clickThroughRate, (v) => v.toFixed(2) + ' %')} ${t('klickfrekvens')}`} />
             <StatTile label={t('Live-kampanjer')} value={String(s.activeAssignments)} hint={`${orDash(s.avgViewsPerAssignment, short)} ${t('snittvisningar')}`} />
           </StatRow>
           <SourceNote source="tiktok" at={s.metricsUpdatedAt} scope={t('alla dina kampanjvideos')} />

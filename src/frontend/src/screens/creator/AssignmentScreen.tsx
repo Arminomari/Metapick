@@ -116,8 +116,8 @@ export function AssignmentScreen() {
       </div>
 
       <StatRow cols={3}>
-        <StatTile label={t('Views')} value={formatNumber(isTap && tap ? tap.myMonthViews : a.totalVerifiedViews)} hint={isTap ? t('denna månad') : undefined} />
-        <StatTile label={t('Intjänat')} value={money(isTap && tap ? tap.myMonthEarned : a.currentPayoutAmount)} hint={isTap ? t('denna månad') : undefined} />
+        <StatTile label={t('Views')} count={isTap && tap ? tap.myMonthViews : a.totalVerifiedViews} format={formatNumber} hint={isTap ? t('denna månad') : undefined} />
+        <StatTile label={t('Intjänat')} count={isTap && tap ? tap.myMonthEarned : a.currentPayoutAmount} format={money} hint={isTap ? t('denna månad') : undefined} />
         {isTap && tap ? <StatTile label={t('Kranen använd')} value={`${tap.tapMonthBudget > 0 ? Math.round((tap.tapMonthSpent / tap.tapMonthBudget) * 100) : 0} %`} hint={t('av månadsbudget')} />
           : <StatTile label={left != null ? t('Slutar om') : t('Slutdatum')} value={left != null ? `${left} ${t('dgr')}` : campaign?.endDate ? formatDate(campaign.endDate) : '–'} />}
       </StatRow>

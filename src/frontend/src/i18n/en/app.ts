@@ -541,4 +541,9 @@ export const app: Record<string, string> = {
   'Minst godkännandegrad (%)': 'Minimum approval rate (%)',
   'Andel godkända videor bland de som granskats. Creators utan granskade videor faller bort.': 'Share of approved videos among those reviewed. Creators with no reviewed videos are excluded.',
   'Endast creators med verifierade resultat': 'Only creators with verified results',
+  'Inga inlägg ännu': 'No posts yet',
+  'Inga verifierade kampanjvideos ännu': 'No verified campaign videos yet',
+  'Följ företaget så ser du när nästa släpps.': 'Follow the company to see when the next one is released.',
+  'Siffrorna dyker upp när creatorn kört sin första kampanj.': 'The numbers appear once the creator has run a first campaign.',
+  'Skriv ditt första via + så når du alla följare direkt.': 'Write your first one via + and reach all followers at once.',
 };

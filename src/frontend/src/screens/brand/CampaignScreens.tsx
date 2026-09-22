@@ -57,12 +57,12 @@ export function BrandCampaignDetailScreen() {
       ]} />} />
       <div className="ds-row ds-row--wrap"><Badge tone={statusTone(c.status)}>{statusLabel(c.status)}</Badge><span className="ds-caption ds-muted">{categoryLabel(c.category)} · {formatDate(c.startDate)} – {formatDate(c.endDate)}{left != null ? ` · ${left} ${t('dgr kvar')}` : ''}</span></div>
       <StatRow cols={3}>
-        <StatTile label={t('Views')} value={formatNumber(c.totalViews)} />
-        <StatTile label={draftish ? t('Maxkostnad') : t('Spenderat')} value={money(draftish ? c.budget : c.budgetSpent + c.budgetReserved)} hint={draftish ? undefined : `${t('av')} ${money(c.budget)}`} />
+        <StatTile label={t('Views')} count={c.totalViews} format={formatNumber} />
+        <StatTile label={draftish ? t('Maxkostnad') : t('Spenderat')} count={draftish ? c.budget : c.budgetSpent + c.budgetReserved} format={money} hint={draftish ? undefined : `${t('av')} ${money(c.budget)}`} />
         <StatTile label={t('Creators')} value={draftish ? String(c.maxCreators) : `${c.approvedCreatorCount} / ${c.maxCreators}`} />
       </StatRow>
       {c.status === 'PendingReview' && <Card><p className="ds-body" style={{ fontWeight: 600 }}>{t('Kampanjen väntar på granskning av VYRLE.')}</p><p className="ds-caption ds-muted">{t('Så fort den godkänns blir den synlig för creators och kan ta emot ansökningar.')}</p></Card>}
-      {c.status === 'Draft' && <Card><p className="ds-body ds-muted">{t('Kampanjen är ett utkast. Skicka in den för granskning så öppnas den för ansökningar när den godkänts.')}</p></Card>}
+      {c.status === 'Draft' && <Card><EmptyState description={t('Kampanjen är ett utkast. Skicka in den för granskning så öppnas den för ansökningar när den godkänts.')} /></Card>}
       {c.status === 'Completed' && <Card><p className="ds-body" style={{ fontWeight: 600 }}>{t('Gör det här månatligt')}</p><p className="ds-caption ds-muted">{t('Creators som levererade är nu i ditt community. Öppna en kran så fortsätter de skapa löpande.')}</p></Card>}
 
       {!draftish && (
@@ -149,14 +149,14 @@ export function CampaignCreatorScreen() {
       <PageHead title={a.creatorName || t('Creator')} back={{ to: `/brand/campaigns/${id}` }} actions={<MoreMenu items={[{ label: t('Uppdatera views nu'), onClick: () => refresh.mutate() }, { label: t('Visa profil'), to: `/brand/creators/${a.creatorProfileId}` }, { label: t('Betygsätt'), hidden: a.status !== 'Completed', onClick: () => document.getElementById('review')?.scrollIntoView({ block: 'start', behavior: 'smooth' }) }]} />} />
       <div className="ds-row ds-row--wrap"><StatusBadge status={a.status} /><span className="ds-caption ds-muted">{a.campaignName}</span></div>
       <StatRow cols={3}>
-        <StatTile label={t('Views')} value={formatNumber(a.totalVerifiedViews)} />
-        <StatTile label={t('Intjänat')} value={money(a.currentPayoutAmount)} hint={cp ? t(PAYOUT_LABEL[cp.payoutStatus] ?? cp.payoutStatus) : undefined} />
+        <StatTile label={t('Views')} count={a.totalVerifiedViews} format={formatNumber} />
+        <StatTile label={t('Intjänat')} count={a.currentPayoutAmount} format={money} hint={cp ? t(PAYOUT_LABEL[cp.payoutStatus] ?? cp.payoutStatus) : undefined} />
         <StatTile label={t('Videor godkända')} value={`${approvedCount} / ${c?.requiredVideoCount ?? 1}`} />
       </StatRow>
       {cp?.payoutStatus === 'AwaitingThreshold' && <p className="ds-caption ds-muted">{approvedCount > 0 ? t('Creatorn har godkända videor men har inte nått betalningsnivån ännu.') : t('Väntar på att creatorn lägger till en video — godkänn den sedan här.')}</p>}
 
       <Section title={t('Videor')}>
-        {videos.length === 0 ? <Card><p className="ds-body ds-muted">{t('Inga videor ännu')}</p></Card> : videos.map((v, i) => {
+        {videos.length === 0 ? <Card><EmptyState title={t('Inga videor ännu')} /></Card> : videos.map((v, i) => {
           const pend = v.submissionId && !['Approved', 'Rejected'].includes(v.status);
           const hours = v.autoApproveAt ? Math.max(0, Math.ceil((+new Date(v.autoApproveAt) - Date.now()) / 3600000)) : 0;
           return (

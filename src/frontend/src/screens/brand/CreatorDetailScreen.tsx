@@ -114,7 +114,7 @@ export function BrandCreatorDetailScreen() {
         {c.profileTags.length > 0 && <div className="ds-tags" style={{ marginTop: 10 }}>{c.profileTags.map((tg) => <span key={tg} className="ds-tag">{tg}</span>)}</div>}
         <div style={{ marginTop: 14 }}>
           <StatRow cols={3}>
-            <StatTile plain label={t('Verifierade views')} value={formatNumber(c.totalVerifiedViews)} />
+            <StatTile plain label={t('Verifierade views')} count={c.totalVerifiedViews} format={formatNumber} />
             <StatTile plain label={t('Intäkt / 1K views')} value={c.totalVerifiedViews > 0 ? money(c.earningsPerThousandViews) : '–'} />
             <StatTile plain label={t('Godkänt')} value={c.totalVideos > 0 ? `${Math.round(c.approvalRate)} %` : '–'} hint={c.totalVideos > 0 ? `${c.approvedVideos}/${c.totalVideos} ${t('videor')}` : undefined} />
           </StatRow>
@@ -141,25 +141,25 @@ export function BrandCreatorDetailScreen() {
         {more && (c.totalVerifiedViews > 0 ? (
           <Card>
             <StatRow cols={3}>
-              <StatTile plain label={t('Views')} value={formatNumber(c.totalVerifiedViews ?? 0)} />
-              <StatTile plain label={t('Gilla')} value={formatNumber(c.totalLikes ?? 0)} />
+              <StatTile plain label={t('Views')} count={c.totalVerifiedViews ?? 0} format={formatNumber} />
+              <StatTile plain label={t('Gilla')} count={c.totalLikes ?? 0} format={formatNumber} />
               <StatTile plain label={t('Engagemang')} value={`${(c.engagementRate ?? 0).toFixed(1)} %`} />
             </StatRow>
             <div className="ds-divider" />
             <StatRow cols={3}>
-              <StatTile plain label={t('Kommentarer')} value={formatNumber(c.totalComments ?? 0)} />
-              <StatTile plain label={t('Delningar')} value={formatNumber(c.totalShares ?? 0)} />
+              <StatTile plain label={t('Kommentarer')} count={c.totalComments ?? 0} format={formatNumber} />
+              <StatTile plain label={t('Delningar')} count={c.totalShares ?? 0} format={formatNumber} />
               <StatTile plain label={t('Samarbeten')} value={String(c.completedCampaigns)} />
             </StatRow>
             <div className="ds-facts" style={{ marginTop: 12 }}><div className="ds-fact"><span>{t('Intäkt / 1K views')}</span><span className="ds-num">{money(c.earningsPerThousandViews)}</span></div><div className="ds-fact"><span>{t('Godkännandegrad')}</span><span className="ds-num">{c.totalVideos > 0 ? `${Math.round(c.approvalRate)} % (${c.approvedVideos}/${c.totalVideos})` : '–'}</span></div><div className="ds-fact"><span>{t('Nivå')}</span><span>{c.level}</span></div></div>
             <p className="ds-caption ds-muted" style={{ marginTop: 8 }}>{t('Uppmätt av VYRLE på kampanjvideos — inte självrapporterat.')}</p>
             <SourceNote source="vyrle" at={c.metricsUpdatedAt} scope={`${c.verifiedPostCount} ${t('verifierade videor, alla kampanjer')}`} />
           </Card>
-        ) : <Card><p className="ds-body ds-muted">{t('Inga verifierade kampanjvideos ännu — siffrorna dyker upp när creatorn kört sin första kampanj.')}</p></Card>)}
+        ) : <Card><EmptyState title={t('Inga verifierade kampanjvideos ännu')} description={t('Siffrorna dyker upp när creatorn kört sin första kampanj.')} /></Card>)}
       </Section>
 
       <Section title={`${t('Portfölj')} (${c.portfolio.length})`}>
-        {c.portfolio.length === 0 ? <Card><p className="ds-body ds-muted">{t('Creatorn har inte lagt till några arbeten ännu.')}</p></Card> : (
+        {c.portfolio.length === 0 ? <Card><EmptyState title={t('Creatorn har inte lagt till några arbeten ännu.')} /></Card> : (
           <PortfolioGrid items={c.portfolio} />
         )}
       </Section>
