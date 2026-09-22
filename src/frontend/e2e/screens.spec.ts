@@ -25,7 +25,7 @@ const creatorPlatform: Action[] = [...creatorAccount, ['type', '#rg-tt', 'annabe
 const creatorProfile: Action[] = [...creatorPlatform, ['type', '#rg-name', 'Anna Berg'], ['type', '#rg-bio', 'Mat, kaféer och vardag i Göteborg. Recept, restaurangtips och ärliga smaktest.'], ['click', 'Hudvård'], ['file', 0, SELFIE]];
 
 const shots: Shot[] = [
-  { name: 'landing', path: '/vyrle.html', role: 'Creator', guest: true, actions: [['scrollall']], axe: false /* 3 decorative contrast nodes left (shift intro, demo-tag on dark, orb); see PR #6 */ },
+  { name: 'landing', path: '/vyrle.html', role: 'Creator', guest: true, actions: [['scrollall']], axe: true },
   // creator onboarding: each wizard step, with the live preview, then the in-app onboarding
   { name: 'register-1-konto', path: '/register', role: 'Creator', guest: true, axe: true },
   { name: 'register-1-errors', path: '/register', role: 'Creator', guest: true, actions: [['click', 'Fortsätt']] },
