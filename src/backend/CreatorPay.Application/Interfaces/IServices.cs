@@ -92,7 +92,9 @@ public interface ICreatorDiscoveryService
 {
     Task<Result<PagedResult<CreatorDiscoveryDto>>> SearchAsync(
         string? search, string? category, string? country, int? minFollowers,
-        string? tag, bool? openToPrOffers, string? sort, int page, int pageSize, CancellationToken ct = default);
+        string? tag, bool? openToPrOffers, string? sort, int page, int pageSize,
+        long? minVerifiedViews = null, double? minApprovalRate = null, bool? onlyWithResults = null,
+        CancellationToken ct = default);
     Task<Result<CreatorPublicProfileDto>> GetPublicProfileAsync(Guid creatorProfileId, CancellationToken ct = default);
 }
 

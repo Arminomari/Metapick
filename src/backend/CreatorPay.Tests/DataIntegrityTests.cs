@@ -440,4 +440,39 @@ public class DataIntegrityTests
         Assert.Contains("Verifiera", denied.Reason);
         Assert.True(UgcCampaignStateMachine.Check(UgcCampaignStatus.Draft, UgcCampaignStatus.Published, UgcActor.Brand, brandHasOrgNumber: true).Allowed);
     }
+
+    // ── Discovery ranking (block E) ─────────────────────────────────────
+
+    private sealed record Cand(string Name, CreatorPerformance Perf, int Followers, double Rating, DateTime Created);
+
+    [Fact]
+    public void Discovery_ranks_by_verified_views_not_followers()
+    {
+        var now = DateTime.UtcNow;
+        var big = new Cand("big-following", new CreatorPerformance(2_000, 100m, 1, 1, 1, 1, now, now), 500_000, 5.0, now);
+        var proven = new Cand("proven", new CreatorPerformance(80_000, 2_400m, 6, 9, 10, 8, now, now), 4_000, 4.2, now.AddYears(-1));
+        var newcomer = new Cand("newcomer", CreatorPerformance.Empty, 12_000, 0, now);
+
+        string[] Rank(string? sort) => CreatorRanking.Order(new[] { big, newcomer, proven }, sort, c => c.Perf, c => c.Followers, c => c.Rating, c => c.Created).Select(c => c.Name).ToArray();
+
+        Assert.Equal(new[] { "proven", "big-following", "newcomer" }, Rank(null));
+        Assert.Equal(new[] { "proven", "big-following", "newcomer" }, Rank("views"));
+        Assert.Equal(new[] { "big-following", "proven", "newcomer" }, Rank("epm"));      // 50 kr/1K beats 30 kr/1K
+        Assert.Equal(new[] { "big-following", "proven", "newcomer" }, Rank("approval")); // 100 % (1/1) beats 90 %, newcomer has no decisions
+        Assert.Equal(new[] { "big-following", "newcomer", "proven" }, Rank("followers")); // only when a brand explicitly asks
+    }
+
+    [Fact]
+    public void Verified_filters_exclude_creators_without_results()
+    {
+        var now = DateTime.UtcNow;
+        var proven = new CreatorPerformance(80_000, 2_400m, 6, 9, 10, 8, now, now);
+        var none = CreatorPerformance.Empty;
+        Assert.True(CreatorRanking.Passes(proven, minVerifiedViews: 50_000, minApprovalRate: 80, onlyWithResults: true));
+        Assert.False(CreatorRanking.Passes(proven, minVerifiedViews: 100_000, null, false));
+        Assert.False(CreatorRanking.Passes(proven, null, minApprovalRate: 95, false));
+        Assert.False(CreatorRanking.Passes(none, null, null, onlyWithResults: true));
+        Assert.False(CreatorRanking.Passes(none, null, minApprovalRate: 1, false)); // no decisions is not "100 %"
+        Assert.True(CreatorRanking.Passes(none, null, null, false));
+    }
 }

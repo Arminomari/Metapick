@@ -14,6 +14,7 @@ import { useToast } from '@/components/vyrle/Toast';
 import type { ApplicationItem } from '@/types';
 import { Avatar, Badge, BottomSheet, Button, Card, Checkbox, Chip, Chips, EmptyState, Field, IconButton, List, ListRow, Page, PageHead, SegmentedControl, Section, SkeletonList, StatusBadge } from '@/components/ds';
 import { MoreMenu, NotifBell, apiMessage } from '@/components/app/common';
+import { SourceNote } from '@/components/app/SourceNote';
 import { MessageCreatorSheet } from '@/screens/brand/CreatorDetailScreen';
 
 type Tab = 'community' | 'find' | 'applications';
@@ -123,16 +124,21 @@ function InviteSheet({ open, onClose, existing }: { open: boolean; onClose: () =
 }
 
 /* ── Hitta ────────────────────────────────────────────────── */
+const EMPTY_FILTERS = { category: '', country: '', minFollowers: '', minVerifiedViews: '', minApprovalRate: '', tag: '', openToPrOffers: false, onlyWithResults: false, sort: 'views' };
+/** Ranking is by verified performance (server: CreatorRanking). Followers are not a ranking option here. */
+const SORTS: [string, string][] = [['views', 'Verifierade views'], ['epm', 'Intäkt / 1K'], ['approval', 'Godkänt'], ['active', 'Senast aktiv']];
+
 function Find() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [input, setInput] = useState('');
-  const [f, setF] = useState({ category: '', country: '', minFollowers: '', tag: '', openToPrOffers: false, sort: 'views' });
+  const [f, setF] = useState(EMPTY_FILTERS);
   const [draft, setDraft] = useState(f);
   const [filters, setFilters] = useState(false);
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useCreatorSearch({ search: search || undefined, category: f.category || undefined, country: f.country || undefined, minFollowers: f.minFollowers ? Number(f.minFollowers) : undefined, tag: f.tag || undefined, openToPrOffers: f.openToPrOffers || undefined, sort: f.sort, page });
-  const activeFilters = [f.category, f.country, f.minFollowers, f.tag, f.openToPrOffers ? 'pr' : ''].filter(Boolean).length;
+  const { data, isLoading } = useCreatorSearch({ search: search || undefined, category: f.category || undefined, country: f.country || undefined, minFollowers: f.minFollowers ? Number(f.minFollowers) : undefined, minVerifiedViews: f.minVerifiedViews ? Number(f.minVerifiedViews) : undefined, minApprovalRate: f.minApprovalRate ? Number(f.minApprovalRate) : undefined, onlyWithResults: f.onlyWithResults || undefined, tag: f.tag || undefined, openToPrOffers: f.openToPrOffers || undefined, sort: f.sort, page });
+  const activeFilters = [f.category, f.country, f.minFollowers, f.minVerifiedViews, f.minApprovalRate, f.tag, f.openToPrOffers ? 'pr' : '', f.onlyWithResults ? 'res' : ''].filter(Boolean).length;
+  const latest = (data?.data ?? []).reduce<string | null>((m, c) => c.metricsUpdatedAt && (!m || c.metricsUpdatedAt > m) ? c.metricsUpdatedAt : m, null);
   const pages = data ? Math.ceil(data.totalCount / data.pageSize) : 1;
   return (
     <>
@@ -140,25 +146,36 @@ function Find() {
         <div className="ds-search ds-grow"><Search /><input className="ds-input" type="search" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { setSearch(input); setPage(1); } }} onBlur={() => { setSearch(input); setPage(1); }} placeholder={t('Namn, bio eller kategori')} aria-label={t('Sök')} /></div>
         <IconButton label={t('Filter')} boxed badge={activeFilters} onClick={() => { setDraft(f); setFilters(true); }}><SlidersHorizontal /></IconButton>
       </div>
+      <Chips>
+        {SORTS.map(([k, l]) => <Chip key={k} selected={f.sort === k} onClick={() => { setF({ ...f, sort: k }); setDraft({ ...draft, sort: k }); setPage(1); }}>{t(l)}</Chip>)}
+      </Chips>
       {isLoading ? <SkeletonList rows={4} /> : !data || data.data.length === 0 ? <Card><EmptyState title={t('Inga creators matchade')} description={t('Justera filtren eller sök på något annat.')} /></Card> : (
         <>
           <span className="ds-caption ds-muted">{plural(data.totalCount, t('creator'), t('creators'))}</span>
           <List>
             {data.data.map((c) => {
-              // Verified performance first; followers only from an OAuth-verified TikTok connection.
-              const followers = c.tikTokVerified ? `${formatNumber(c.tikTokFollowerCount)} ${t('följare')}` : t('TikTok ej verifierat');
-              return <ListRow key={c.id} leading={<Avatar name={c.displayName} src={c.avatarUrl} />} title={c.displayName} badge={c.tikTokVerified ? <Badge tone="ok">{t('Verifierad')}</Badge> : c.openToPrOffers ? <Badge tone="neutral">{t('Öppen för PR')}</Badge> : undefined} subtitle={`${formatNumber(c.totalVerifiedViews)} ${t('verifierade views')} · ${followers} · ${c.category}${c.reviewCount > 0 ? ` · ★ ${c.averageRating.toFixed(1)}` : ''}`} wrapSubtitle onClick={() => navigate(`/brand/creators/${c.id}`)} />;
+              // Verified performance only: views, kr/1K and approval come from campaign videos the platform synced.
+              const hasResults = c.totalVideos > 0 || c.totalVerifiedViews > 0;
+              const perf = hasResults
+                ? `${formatNumber(c.totalVerifiedViews)} ${t('verifierade views')} · ${money(c.earningsPerThousandViews)}/1K${c.totalVideos > 0 ? ` · ${Math.round(c.approvalRate)} % ${t('godkänt')}` : ''}`
+                : t('Inga verifierade resultat än');
+              const badge = c.topCreator ? <Badge tone="accent">{t('Top creator')}</Badge> : c.verifiedCreator ? <Badge tone="ok">{t('Verifierad kreatör')}</Badge> : c.openToPrOffers ? <Badge tone="neutral">{t('Öppen för PR')}</Badge> : undefined;
+              return <ListRow key={c.id} leading={<Avatar name={c.displayName} src={c.avatarUrl} />} title={c.displayName} badge={badge} subtitle={`${perf} · ${c.category}${c.reviewCount > 0 ? ` · ★ ${c.averageRating.toFixed(1)}` : ''}`} wrapSubtitle onClick={() => navigate(`/brand/creators/${c.id}`)} />;
             })}
           </List>
+          <SourceNote source="tiktok" at={latest} scope={t('kampanjvideos, alla i listan')} style={{ marginTop: 0 }} />
           {pages > 1 && <div className="ds-row" style={{ justifyContent: 'space-between' }}><Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>{t('Föregående')}</Button><span className="ds-caption ds-muted">{page} / {pages}</span><Button variant="secondary" size="sm" disabled={page >= pages} onClick={() => setPage(page + 1)}>{t('Nästa')}</Button></div>}
         </>
       )}
-      <BottomSheet open={filters} onClose={() => setFilters(false)} title={t('Filter')} footer={<><Button variant="secondary" onClick={() => { setDraft({ category: '', country: '', minFollowers: '', tag: '', openToPrOffers: false, sort: 'views' }); }}>{t('Rensa')}</Button><Button onClick={() => { setF(draft); setPage(1); setFilters(false); }}>{t('Visa resultat')}</Button></>}>
+      <BottomSheet open={filters} onClose={() => setFilters(false)} title={t('Filter')} footer={<><Button variant="secondary" onClick={() => { setDraft(EMPTY_FILTERS); }}>{t('Rensa')}</Button><Button onClick={() => { setF(draft); setPage(1); setFilters(false); }}>{t('Visa resultat')}</Button></>}>
         <Field label={t('Kategori')}><select value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })}><option value="">{t('Alla')}</option>{CATEGORIES.map((c) => <option key={c} value={c}>{t(c)}</option>)}</select></Field>
         <Field label={t('Land')}><select value={draft.country} onChange={(e) => setDraft({ ...draft, country: e.target.value })}><option value="">{t('Alla')}</option><option value="SE">{t('Sverige')}</option><option value="NO">{t('Norge')}</option><option value="DK">{t('Danmark')}</option><option value="FI">{t('Finland')}</option></select></Field>
         <Field label={t('Minst antal följare')} hint={t('Räknar bara TikTok-konton kopplade via OAuth.')}><input inputMode="numeric" value={draft.minFollowers} onChange={(e) => setDraft({ ...draft, minFollowers: e.target.value.replace(/\D/g, '') })} placeholder="5000" /></Field>
+        <Field label={t('Minst verifierade views')} hint={t('Views från verifierade kampanjvideos, inte från profilen.')}><input inputMode="numeric" value={draft.minVerifiedViews} onChange={(e) => setDraft({ ...draft, minVerifiedViews: e.target.value.replace(/\D/g, '') })} placeholder="10000" /></Field>
+        <Field label={t('Minst godkännandegrad (%)')} hint={t('Andel godkända videor bland de som granskats. Creators utan granskade videor faller bort.')}><input inputMode="numeric" value={draft.minApprovalRate} onChange={(e) => setDraft({ ...draft, minApprovalRate: e.target.value.replace(/\D/g, '').slice(0, 3) })} placeholder="80" /></Field>
+        <Checkbox label={t('Endast creators med verifierade resultat')} checked={draft.onlyWithResults} onChange={(e) => setDraft({ ...draft, onlyWithResults: e.target.checked })} />
         <Field label={t('Expertis')}><select value={draft.tag} onChange={(e) => setDraft({ ...draft, tag: e.target.value })}><option value="">{t('Alla taggar')}</option>{ALL_TAGS.map((tg) => <option key={tg} value={tg}>{tg}</option>)}</select></Field>
-        <Field label={t('Sortera')}><select value={draft.sort} onChange={(e) => setDraft({ ...draft, sort: e.target.value })}><option value="views">{t('Flest verifierade views')}</option><option value="epm">{t('Bäst intäkt / 1K views')}</option><option value="approval">{t('Högst godkännandegrad')}</option><option value="active">{t('Senast aktiva')}</option><option value="rating">{t('Högst betyg')}</option><option value="followers">{t('Flest följare (verifierade)')}</option><option value="recent">{t('Senast tillkomna')}</option></select></Field>
+        <Field label={t('Sortera')}><select value={draft.sort} onChange={(e) => setDraft({ ...draft, sort: e.target.value })}><option value="views">{t('Flest verifierade views')}</option><option value="epm">{t('Bäst intäkt / 1K views')}</option><option value="approval">{t('Högst godkännandegrad')}</option><option value="active">{t('Senast aktiva')}</option><option value="rating">{t('Högst betyg')}</option><option value="recent">{t('Senast tillkomna')}</option></select></Field>
         <Checkbox label={t('Endast öppna för PR-erbjudanden')} checked={draft.openToPrOffers} onChange={(e) => setDraft({ ...draft, openToPrOffers: e.target.checked })} />
       </BottomSheet>
     </>
