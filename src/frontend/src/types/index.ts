@@ -47,6 +47,8 @@ export interface CreatorProfile {
   dateOfBirth?: string | null;
   /** Wide 3:1 banner; a gradient is shown when empty. */
   coverUrl?: string | null;
+  /** Opt-in "Instagram kreatör" tag on Hitta and the public profile (a link, never numbers). */
+  showInstagramBadge: boolean;
   /** Server rule (CreatorVisibility): approved AND OAuth-connected TikTok. */
   visibleToBrands: boolean;
   /** Why brands cannot see the profile yet; null when visible. */
@@ -111,6 +113,11 @@ export interface CreatorDiscoveryItem {
   lastActiveAt?: string | null;
   verifiedCreator: boolean;
   topCreator: boolean;
+  /** Verified views gained in the last 7 / 30 days, from daily TikTok snapshots. */
+  views7d: number;
+  views30d: number;
+  /** The creator's opt-in "Instagram kreatör" tag: a link, never numbers. */
+  showInstagramBadge: boolean;
 }
 
 export interface CreatorPublicProfile {
@@ -131,6 +138,7 @@ export interface CreatorPublicProfile {
   instagramUsername?: string;
   profileTags: string[];
   openToPrOffers: boolean;
+  showInstagramBadge?: boolean;
   portfolio: PortfolioItem[];
   averageRating: number;
   reviewCount: number;
@@ -658,5 +666,5 @@ export interface CreatorAnalytics {
   verifiedCreator: boolean; topCreator: boolean;
 }
 export interface CreatorCollaboration { kind: 'Campaign' | 'Tap' | 'Ugc'; id: string; brandProfileId: string; brandName: string; title: string; status: string; at: string }
-export interface UpdateCreatorProfileInput { displayName: string; bio?: string; category: string; country: string; language: string; tikTokUsername?: string; dateOfBirth?: string; profileTags?: string[]; avatarUrl?: string; coverUrl?: string; instagramUsername?: string; website?: string; openToPrOffers?: boolean }
+export interface UpdateCreatorProfileInput { displayName: string; bio?: string; category: string; country: string; language: string; tikTokUsername?: string; dateOfBirth?: string; profileTags?: string[]; avatarUrl?: string; coverUrl?: string; instagramUsername?: string; website?: string; openToPrOffers?: boolean; showInstagramBadge?: boolean }
 export interface PortfolioItemInput { title: string; description?: string; mediaType: PortfolioMediaType; mediaUrl: string; thumbnailUrl?: string; category?: string; brandName?: string; isFeatured: boolean; campaignId?: string | null; ugcCollabId?: string | null; sortOrder?: number }

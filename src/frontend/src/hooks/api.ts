@@ -699,6 +699,8 @@ export function useCreatorSearch(params: {
   tag?: string; openToPrOffers?: boolean; sort?: string; page?: number;
   /** Verified-data filters: views/decisions from campaign videos only (CreatorRanking on the server). */
   minVerifiedViews?: number; minApprovalRate?: number; onlyWithResults?: boolean;
+  /** Recent window (7 or 30 days) for Relevans and the chips; recentOnly=false also lists creators without recent results; platform 'instagram' = opted-in tag. */
+  window?: 7 | 30; recentOnly?: boolean; platform?: string;
 }) {
   return useQuery({
     queryKey: ['creator-search', params],

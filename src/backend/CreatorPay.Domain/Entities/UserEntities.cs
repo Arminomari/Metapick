@@ -104,6 +104,8 @@ public class CreatorProfile : SoftDeletableEntity
     public string? Website { get; set; }
     /// <summary>Whether the creator allows brands to send direct PR offers.</summary>
     public bool OpenToPrOffers { get; set; } = true;
+    /// <summary>USER_EDITABLE opt-in: show an "Instagram kreatör" tag (a link, never numbers) on Hitta and the profile.</summary>
+    public bool ShowInstagramBadge { get; set; }
 
     // Navigation
     public User User { get; set; } = null!;

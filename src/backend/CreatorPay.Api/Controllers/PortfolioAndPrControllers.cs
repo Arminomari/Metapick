@@ -55,12 +55,13 @@ public class CreatorDiscoveryController : BaseController
         [FromQuery] int? minFollowers, [FromQuery] string? tag, [FromQuery] bool? openToPrOffers,
         [FromQuery] string? sort, [FromQuery] int page = 1, [FromQuery] int pageSize = 20,
         [FromQuery] long? minVerifiedViews = null, [FromQuery] double? minApprovalRate = null, [FromQuery] bool? onlyWithResults = null,
+        [FromQuery] int? window = null, [FromQuery] bool? recentOnly = null, [FromQuery] string? platform = null,
         CancellationToken ct = default)
     {
         (page, pageSize) = ClampPagination(page, pageSize);
         return ToActionResult(await _discovery.SearchAsync(
             search, category, country, minFollowers, tag, openToPrOffers, sort, page, pageSize,
-            minVerifiedViews, minApprovalRate, onlyWithResults, ct));
+            minVerifiedViews, minApprovalRate, onlyWithResults, window, recentOnly, platform, ct));
     }
 
     /// <summary>Hämta en kreatörs fullständiga publika profil (inkl. portfölj &amp; omdömen)</summary>

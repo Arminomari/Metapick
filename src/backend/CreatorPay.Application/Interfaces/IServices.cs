@@ -94,6 +94,7 @@ public interface ICreatorDiscoveryService
         string? search, string? category, string? country, int? minFollowers,
         string? tag, bool? openToPrOffers, string? sort, int page, int pageSize,
         long? minVerifiedViews = null, double? minApprovalRate = null, bool? onlyWithResults = null,
+        int? window = null, bool? recentOnly = null, string? platform = null,
         CancellationToken ct = default);
     Task<Result<CreatorPublicProfileDto>> GetPublicProfileAsync(Guid creatorProfileId, CancellationToken ct = default);
 }

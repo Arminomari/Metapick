@@ -127,7 +127,8 @@ public record CreatorProfileDto(
     string? InstagramUsername, string? Website, bool OpenToPrOffers,
     DateOnly? DateOfBirth = null, string? CoverUrl = null,
     // Whether brands can find and open this profile (CreatorVisibility), and why not
-    bool VisibleToBrands = false, string? VisibilityBlocker = null);
+    bool VisibleToBrands = false, string? VisibilityBlocker = null,
+    bool ShowInstagramBadge = false);
 
 public record CreatorListDto(
     Guid Id, string DisplayName, string Category, string Country,
@@ -139,7 +140,7 @@ public record UpdateCreatorProfileRequest(
     string? AvatarUrl = null,
     string? InstagramUsername = null,
     string? Website = null, bool? OpenToPrOffers = null,
-    string? CoverUrl = null);
+    string? CoverUrl = null, bool? ShowInstagramBadge = null);
 
 // ──── Creator discovery (brand-facing search & public profile) ────
 /// <summary>
@@ -159,7 +160,9 @@ public record CreatorDiscoveryDto(
     int ApprovedVideos, int TotalVideos, double ApprovalRate,
     DateTime? MetricsUpdatedAt, DateTime? LastActiveAt,
     // Badges from platform data only (CreatorBadges): OAuth + verified video; top decile of verified views
-    bool VerifiedCreator = false, bool TopCreator = false);
+    bool VerifiedCreator = false, bool TopCreator = false,
+    // Verified views gained in the last 7 / 30 days (daily snapshots); the creator's opt-in Instagram tag
+    long Views7d = 0, long Views30d = 0, bool ShowInstagramBadge = false);
 
 public record CreatorPublicProfileDto(
     Guid Id, Guid UserId, string DisplayName, string? Bio, string Category, string Country,
@@ -178,7 +181,8 @@ public record CreatorPublicProfileDto(
     decimal TotalEarned = 0, decimal EarningsPerThousandViews = 0,
     int ApprovedVideos = 0, int TotalVideos = 0, double ApprovalRate = 0,
     string Level = "Rising",
-    string? CoverUrl = null, bool VerifiedCreator = false, bool TopCreator = false);
+    string? CoverUrl = null, bool VerifiedCreator = false, bool TopCreator = false,
+    bool ShowInstagramBadge = false);
 
 // ──── Portfolio ────
 public record PortfolioItemDto(

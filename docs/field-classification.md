@@ -502,3 +502,13 @@ Wizarden samlar **inga** självrapporterade prestationssiffror. Den skickar dock
 7. Landningssida: ta bort fiktiva badges, scores, testimonials och logotyper; märk räkneexempel; laga 17 länkar; Instagram-påståenden bort.
 
 Steg 0 är levererat. Inget är kodat. Väntar på "OK" innan block A påbörjas.
+
+## Tillägg 2026-09-22 — Hitta: nyligen presterat
+
+| Fält | Sida/komponent | Klass | Källa | Åtgärd |
+|---|---|---|---|---|
+| Views senaste 7 / 30 dagarna | Creators › Hitta (plattforms-chip, sortering Relevans) | SYSTEM_COMPUTED | `SocialPostMetricSnapshot` (dagliga TikTok-snapshots) via `CreatorRanking.WindowViews` | behåll (server-beräknad, visas med fönster) |
+| "Presterat nyligen"-tröskel (≥10 000 / 7 d eller ≥100 000 / 30 d) | Creators › Hitta (standardfilter) | SYSTEM_COMPUTED | `CreatorRanking.Recent7dViews/Recent30dViews` | behåll |
+| Följare (chip till höger) | Creators › Hitta | SYSTEM_COMPUTED | `TikTokAccount.FollowerCount` via OAuth (`VerifiedFollowers()`) | behåll; summa över verifierade plattformar = TikTok idag |
+| Instagram kreatör-tagg | Creators › Hitta, profil | USER_EDITABLE | `CreatorProfile.ShowInstagramBadge` + `InstagramUsername` | behåll som länk märkt "ej verifierad"; inga siffror |
+

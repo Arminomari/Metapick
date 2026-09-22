@@ -136,6 +136,8 @@ public class CreatorService : ICreatorService
             creator.Website = string.IsNullOrWhiteSpace(request.Website) ? null : request.Website.Trim();
         if (request.OpenToPrOffers.HasValue)
             creator.OpenToPrOffers = request.OpenToPrOffers.Value;
+        if (request.ShowInstagramBadge.HasValue)
+            creator.ShowInstagramBadge = request.ShowInstagramBadge.Value;
 
         // Update or create TikTok account
         if (!string.IsNullOrWhiteSpace(request.TikTokUsername))
@@ -246,7 +248,8 @@ public class CreatorService : ICreatorService
             c.ProfileTags?.ToList() ?? [],
             c.InstagramUsername, c.Website, c.OpenToPrOffers, c.DateOfBirth, c.CoverUrl,
             CreatorVisibility.IsVisibleToBrands(c.Status, c.TikTokAccount.IsVerified()),
-            CreatorVisibility.Blocker(c.Status, c.TikTokAccount.IsVerified()));
+            CreatorVisibility.Blocker(c.Status, c.TikTokAccount.IsVerified()),
+            c.ShowInstagramBadge);
 
     private async Task<CreatorProfile?> GetOrCreateCreatorProfileAsync(Guid userId)
     {
