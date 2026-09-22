@@ -46,8 +46,7 @@ public class PayoutApiTests(CreatorPayFactory factory)
         var campaign = await campaignRes.GetData<CampaignDetailDto>();
         var campaignId = campaign!.Id.ToString();
 
-        var publishRes = await brandClient.PostAsync($"/api/campaigns/{campaignId}/publish", null);
-        Assert.Equal(HttpStatusCode.OK, publishRes.StatusCode);
+        await brandClient.PublishAndApproveCampaign(campaignId);
 
         var creatorClient = _factory.CreateClient();
         await creatorClient.RegisterAndLogin($"creator-payout-{Guid.NewGuid():N}@test.se", "Test1234!", "Creator");
@@ -79,7 +78,7 @@ public class PayoutApiTests(CreatorPayFactory factory)
     {
         var submitRes = await creator.PostAsJsonAsync($"/api/assignments/{assignmentId}/submit", new
         {
-            tikTokVideoUrl = $"https://www.tiktok.com/@testuser/video/{videoId}",
+            videoUrl = $"https://www.tiktok.com/@{TestMedia.TikTokUsername(creator.TestEmail())}/video/{videoId}",
             notes = "Payout test video"
         });
         Assert.Equal(HttpStatusCode.OK, submitRes.StatusCode);
@@ -128,7 +127,7 @@ public class PayoutApiTests(CreatorPayFactory factory)
 
         var submitRes = await creator.PostAsJsonAsync($"/api/assignments/{assignmentId}/submit", new
         {
-            tikTokVideoUrl = "https://www.tiktok.com/@testuser/video/5555555555",
+            videoUrl = TestMedia.VideoUrl(creator, 5555555555),
             notes = "Still pending"
         });
         Assert.Equal(HttpStatusCode.OK, submitRes.StatusCode);

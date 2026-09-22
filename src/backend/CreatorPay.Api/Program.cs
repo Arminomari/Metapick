@@ -270,14 +270,22 @@ else
 app.UseHttpsRedirection();
 app.UseMiddleware<SecurityHeadersMiddleware>();
 
-app.UseRateLimiter();
+// Rate limiting is always on in production. Outside it, RateLimiting:Enabled=false
+// lets the integration tests register and log in hundreds of times from one client.
+if (app.Environment.IsProduction() || builder.Configuration.GetValue<bool?>("RateLimiting:Enabled") != false)
+    app.UseRateLimiter();
 app.UseCors("Frontend");
 // Local video deliverables (dev / before object storage is configured) are
 // served from disk. With S3/R2 configured the store hands out presigned URLs
 // and this branch is never used.
 if (string.IsNullOrEmpty(builder.Configuration["Storage:S3:Bucket"]))
 {
-    var uploadsRoot = builder.Configuration["Storage:BasePath"] ?? Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+    // PhysicalFileProvider demands an absolute path, so a relative Storage:BasePath
+    // (the dev default is "./uploads") would crash the API on boot.
+    var uploadsRoot = Path.GetFullPath(
+        builder.Configuration["Storage:BasePath"] is { Length: > 0 } configured
+            ? configured
+            : Path.Combine(Directory.GetCurrentDirectory(), "uploads"));
     Directory.CreateDirectory(uploadsRoot);
     app.UseStaticFiles(new StaticFileOptions
     {
@@ -289,10 +297,15 @@ if (string.IsNullOrEmpty(builder.Configuration["Storage:S3:Bucket"]))
 
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseHangfireDashboard("/hangfire", new DashboardOptions
+// Only when Hangfire storage is actually registered. A host that strips it (the
+// integration tests) would otherwise fail to start on the dashboard alone.
+if (app.Services.GetService<Hangfire.JobStorage>() != null)
 {
-    Authorization = [new CreatorPay.Api.Middleware.HangfireAuthFilter()]
-});
+    app.UseHangfireDashboard("/hangfire", new DashboardOptions
+    {
+        Authorization = [new CreatorPay.Api.Middleware.HangfireAuthFilter()]
+    });
+}
 app.MapControllers();
 
 // ── Health checks ─────────────────────────────────────
@@ -442,9 +455,10 @@ app.MapHealthChecks("/health/ready",
     // The demo-data seeder (fake views, payouts and portfolio brands) was removed: no fabricated numbers can be seeded into production.
 
     // ── Recurring jobs (only when the API hosts the Hangfire server) ──
-    if (runHangfireServerInApi)
+    // GetService, not GetRequiredService: a host without Hangfire (the integration
+    // tests) has no job manager and must still boot.
+    if (runHangfireServerInApi && scope.ServiceProvider.GetService<Hangfire.IRecurringJobManager>() is { } recurring)
     {
-        var recurring = scope.ServiceProvider.GetRequiredService<Hangfire.IRecurringJobManager>();
         recurring.AddOrUpdate<CreatorPay.Worker.Jobs.DailyCampaignSyncJob>(
             "daily-campaign-sync", j => j.ExecuteAsync(),
             builder.Configuration["Jobs:CampaignSyncCron"] ?? "*/10 * * * *");

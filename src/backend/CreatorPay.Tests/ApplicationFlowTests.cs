@@ -44,13 +44,10 @@ public class ApplicationFlowTests(CreatorPayFactory factory)
         });
         Assert.Equal(HttpStatusCode.OK, campaignRes.StatusCode);
 
-        var campaignBody = await campaignRes.Content.ReadAsStringAsync();
-        using var campaignDoc = JsonDocument.Parse(campaignBody);
-        var campaignId = campaignDoc.RootElement.GetProperty("data").GetProperty("id").GetString()!;
+        var campaignId = await campaignRes.ReadId();
 
         // ── 2. Brand publishes campaign ──
-        var publishRes = await brandClient.PostAsync($"/api/campaigns/{campaignId}/publish", null);
-        Assert.Equal(HttpStatusCode.OK, publishRes.StatusCode);
+        await brandClient.PublishAndApproveCampaign(campaignId);
 
         // ── 3. Creator creates profile and applies ──
         var creatorClient = _factory.CreateClient();
@@ -73,9 +70,7 @@ public class ApplicationFlowTests(CreatorPayFactory factory)
         });
         Assert.Equal(HttpStatusCode.OK, applyRes.StatusCode);
 
-        var applyBody = await applyRes.Content.ReadAsStringAsync();
-        using var applyDoc = JsonDocument.Parse(applyBody);
-        var applicationId = applyDoc.RootElement.GetProperty("data").GetProperty("id").GetString()!;
+        var applicationId = await applyRes.ReadId();
 
         // ── 4. Brand approves application ──
         var approveRes = await brandClient.PostAsync($"/api/applications/{applicationId}/approve", null);
@@ -108,10 +103,8 @@ public class ApplicationFlowTests(CreatorPayFactory factory)
             rules = Array.Empty<object>(),
             payoutRules = new[] { new { payoutType = "FixedThreshold", minViews = 500, amount = 300, sortOrder = 0 } }
         });
-        var campBody = await campaign.Content.ReadAsStringAsync();
-        using var campDoc = JsonDocument.Parse(campBody);
-        var campId = campDoc.RootElement.GetProperty("data").GetProperty("id").GetString()!;
-        await brandClient.PostAsync($"/api/campaigns/{campId}/publish", null);
+        var campId = await campaign.ReadId();
+        await brandClient.PublishAndApproveCampaign(campId);
 
         var creatorClient = _factory.CreateClient();
         await creatorClient.RegisterAndLogin($"creator-dup-{Guid.NewGuid():N}@test.se", "Test1234!", "Creator");

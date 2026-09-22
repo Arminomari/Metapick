@@ -33,10 +33,8 @@ public class SubmissionReviewTests(CreatorPayFactory factory)
             rules = Array.Empty<object>(),
             payoutRules = new[] { new { payoutType = "FixedThreshold", minViews = 500, amount = 300, sortOrder = 0 } }
         });
-        var campBody = await campRes.Content.ReadAsStringAsync();
-        using var campDoc = JsonDocument.Parse(campBody);
-        var campaignId = campDoc.RootElement.GetProperty("data").GetProperty("id").GetString()!;
-        await brandClient.PostAsync($"/api/campaigns/{campaignId}/publish", null);
+        var campaignId = await campRes.ReadId();
+        await brandClient.PublishAndApproveCampaign(campaignId);
 
         var creatorClient = _factory.CreateClient();
         await creatorClient.RegisterAndLogin($"creator-rev-{Guid.NewGuid():N}@test.se", "Test1234!", "Creator");
@@ -47,9 +45,7 @@ public class SubmissionReviewTests(CreatorPayFactory factory)
 
         // Apply and approve
         var applyRes = await creatorClient.PostAsJsonAsync("/api/applications", new { campaignId, message = "Review me" });
-        var applyBody = await applyRes.Content.ReadAsStringAsync();
-        using var applyDoc = JsonDocument.Parse(applyBody);
-        var appId = applyDoc.RootElement.GetProperty("data").GetProperty("id").GetString()!;
+        var appId = await applyRes.ReadId();
         await brandClient.PostAsync($"/api/applications/{appId}/approve", null);
 
         // Get assignment
@@ -69,7 +65,7 @@ public class SubmissionReviewTests(CreatorPayFactory factory)
 
         var res = await creator.PostAsJsonAsync($"/api/assignments/{assignmentId}/submit", new
         {
-            tikTokVideoUrl = "https://www.tiktok.com/@testuser/video/1234567890",
+            videoUrl = TestMedia.VideoUrl(creator, 1234567890),
             notes = "Test video"
         });
 
@@ -84,12 +80,10 @@ public class SubmissionReviewTests(CreatorPayFactory factory)
         // Submit video
         var submitRes = await creator.PostAsJsonAsync($"/api/assignments/{assignmentId}/submit", new
         {
-            tikTokVideoUrl = "https://www.tiktok.com/@testuser/video/9876543210",
+            videoUrl = TestMedia.VideoUrl(creator, 9876543210),
             notes = "Review this"
         });
-        var submitBody = await submitRes.Content.ReadAsStringAsync();
-        using var submitDoc = JsonDocument.Parse(submitBody);
-        var submissionId = submitDoc.RootElement.GetProperty("data").GetProperty("id").GetString()!;
+        var submissionId = await submitRes.ReadId();
 
         // Brand approves
         var approveRes = await brand.PostAsync($"/api/assignments/submissions/{submissionId}/approve", null);
@@ -106,12 +100,10 @@ public class SubmissionReviewTests(CreatorPayFactory factory)
 
         var submitRes = await creator.PostAsJsonAsync($"/api/assignments/{assignmentId}/submit", new
         {
-            tikTokVideoUrl = "https://www.tiktok.com/@testuser/video/1111111111",
+            videoUrl = TestMedia.VideoUrl(creator, 1111111111),
             notes = "Bad video"
         });
-        var submitBody = await submitRes.Content.ReadAsStringAsync();
-        using var submitDoc = JsonDocument.Parse(submitBody);
-        var submissionId = submitDoc.RootElement.GetProperty("data").GetProperty("id").GetString()!;
+        var submissionId = await submitRes.ReadId();
 
         // Brand rejects with reason
         var rejectRes = await brand.PostAsJsonAsync($"/api/assignments/submissions/{submissionId}/reject", new
@@ -132,11 +124,9 @@ public class SubmissionReviewTests(CreatorPayFactory factory)
 
         var submitRes = await creator.PostAsJsonAsync($"/api/assignments/{assignmentId}/submit", new
         {
-            tikTokVideoUrl = "https://www.tiktok.com/@testuser/video/2222222222"
+            videoUrl = TestMedia.VideoUrl(creator, 2222222222)
         });
-        var submitBody = await submitRes.Content.ReadAsStringAsync();
-        using var submitDoc = JsonDocument.Parse(submitBody);
-        var submissionId = submitDoc.RootElement.GetProperty("data").GetProperty("id").GetString()!;
+        var submissionId = await submitRes.ReadId();
 
         // Different brand tries to approve
         var otherBrand = _factory.CreateClient();
@@ -153,12 +143,10 @@ public class SubmissionReviewTests(CreatorPayFactory factory)
 
         var submitRes = await creator.PostAsJsonAsync($"/api/assignments/{assignmentId}/submit", new
         {
-            tikTokVideoUrl = "https://www.tiktok.com/@testuser/video/3333333333",
+            videoUrl = TestMedia.VideoUrl(creator, 3333333333),
             notes = "Ready for payment"
         });
-        var submitBody = await submitRes.Content.ReadAsStringAsync();
-        using var submitDoc = JsonDocument.Parse(submitBody);
-        var submissionId = submitDoc.RootElement.GetProperty("data").GetProperty("id").GetString()!;
+        var submissionId = await submitRes.ReadId();
 
         var approveRes = await brand.PostAsync($"/api/assignments/submissions/{submissionId}/approve", null);
         Assert.Equal(HttpStatusCode.OK, approveRes.StatusCode);
