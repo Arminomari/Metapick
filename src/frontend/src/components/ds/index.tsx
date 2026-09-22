@@ -211,10 +211,10 @@ export function Checkbox({ label, ...rest }: React.InputHTMLAttributes<HTMLInput
 }
 
 /* ── Meter ────────────────────────────────────────────────── */
-export function Meter({ value, max, tone, left, right }: { value: number; max: number; tone?: 'accent' | 'ok' | 'bad'; left?: React.ReactNode; right?: React.ReactNode }) {
+export function Meter({ value, max, tone, left, right, label }: { value: number; max: number; tone?: 'accent' | 'ok' | 'bad'; left?: React.ReactNode; right?: React.ReactNode; label?: string }) {
   const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0;
   return (
-    <div className={cx('ds-meter', tone && tone !== 'accent' && `ds-meter--${tone}`)} role="progressbar" aria-valuemin={0} aria-valuemax={max} aria-valuenow={value}>
+    <div className={cx('ds-meter', tone && tone !== 'accent' && `ds-meter--${tone}`)} role="progressbar" aria-valuemin={0} aria-valuemax={max} aria-valuenow={value} aria-label={label ?? (typeof left === 'string' ? left : typeof right === 'string' ? right : 'Andel')}>
       <div className="ds-meter-track"><div className="ds-meter-fill" style={{ width: `${pct}%` }} /></div>
       {(left || right) && <div className="ds-meter-labels"><span>{left}</span><span>{right}</span></div>}
     </div>
