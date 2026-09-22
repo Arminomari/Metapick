@@ -16,7 +16,8 @@ public class AdminTests(CreatorPayFactory factory)
         var email = $"approve-{Guid.NewGuid():N}@test.se";
         await _client.PostAsJsonAsync("/api/auth/register", new
         {
-            email, password = "Test1234!", firstName = "Approve", lastName = "Me", role = "Brand"
+            email, password = "Test1234!", firstName = "Approve", lastName = "Me", role = "Brand",
+            companyName = "Approve Me AB", organizationNumber = TestMedia.OrgNumber
         });
 
         // Login as admin
@@ -45,7 +46,7 @@ public class AdminTests(CreatorPayFactory factory)
     {
         await _client.LoginAs("admin@metapick.se", "Admin123!");
 
-        var res = await _client.GetAsync("/api/auth/me");
+        var res = await _client.GetAsync("/api/auth/profile");
 
         Assert.Equal(HttpStatusCode.OK, res.StatusCode);
         var body = await res.Content.ReadAsStringAsync();

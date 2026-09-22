@@ -33,16 +33,22 @@ public abstract class BaseController : ControllerBase
             return result.Value == null ? NoContent() : Ok(ApiResponse<T>.Ok(result.Value));
         }
 
-        // Error codes end with _NOT_FOUND, VALIDATION_ERROR, CONFLICT, FORBIDDEN, UNAUTHORIZED
-        var code = result.Error!.Code;
-        if (code.EndsWith("_NOT_FOUND")) return NotFound(new { error = result.Error });
-        return code switch
-        {
-            "VALIDATION_ERROR" => BadRequest(new { error = result.Error }),
-            "CONFLICT"         => Conflict(new { error = result.Error }),
-            "FORBIDDEN"        => StatusCode(403, new { error = result.Error }),
-            "UNAUTHORIZED"     => Unauthorized(new { error = result.Error }),
-            _                  => StatusCode(500, new { error = result.Error })
-        };
+        // Every Error carries the status it means (Errors.Conflict, AlreadyApplied,
+        // CampaignFull, InsufficientBudget …). Mapping on the code string alone
+        // turned every named 409 into a 500, so the status wins here; the code is
+        // only a fallback for errors built without one.
+        var error = result.Error!;
+        var status = error.HttpStatus is >= 400 and < 600
+            ? error.HttpStatus
+            : error.Code.EndsWith("_NOT_FOUND") ? 404
+            : error.Code switch
+            {
+                "VALIDATION_ERROR" => 400,
+                "CONFLICT" => 409,
+                "FORBIDDEN" => 403,
+                "UNAUTHORIZED" => 401,
+                _ => 500,
+            };
+        return StatusCode(status, new { error });
     }
 }

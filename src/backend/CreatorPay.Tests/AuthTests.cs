@@ -18,7 +18,9 @@ public class AuthTests(CreatorPayFactory factory)
             password = "Test1234!",
             firstName = "Brand",
             lastName = "Test",
-            role = "Brand"
+            role = "Brand",
+            companyName = "Brand Test AB",
+            organizationNumber = TestMedia.OrgNumber
         });
 
         Assert.Equal(HttpStatusCode.OK, res.StatusCode);
@@ -33,7 +35,14 @@ public class AuthTests(CreatorPayFactory factory)
             password = "Test1234!",
             firstName = "Creator",
             lastName = "Test",
-            role = "Creator"
+            role = "Creator",
+            displayName = "Creator Test",
+            bio = "Integration test creator profile.",
+            category = "Tech",
+            country = "SE",
+            tikTokUsername = "tt_" + Guid.NewGuid().ToString("N")[..8],
+            profileTags = new[] { "UGC Creator" },
+            selfieUrl = TestMedia.Selfie
         });
 
         Assert.Equal(HttpStatusCode.OK, res.StatusCode);
@@ -43,15 +52,14 @@ public class AuthTests(CreatorPayFactory factory)
     public async Task Register_DuplicateEmail_Returns409()
     {
         var email = $"dup-{Guid.NewGuid():N}@test.se";
-        await _client.PostAsJsonAsync("/api/auth/register", new
+        object payload = new
         {
-            email, password = "Test1234!", firstName = "A", lastName = "B", role = "Brand"
-        });
+            email, password = "Test1234!", firstName = "A", lastName = "B", role = "Brand",
+            companyName = "Dup AB", organizationNumber = TestMedia.OrgNumber
+        };
+        await _client.PostAsJsonAsync("/api/auth/register", payload);
 
-        var res = await _client.PostAsJsonAsync("/api/auth/register", new
-        {
-            email, password = "Test1234!", firstName = "A", lastName = "B", role = "Brand"
-        });
+        var res = await _client.PostAsJsonAsync("/api/auth/register", payload);
 
         Assert.Equal(HttpStatusCode.Conflict, res.StatusCode);
     }

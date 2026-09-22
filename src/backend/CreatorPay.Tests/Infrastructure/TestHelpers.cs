@@ -9,6 +9,34 @@ namespace CreatorPay.Tests.Infrastructure;
 [CollectionDefinition("Integration")]
 public class IntegrationCollection : ICollectionFixture<CreatorPayFactory> { }
 
+/// <summary>Shapes the API accepts, so payload rules live in one place.</summary>
+public static class TestMedia
+{
+    /// <summary>Smallest thing MediaValidation accepts as an uploaded image.</summary>
+    public const string Selfie = "https://cdn.example.test/selfie.jpg";
+    /// <summary>Luhn-valid Swedish organisation number (OrgNumber.IsValid).</summary>
+    public const string OrgNumber = "556677-8899";
+
+    /// <summary>
+    /// The TikTok handle a test creator gets. Derived from the email so the
+    /// factory and the tests agree without passing it around, and unique per
+    /// creator because tiktok_accounts.TikTokUsername is unique.
+    /// </summary>
+    public static string TikTokUsername(string email)
+    {
+        var local = email.Split('@')[0];
+        var clean = new string(local.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+        return "tt" + (clean.Length > 22 ? clean[..22] : clean);
+    }
+
+    /// <summary>
+    /// A video URL on the client's own connected account. Submitting someone
+    /// else's video is refused, so tests must post their own.
+    /// </summary>
+    public static string VideoUrl(HttpClient client, long videoId)
+        => $"https://www.tiktok.com/@{TikTokUsername(client.TestEmail())}/video/{videoId}";
+}
+
 public static class HttpClientExtensions
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -21,6 +49,63 @@ public static class HttpClientExtensions
         var content = await response.Content.ReadAsStringAsync();
         var wrapper = JsonSerializer.Deserialize<ApiResponse<T>>(content, JsonOptions);
         return wrapper == null ? default : wrapper.Data;
+    }
+
+    /// <summary>
+    /// Takes a campaign live the way the product does: the brand publishes it,
+    /// which puts it in review, and VYRLE approves it. Restores the caller's
+    /// own token afterwards.
+    /// </summary>
+    public static async Task PublishAndApproveCampaign(this HttpClient brandClient, string campaignId)
+    {
+        (await brandClient.PostAsync($"/api/campaigns/{campaignId}/publish", null)).EnsurePublished();
+
+        var brandAuth = brandClient.DefaultRequestHeaders.Authorization;
+        await brandClient.LoginAs("admin@metapick.se", "Admin123!");
+        var approve = await brandClient.PostAsync($"/api/admin/campaigns/{campaignId}/approve", null);
+        if (!approve.IsSuccessStatusCode)
+            throw new Exception($"Campaign approval failed ({(int)approve.StatusCode}): {await approve.Content.ReadAsStringAsync()}");
+        brandClient.DefaultRequestHeaders.Authorization = brandAuth;
+    }
+
+    /// <summary>
+    /// Publishing is a precondition for everything that follows; letting it fail
+    /// silently turns the next call into a confusing 409.
+    /// </summary>
+    public static HttpResponseMessage EnsurePublished(this HttpResponseMessage res)
+    {
+        if (!res.IsSuccessStatusCode)
+            throw new Exception($"Publish failed ({(int)res.StatusCode} {res.StatusCode}): {res.Content.ReadAsStringAsync().GetAwaiter().GetResult()}");
+        return res;
+    }
+
+    /// <summary>
+    /// The id from a successful envelope. Fails with the status and the body
+    /// instead of a bare KeyNotFoundException when the call did not succeed.
+    /// </summary>
+    public static async Task<string> ReadId(this HttpResponseMessage res)
+    {
+        var body = await res.Content.ReadAsStringAsync();
+        if (!res.IsSuccessStatusCode)
+            throw new Exception($"Expected success, got {(int)res.StatusCode} {res.StatusCode}: {body}");
+        using var doc = JsonDocument.Parse(body);
+        if (!doc.RootElement.TryGetProperty("data", out var data) || data.ValueKind != JsonValueKind.Object)
+            throw new Exception($"No data object in response ({(int)res.StatusCode}): {body}");
+        return data.GetProperty("id").GetString()!;
+    }
+
+    private const string TestEmailHeader = "X-Test-Email";
+
+    /// <summary>The account this client last registered as.</summary>
+    public static string TestEmail(this HttpClient client)
+        => client.DefaultRequestHeaders.TryGetValues(TestEmailHeader, out var values)
+            ? values.First()
+            : throw new Exception("This client has not registered; call RegisterAndLogin first.");
+
+    private static void RememberTestEmail(this HttpClient client, string email)
+    {
+        client.DefaultRequestHeaders.Remove(TestEmailHeader);
+        client.DefaultRequestHeaders.Add(TestEmailHeader, email);
     }
 
     public static async Task<HttpClient> LoginAs(this HttpClient client, string email, string password)
@@ -46,13 +131,15 @@ public static class HttpClientExtensions
                 category = "Tech",
                 country = "SE",
                 tikTokUsername = "tt_" + Guid.NewGuid().ToString("N")[..8],
-                profileTags = new[] { "UGC Creator" }
+                profileTags = new[] { "UGC Creator" },
+                // Identity verification: a creator cannot register without one.
+                selfieUrl = TestMedia.Selfie
             },
             "Brand" => new
             {
                 email, password, firstName, lastName, role,
                 companyName = $"{firstName} Co",
-                organizationNumber = "556677-8899"
+                organizationNumber = TestMedia.OrgNumber
             },
             _ => new { email, password, firstName, lastName, role }
         };
@@ -63,6 +150,16 @@ public static class HttpClientExtensions
             var body = await regRes.Content.ReadAsStringAsync();
             if (!body.Contains("already exists"))
                 throw new Exception($"Register failed: {body}");
+        }
+
+        // Registration only sends the confirmation link; tests cannot click it, and
+        // applying for work requires a proven inbox and an OAuth TikTok connection.
+        if (CreatorPayFactory.Current is { } fixtureFactory)
+        {
+            await fixtureFactory.MarkEmailVerified(email);
+            if (role == "Creator") await fixtureFactory.ConnectTikTok(email);
+            // Publishing a campaign or ordering video needs a registry-verified number.
+            if (role == "Brand") await fixtureFactory.MarkOrgVerified(email);
         }
 
         // Approve via admin
@@ -96,6 +193,7 @@ public static class HttpClientExtensions
 
         // Now login as the new user
         await client.LoginAs(email, password);
+        client.RememberTestEmail(email);
         return client;
     }
 }
