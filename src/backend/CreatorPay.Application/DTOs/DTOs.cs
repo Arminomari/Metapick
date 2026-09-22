@@ -346,7 +346,21 @@ public record ApplicationDto(
 public record AssignmentListDto(
     Guid Id, Guid CampaignId, string CampaignName,
     string Status, long TotalVerifiedViews, long TotalTrackedClicks, decimal CurrentPayoutAmount, DateTime AssignedAt,
-    bool GoalReached = false, bool IsTap = false);
+    bool GoalReached = false, bool IsTap = false,
+    // Shared timeline (AssignmentProgress): which step the job is on and who it waits for.
+    string? StageKey = null, string? StageLabel = null, string? WaitingOn = null, string? Headline = null);
+
+/// <summary>One step of the shared creator/brand timeline.</summary>
+public record ProgressStageDto(
+    string Key, string Label, string State, string WaitingOn, string? Hint, DateTime? Deadline);
+
+/// <summary>
+/// The same timeline for both sides of a job. Headlines are phrased per role so
+/// neither party has to guess whose turn it is.
+/// </summary>
+public record AssignmentProgressDto(
+    List<ProgressStageDto> Stages, string CurrentKey, string CurrentLabel,
+    string WaitingOn, string CreatorHeadline, string BrandHeadline);
 
 public record AssignmentDetailDto(
     Guid Id, Guid CampaignId, string CampaignName, Guid CreatorProfileId,
@@ -356,7 +370,8 @@ public record AssignmentDetailDto(
     List<SubmissionDto> Submissions, List<SocialPostInfoDto> SocialPosts,
     DateTime AssignedAt, DateTime? CompletedAt,
     Guid BrandUserId, Guid CreatorUserId, bool GoalReached = false, bool IsTap = false,
-    DateTime? MetricsUpdatedAt = null);
+    DateTime? MetricsUpdatedAt = null,
+    AssignmentProgressDto? Progress = null);
 
 public record SocialPostInfoDto(
     Guid Id, string TikTokUrl, string TikTokVideoId, long Views,

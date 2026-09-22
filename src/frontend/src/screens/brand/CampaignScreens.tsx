@@ -14,6 +14,7 @@ import { Avatar, Badge, BottomSheet, Button, Card, EmptyState, Field, List, List
 import { MoreMenu, apiMessage, daysLeft } from '@/components/app/common';
 import { ChatPanel } from '@/components/app/Chat';
 import { ReviewSection } from '@/components/app/Reviews';
+import { ProgressTimeline } from '@/components/app/ProgressTimeline';
 import { PayoutTerms, payoutHeadline } from '@/components/app/PayoutTerms';
 
 const PAYOUT_LABEL: Record<string, string> = { ReadyForManualPayment: 'Redo att betalas', AwaitingThreshold: 'Väntar på views', Completed: 'Pengar skickade', Approved: 'Godkänd för utbetalning', Pending: 'Väntar', Processing: 'Bearbetas' };
@@ -148,6 +149,7 @@ export function CampaignCreatorScreen() {
     <Page>
       <PageHead title={a.creatorName || t('Creator')} back={{ to: `/brand/campaigns/${id}` }} actions={<MoreMenu items={[{ label: t('Uppdatera views nu'), onClick: () => refresh.mutate() }, { label: t('Visa profil'), to: `/brand/creators/${a.creatorProfileId}` }, { label: t('Betygsätt'), hidden: a.status !== 'Completed', onClick: () => document.getElementById('review')?.scrollIntoView({ block: 'start', behavior: 'smooth' }) }]} />} />
       <div className="ds-row ds-row--wrap"><StatusBadge status={a.status} /><span className="ds-caption ds-muted">{a.campaignName}</span></div>
+      {a.progress && <ProgressTimeline progress={a.progress} role="brand" />}
       <StatRow cols={3}>
         <StatTile label={t('Views')} count={a.totalVerifiedViews} format={formatNumber} />
         <StatTile label={t('Intjänat')} count={a.currentPayoutAmount} format={money} hint={cp ? t(PAYOUT_LABEL[cp.payoutStatus] ?? cp.payoutStatus) : undefined} />

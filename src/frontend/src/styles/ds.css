@@ -383,9 +383,9 @@ select.ds-input { appearance: none; background-image: url("data:image/svg+xml,%3
 /* Chat */
 .ds-thread { display: flex; flex-direction: column; gap: 6px; padding: var(--ds-2) 0; }
 .ds-bubble { max-width: 82%; padding: 9px 12px; border-radius: 16px; font-size: var(--ds-body); line-height: 1.45; overflow-wrap: anywhere; white-space: pre-line; }
-.ds-bubble--me { align-self: flex-end; background: var(--ds-accent); color: var(--ds-on-accent); border-bottom-right-radius: 5px; }
+.ds-bubble--me { align-self: flex-end; background: var(--ds-accent-ink); color: var(--ds-on-accent); border-bottom-right-radius: 5px; }
 .ds-bubble--them { align-self: flex-start; background: var(--ds-neutral-soft); color: var(--ds-ink); border-bottom-left-radius: 5px; }
-.ds-bubble-meta { font-size: 11px; opacity: .7; margin-top: 3px; text-align: right; }
+.ds-bubble-meta { font-size: 11px; opacity: .85; margin-top: 3px; text-align: right; }
 .ds-bubble--them .ds-bubble-meta { text-align: left; }
 .ds-composer { display: flex; gap: var(--ds-2); align-items: flex-end; padding-top: var(--ds-2); border-top: 1px solid var(--ds-line); }
 .ds-composer .ds-input { border-radius: 22px; min-height: var(--ds-tap); }
@@ -516,3 +516,18 @@ button.ds-tag { border: none; font: inherit; cursor: pointer; min-height: 32px; 
 .ds-platchip-text b { font-size: var(--ds-caption); font-weight: 600; color: var(--ds-ink); }
 .ds-platchip-text span { font-size: 11px; color: var(--ds-ink-2); overflow-wrap: anywhere; }
 .ds-select-inline { font: inherit; font-size: var(--ds-caption); font-weight: 600; color: var(--ds-ink); background: var(--ds-card); border: 1px solid var(--ds-line-strong); border-radius: var(--ds-r-sm); padding: 4px 8px; min-height: 32px; }
+
+/* ── Shared job timeline (creator + brand read the same steps) ────── */
+.ds-timeline { list-style: none; margin: 12px 0 0; padding: 0; }
+.ds-timeline-item { position: relative; display: flex; gap: 12px; padding: 0 0 14px 0; }
+.ds-timeline-item:last-child { padding-bottom: 0; }
+/* the connector runs from each mark down to the next one */
+.ds-timeline-item:not(:last-child)::before { content: ""; position: absolute; left: 10px; top: 22px; bottom: 0; width: 2px; background: var(--ds-line); }
+.ds-timeline-item.done:not(:last-child)::before { background: var(--ds-ok, #1F7A4D); opacity: .35; }
+.ds-timeline-mark { position: relative; z-index: 1; flex: 0 0 22px; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--ds-line-strong); background: var(--ds-card); display: inline-flex; align-items: center; justify-content: center; color: #fff; }
+.ds-timeline-item.done .ds-timeline-mark { background: var(--ds-ok, #1F7A4D); border-color: transparent; }
+.ds-timeline-item.current .ds-timeline-mark { background: var(--ds-accent-ink); border-color: transparent; }
+.ds-timeline-item.stopped .ds-timeline-mark { background: var(--ds-bad); border-color: transparent; }
+.ds-timeline-label { font-size: var(--ds-body); font-weight: 600; color: var(--ds-ink); overflow-wrap: anywhere; }
+.ds-timeline-item:not(.done):not(.current):not(.stopped) .ds-timeline-label { color: var(--ds-ink-2); font-weight: 500; }
+.ds-timeline-hint { font-size: var(--ds-caption); color: var(--ds-ink-2); margin-top: 2px; line-height: 1.4; overflow-wrap: anywhere; }

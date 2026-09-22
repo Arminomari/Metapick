@@ -363,6 +363,31 @@ export interface AssignmentListItem {
   assignedAt: string;
   goalReached?: boolean;
   isTap?: boolean;
+  /** Shared timeline (server: AssignmentProgress): the step and who it waits for. */
+  stageKey?: string | null;
+  stageLabel?: string | null;
+  waitingOn?: string | null;
+  headline?: string | null;
+}
+
+/** One step of the shared creator/brand timeline. */
+export interface ProgressStage {
+  key: string;
+  label: string;
+  state: 'Upcoming' | 'Current' | 'Done' | 'Stopped';
+  waitingOn: 'Nobody' | 'Creator' | 'Brand' | 'Vyrle' | 'TikTok';
+  hint?: string | null;
+  deadline?: string | null;
+}
+
+/** The same timeline for both sides, with a headline phrased per role. */
+export interface AssignmentProgress {
+  stages: ProgressStage[];
+  currentKey: string;
+  currentLabel: string;
+  waitingOn: 'Nobody' | 'Creator' | 'Brand' | 'Vyrle' | 'TikTok';
+  creatorHeadline: string;
+  brandHeadline: string;
 }
 
 export interface AssignmentDetail {
@@ -385,6 +410,7 @@ export interface AssignmentDetail {
   brandUserId: string;
   creatorUserId: string;
   metricsUpdatedAt?: string | null;
+  progress?: AssignmentProgress | null;
 }
 
 export interface SocialPostInfo {

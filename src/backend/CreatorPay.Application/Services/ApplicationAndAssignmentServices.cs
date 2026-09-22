@@ -438,6 +438,7 @@ public class AssignmentService : IAssignmentService
             .Include(a => a.TrackingLinks)
             .Include(a => a.Submissions)
             .Include(a => a.SocialPosts)
+            .Include(a => a.PayoutCalculations).ThenInclude(pc => pc.PayoutRequest)
             .FirstOrDefaultAsync(a => a.Id == assignmentId, ct);
 
         if (assignment == null) return Errors.NotFound("Assignment", assignmentId);
@@ -464,6 +465,8 @@ public class AssignmentService : IAssignmentService
         var query = _assignments.Query()
             .Include(a => a.Campaign).ThenInclude(c => c.PayoutRules)
             .Include(a => a.TrackingLinks)
+            .Include(a => a.Submissions)
+            .Include(a => a.PayoutCalculations).ThenInclude(pc => pc.PayoutRequest)
             .Where(a => a.CreatorProfileId == creator.Id
                 && a.Campaign.Kind == CampaignKind.Campaign);
 
@@ -502,12 +505,14 @@ public class AssignmentService : IAssignmentService
         var dtos = items.Select(a =>
         {
             var eff = EffectiveStatus(a, today);
+            var stage = AssignmentProgress.Current(AssignmentProgress.Stages(FactsFor(a, eff)));
             return new AssignmentListDto(
                 a.Id, a.CampaignId, a.Campaign.Name, eff,
                 a.TotalVerifiedViews, a.TrackingLinks.Where(tl => tl.IsActive).Sum(tl => tl.TotalClicks),
                 a.CurrentPayoutAmount, a.AssignedAt,
                 eff == nameof(AssignmentStatus.Active) && IsGoalReached(a.Campaign, a.CurrentPayoutAmount),
-                a.Campaign.Kind == CampaignKind.Tap);
+                a.Campaign.Kind == CampaignKind.Tap,
+                stage.Key, stage.Label, stage.WaitingOn.ToString(), AssignmentProgress.CreatorHeadline(stage));
         }).ToList();
 
         return new PagedResult<AssignmentListDto>
@@ -850,6 +855,49 @@ public class AssignmentService : IAssignmentService
         return nameof(AssignmentStatus.Active);
     }
 
+    /// <summary>
+    /// Collects what the shared timeline needs. Submissions decide the review
+    /// step, the payout ledger decides the money step; everything else follows
+    /// from the assignment itself.
+    /// </summary>
+    private static AssignmentFacts FactsFor(CreatorCampaignAssignment a, string effectiveStatus)
+    {
+        var subs = a.Submissions ?? (ICollection<CreatorSubmission>)[];
+        var pending = subs.Where(x => x.Status is SubmissionStatus.Pending or SubmissionStatus.ManualReview).ToList();
+        // The oldest undecided video is the one that auto-approves first.
+        DateTime? nextAuto = pending.Count == 0 ? null : ReviewPolicy.AutoApproveAt(pending.Min(x => x.CreatedAt));
+
+        var request = a.PayoutCalculations?
+            .Where(pc => pc.PayoutRequest != null)
+            .OrderByDescending(pc => pc.CalculatedAt)
+            .Select(pc => pc.PayoutRequest)
+            .FirstOrDefault();
+
+        return new AssignmentFacts(
+            Enum.TryParse<AssignmentStatus>(effectiveStatus, out var st) ? st : a.Status,
+            a.Campaign?.Kind == CampaignKind.Tap,
+            pending.Count,
+            subs.Count(x => x.Status is SubmissionStatus.Approved or SubmissionStatus.Matched),
+            subs.Count(x => x.Status == SubmissionStatus.Rejected),
+            nextAuto,
+            a.TotalVerifiedViews,
+            a.Campaign?.MinViews ?? 0,
+            a.CurrentPayoutAmount,
+            request?.Status,
+            null);
+    }
+
+    private static AssignmentProgressDto ProgressFor(CreatorCampaignAssignment a, string effectiveStatus)
+    {
+        var stages = AssignmentProgress.Stages(FactsFor(a, effectiveStatus));
+        var current = AssignmentProgress.Current(stages);
+        return new AssignmentProgressDto(
+            stages.Select(x => new ProgressStageDto(
+                x.Key, x.Label, x.State.ToString(), x.WaitingOn.ToString(), x.Hint, x.Deadline)).ToList(),
+            current.Key, current.Label, current.WaitingOn.ToString(),
+            AssignmentProgress.CreatorHeadline(current), AssignmentProgress.BrandHeadline(current));
+    }
+
     private static AssignmentDetailDto MapToDetail(CreatorCampaignAssignment a, bool goalReached) =>
         new(a.Id, a.CampaignId, a.Campaign.Name, a.CreatorProfileId,
             a.CreatorProfile.DisplayName, EffectiveStatus(a, DateTime.UtcNow.Date),
@@ -866,7 +914,8 @@ public class AssignmentService : IAssignmentService
             a.AssignedAt, a.CompletedAt,
             a.Campaign.BrandProfile.UserId, a.CreatorProfile.UserId, goalReached,
             a.Campaign.Kind == CampaignKind.Tap,
-            a.SocialPosts?.Where(sp => sp.IsActive).Max(sp => sp.MetricsUpdatedAt));
+            a.SocialPosts?.Where(sp => sp.IsActive).Max(sp => sp.MetricsUpdatedAt),
+            ProgressFor(a, EffectiveStatus(a, DateTime.UtcNow.Date)));
 
     private static SubmissionDto MapSubmission(CreatorSubmission s) =>
         new(s.Id, s.AssignmentId, s.TikTokVideoUrl, s.TikTokVideoId,
