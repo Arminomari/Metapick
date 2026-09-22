@@ -17,6 +17,7 @@ import { Badge, BottomSheet, Button, Card, EmptyState, Field, IconButton, Meter,
 import { MoreMenu, apiMessage, daysLeft } from '@/components/app/common';
 import { ChatPanel } from '@/components/app/Chat';
 import { ReviewSection } from '@/components/app/Reviews';
+import { ProgressTimeline } from '@/components/app/ProgressTimeline';
 import { PayoutTerms, payoutHeadline } from '@/components/app/PayoutTerms';
 
 async function copyText(text: string) {
@@ -114,6 +115,8 @@ export function AssignmentScreen() {
         {isTap ? <Badge tone={tapOpen ? 'ok' : 'neutral'}>{tapOpen ? t('Kran · öppen') : t('Kran · pausad')}</Badge> : <StatusBadge status={a.goalReached ? 'GoalReached' : a.status} />}
         {tap && <span className="ds-caption ds-muted">{tap.brandName}</span>}
       </div>
+
+      {a.progress && <ProgressTimeline progress={a.progress} role="creator" />}
 
       <StatRow cols={3}>
         <StatTile label={t('Views')} count={isTap && tap ? tap.myMonthViews : a.totalVerifiedViews} format={formatNumber} hint={isTap ? t('denna månad') : undefined} />

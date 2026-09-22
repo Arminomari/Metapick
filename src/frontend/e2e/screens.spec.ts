@@ -57,6 +57,9 @@ const shots: Shot[] = [
   { name: 'analytics-lowdata', path: '/brand/analytics', role: 'Brand', env: { LOW_DATA: '1' } },
   { name: 'creator-analytics-oversikt', path: '/creator/analytics', role: 'Creator', axe: true },
   { name: 'creator-analytics-pengar', path: '/creator/analytics', role: 'Creator', actions: [['click', 'Pengar']] },
+  // shared job timeline, both roles
+  { name: 'timeline-creator', path: '/creator/assignments/a2', role: 'Creator', axe: true },
+  { name: 'timeline-brand', path: '/brand/campaigns/ca1/creators/a2', role: 'Brand', axe: true },
   // 404
   { name: 'not-found', path: '/creator/nope', role: 'Creator', axe: true },
 ];

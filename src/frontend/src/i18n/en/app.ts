@@ -568,4 +568,6 @@ export const app: Record<string, string> = {
   'Visa taggen "Instagram kreatör" för företag (länk, märkt ej verifierad — inga siffror hämtas)': 'Show the "Instagram creator" tag to brands (a link, marked not verified — no numbers are fetched)',
   'Namn, bio, kategori eller plattform': 'Name, bio, category or platform',
   'Krävs för att publicera kampanjer och beställa video': 'Required to publish campaigns and order video',
+  'om': 'in',
+  'dag': 'day',
 };

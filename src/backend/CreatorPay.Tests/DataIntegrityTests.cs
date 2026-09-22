@@ -519,4 +519,73 @@ public class DataIntegrityTests
         // Counts never go negative if a platform corrects a number downwards.
         Assert.Equal(0, CreatorRanking.WindowViews(9_000, old, cutoff, [(new DateOnly(2026, 9, 14), 9_500)]));
     }
+
+    // ── Shared job timeline ─────────────────────────────────────────────
+
+    private static AssignmentFacts Job(
+        int pending = 0, int approved = 0, int rejected = 0, long views = 0, long minViews = 0,
+        decimal payout = 0, PayoutStatus? request = null, AssignmentStatus status = AssignmentStatus.Active, bool tap = false)
+        => new(status, tap, pending, approved, rejected, pending > 0 ? DateTime.UtcNow.AddHours(12) : null,
+            views, minViews, payout, request, null);
+
+    private static ProgressStage Step(AssignmentFacts f) => AssignmentProgress.Current(AssignmentProgress.Stages(f));
+
+    [Fact]
+    public void The_timeline_always_says_whose_turn_it_is()
+    {
+        // No video yet → the creator is up.
+        var waiting = Step(Job());
+        Assert.Equal("video", waiting.Key);
+        Assert.Equal(WaitingOn.Creator, waiting.WaitingOn);
+        Assert.Equal("Din tur: video publicerad", AssignmentProgress.CreatorHeadline(waiting));
+        Assert.Equal("Väntar på creatorn", AssignmentProgress.BrandHeadline(waiting));
+
+        // Submitted → the brand is up, with the auto-approve deadline attached.
+        var review = Step(Job(pending: 1));
+        Assert.Equal("review", review.Key);
+        Assert.Equal(WaitingOn.Brand, review.WaitingOn);
+        Assert.NotNull(review.Deadline);
+        Assert.Equal("Väntar på företaget", AssignmentProgress.CreatorHeadline(review));
+        Assert.Equal("Er tur: godkänd av företaget", AssignmentProgress.BrandHeadline(review));
+
+        // Approved but short of the threshold → nobody is blocking, TikTok is.
+        var views = Step(Job(approved: 1, views: 400, minViews: 1000));
+        Assert.Equal("views", views.Key);
+        Assert.Equal(WaitingOn.TikTok, views.WaitingOn);
+        Assert.Contains("400 av 1000", views.Hint);
+
+        // Rejected and nothing pending → back to the creator, with the reason kept.
+        var rejected = Step(Job(rejected: 1));
+        Assert.Equal("video", rejected.Key);
+        Assert.Equal(WaitingOn.Creator, rejected.WaitingOn);
+        Assert.Contains("nekades", rejected.Hint);
+    }
+
+    [Fact]
+    public void The_money_step_follows_the_payout_ledger()
+    {
+        Assert.Equal(WaitingOn.Creator, Step(Job(approved: 1, views: 5_000, minViews: 1_000, payout: 620)).WaitingOn);
+        Assert.Equal("payout", Step(Job(approved: 1, views: 5_000, minViews: 1_000, payout: 620)).Key);
+        Assert.Equal(WaitingOn.Vyrle, Step(Job(approved: 1, views: 5_000, payout: 620, request: PayoutStatus.Pending)).WaitingOn);
+        Assert.Equal(WaitingOn.Vyrle, Step(Job(approved: 1, views: 5_000, payout: 620, request: PayoutStatus.Processing)).WaitingOn);
+        Assert.Equal(WaitingOn.Creator, Step(Job(approved: 1, views: 5_000, payout: 620, request: PayoutStatus.Rejected)).WaitingOn);
+
+        // Paid and completed: the timeline is finished, nobody waits for anything.
+        var done = AssignmentProgress.Stages(Job(approved: 1, views: 5_000, payout: 620,
+            request: PayoutStatus.Completed, status: AssignmentStatus.Completed));
+        Assert.All(done, x => Assert.Equal(StageState.Done, x.State));
+        Assert.Equal(WaitingOn.Nobody, AssignmentProgress.Current(done).WaitingOn);
+    }
+
+    [Fact]
+    public void A_cancelled_job_stops_the_timeline_instead_of_pretending_to_continue()
+    {
+        var stages = AssignmentProgress.Stages(Job(approved: 1, views: 9_000, status: AssignmentStatus.Cancelled));
+        var current = AssignmentProgress.Current(stages);
+        Assert.Equal(StageState.Stopped, current.State);
+        Assert.Equal("Avbrutet", current.Label);
+        Assert.DoesNotContain(stages, x => x.Key == "payout");
+        // A tap never shows "Avslutat" — it runs month after month.
+        Assert.DoesNotContain(AssignmentProgress.Stages(Job(approved: 1, tap: true)), x => x.Key == "done");
+    }
 }
