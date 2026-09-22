@@ -41,6 +41,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAdminUserService, AdminUserService>();
         services.AddScoped<IBrandService, BrandService>();
         services.AddScoped<OrgVerificationService>();
+        services.AddScoped<CreatorBadgeService>();
         services.AddScoped<IBrandAnalyticsService, BrandAnalyticsService>();
         services.AddScoped<ICreatorAnalyticsService, CreatorAnalyticsService>();
         services.AddScoped<ICreatorService, CreatorService>();

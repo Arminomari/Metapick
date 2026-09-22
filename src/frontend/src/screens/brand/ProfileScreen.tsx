@@ -9,12 +9,14 @@ import { formatDate } from '@/lib/utils';
 import { maskOrgNr } from '@/lib/masks';
 import { CATEGORIES } from '@/lib/categories';
 import { useAuthStore } from '@/stores/authStore';
-import { useBrandProfile, useUpdateBrandProfile, useVerifyOrg } from '@/hooks/api';
+import { useBrandProfile, useUpdateBrandProfile, useVerifyOrg, useBrandCampaigns } from '@/hooks/api';
 import { useToast } from '@/components/vyrle/Toast';
 import { ImagePicker } from '@/components/auth/ImagePicker';
 import { Badge, BottomSheet, Button, Card, Field, List, ListRow, Page, PageHead, SkeletonList } from '@/components/ds';
 import { NotifBell, apiMessage } from '@/components/app/common';
 import { BrandPublicView } from '@/screens/shared/BrandPublicScreen';
+import { ProfileChecklist } from '@/components/app/ProfileChecklist';
+import { useBrandTaps } from '@/hooks/extra';
 
 function PostSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const qc = useQueryClient();
@@ -45,6 +47,8 @@ export function BrandProfileScreen() {
   const [post, setPost] = useState(params.get('post') === '1');
   useEffect(() => { if (params.get('post') === '1') { setPost(true); const n = new URLSearchParams(params); n.delete('post'); setParams(n, { replace: true }); } /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [params.get('post')]);
   const verify = useVerifyOrg();
+  const { data: taps = [] } = useBrandTaps();
+  const { data: campaignsRes } = useBrandCampaigns();
   const del = useMutation({ mutationFn: async (postId: string) => api.delete(`/brand/posts/${postId}`), onSuccess: () => { qc.invalidateQueries({ queryKey: ['brand-public'] }); toast.push(t('Inlägget är borttaget'), 'success'); }, onError: (e) => toast.push(apiMessage(e, t('Kunde inte ta bort')), 'error') });
   if (isLoading || !profile?.id) return <Page><PageHead title={t('Profil')} /><SkeletonList rows={3} /></Page>;
   return (
@@ -59,6 +63,13 @@ export function BrandProfileScreen() {
         </Card>
       )}
       {profile.orgVerified && profile.orgVerifiedName && <p className="ds-caption ds-muted">{t('Registrerat namn')}: {profile.orgVerifiedName} · {profile.orgVerificationSource === 'Admin' ? t('verifierat av VYRLE') : t('verifierat mot momsregistret')}{profile.orgVerifiedAt ? ` · ${formatDate(profile.orgVerifiedAt)}` : ''}</p>}
+      <ProfileChecklist title={t('Gör företagsprofilen komplett')} items={[
+        { key: 'org', label: t('Verifiera organisationsnumret'), done: !!profile.orgVerified, to: '/brand/profile/edit' },
+        { key: 'logo', label: t('Lägg till logotyp'), done: !!profile.logoUrl, to: '/brand/profile/edit' },
+        { key: 'cover', label: t('Lägg till cover'), done: !!profile.coverUrl, to: '/brand/profile/edit' },
+        { key: 'desc', label: t('Beskriv företaget (minst 40 tecken)'), done: (profile.description ?? '').trim().length >= 40, to: '/brand/profile/edit' },
+        { key: 'program', label: t('Öppna en kran eller skapa en kampanj'), done: taps.length > 0 || (campaignsRes?.totalCount ?? 0) > 0, to: '/brand/tap/new' },
+      ]} />
       <BrandPublicView id={profile.id} ownView onDeletePost={(id) => del.mutate(id)} />
       <List>
         <ListRow leading={<BarChart3 />} title={t('Statistik')} to="/brand/analytics" />
@@ -76,22 +87,25 @@ export function BrandProfileEditScreen() {
   const toast = useToast();
   const { data: profile, isLoading } = useBrandProfile();
   const update = useUpdateBrandProfile();
-  const [form, setForm] = useState<null | { companyName: string; organizationNumber: string; website: string; industry: string; description: string; contactPhone: string; logoUrl: string | null }>(null);
+  const [form, setForm] = useState<null | { companyName: string; organizationNumber: string; website: string; industry: string; description: string; contactPhone: string; logoUrl: string | null; coverUrl: string | null }>(null);
   const [error, setError] = useState('');
-  useEffect(() => { if (profile && !form) setForm({ companyName: profile.companyName ?? '', organizationNumber: profile.organizationNumber ?? '', website: profile.website ?? '', industry: profile.industry ?? '', description: profile.description ?? '', contactPhone: profile.contactPhone ?? '', logoUrl: profile.logoUrl ?? null }); }, [profile, form]);
+  useEffect(() => { if (profile && !form) setForm({ companyName: profile.companyName ?? '', organizationNumber: profile.organizationNumber ?? '', website: profile.website ?? '', industry: profile.industry ?? '', description: profile.description ?? '', contactPhone: profile.contactPhone ?? '', logoUrl: profile.logoUrl ?? null, coverUrl: profile.coverUrl ?? null }); }, [profile, form]);
   if (isLoading || !form) return <Page><PageHead title={t('Företagsprofil')} back={{ to: '/brand/profile' }} /><SkeletonList rows={3} /></Page>;
   const save = async (e: React.FormEvent) => {
     e.preventDefault(); setError('');
     const org = form.organizationNumber.trim();
     if (org && !/^\d{6}-?\d{4}$/.test(org)) { setError(t('Ange organisationsnummer i formatet XXXXXX-XXXX')); return; }
-    try { await update.mutateAsync({ ...form, organizationNumber: org || null, logoUrl: form.logoUrl ?? '' }); await qc.invalidateQueries({ queryKey: ['brand-public'] }); toast.push(t('Profilen sparad'), 'success'); navigate('/brand/profile'); }
+    try { await update.mutateAsync({ ...form, organizationNumber: org || null, logoUrl: form.logoUrl ?? '', coverUrl: form.coverUrl ?? '' }); await qc.invalidateQueries({ queryKey: ['brand-public'] }); toast.push(t('Profilen sparad'), 'success'); navigate('/brand/profile'); }
     catch (e2) { setError(apiMessage(e2, t('Kunde inte spara profilen.'))); }
   };
   return (
     <Page>
       <PageHead title={t('Företagsprofil')} back={{ to: '/brand/profile' }} />
       <form onSubmit={save} className="ds-stack" style={{ gap: 16 }}>
-        <Card><ImagePicker label={t('Logotyp')} shape="rounded" value={form.logoUrl} onChange={(v) => setForm({ ...form, logoUrl: v })} hint={t('Visas för creators på kampanjer, kranar och erbjudanden.')} /></Card>
+        <Card>
+          <ImagePicker label={t('Logotyp')} shape="rounded" value={form.logoUrl} onChange={(v) => setForm({ ...form, logoUrl: v })} hint={t('Visas för creators på kampanjer, kranar och erbjudanden.')} />
+          <ImagePicker label={t('Omslagsbild')} shape="wide" aspect={3} value={form.coverUrl} onChange={(v) => setForm({ ...form, coverUrl: v })} hint={t('Bred bild överst på profilen (3:1). Utan bild visas en färgad bakgrund.')} />
+        </Card>
         <Card>
           <div className="ds-stack" style={{ gap: 12 }}>
             <Field label={t('Företagsnamn')}><input required value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} /></Field>

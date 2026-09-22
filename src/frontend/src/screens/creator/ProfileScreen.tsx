@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Award, BarChart3, Bookmark, Link2, LogOut, Settings, Wallet } from 'lucide-react';
-import { t } from '@/lib/i18n';
+import { t, statusLabel } from '@/lib/i18n';
 import { formatNumber, categoryLabel, countryName } from '@/lib/utils';
 import { FEATURES } from '@/lib/features';
 import { CATEGORIES } from '@/lib/categories';
@@ -13,12 +13,14 @@ import { ALL_TAGS } from '@/lib/tags';
 import { useAuthStore } from '@/stores/authStore';
 import { useCreatorProfile, useUpdateCreatorProfile, useUserReviews, usePortfolio, useAddPortfolioItem, useUpdatePortfolioItem, useDeletePortfolioItem, useTikTokStatus, useCreatorAnalytics, useCreatorCollaborations } from '@/hooks/api';
 import { SourceNote } from '@/components/app/SourceNote';
+import { ProfileHero } from '@/components/app/ProfileHero';
+import { ProfileChecklist } from '@/components/app/ProfileChecklist';
+import { PortfolioGrid } from '@/components/app/PortfolioGrid';
 import { useToast } from '@/components/vyrle/Toast';
-import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
 import { ImagePicker } from '@/components/auth/ImagePicker';
 import { DateInput } from '@/components/ui/DateInput';
 import type { PortfolioItem, PortfolioMediaType } from '@/types';
-import { Avatar, Badge, BottomSheet, Button, Card, Checkbox, Field, List, ListRow, Page, PageHead, Section, SkeletonList, StatRow, StatTile } from '@/components/ds';
+import { Badge, BottomSheet, Button, Card, Checkbox, Field, List, ListRow, Page, PageHead, Section, SkeletonList, StatRow, StatTile } from '@/components/ds';
 import { MoreMenu, NotifBell, apiMessage } from '@/components/app/common';
 import { ReviewList } from '@/components/app/Reviews';
 import { money } from '@/lib/utils';
@@ -81,46 +83,47 @@ export function CreatorProfileScreen() {
   return (
     <Page>
       <PageHead title={t('Profil')} actions={<NotifBell />} />
-      <Card>
-        <div className="ds-row" style={{ alignItems: 'flex-start', gap: 14 }}>
-          <Avatar name={p.displayName} src={p.avatarUrl} size="xl" />
-          <div className="ds-grow">
-            <div className="ds-heading">{p.displayName}</div>
-            <div className="ds-caption ds-muted">{p.tikTokUsername ? `@${p.tikTokUsername} · ` : ''}{categoryLabel(p.category)} · {countryName(p.country)}</div>
-            <div className="ds-row ds-row--wrap" style={{ marginTop: 6 }}><Badge tone="accent">{level.tier.name}</Badge>{p.status !== 'Approved' && <Badge tone="warn">{t('Konto')}: {p.status}</Badge>}</div>
-          </div>
-        </div>
+      <ProfileHero coverUrl={p.coverUrl} avatarUrl={p.avatarUrl} name={p.displayName}
+        meta={<>{p.tikTokUsername ? `@${p.tikTokUsername} · ` : ''}{categoryLabel(p.category)} · {countryName(p.country)}</>}
+        badges={<>
+          <Badge tone="accent">{level.tier.name}</Badge>
+          {stats?.verifiedCreator && <Badge tone="ok">{t('Verifierad kreatör')}</Badge>}
+          {stats?.topCreator && <Badge tone="accent">{t('Top creator')}</Badge>}
+          {p.status !== 'Approved' && <Badge tone="warn">{t('Konto')}: {statusLabel(p.status)}</Badge>}
+        </>}>
         {p.bio && <p className="ds-body" style={{ marginTop: 12 }}>{p.bio}</p>}
         {p.profileTags.length > 0 && <div className="ds-tags" style={{ marginTop: 10 }}>{p.profileTags.map((tg) => <span key={tg} className="ds-tag">{tg}</span>)}</div>}
         <div style={{ marginTop: 14 }}>
           <StatRow cols={3}>
             <StatTile plain label={t('Verifierade views')} value={formatNumber(views)} />
-            <StatTile plain label={t('Följare')} value={p.tikTokVerified ? formatNumber(p.followerCount) : '–'} hint={p.tikTokVerified ? 'TikTok' : t('TikTok ej verifierat')} />
-            <StatTile plain label={t('Omdöme')} value={reviews && reviews.totalReviews > 0 ? reviews.averageStars.toFixed(1) : '–'} hint={reviews && reviews.totalReviews > 0 ? `${reviews.totalReviews} ${t('omdömen')}` : undefined} />
+            <StatTile plain label={t('Intäkt / 1K views')} value={stats?.earningsPerThousandViews != null ? money(stats.earningsPerThousandViews) : '–'} />
+            <StatTile plain label={t('Godkänt')} value={stats?.approvalRate != null ? `${Math.round(stats.approvalRate)} %` : '–'} hint={stats?.totalVideos ? `${stats.approvedVideos}/${stats.totalVideos} ${t('videor')}` : undefined} />
           </StatRow>
           <SourceNote source="tiktok" at={stats?.metricsUpdatedAt} scope={t('alla dina kampanjvideos')} />
+          <div className="ds-facts" style={{ marginTop: 10 }}>
+            <div className="ds-fact"><span>{t('Följare')} · TikTok</span><span className="ds-num">{p.tikTokVerified ? formatNumber(p.followerCount) : t('ej verifierat')}</span></div>
+            <div className="ds-fact"><span>{t('Omdöme')}</span><span className="ds-num">{reviews && reviews.totalReviews > 0 ? `${reviews.averageStars.toFixed(1)} · ${reviews.totalReviews} ${t('omdömen')}` : '–'}</span></div>
+          </div>
         </div>
         <div className="ds-row ds-row--wrap" style={{ marginTop: 14 }}>
           <Button variant="secondary" full onClick={() => navigate('/creator/profile/edit')}>{t('Redigera profil')}</Button>
           {p.tikTokUsername && <Button variant="secondary" size="sm" onClick={() => window.open(`https://www.tiktok.com/@${p.tikTokUsername}`, '_blank', 'noopener')}>TikTok</Button>}
           {p.instagramUsername && <Button variant="secondary" size="sm" onClick={() => window.open(`https://www.instagram.com/${p.instagramUsername}`, '_blank', 'noopener')}>{`Instagram · ${t('ej verifierad')}`}</Button>}
         </div>
-      </Card>
+      </ProfileHero>
+
+      <ProfileChecklist items={[
+        { key: 'tiktok', label: t('Koppla TikTok'), done: !!p.tikTokVerified, to: '/creator/settings/tiktok' },
+        { key: 'avatar', label: t('Lägg till profilbild'), done: !!p.avatarUrl, to: '/creator/profile/edit' },
+        { key: 'cover', label: t('Lägg till cover'), done: !!p.coverUrl, to: '/creator/profile/edit' },
+        { key: 'bio', label: t('Skriv en bio (minst 20 tecken)'), done: (p.bio ?? '').trim().length >= 20, to: '/creator/profile/edit' },
+        { key: 'tags', label: t('Välj minst en expertis-tagg'), done: p.profileTags.length > 0, to: '/creator/profile/edit' },
+        { key: 'portfolio', label: t('Lägg till 3 portfolio-verk'), done: items.length >= 3, onClick: () => setEditing({ form: { ...emptyItem } }) },
+      ]} />
 
       <Section title={t('Portfolio')} action={<Button variant="ghost" size="sm" onClick={() => setEditing({ form: { ...emptyItem } })}>{t('Lägg till')}</Button>}>
         {items.length === 0 ? <Card><p className="ds-body ds-muted">{t('Lägg till dina bästa videor och samarbeten så företag kan se vad du kan.')}</p></Card> : (
-          <div className="ds-media-grid">
-            {items.map((it) => (
-              <div key={it.id} style={{ position: 'relative' }}>
-                {it.mediaType === 'TikTok' ? <div className="ds-embed"><TikTokEmbed videoUrl={it.mediaUrl} compact /></div>
-                  : <a href={it.mediaUrl} target="_blank" rel="noopener noreferrer" className="ds-media">{(it.thumbnailUrl || it.mediaType === 'Image') ? <img src={it.thumbnailUrl || it.mediaUrl} alt="" /> : <span className="ds-caption" style={{ padding: 12, textAlign: 'center' }}>{it.title}</span>}{it.isFeatured && <span className="ds-media-tag">{t('Utvald')}</span>}</a>}
-                <div className="ds-row" style={{ marginTop: 2 }}>
-                  <div className="ds-grow"><div className="ds-caption" style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</div>{it.brandName && <div className="ds-caption ds-muted">{it.brandName} · {it.brandVerified ? t('verifierat samarbete') : t('ej verifierat')}</div>}</div>
-                  <MoreMenu title={it.title} items={[{ label: t('Redigera'), onClick: () => startEdit(it) }, { label: t('Ta bort'), danger: true, onClick: () => remove.mutate(it.id, { onSuccess: () => toast.push(t('Borttaget ur portföljen'), 'success'), onError: () => toast.push(t('Kunde inte ta bort'), 'error') }) }]} />
-                </div>
-              </div>
-            ))}
-          </div>
+          <PortfolioGrid items={items} menu={(it) => <MoreMenu title={it.title} items={[{ label: t('Redigera'), onClick: () => startEdit(it) }, { label: t('Ta bort'), danger: true, onClick: () => remove.mutate(it.id, { onSuccess: () => toast.push(t('Borttaget ur portföljen'), 'success'), onError: () => toast.push(t('Kunde inte ta bort'), 'error') }) }]} />} />
         )}
       </Section>
 
@@ -163,12 +166,12 @@ export function CreatorProfileEditScreen() {
   const { data: p, isLoading } = useCreatorProfile();
   const { data: tiktok } = useTikTokStatus();
   const update = useUpdateCreatorProfile();
-  const [form, setForm] = useState<null | { displayName: string; bio: string; category: string; country: string; language: string; tikTokUsername: string; dateOfBirth: string; profileTags: string[]; instagramUsername: string; website: string; avatarUrl: string; openToPrOffers: boolean }>(null);
-  useEffect(() => { if (p && !form) setForm({ displayName: p.displayName, bio: p.bio ?? '', category: p.category, country: p.country, language: p.language, tikTokUsername: p.tikTokUsername ?? '', dateOfBirth: '', profileTags: p.profileTags ?? [], instagramUsername: p.instagramUsername ?? '', website: p.website ?? '', avatarUrl: p.avatarUrl ?? '', openToPrOffers: p.openToPrOffers ?? true }); }, [p, form]);
+  const [form, setForm] = useState<null | { displayName: string; bio: string; category: string; country: string; language: string; tikTokUsername: string; dateOfBirth: string; profileTags: string[]; instagramUsername: string; website: string; avatarUrl: string; coverUrl: string; openToPrOffers: boolean }>(null);
+  useEffect(() => { if (p && !form) setForm({ displayName: p.displayName, bio: p.bio ?? '', category: p.category, country: p.country, language: p.language, tikTokUsername: p.tikTokUsername ?? '', dateOfBirth: '', profileTags: p.profileTags ?? [], instagramUsername: p.instagramUsername ?? '', website: p.website ?? '', avatarUrl: p.avatarUrl ?? '', coverUrl: p.coverUrl ?? '', openToPrOffers: p.openToPrOffers ?? true }); }, [p, form]);
   if (isLoading || !form) return <Page><PageHead title={t('Redigera profil')} back={{ to: '/creator/profile' }} /><SkeletonList rows={3} /></Page>;
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    try { await update.mutateAsync({ displayName: form.displayName, bio: form.bio, category: form.category, country: form.country, language: form.language, tikTokUsername: form.tikTokUsername || undefined, dateOfBirth: form.dateOfBirth || undefined, profileTags: form.profileTags, avatarUrl: form.avatarUrl, instagramUsername: form.instagramUsername || undefined, website: form.website || undefined, openToPrOffers: form.openToPrOffers }); toast.push(t('Profilen sparad'), 'success'); navigate('/creator/profile'); }
+    try { await update.mutateAsync({ displayName: form.displayName, bio: form.bio, category: form.category, country: form.country, language: form.language, tikTokUsername: form.tikTokUsername || undefined, dateOfBirth: form.dateOfBirth || undefined, profileTags: form.profileTags, avatarUrl: form.avatarUrl, coverUrl: form.coverUrl, instagramUsername: form.instagramUsername || undefined, website: form.website || undefined, openToPrOffers: form.openToPrOffers }); toast.push(t('Profilen sparad'), 'success'); navigate('/creator/profile'); }
     catch (e2) { toast.push(apiMessage(e2, t('Kunde inte spara profilen')), 'error'); }
   };
   const toggleTag = (tg: string) => setForm({ ...form, profileTags: form.profileTags.includes(tg) ? form.profileTags.filter((x) => x !== tg) : form.profileTags.length >= 10 ? form.profileTags : [...form.profileTags, tg] });
@@ -176,7 +179,10 @@ export function CreatorProfileEditScreen() {
     <Page>
       <PageHead title={t('Redigera profil')} back={{ to: '/creator/profile' }} />
       <form onSubmit={save} className="ds-stack" style={{ gap: 16 }}>
-        <Card><ImagePicker label={t('Profilbild')} value={form.avatarUrl || null} onChange={(v) => setForm({ ...form, avatarUrl: v ?? '' })} hint={t('Varumärken ser den när de hittar dig.')} /></Card>
+        <Card>
+          <ImagePicker label={t('Profilbild')} value={form.avatarUrl || null} onChange={(v) => setForm({ ...form, avatarUrl: v ?? '' })} hint={t('Varumärken ser den när de hittar dig.')} />
+          <ImagePicker label={t('Omslagsbild')} shape="wide" aspect={3} value={form.coverUrl || null} onChange={(v) => setForm({ ...form, coverUrl: v ?? '' })} hint={t('Bred bild överst på profilen (3:1). Utan bild visas en färgad bakgrund.')} />
+        </Card>
         <Card>
           <div className="ds-stack" style={{ gap: 12 }}>
             <Field label={t('Visningsnamn')}><input required value={form.displayName} onChange={(e) => setForm({ ...form, displayName: e.target.value })} /></Field>

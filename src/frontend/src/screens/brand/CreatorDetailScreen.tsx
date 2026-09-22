@@ -11,9 +11,10 @@ import { useCreatorPublicProfile, useCreatePrOffer } from '@/hooks/api';
 import { useCommunityMembers } from '@/hooks/extra';
 import { useToast } from '@/components/vyrle/Toast';
 import { SourceNote } from '@/components/app/SourceNote';
-import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
+import { ProfileHero } from '@/components/app/ProfileHero';
+import { PortfolioGrid } from '@/components/app/PortfolioGrid';
 import { DateInput } from '@/components/ui/DateInput';
-import { Avatar, Badge, BottomSheet, Button, Card, EmptyState, Field, Page, PageHead, Section, SkeletonList, StatRow, StatTile } from '@/components/ds';
+import { Badge, BottomSheet, Button, Card, EmptyState, Field, Page, PageHead, Section, SkeletonList, StatRow, StatTile } from '@/components/ds';
 import { MoreMenu, apiMessage } from '@/components/app/common';
 import { ReviewList } from '@/components/app/Reviews';
 
@@ -101,24 +102,27 @@ export function BrandCreatorDetailScreen() {
         { label: t('Ta bort ur communityn'), danger: true, hidden: membership?.status !== 'Active', onClick: () => remove.mutate() },
       ]} />} />
 
-      <Card>
-        <div className="ds-row" style={{ alignItems: 'flex-start', gap: 14 }}>
-          <Avatar name={c.displayName} src={c.avatarUrl} size="xl" />
-          <div className="ds-grow">
-            <div className="ds-heading">{c.displayName}</div>
-            <div className="ds-caption ds-muted">{c.category} · {c.country}{c.tikTokUsername ? ` · @${c.tikTokUsername}` : ''}</div>
-            {c.openToPrOffers && <div style={{ marginTop: 6 }}><Badge tone="ok">{t('Öppen för PR')}</Badge></div>}
-          </div>
-        </div>
+      <ProfileHero coverUrl={c.coverUrl} avatarUrl={c.avatarUrl} name={c.displayName}
+        meta={<>{c.category} · {c.country}{c.tikTokUsername ? ` · @${c.tikTokUsername}` : ''}</>}
+        badges={<>
+          {c.verifiedCreator && <Badge tone="ok">{t('Verifierad kreatör')}</Badge>}
+          {c.topCreator && <Badge tone="accent">{t('Top creator')}</Badge>}
+          <Badge tone="neutral">{c.level}</Badge>
+          {c.openToPrOffers && <Badge tone="neutral">{t('Öppen för PR')}</Badge>}
+        </>}>
         {c.bio && <p className="ds-body" style={{ marginTop: 12 }}>{c.bio}</p>}
         {c.profileTags.length > 0 && <div className="ds-tags" style={{ marginTop: 10 }}>{c.profileTags.map((tg) => <span key={tg} className="ds-tag">{tg}</span>)}</div>}
         <div style={{ marginTop: 14 }}>
           <StatRow cols={3}>
-            <StatTile plain label={t('Verifierade views')} value={formatNumber(c.totalVerifiedViews)} hint={c.totalVideos > 0 ? `${Math.round(c.approvalRate)} % ${t('godkända')}` : undefined} />
-            <StatTile plain label={t('Följare')} value={c.tikTokVerified ? formatNumber(c.tikTokFollowerCount) : '–'} hint={c.tikTokVerified ? 'TikTok' : t('TikTok ej verifierat')} />
-            <StatTile plain label={t('Betyg')} value={c.reviewCount > 0 ? c.averageRating.toFixed(1) : '–'} hint={c.reviewCount > 0 ? `${c.reviewCount} ${t('omdömen')}` : undefined} />
+            <StatTile plain label={t('Verifierade views')} value={formatNumber(c.totalVerifiedViews)} />
+            <StatTile plain label={t('Intäkt / 1K views')} value={c.totalVerifiedViews > 0 ? money(c.earningsPerThousandViews) : '–'} />
+            <StatTile plain label={t('Godkänt')} value={c.totalVideos > 0 ? `${Math.round(c.approvalRate)} %` : '–'} hint={c.totalVideos > 0 ? `${c.approvedVideos}/${c.totalVideos} ${t('videor')}` : undefined} />
           </StatRow>
           <SourceNote source="tiktok" at={c.metricsUpdatedAt} scope={t('alla kampanjvideos')} />
+          <div className="ds-facts" style={{ marginTop: 10 }}>
+            <div className="ds-fact"><span>{t('Följare')} · TikTok</span><span className="ds-num">{c.tikTokVerified ? formatNumber(c.tikTokFollowerCount) : t('ej verifierat')}</span></div>
+            <div className="ds-fact"><span>{t('Betyg')}</span><span className="ds-num">{c.reviewCount > 0 ? `${c.averageRating.toFixed(1)} · ${c.reviewCount} ${t('omdömen')}` : '–'}</span></div>
+          </div>
         </div>
         <div className="ds-stack" style={{ marginTop: 14 }}>
           {membership?.status === 'Active' ? <Badge tone="ok">{t('I ditt community')}</Badge>
@@ -131,7 +135,7 @@ export function BrandCreatorDetailScreen() {
           </div>
           {c.openToPrOffers && <Button variant="secondary" full icon={<Gift />} onClick={() => setSheet('pr')}>{t('Skicka PR-erbjudande')}</Button>}
         </div>
-      </Card>
+      </ProfileHero>
 
       <Section title={c.totalVerifiedViews > 0 ? t('Verifierat på VYRLE') : t('Kampanjdata')} action={<Button variant="ghost" size="sm" onClick={() => setMore((v) => !v)}>{more ? t('Dölj') : t('Visa mer')}</Button>}>
         {more && (c.totalVerifiedViews > 0 ? (
@@ -156,16 +160,7 @@ export function BrandCreatorDetailScreen() {
 
       <Section title={`${t('Portfölj')} (${c.portfolio.length})`}>
         {c.portfolio.length === 0 ? <Card><p className="ds-body ds-muted">{t('Creatorn har inte lagt till några arbeten ännu.')}</p></Card> : (
-          <div className="ds-media-grid">
-            {c.portfolio.map((it) => (
-              <div key={it.id}>
-                {it.mediaType === 'TikTok' ? <div className="ds-embed"><TikTokEmbed videoUrl={it.mediaUrl} compact /></div>
-                  : <a href={it.mediaUrl} target="_blank" rel="noopener noreferrer" className="ds-media">{(it.thumbnailUrl || it.mediaType === 'Image') ? <img src={it.thumbnailUrl || it.mediaUrl} alt="" /> : <span className="ds-caption" style={{ padding: 12, textAlign: 'center' }}>{it.title}</span>}{it.isFeatured && <span className="ds-media-tag">{t('Utvald')}</span>}</a>}
-                <div className="ds-caption" style={{ marginTop: 4, fontWeight: 600 }}>{it.title}</div>
-                {it.brandName && <div className="ds-caption ds-muted">{it.brandName} · {it.brandVerified ? t('verifierat samarbete') : t('ej verifierat')}</div>}
-              </div>
-            ))}
-          </div>
+          <PortfolioGrid items={c.portfolio} />
         )}
       </Section>
 

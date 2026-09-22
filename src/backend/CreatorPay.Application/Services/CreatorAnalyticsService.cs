@@ -31,7 +31,8 @@ public static class CreatorAnalyticsCalculator
         IReadOnlyList<TapAccrual> tapAccrualsThisMonth,
         decimal prValueDeclared,
         decimal availableToWithdraw,
-        DateTime nowUtc)
+        DateTime nowUtc,
+        long? topCreatorThreshold = null)
     {
         var counted = assignments.Where(Counted).ToList();
         var posts = counted.SelectMany(a => a.SocialPosts.Where(sp => sp.IsActive)).ToList();
@@ -71,6 +72,10 @@ public static class CreatorAnalyticsCalculator
             .Take(5)
             .ToList();
 
+        var decided = counted.SelectMany(a => a.Submissions)
+            .Where(sub => sub.Status is SubmissionStatus.Approved or SubmissionStatus.Rejected).ToList();
+        var approvedVideos = decided.Count(sub => sub.Status == SubmissionStatus.Approved);
+
         var tt = creator.TikTokAccount;
         return new CreatorAnalyticsDto(
             nowUtc,
@@ -86,7 +91,10 @@ public static class CreatorAnalyticsCalculator
             prValueDeclared,
             Level(paid),
             tt.IsVerified(), tt?.TikTokUsername, tt.VerifiedFollowers(), tt.FollowersSyncedAt(),
-            rows, topBrands);
+            rows, topBrands,
+            approvedVideos, decided.Count, decided.Count > 0 ? Math.Round(approvedVideos * 100.0 / decided.Count, 1) : null,
+            CreatorBadges.IsVerifiedCreator(tt.IsVerified(), verifiedPosts),
+            CreatorBadges.IsTopCreator(views, verifiedPosts, topCreatorThreshold));
     }
 }
 
@@ -98,6 +106,7 @@ public class CreatorAnalyticsService : ICreatorAnalyticsService
     private readonly IRepository<TapAccrual> _accruals;
     private readonly IRepository<PrOffer> _prOffers;
     private readonly IPayoutService _payoutService;
+    private readonly CreatorBadgeService _badges;
 
     public CreatorAnalyticsService(
         IRepository<CreatorProfile> creators,
@@ -105,7 +114,8 @@ public class CreatorAnalyticsService : ICreatorAnalyticsService
         IRepository<PayoutRequest> payouts,
         IRepository<TapAccrual> accruals,
         IRepository<PrOffer> prOffers,
-        IPayoutService payoutService)
+        IPayoutService payoutService,
+        CreatorBadgeService badges)
     {
         _creators = creators;
         _assignments = assignments;
@@ -113,6 +123,7 @@ public class CreatorAnalyticsService : ICreatorAnalyticsService
         _accruals = accruals;
         _prOffers = prOffers;
         _payoutService = payoutService;
+        _badges = badges;
     }
 
     public async Task<Result<CreatorAnalyticsDto>> GetAsync(Guid creatorUserId, CancellationToken ct = default)
@@ -124,6 +135,7 @@ public class CreatorAnalyticsService : ICreatorAnalyticsService
             .Include(a => a.Campaign).ThenInclude(c => c.BrandProfile)
             .Include(a => a.SocialPosts)
             .Include(a => a.TrackingLinks)
+            .Include(a => a.Submissions)
             .Where(a => a.CreatorProfileId == creator.Id && !a.Campaign.IsDeleted)
             .ToListAsync(ct);
 
@@ -144,6 +156,7 @@ public class CreatorAnalyticsService : ICreatorAnalyticsService
         var payables = await _payoutService.GetPayablesAsync(creatorUserId, ct);
         var available = payables.IsSuccess ? payables.Value!.Sum(p => p.Available) : 0m;
 
-        return CreatorAnalyticsCalculator.Compute(creator, assignments, payouts, accruals, prDeclared, available, now);
+        var topThreshold = await _badges.TopCreatorThresholdAsync(ct);
+        return CreatorAnalyticsCalculator.Compute(creator, assignments, payouts, accruals, prDeclared, available, now, topThreshold);
     }
 }

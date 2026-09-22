@@ -45,6 +45,8 @@ export interface CreatorProfile {
   website?: string;
   openToPrOffers: boolean;
   dateOfBirth?: string | null;
+  /** Wide 3:1 banner; a gradient is shown when empty. */
+  coverUrl?: string | null;
 }
 
 // ── Portfolio ──────────────────────────────────────────
@@ -64,6 +66,10 @@ export interface PortfolioItem {
   brandProfileId?: string | null;
   campaignId?: string | null;
   ugcCollabId?: string | null;
+  /** Present only when the video is one of the creator's own verified campaign videos. */
+  verifiedViews?: number | null;
+  verifiedLikes?: number | null;
+  metricsUpdatedAt?: string | null;
   sortOrder: number;
   isFeatured: boolean;
   createdAt: string;
@@ -99,6 +105,8 @@ export interface CreatorDiscoveryItem {
   approvalRate: number;
   metricsUpdatedAt?: string | null;
   lastActiveAt?: string | null;
+  verifiedCreator: boolean;
+  topCreator: boolean;
 }
 
 export interface CreatorPublicProfile {
@@ -139,6 +147,11 @@ export interface CreatorPublicProfile {
   totalVideos: number;
   approvalRate: number;
   level: string;
+  coverUrl?: string | null;
+  /** OAuth TikTok + at least one verified campaign video. */
+  verifiedCreator: boolean;
+  /** Top decile of verified views among at least ten creators, with at least three verified videos. */
+  topCreator: boolean;
 }
 
 // ── PR Hub ─────────────────────────────────────────────
@@ -637,7 +650,9 @@ export interface CreatorAnalytics {
   level: CreatorLevel;
   tikTokVerified: boolean; tikTokUsername?: string | null; followers: number; followersSyncedAt?: string | null;
   campaigns: CreatorCampaignRow[]; topBrands: CreatorBrandRow[];
+  approvedVideos: number; totalVideos: number; approvalRate?: number | null;
+  verifiedCreator: boolean; topCreator: boolean;
 }
 export interface CreatorCollaboration { kind: 'Campaign' | 'Tap' | 'Ugc'; id: string; brandProfileId: string; brandName: string; title: string; status: string; at: string }
-export interface UpdateCreatorProfileInput { displayName: string; bio?: string; category: string; country: string; language: string; tikTokUsername?: string; dateOfBirth?: string; profileTags?: string[]; avatarUrl?: string; instagramUsername?: string; website?: string; openToPrOffers?: boolean }
+export interface UpdateCreatorProfileInput { displayName: string; bio?: string; category: string; country: string; language: string; tikTokUsername?: string; dateOfBirth?: string; profileTags?: string[]; avatarUrl?: string; coverUrl?: string; instagramUsername?: string; website?: string; openToPrOffers?: boolean }
 export interface PortfolioItemInput { title: string; description?: string; mediaType: PortfolioMediaType; mediaUrl: string; thumbnailUrl?: string; category?: string; brandName?: string; isFeatured: boolean; campaignId?: string | null; ugcCollabId?: string | null; sortOrder?: number }

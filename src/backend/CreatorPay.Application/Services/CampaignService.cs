@@ -1009,7 +1009,7 @@ public class CampaignService : ICampaignService
             tap?.PayoutCapPerVideo, tap?.MonthlyCapPerCreator,
             membership,
             publicTaps,
-            brand.OrgVerified, metricsUpdatedAt);
+            brand.OrgVerified, metricsUpdatedAt, brand.CoverUrl);
     }
 
     public async Task<Result<bool>> SetBrandFollowAsync(Guid viewerUserId, Guid brandProfileId, bool follow, CancellationToken ct = default)

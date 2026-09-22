@@ -20,11 +20,12 @@ public class PortfolioService : IPortfolioService
     private readonly IRepository<UgcCollab> _collabs;
     private readonly IRepository<BrandProfile> _brands;
     private readonly IUnitOfWork _uow;
+    private readonly CreatorBadgeService _badges;
 
     public PortfolioService(
         IRepository<CreatorProfile> creators, IRepository<PortfolioItem> items,
         IRepository<CreatorCampaignAssignment> assignments, IRepository<UgcCollab> collabs,
-        IRepository<BrandProfile> brands, IUnitOfWork uow)
+        IRepository<BrandProfile> brands, IUnitOfWork uow, CreatorBadgeService badges)
     {
         _creators = creators;
         _items = items;
@@ -32,6 +33,7 @@ public class PortfolioService : IPortfolioService
         _collabs = collabs;
         _brands = brands;
         _uow = uow;
+        _badges = badges;
     }
 
     public async Task<Result<List<PortfolioItemDto>>> GetMyPortfolioAsync(Guid creatorUserId, CancellationToken ct = default)
@@ -46,7 +48,8 @@ public class PortfolioService : IPortfolioService
             .ThenByDescending(p => p.CreatedAt)
             .ToListAsync(ct);
 
-        return items.Select(MapToDto).ToList();
+        var verified = await _badges.VerifiedPostsAsync(creator.Id, ct);
+        return items.Select(p => MapToDto(p, verified)).ToList();
     }
 
     /// <summary>
@@ -235,11 +238,27 @@ public class PortfolioService : IPortfolioService
         return null;
     }
 
-    internal static PortfolioItemDto MapToDto(PortfolioItem p) => new(
-        p.Id, p.Title, p.Description, p.MediaType.ToString(), p.MediaUrl,
-        p.ThumbnailUrl, p.Category, p.BrandName,
-        p.BrandVerified, p.BrandProfileId, p.CampaignId, p.UgcCollabId,
-        p.SortOrder, p.IsFeatured, p.CreatedAt);
+    public static PortfolioItemDto MapToDto(PortfolioItem p) => MapToDto(p, null);
+
+    /// <summary>
+    /// Engagement on a portfolio card is shown only when the TikTok video is one
+    /// of the creator's own verified campaign videos — never typed, never scraped.
+    /// </summary>
+    public static PortfolioItemDto MapToDto(PortfolioItem p, IReadOnlyDictionary<string, CreatorBadgeService.VerifiedPost>? verified)
+    {
+        CreatorBadgeService.VerifiedPost? match = null;
+        if (verified != null && p.MediaType == PortfolioMediaType.TikTok)
+        {
+            var id = CreatorBadges.TikTokVideoId(p.MediaUrl);
+            if (id != null) verified.TryGetValue(id, out match);
+        }
+        return new PortfolioItemDto(
+            p.Id, p.Title, p.Description, p.MediaType.ToString(), p.MediaUrl,
+            p.ThumbnailUrl, p.Category, p.BrandName,
+            p.BrandVerified, p.BrandProfileId, p.CampaignId, p.UgcCollabId,
+            p.SortOrder, p.IsFeatured, p.CreatedAt,
+            match?.Views, match?.Likes, match?.MetricsUpdatedAt);
+    }
 }
 
 // ────────────────────────────────────────────────────────────────
@@ -252,19 +271,22 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
     private readonly IRepository<CreatorCampaignAssignment> _assignments;
     private readonly IRepository<Review> _reviews;
     private readonly IRepository<PayoutRequest> _payouts;
+    private readonly CreatorBadgeService _badges;
 
     public CreatorDiscoveryService(
         IRepository<CreatorProfile> creators,
         IRepository<PortfolioItem> items,
         IRepository<CreatorCampaignAssignment> assignments,
         IRepository<Review> reviews,
-        IRepository<PayoutRequest> payouts)
+        IRepository<PayoutRequest> payouts,
+        CreatorBadgeService badges)
     {
         _creators = creators;
         _items = items;
         _assignments = assignments;
         _reviews = reviews;
         _payouts = payouts;
+        _badges = badges;
     }
 
     /// <summary>Platform-verified performance per creator, from campaign/tap assignments that ran.</summary>
@@ -376,6 +398,7 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
 
         var perf = await PerfStatsAsync(candidates.Select(c => c.Id).ToList(), ct);
         PerfStats P(CreatorProfile c) => perf.GetValueOrDefault(c.Id, PerfStats.Empty);
+        var topThreshold = await _badges.TopCreatorThresholdAsync(ct);
 
         // Ranking is by verified performance; followers are a tie-breaker, never the primary signal.
         candidates = (sort?.ToLower()) switch
@@ -416,7 +439,9 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
                 p.Completed,
                 c.OpenToPrOffers,
                 p.Views, p.Earned, p.Epm, p.Approved, p.Decided, p.ApprovalRate,
-                p.MetricsUpdatedAt, p.LastActive);
+                p.MetricsUpdatedAt, p.LastActive,
+                CreatorBadges.IsVerifiedCreator(c.TikTokAccount.IsVerified(), p.VerifiedPosts),
+                CreatorBadges.IsTopCreator(p.Views, p.VerifiedPosts, topThreshold));
         }).ToList();
 
         return new PagedResult<CreatorDiscoveryDto>
@@ -446,9 +471,10 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
             r.Id, r.AssignmentId, r.ReviewerId, r.ReviewerRole,
             $"{r.Reviewer.FirstName} {r.Reviewer.LastName}".Trim(), r.Stars, r.Comment, r.CreatedAt)).ToList();
 
+        var verifiedPosts = await _badges.VerifiedPostsAsync(creator.Id, ct);
         var portfolio = creator.PortfolioItems
             .OrderByDescending(p => p.IsFeatured).ThenBy(p => p.SortOrder).ThenByDescending(p => p.CreatedAt)
-            .Select(PortfolioService.MapToDto).ToList();
+            .Select(p => PortfolioService.MapToDto(p, verifiedPosts)).ToList();
 
         // Real, platform-verified engagement across all campaign videos —
         // never creator-reported numbers. Scope: every Verified post, all time.
@@ -480,6 +506,7 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
         var paid = await _payouts.Query()
             .Where(p => p.CreatorProfileId == creator.Id && p.Status == PayoutStatus.Completed)
             .SumAsync(p => (decimal?)p.RequestedAmount, ct) ?? 0m;
+        var topThreshold = await _badges.TopCreatorThresholdAsync(ct);
 
         return new CreatorPublicProfileDto(
             creator.Id, creator.UserId, creator.DisplayName, creator.Bio, creator.Category, creator.Country,
@@ -493,6 +520,9 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
             tViews, tLikes, tComments, tShares, engagementRate,
             engagement?.Count ?? 0, engagement?.Updated,
             perf.Earned, perf.Epm, perf.Approved, perf.Decided, perf.ApprovalRate,
-            CreatorLevels.For(paid).Name);
+            CreatorLevels.For(paid).Name,
+            creator.CoverUrl,
+            CreatorBadges.IsVerifiedCreator(creator.TikTokAccount.IsVerified(), perf.VerifiedPosts),
+            CreatorBadges.IsTopCreator(perf.Views, perf.VerifiedPosts, topThreshold));
     }
 }

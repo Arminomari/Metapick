@@ -103,7 +103,8 @@ public record BrandProfileDto(
     string? ContactPhone, string Status, DateTime CreatedAt,
     // Organisation-number verification (SYSTEM_COMPUTED; registry or admin only)
     bool OrgVerified = false, DateTime? OrgVerifiedAt = null, string? OrgVerifiedName = null,
-    string? OrgVerificationSource = null, DateTime? OrgVerificationCheckedAt = null);
+    string? OrgVerificationSource = null, DateTime? OrgVerificationCheckedAt = null,
+    string? CoverUrl = null);
 
 public record BrandListDto(
     Guid Id, string CompanyName, string Industry, string Country,
@@ -111,7 +112,7 @@ public record BrandListDto(
 
 public record UpdateBrandProfileRequest(
     string CompanyName, string? Website, string Industry, string? Description, string? ContactPhone,
-    string? LogoUrl = null, string? OrganizationNumber = null);
+    string? LogoUrl = null, string? OrganizationNumber = null, string? CoverUrl = null);
 
 // ──── Creator ────
 public record CreatorProfileDto(
@@ -124,7 +125,7 @@ public record CreatorProfileDto(
     bool TikTokConnected, bool TikTokVerified, string? TikTokUsername, DateTime CreatedAt,
     List<string> ProfileTags,
     string? InstagramUsername, string? Website, bool OpenToPrOffers,
-    DateOnly? DateOfBirth = null);
+    DateOnly? DateOfBirth = null, string? CoverUrl = null);
 
 public record CreatorListDto(
     Guid Id, string DisplayName, string Category, string Country,
@@ -135,7 +136,8 @@ public record UpdateCreatorProfileRequest(
     string? TikTokUsername, DateOnly? DateOfBirth, List<string>? ProfileTags,
     string? AvatarUrl = null,
     string? InstagramUsername = null,
-    string? Website = null, bool? OpenToPrOffers = null);
+    string? Website = null, bool? OpenToPrOffers = null,
+    string? CoverUrl = null);
 
 // ──── Creator discovery (brand-facing search & public profile) ────
 /// <summary>
@@ -153,7 +155,9 @@ public record CreatorDiscoveryDto(
     double AverageRating, int ReviewCount, int CompletedCampaigns, bool OpenToPrOffers,
     long TotalVerifiedViews, decimal TotalEarned, decimal EarningsPerThousandViews,
     int ApprovedVideos, int TotalVideos, double ApprovalRate,
-    DateTime? MetricsUpdatedAt, DateTime? LastActiveAt);
+    DateTime? MetricsUpdatedAt, DateTime? LastActiveAt,
+    // Badges from platform data only (CreatorBadges): OAuth + verified video; top decile of verified views
+    bool VerifiedCreator = false, bool TopCreator = false);
 
 public record CreatorPublicProfileDto(
     Guid Id, Guid UserId, string DisplayName, string? Bio, string Category, string Country,
@@ -171,7 +175,8 @@ public record CreatorPublicProfileDto(
     int VerifiedPostCount = 0, DateTime? MetricsUpdatedAt = null,
     decimal TotalEarned = 0, decimal EarningsPerThousandViews = 0,
     int ApprovedVideos = 0, int TotalVideos = 0, double ApprovalRate = 0,
-    string Level = "Rising");
+    string Level = "Rising",
+    string? CoverUrl = null, bool VerifiedCreator = false, bool TopCreator = false);
 
 // ──── Portfolio ────
 public record PortfolioItemDto(
@@ -179,7 +184,9 @@ public record PortfolioItemDto(
     string? ThumbnailUrl, string? Category, string? BrandName,
     // BrandVerified = the item is linked to a real VYRLE collaboration; otherwise the brand is the creator's own claim.
     bool BrandVerified, Guid? BrandProfileId, Guid? CampaignId, Guid? UgcCollabId,
-    int SortOrder, bool IsFeatured, DateTime CreatedAt);
+    int SortOrder, bool IsFeatured, DateTime CreatedAt,
+    // Set only when the TikTok video is one of the creator's own verified campaign videos.
+    long? VerifiedViews = null, long? VerifiedLikes = null, DateTime? MetricsUpdatedAt = null);
 
 /// <summary>A real collaboration the creator can attach a portfolio item to.</summary>
 public record CreatorCollaborationDto(
@@ -312,7 +319,8 @@ public record BrandPublicProfileDto(
     // Registry-verified organisation number (never inferred from the number being present)
     bool OrgVerified = false,
     // Latest TikTok refresh behind TotalVerifiedViews / per-campaign views
-    DateTime? MetricsUpdatedAt = null);
+    DateTime? MetricsUpdatedAt = null,
+    string? CoverUrl = null);
 
 public record PublicTapDto(
     Guid Id, string Name, decimal Cpm, string Brief, string RequiredHashtag,
