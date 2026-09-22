@@ -22,6 +22,12 @@ export function money(amount: number, currency = 'SEK'): string {
   return new Intl.NumberFormat(LOCALE, { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(amount);
 }
 
+/** 120K / 1,2M for tight chips. Plain digits under a thousand. */
+export function formatCompact(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1).replace('.0', '').replace('.', ',')}M`;
+  if (n >= 1_000) return `${Math.round(n / 1_000)}K`;
+  return String(Math.round(n));
+}
 export function formatNumber(n: number): string {
   return new Intl.NumberFormat(LOCALE).format(n);
 }

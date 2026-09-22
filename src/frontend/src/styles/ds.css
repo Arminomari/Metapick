@@ -502,3 +502,15 @@ button.ds-tag { border: none; font: inherit; cursor: pointer; min-height: 32px; 
 .ds-root a.ds-btn--primary { color: var(--ds-on-accent); }
 .ds-root a.ds-btn--secondary { color: var(--ds-ink); }
 .ds-root a.ds-btn--ghost { color: var(--ds-accent-ink); }
+
+
+/* ── Platform chips (Hitta rows) ───────────────────────────── */
+.ds-platchips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.ds-platchip { display: inline-flex; align-items: center; gap: 8px; padding: 5px 10px 5px 6px; border-radius: 12px; background: var(--ds-accent-soft); max-width: 100%; min-width: 0; }
+.ds-platchip--instagram { background: #EFE9FB; }
+.ds-platchip-ic { width: 22px; height: 22px; border-radius: 7px; background: var(--ds-card); color: var(--ds-ink); display: inline-flex; align-items: center; justify-content: center; flex: 0 0 22px; }
+.ds-platchip--instagram .ds-platchip-ic { color: #7A3E9D; }
+.ds-platchip-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.ds-platchip-text b { font-size: var(--ds-caption); font-weight: 600; color: var(--ds-ink); }
+.ds-platchip-text span { font-size: 11px; color: var(--ds-ink-2); overflow-wrap: anywhere; }
+.ds-select-inline { font: inherit; font-size: var(--ds-caption); font-weight: 600; color: var(--ds-ink); background: var(--ds-card); border: 1px solid var(--ds-line-strong); border-radius: var(--ds-r-sm); padding: 4px 8px; min-height: 32px; }

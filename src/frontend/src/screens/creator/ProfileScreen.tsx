@@ -174,12 +174,12 @@ export function CreatorProfileEditScreen() {
   const { data: p, isLoading } = useCreatorProfile();
   const { data: tiktok } = useTikTokStatus();
   const update = useUpdateCreatorProfile();
-  const [form, setForm] = useState<null | { displayName: string; bio: string; category: string; country: string; language: string; tikTokUsername: string; dateOfBirth: string; profileTags: string[]; instagramUsername: string; website: string; avatarUrl: string; coverUrl: string; openToPrOffers: boolean }>(null);
-  useEffect(() => { if (p && !form) setForm({ displayName: p.displayName, bio: p.bio ?? '', category: p.category, country: p.country, language: p.language, tikTokUsername: p.tikTokUsername ?? '', dateOfBirth: '', profileTags: p.profileTags ?? [], instagramUsername: p.instagramUsername ?? '', website: p.website ?? '', avatarUrl: p.avatarUrl ?? '', coverUrl: p.coverUrl ?? '', openToPrOffers: p.openToPrOffers ?? true }); }, [p, form]);
+  const [form, setForm] = useState<null | { displayName: string; bio: string; category: string; country: string; language: string; tikTokUsername: string; dateOfBirth: string; profileTags: string[]; instagramUsername: string; website: string; avatarUrl: string; coverUrl: string; openToPrOffers: boolean; showInstagramBadge: boolean }>(null);
+  useEffect(() => { if (p && !form) setForm({ displayName: p.displayName, bio: p.bio ?? '', category: p.category, country: p.country, language: p.language, tikTokUsername: p.tikTokUsername ?? '', dateOfBirth: '', profileTags: p.profileTags ?? [], instagramUsername: p.instagramUsername ?? '', website: p.website ?? '', avatarUrl: p.avatarUrl ?? '', coverUrl: p.coverUrl ?? '', openToPrOffers: p.openToPrOffers ?? true, showInstagramBadge: !!p.showInstagramBadge }); }, [p, form]);
   if (isLoading || !form) return <Page><PageHead title={t('Redigera profil')} back={{ to: '/creator/profile' }} /><SkeletonList rows={3} /></Page>;
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    try { await update.mutateAsync({ displayName: form.displayName, bio: form.bio, category: form.category, country: form.country, language: form.language, tikTokUsername: form.tikTokUsername || undefined, dateOfBirth: form.dateOfBirth || undefined, profileTags: form.profileTags, avatarUrl: form.avatarUrl, coverUrl: form.coverUrl, instagramUsername: form.instagramUsername || undefined, website: form.website || undefined, openToPrOffers: form.openToPrOffers }); toast.push(t('Profilen sparad'), 'success'); navigate('/creator/profile'); }
+    try { await update.mutateAsync({ displayName: form.displayName, bio: form.bio, category: form.category, country: form.country, language: form.language, tikTokUsername: form.tikTokUsername || undefined, dateOfBirth: form.dateOfBirth || undefined, profileTags: form.profileTags, avatarUrl: form.avatarUrl, coverUrl: form.coverUrl, instagramUsername: form.instagramUsername || undefined, website: form.website || undefined, openToPrOffers: form.openToPrOffers, showInstagramBadge: form.showInstagramBadge }); toast.push(t('Profilen sparad'), 'success'); navigate('/creator/profile'); }
     catch (e2) { toast.push(apiMessage(e2, t('Kunde inte spara profilen')), 'error'); }
   };
   const toggleTag = (tg: string) => setForm({ ...form, profileTags: form.profileTags.includes(tg) ? form.profileTags.filter((x) => x !== tg) : form.profileTags.length >= 10 ? form.profileTags : [...form.profileTags, tg] });
@@ -213,6 +213,7 @@ export function CreatorProfileEditScreen() {
         <Card title={t('Vad är du expert på?')} action={<span className="ds-caption ds-muted">{form.profileTags.length}/10</span>}>
           <div className="ds-tags">{ALL_TAGS.map((tg) => <button key={tg} type="button" className={`ds-tag${form.profileTags.includes(tg) ? ' ds-tag--on' : ''}`} onClick={() => toggleTag(tg)}>{tg}</button>)}</div>
           <div style={{ marginTop: 12 }}><Checkbox label={t('Öppen för direkta PR-erbjudanden från företag')} checked={form.openToPrOffers} onChange={(e) => setForm({ ...form, openToPrOffers: e.target.checked })} /></div>
+          {form.instagramUsername.trim() !== '' && <div style={{ marginTop: 8 }}><Checkbox label={t('Visa taggen "Instagram kreatör" för företag (länk, märkt ej verifierad — inga siffror hämtas)')} checked={form.showInstagramBadge} onChange={(e) => setForm({ ...form, showInstagramBadge: e.target.checked })} /></div>}
         </Card>
         <div className="ds-sticky-action"><Button type="submit" full loading={update.isPending}>{t('Spara profil')}</Button></div>
       </form>

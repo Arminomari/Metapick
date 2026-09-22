@@ -475,4 +475,48 @@ public class DataIntegrityTests
         Assert.False(CreatorRanking.Passes(none, null, minApprovalRate: 1, false)); // no decisions is not "100 %"
         Assert.True(CreatorRanking.Passes(none, null, null, false));
     }
+
+    // ── Recent performance (Hitta default) ──────────────────────────────
+
+    [Fact]
+    public void Hitta_lists_only_creators_who_performed_recently_by_default()
+    {
+        var now = DateTime.UtcNow;
+        CreatorPerformance P(long v7, long v30) => new(500_000, 9_000m, 4, 8, 9, 6, now, now, v7, v30);
+        Assert.True(CreatorRanking.PerformedRecently(P(10_000, 0)));      // 7-day bar
+        Assert.True(CreatorRanking.PerformedRecently(P(0, 100_000)));     // 30-day bar
+        Assert.False(CreatorRanking.PerformedRecently(P(9_999, 99_999))); // a big all-time total does not help
+        Assert.False(CreatorRanking.Passes(P(0, 0), null, null, false, recentOnly: true));
+        Assert.True(CreatorRanking.Passes(P(0, 0), null, null, false, recentOnly: false));
+        Assert.Equal(7, CreatorRanking.NormalizeWindow(null));
+        Assert.Equal(30, CreatorRanking.NormalizeWindow(30));
+    }
+
+    [Fact]
+    public void Relevance_ranks_the_window_first_then_the_track_record()
+    {
+        var now = DateTime.UtcNow;
+        var hot = new Cand("hot-this-week", new CreatorPerformance(30_000, 600m, 1, 1, 1, 1, now, now, 25_000, 25_000), 2_000, 0, now);
+        var steady = new Cand("big-history", new CreatorPerformance(900_000, 20_000m, 9, 9, 9, 9, now, now, 4_000, 150_000), 50_000, 5, now);
+        string[] Rank(int window) => CreatorRanking.Order(new[] { steady, hot }, "views", c => c.Perf, c => c.Followers, c => c.Rating, c => c.Created, window).Select(c => c.Name).ToArray();
+        Assert.Equal(new[] { "hot-this-week", "big-history" }, Rank(7));
+        Assert.Equal(new[] { "big-history", "hot-this-week" }, Rank(30));
+    }
+
+    [Fact]
+    public void Window_views_come_from_daily_snapshots_never_from_the_all_time_total()
+    {
+        var cutoff = new DateOnly(2026, 9, 15);
+        var old = new DateTime(2026, 6, 1);
+        // Snapshot on the cutoff: views since then.
+        Assert.Equal(3_000, CreatorRanking.WindowViews(13_000, old, cutoff, [(new DateOnly(2026, 9, 10), 9_000), (new DateOnly(2026, 9, 15), 10_000), (new DateOnly(2026, 9, 20), 12_000)]));
+        // Published inside the window: everything counts.
+        Assert.Equal(7_500, CreatorRanking.WindowViews(7_500, new DateTime(2026, 9, 18), cutoff, []));
+        // Old post, snapshots only inside the window: count from the earliest one (conservative).
+        Assert.Equal(1_000, CreatorRanking.WindowViews(12_000, old, cutoff, [(new DateOnly(2026, 9, 18), 11_000), (new DateOnly(2026, 9, 20), 11_800)]));
+        // Old post with no history at all: nothing can be attributed to the window.
+        Assert.Equal(0, CreatorRanking.WindowViews(12_000, old, cutoff, []));
+        // Counts never go negative if a platform corrects a number downwards.
+        Assert.Equal(0, CreatorRanking.WindowViews(9_000, old, cutoff, [(new DateOnly(2026, 9, 14), 9_500)]));
+    }
 }

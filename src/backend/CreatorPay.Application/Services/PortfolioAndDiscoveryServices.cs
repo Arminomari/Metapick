@@ -326,17 +326,46 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
             })
             .ToDictionaryAsync(x => x.Id, ct);
 
+        // Recent windows from the daily metric snapshots of verified posts (CreatorRanking.WindowViews).
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var since = today.AddDays(-31);
+        var verifiedPosts = await counted
+            .SelectMany(a => a.SocialPosts
+                .Where(sp => sp.IsActive && sp.VerificationStatus == VerificationStatus.Verified)
+                .Select(sp => new { a.CreatorProfileId, PostId = sp.Id, sp.LatestViewCount, sp.PublishedAt }))
+            .ToListAsync(ct);
+        var snapshots = verifiedPosts.Count == 0 ? [] : await counted
+            .SelectMany(a => a.SocialPosts
+                .Where(sp => sp.IsActive && sp.VerificationStatus == VerificationStatus.Verified)
+                .SelectMany(sp => sp.MetricSnapshots
+                    .Where(m => m.SnapshotDate >= since)
+                    .Select(m => new { PostId = sp.Id, m.SnapshotDate, m.ViewCount })))
+            .ToListAsync(ct);
+        var snapsByPost = snapshots.GroupBy(x => x.PostId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<(DateOnly, long)>)g.Select(x => (x.SnapshotDate, x.ViewCount)).ToList());
+        var recent = new Dictionary<Guid, (long V7, long V30)>();
+        foreach (var vp in verifiedPosts)
+        {
+            var snaps = snapsByPost.GetValueOrDefault(vp.PostId, Array.Empty<(DateOnly, long)>());
+            var v7 = CreatorRanking.WindowViews(vp.LatestViewCount, vp.PublishedAt, today.AddDays(-7), snaps);
+            var v30 = CreatorRanking.WindowViews(vp.LatestViewCount, vp.PublishedAt, today.AddDays(-30), snaps);
+            recent.TryGetValue(vp.CreatorProfileId, out var acc);
+            recent[vp.CreatorProfileId] = (acc.V7 + v7, acc.V30 + v30);
+        }
+
         var result = new Dictionary<Guid, CreatorPerformance>();
         foreach (var id in creatorIds)
         {
             totals.TryGetValue(id, out var t);
             decisions.TryGetValue(id, out var d);
             posts.TryGetValue(id, out var p);
+            recent.TryGetValue(id, out var r);
             result[id] = new CreatorPerformance(
                 t?.Views ?? 0, t?.Earned ?? 0, t?.Completed ?? 0,
                 d?.Approved ?? 0, d?.Decided ?? 0,
                 p?.Verified ?? 0, p?.Updated,
-                new[] { t?.LastActive, p?.Updated }.Max());
+                new[] { t?.LastActive, p?.Updated }.Max(),
+                r.V7, r.V30);
         }
         return result;
     }
@@ -345,8 +374,13 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
         string? search, string? category, string? country, int? minFollowers,
         string? tag, bool? openToPrOffers, string? sort, int page, int pageSize,
         long? minVerifiedViews = null, double? minApprovalRate = null, bool? onlyWithResults = null,
+        int? window = null, bool? recentOnly = null, string? platform = null,
         CancellationToken ct = default)
     {
+        var windowDays = CreatorRanking.NormalizeWindow(window);
+        // A platform word in the search box is a platform filter, not a text match.
+        var s0 = search?.Trim().ToLowerInvariant();
+        if (s0 is "instagram" or "tiktok") { platform ??= s0; search = null; }
         // Only approved creators with an OAuth-verified TikTok connection are
         // discoverable by brands (CreatorVisibility): a typed handle proves nothing.
         var query = _creators.Query()
@@ -362,6 +396,9 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
             query = query.Where(c => c.Country == country);
         if (openToPrOffers == true)
             query = query.Where(c => c.OpenToPrOffers);
+        // "instagram" = creators who opted in to the Instagram tag (a link, never numbers); "tiktok" = everyone listed (OAuth-verified).
+        if (string.Equals(platform, "instagram", StringComparison.OrdinalIgnoreCase))
+            query = query.Where(c => c.ShowInstagramBadge && c.InstagramUsername != null && c.InstagramUsername != "");
         // Follower filters only ever see OAuth-verified TikTok numbers; a typed handle has none.
         if (minFollowers is > 0)
             query = query.Where(c => c.TikTokAccount != null && c.TikTokAccount.IsActive
@@ -399,13 +436,14 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
         var topThreshold = await _badges.TopCreatorThresholdAsync(ct);
 
         // Verified-data filters: views and decisions from campaign videos only.
-        candidates = candidates.Where(c => CreatorRanking.Passes(P(c), minVerifiedViews, minApprovalRate, onlyWithResults == true)).ToList();
+        // Default: only creators who performed recently (≥10k views / 7 d or ≥100k / 30 d); recentOnly=false lists everyone.
+        candidates = candidates.Where(c => CreatorRanking.Passes(P(c), minVerifiedViews, minApprovalRate, onlyWithResults == true, recentOnly ?? true)).ToList();
 
         // Ranking is by verified performance; followers are a tie-breaker, never the primary signal (CreatorRanking).
         candidates = CreatorRanking.Order(candidates, sort,
             P, c => c.TikTokAccount.VerifiedFollowers(),
             c => ratings.TryGetValue(c.UserId, out var r) ? r.Avg : 0,
-            c => c.CreatedAt).ToList();
+            c => c.CreatedAt, windowDays).ToList();
 
         var totalCount = candidates.Count;
         var pageItems = candidates.Skip((page - 1) * pageSize).Take(pageSize).ToList();
@@ -435,7 +473,8 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
                 p.VerifiedViews, p.Earned, p.Epm, p.Approved, p.Decided, p.ApprovalRate,
                 p.MetricsUpdatedAt, p.LastActive,
                 CreatorBadges.IsVerifiedCreator(c.TikTokAccount.IsVerified(), p.VerifiedPosts),
-                CreatorBadges.IsTopCreator(p.VerifiedViews, p.VerifiedPosts, topThreshold));
+                CreatorBadges.IsTopCreator(p.VerifiedViews, p.VerifiedPosts, topThreshold),
+                p.Views7d, p.Views30d, c.ShowInstagramBadge);
         }).ToList();
 
         return new PagedResult<CreatorDiscoveryDto>
@@ -517,6 +556,7 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
             CreatorLevels.For(paid).Name,
             creator.CoverUrl,
             CreatorBadges.IsVerifiedCreator(creator.TikTokAccount.IsVerified(), perf.VerifiedPosts),
-            CreatorBadges.IsTopCreator(perf.VerifiedViews, perf.VerifiedPosts, topThreshold));
+            CreatorBadges.IsTopCreator(perf.VerifiedViews, perf.VerifiedPosts, topThreshold),
+            ShowInstagramBadge: creator.ShowInstagramBadge);
     }
 }

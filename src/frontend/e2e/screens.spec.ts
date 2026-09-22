@@ -41,6 +41,8 @@ const shots: Shot[] = [
   { name: 'brand-profile', path: '/brand/profile', role: 'Brand', env: { ORG_VERIFIED: '1' }, axe: true },
   // discovery
   { name: 'creators-find', path: '/brand/creators?tab=find', role: 'Brand', axe: true },
+  { name: 'creators-find-filters', path: '/brand/creators?tab=find', role: 'Brand', actions: [['click', 'Filter']] },
+  { name: 'creator-profile-edit', path: '/creator/profile/edit', role: 'Creator', axe: true },
   // campaign wizard
   { name: 'campaign-wizard-1', path: '/brand/campaigns/new', role: 'Brand', axe: true },
   { name: 'campaign-wizard-1-errors', path: '/brand/campaigns/new', role: 'Brand', actions: [['click', 'Fortsätt']] },
@@ -103,7 +105,7 @@ for (const vp of viewports) {
       expect(overflow, 'no horizontal scroll').toBeLessThanOrEqual(0);
 
       fs.mkdirSync(OUT, { recursive: true });
-      await page.screenshot({ path: path.join(OUT, `${s.name}-${vp.tag}.jpg`), type: 'jpeg', quality: 82, fullPage: s.name !== 'campaign-wizard-datepicker' });
+      await page.screenshot({ path: path.join(OUT, `${s.name}-${vp.tag}.jpg`), type: 'jpeg', quality: 82, fullPage: !['campaign-wizard-datepicker', 'creators-find-filters'].includes(s.name) });
 
       if (s.axe && vp.mobile) {
         await page.addScriptTag({ path: AXE });
