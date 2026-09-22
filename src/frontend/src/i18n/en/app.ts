@@ -567,4 +567,5 @@ export const app: Record<string, string> = {
   'Nyligen = minst 10 000 verifierade views senaste 7 dagarna eller 100 000 senaste 30 dagarna.': 'Recently = at least 10,000 verified views in the last 7 days or 100,000 in the last 30 days.',
   'Visa taggen "Instagram kreatör" för företag (länk, märkt ej verifierad — inga siffror hämtas)': 'Show the "Instagram creator" tag to brands (a link, marked not verified — no numbers are fetched)',
   'Namn, bio, kategori eller plattform': 'Name, bio, category or platform',
+  'Krävs för att publicera kampanjer och beställa video': 'Required to publish campaigns and order video',
 };
