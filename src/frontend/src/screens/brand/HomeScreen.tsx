@@ -28,7 +28,8 @@ export function BrandHomeScreen() {
   const videosToReview = (counts?.pendingTapReviews ?? 0) + (counts?.pendingVideoReviews ?? 0);
   const needsMe = collabs.filter((c) => c.needsMyAction);
   const ordersWithBids = orders.filter((o) => o.pendingApplicationCount > 0);
-  const orgMissing = !!profile && !profile.organizationNumber;
+  // Block C: going live needs a *verified* org number, not just a typed one.
+  const orgMissing = !!profile && !profile.orgVerified;
   const hasTodo = videosToReview + (counts?.pendingApplications ?? 0) + (counts?.pendingCommunityRequests ?? 0) + needsMe.length + ordersWithBids.length + (orgMissing ? 1 : 0) > 0;
   const campaigns = campaignsRes?.data ?? [];
   const recentVideos = stats?.recentContent ?? [];
@@ -41,7 +42,7 @@ export function BrandHomeScreen() {
       {hasTodo && (
         <Section title={t('Behöver dig')}>
           <List>
-            {orgMissing && <ListRow leading={<Avatar name="!" size="sm" />} title={t('Organisationsnummer saknas')} subtitle={t('Krävs för att beställa video')} to="/brand/profile/edit" />}
+            {orgMissing && <ListRow leading={<Avatar name="!" size="sm" />} title={profile?.organizationNumber ? t('Organisationsnumret är inte verifierat') : t('Organisationsnummer saknas')} subtitle={t('Krävs för att publicera kampanjer och beställa video')} to="/brand/profile/edit" />}
             {videosToReview > 0 && <ListRow leading={<Avatar name={String(videosToReview)} size="sm" />} title={`${videosToReview} ${videosToReview === 1 ? t('video att granska') : t('videor att granska')}`} subtitle={counts?.reviewWindowHours ? `${t('Godkänns automatiskt efter')} ${counts.reviewWindowHours} ${t('timmar')}` : t('Godkänns automatiskt om de inte granskas i tid')} to="/brand/review" />}
             {(counts?.pendingApplications ?? 0) > 0 && <ListRow leading={<Avatar name={String(counts!.pendingApplications)} size="sm" />} title={`${counts!.pendingApplications} ${counts!.pendingApplications === 1 ? t('ansökan') : t('ansökningar')}`} subtitle={t('Creators vill vara med i dina kampanjer')} to="/brand/creators?tab=applications" />}
             {(counts?.pendingCommunityRequests ?? 0) > 0 && <ListRow leading={<Avatar name={String(counts!.pendingCommunityRequests)} size="sm" />} title={`${counts!.pendingCommunityRequests} ${t('vill gå med i communityn')}`} to="/brand/creators?tab=community" />}
