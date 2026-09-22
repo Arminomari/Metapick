@@ -40,6 +40,18 @@ public class BrandProfile : SoftDeletableEntity
     public Guid UserId { get; set; }
     public string CompanyName { get; set; } = null!;
     public string? OrganizationNumber { get; set; }
+    /// <summary>
+    /// True only when the organisation number was confirmed against a registry
+    /// (VIES/momsregistret) or by an admin. Never set from client input.
+    /// </summary>
+    public bool OrgVerified { get; set; }
+    public DateTime? OrgVerifiedAt { get; set; }
+    /// <summary>Registered company name returned by the registry, when available.</summary>
+    public string? OrgVerifiedName { get; set; }
+    /// <summary>"Vies" or "Admin".</summary>
+    public string? OrgVerificationSource { get; set; }
+    /// <summary>Last time a registry lookup was attempted (verified or not).</summary>
+    public DateTime? OrgVerificationCheckedAt { get; set; }
     public string? Website { get; set; }
     public string Industry { get; set; } = null!;
     public string Country { get; set; } = null!;
@@ -69,8 +81,8 @@ public class CreatorProfile : SoftDeletableEntity
     /// <summary>Identity-verification selfie — admin eyes only, never public.</summary>
     public string? SelfieUrl { get; set; }
     public DateOnly? DateOfBirth { get; set; }
+    /// <summary>TikTok follower count — written only by the TikTok OAuth connection and the daily sync.</summary>
     public int FollowerCount { get; set; }
-    public int? AverageViews { get; set; }
     public CreatorStatus Status { get; set; } = CreatorStatus.Pending;
     public Guid? ReviewedBy { get; set; }
     public DateTime? ReviewedAt { get; set; }
@@ -80,9 +92,9 @@ public class CreatorProfile : SoftDeletableEntity
     /// <summary>Creator expertise/platform tags, e.g. ["TikTok Creator","UGC Creator","Beauty"]</summary>
     public string[] ProfileTags { get; set; } = [];
 
-    // ── Instagram (optional, manually connected) ──────────
+    // ── Instagram: a typed handle shown as a plain link. There is no Instagram
+    // API integration, so no Instagram number may ever be derived from it. ──
     public string? InstagramUsername { get; set; }
-    public int InstagramFollowerCount { get; set; }
 
     /// <summary>Free-text personal site / linktree shown on the public profile.</summary>
     public string? Website { get; set; }

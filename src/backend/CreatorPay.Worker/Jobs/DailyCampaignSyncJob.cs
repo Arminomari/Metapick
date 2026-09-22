@@ -30,6 +30,8 @@ public class DailyCampaignSyncJob : ICampaignSyncTrigger
     private readonly INotificationService _notifications;
     private readonly IAuditService _audit;
     private readonly IRepository<CreatorSubmission> _submissions;
+    // TikTok accounts whose follower count was refreshed in this run (one user/info call per account per run).
+    private readonly HashSet<Guid> _refreshedAccounts = new();
 
     public DailyCampaignSyncJob(
         ILogger<DailyCampaignSyncJob> logger,
@@ -199,6 +201,21 @@ public class DailyCampaignSyncJob : ICampaignSyncTrigger
         // Update last sync timestamp
         tikTokAccount.LastSyncAt = DateTime.UtcNow;
 
+        // Followers are a verified number only while they are refreshed: once per account per run.
+        if (_refreshedAccounts.Add(tikTokAccount.Id))
+        {
+            try
+            {
+                var info = await _tikTok.GetUserInfoAsync(accessToken);
+                tikTokAccount.FollowerCount = info.FollowerCount;
+                if (assignment.CreatorProfile != null) assignment.CreatorProfile.FollowerCount = info.FollowerCount;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Follower refresh failed for {Username}", tikTokAccount.TikTokUsername);
+            }
+        }
+
         // Step 2: Get existing tracked posts for this assignment
         var existingPosts = await _socialPosts.Query()
             .Where(p => p.AssignmentId == assignment.Id && p.IsActive)
@@ -321,6 +338,7 @@ public class DailyCampaignSyncJob : ICampaignSyncTrigger
             post.LatestLikeCount = video.LikeCount;
             post.LatestCommentCount = video.CommentCount;
             post.LatestShareCount = video.ShareCount;
+            post.MetricsUpdatedAt = DateTime.UtcNow;
 
             // Step 5: Fraud check – if views increased > 500% in 24h
             if (previousViews > 0)

@@ -466,7 +466,7 @@ public class AdminUserService : IAdminUserService
             user.CreatedAt, user.LastLoginAt,
             creator.Id, creator.DisplayName, creator.Bio, creator.Category, creator.Country, creator.Language,
             creator.AvatarUrl, creator.Website, creator.DateOfBirth, creator.ProfileTags?.ToList() ?? [],
-            creator.FollowerCount, creator.AverageViews, creator.InstagramUsername, creator.InstagramFollowerCount,
+            creator.FollowerCount, creator.InstagramUsername,
             creator.Status.ToString(),
             tt?.TikTokUsername, tt is { IsActive: true }, tt != null && tt.Scopes != "manual", tt?.FollowerCount ?? 0, tt?.LastSyncAt,
             assignmentStats?.Active ?? 0, assignmentStats?.Completed ?? 0, assignmentStats?.Views ?? 0,

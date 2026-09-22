@@ -138,8 +138,7 @@ public class SocialAuthService : ISocialAuthService
             request.DisplayName, request.Country, request.Bio, request.Category,
             request.TikTokUsername, request.DateOfBirth, request.ProfileTags,
             request.InstagramUsername,
-            request.AvatarUrl ?? identity.PictureUrl, request.FollowerCount, request.AverageViews,
-            request.InstagramFollowerCount, request.Website,
+            request.AvatarUrl ?? identity.PictureUrl, request.Website,
             request.Industry, request.LogoUrl, request.Description,
             SelfieUrl: request.SelfieUrl);
 
@@ -290,8 +289,7 @@ public class SocialAuthService : ISocialAuthService
             string.IsNullOrWhiteSpace(ticket.Username) ? request.TikTokUsername : ticket.Username,
             request.DateOfBirth, request.ProfileTags,
             request.InstagramUsername,
-            request.AvatarUrl ?? ticket.AvatarUrl, ticket.FollowerCount, request.AverageViews,
-            request.InstagramFollowerCount, request.Website,
+            request.AvatarUrl ?? ticket.AvatarUrl, request.Website,
             null, null, request.Description);
 
         var registered = await _auth.RegisterAsync(composed);

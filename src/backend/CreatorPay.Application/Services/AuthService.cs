@@ -9,6 +9,7 @@ using CreatorPay.Domain.Entities;
 using CreatorPay.Domain.Enums;
 using CreatorPay.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using CreatorPay.Domain.Common;
 
 namespace CreatorPay.Application.Services;
 
@@ -24,6 +25,7 @@ public class AuthService : IAuthService
     private readonly IAuditService _audit;
     private readonly IEmailService _email;
     private readonly IConfiguration _config;
+    private readonly OrgVerificationService _orgVerification;
 
     public AuthService(
         IRepository<User> users,
@@ -35,7 +37,8 @@ public class AuthService : IAuthService
         IEncryptionService encryption,
         IAuditService audit,
         IEmailService email,
-        IConfiguration config)
+        IConfiguration config,
+        OrgVerificationService orgVerification)
     {
         _users = users;
         _brands = brands;
@@ -47,6 +50,7 @@ public class AuthService : IAuthService
         _audit = audit;
         _email = email;
         _config = config;
+        _orgVerification = orgVerification;
     }
 
     public async Task<Result<AuthResponse>> RegisterAsync(RegisterRequest request)
@@ -99,13 +103,15 @@ public class AuthService : IAuthService
 
         _users.Add(user);
 
+        BrandProfile? brand = null;
         if (role == UserRole.Brand)
         {
-            var brand = new BrandProfile
+            brand = new BrandProfile
             {
                 UserId = user.Id,
                 CompanyName = request.CompanyName ?? request.Email,
-                OrganizationNumber = request.OrganizationNumber,
+                // Stored normalised (XXXXXX-XXXX). Whether it is VERIFIED is decided below by the registry.
+                OrganizationNumber = OrgNumber.Normalize(request.OrganizationNumber) ?? request.OrganizationNumber,
                 Industry = string.IsNullOrWhiteSpace(request.Industry) ? "Övrigt" : request.Industry.Trim(),
                 Country = request.Country ?? "SE",
                 ContactPhone = request.ContactPhone,
@@ -134,8 +140,6 @@ public class AuthService : IAuthService
                 SelfieUrl = MediaValidation.Normalize(request.SelfieUrl),
                 // Self-reported reach is not accepted — the numbers arrive with the TikTok connection.
                 FollowerCount = 0,
-                AverageViews = null,
-                InstagramFollowerCount = 0,
                 Website = TrimOrNull(request.Website, 300),
                 Status = CreatorStatus.Pending
             };
@@ -165,6 +169,14 @@ public class AuthService : IAuthService
 
         await _uow.SaveChangesAsync();
         await _audit.LogAsync(user.Id, "Auth.Register", "User", user.Id);
+
+        // Best-effort registry check of the organisation number. A registry outage
+        // leaves the brand unverified; the badge is never shown on the number alone.
+        if (brand != null && brand.OrganizationNumber != null)
+        {
+            try { await _orgVerification.VerifyAsync(brand, numberChanged: true); await _uow.SaveChangesAsync(); }
+            catch (Exception) { /* stays unverified until the next attempt */ }
+        }
 
         try { await SendVerificationEmailAsync(user); }
         catch { /* best-effort: registration must never fail on email delivery */ }

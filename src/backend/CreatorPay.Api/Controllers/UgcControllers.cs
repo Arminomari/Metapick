@@ -122,6 +122,19 @@ public class UgcAdminController : BaseController
 }
 
 /// <summary>Things both parties open the same way.</summary>
+[Route("api/ugc/settings")]
+[Authorize]
+public class UgcSettingsController : BaseController
+{
+    private readonly CreatorPay.Application.Ugc.UgcSettings _settings;
+    public UgcSettingsController(CreatorPay.Application.Ugc.UgcSettings settings) => _settings = settings;
+
+    /// <summary>Avgift och tidsfönster som gäller för videouppdrag</summary>
+    [HttpGet]
+    public IActionResult Get() => Ok(CreatorPay.Application.Common.ApiResponse<CreatorPay.Application.Ugc.UgcPublicSettingsDto>.Ok(
+        new CreatorPay.Application.Ugc.UgcPublicSettingsDto(_settings.PlatformFeePercent, _settings.AutoApproveDays, _settings.RevisionDeadlineDays, _settings.MaxRevisions)));
+}
+
 [Route("api/ugc/collabs")]
 [Authorize]
 public class UgcSharedController : BaseController

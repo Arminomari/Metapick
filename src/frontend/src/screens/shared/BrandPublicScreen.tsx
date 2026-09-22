@@ -10,6 +10,7 @@ import { t, statusLabel } from '@/lib/i18n';
 import { money, formatDate, formatNumber, categoryLabel, countryName, payoutSummaryText, plural } from '@/lib/utils';
 import { useMyApplications } from '@/hooks/api';
 import { useBrandPublicProfile } from '@/hooks/extra';
+import { SourceNote } from '@/components/app/SourceNote';
 import { useToast } from '@/components/vyrle/Toast';
 import { Avatar, Badge, BottomSheet, Button, Card, List, ListRow, Page, PageHead, Section, SkeletonList, StatRow, StatTile, StickyAction } from '@/components/ds';
 import { MoreMenu, ago, apiMessage } from '@/components/app/common';
@@ -44,7 +45,7 @@ export function BrandPublicView({ id, ownView, onDeletePost }: { id: string; own
           <div className="ds-grow">
             <div className="ds-heading">{p.companyName}</div>
             <div className="ds-caption ds-muted">{categoryLabel(p.industry)} · {countryName(p.country)} · {t('sedan')} {new Date(p.memberSince).getFullYear()}</div>
-            <div style={{ marginTop: 6 }}><Badge tone="ok">{t('Verifierat företag')}</Badge></div>
+            {p.orgVerified ? <div style={{ marginTop: 6 }}><Badge tone="ok">{t('Verifierat företag')}</Badge></div> : ownView ? <div style={{ marginTop: 6 }}><Badge tone="neutral">{t('Org.nr ej verifierat')}</Badge></div> : null}
           </div>
         </div>
         {p.description && <p className="ds-body" style={{ marginTop: 12 }}>{p.description}</p>}
@@ -54,6 +55,7 @@ export function BrandPublicView({ id, ownView, onDeletePost }: { id: string; own
             <StatTile plain label={t('Aktiva kampanjer')} value={String(p.activeCampaignCount)} />
             <StatTile plain label={t('Betyg')} value={p.reviewCount > 0 ? p.averageRating.toFixed(1) : '–'} hint={p.reviewCount > 0 ? `${p.reviewCount} ${t('omdömen')}` : undefined} />
           </StatRow>
+          <SourceNote source="tiktok" at={p.metricsUpdatedAt} scope={t('alla kampanjvideos')} />
           {more && <><div className="ds-divider" /><StatRow cols={3}><StatTile plain label={t('Genomförda')} value={String(p.completedCampaignCount)} /><StatTile plain label={t('Totala views')} value={formatNumber(p.totalVerifiedViews)} /><StatTile plain label={t('Ambassadörer')} value={String(p.creatorsWorkedWith)} /></StatRow></>}
           <Button variant="ghost" size="sm" onClick={() => setMore((v) => !v)}>{more ? t('Visa mindre') : t('Visa mer')}</Button>
         </div>

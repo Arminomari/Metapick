@@ -6,6 +6,7 @@ using CreatorPay.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
+using CreatorPay.Domain.Common;
 
 namespace CreatorPay.Application.Services;
 
@@ -103,7 +104,17 @@ public class TrackingLinkService : ITrackingLinkService
         var link = await _links.Query().FirstOrDefaultAsync(l => l.Code == normalized && l.IsActive, ct);
         if (link == null) return Errors.NotFound("TrackingLink");
 
-        link.TotalClicks += 1;
+        // One visitor counts once per link per 24 h; every hit is still logged below.
+        var now = DateTime.UtcNow;
+        DateTime? lastFromVisitor = null;
+        if (!string.IsNullOrEmpty(context.IpHash))
+            lastFromVisitor = await _clicks.Query()
+                .Where(c => c.TrackingLinkId == link.Id && c.IpHash == context.IpHash)
+                .OrderByDescending(c => c.ClickedAt)
+                .Select(c => (DateTime?)c.ClickedAt)
+                .FirstOrDefaultAsync(ct);
+        if (ClickPolicy.ShouldCount(lastFromVisitor, now))
+            link.TotalClicks += 1;
 
         _clicks.Add(new LinkTrackingClick
         {

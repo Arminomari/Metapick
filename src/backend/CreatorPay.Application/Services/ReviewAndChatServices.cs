@@ -54,6 +54,10 @@ public class ReviewService : IReviewService
         if (!isBrand && !isCreator)
             return Result<ReviewDto>.Failure(new Error("FORBIDDEN", "Not part of this assignment"));
 
+        // A rating is a statement about finished work: the assignment must be completed.
+        if (assignment.Status != AssignmentStatus.Completed)
+            return Result<ReviewDto>.Failure(new Error("VALIDATION_ERROR", "Omdömen kan lämnas när samarbetet är slutfört"));
+
         var reviewerRole = isBrand ? "Brand" : "Creator";
         var revieweeId = isBrand ? creatorUserId : brandUserId;
 

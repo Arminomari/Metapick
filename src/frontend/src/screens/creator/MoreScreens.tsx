@@ -10,13 +10,13 @@ import { useToast } from '@/components/vyrle/Toast';
 import { Avatar, Badge, Button, Card, Checkbox, EmptyState, Field, List, ListRow, Meter, Page, PageHead, Section, SkeletonList } from '@/components/ds';
 import { MoreMenu } from '@/components/app/common';
 import { ChangeEmailForm, ChangePasswordForm, DeleteAccountForm, LanguagePicker, TikTokCard } from '@/components/app/AccountForms';
-import { TIERS, useLevel } from './ProfileScreen';
+import { useLevel } from './ProfileScreen';
 
 export function LevelsScreen() {
   const level = useLevel();
   const { data: asg } = useCreatorAssignments(undefined, 1, 100);
   const completed = (asg?.data ?? []).filter((a) => a.status === 'Completed').length;
-  const pct = level.next ? Math.min(100, Math.round(((level.paid - level.tier.min) / (level.next.min - level.tier.min)) * 100)) : 100;
+  const pct = level.progress;
   return (
     <Page>
       <PageHead title={t('Creator-nivå')} back={{ to: '/creator/profile' }} />
@@ -28,9 +28,9 @@ export function LevelsScreen() {
       </Card>
       <Section title={t('Alla nivåer')}>
         <List>
-          {TIERS.map((tier, i) => <ListRow key={tier.name} leading={<Avatar name={String(i + 1)} size="sm" />} title={tier.name} badge={i === level.idx ? <Badge tone="accent">{t('Du är här')}</Badge> : i < level.idx ? <Badge tone="ok">{t('Upplåst')}</Badge> : undefined} subtitle={tier.min === 0 ? t('Start') : `${t('Låses upp vid')} ${money(tier.min)} ${t('utbetalt')}`} chevron={false} />)}
+          {level.tiers.map((tier, i) => <ListRow key={tier.name} leading={<Avatar name={String(i + 1)} size="sm" />} title={tier.name} badge={i === level.idx ? <Badge tone="accent">{t('Du är här')}</Badge> : i < level.idx ? <Badge tone="ok">{t('Upplåst')}</Badge> : undefined} subtitle={tier.min === 0 ? t('Start') : `${t('Låses upp vid')} ${money(tier.min)} ${t('utbetalt')}`} chevron={false} />)}
         </List>
-        <p className="ds-caption ds-muted">{t('Din nivå bygger på hur mycket du fått utbetalt via VYRLE och låses upp automatiskt.')}</p>
+        <p className="ds-caption ds-muted">{t('Din nivå bygger på hur mycket du fått utbetalt via VYRLE och låses upp automatiskt.')} {t('Beräknas på servern ur utbetalningsboken.')}</p>
       </Section>
     </Page>
   );

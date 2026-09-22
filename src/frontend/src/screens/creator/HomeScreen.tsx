@@ -6,7 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import { t } from '@/lib/i18n';
 import { money, formatNumber, categoryLabel, payoutSummaryText } from '@/lib/utils';
-import { useCreatorAssignments, useCreatorProfile, useReceivedPrOffers, useBrowseCampaigns, useTikTokStatus } from '@/hooks/api';
+import { useCreatorAssignments, useCreatorProfile, useReceivedPrOffers, useBrowseCampaigns, useTikTokStatus, useCreatorAnalytics } from '@/hooks/api';
+import { SourceNote } from '@/components/app/SourceNote';
 import { useUgcCollabs } from '@/hooks/ugc';
 import { usePayables, useCreatorTaps, usePendingCommunityInvites, useBrandFeed } from '@/hooks/extra';
 import { Avatar, Badge, Button, Card, EmptyState, List, ListRow, Page, PageHead, Section, SkeletonList, SkeletonStats, StatRow, StatTile } from '@/components/ds';
@@ -25,10 +26,12 @@ export function CreatorHomeScreen() {
   const { data: feed = [] } = useBrandFeed();
   const { data: browse } = useBrowseCampaigns();
 
+  const { data: stats, isLoading: loadingStats } = useCreatorAnalytics();
   const assignments = asg?.data ?? [];
-  const earned = assignments.reduce((s, a) => s + a.currentPayoutAmount, 0);
-  const views = assignments.reduce((s, a) => s + a.totalVerifiedViews, 0);
-  const available = payables.reduce((s, p) => s + p.available, 0);
+  // Numbers come from the server: verified views (TikTok), earned and available (payout ledger).
+  const earned = stats?.totalEarned ?? 0;
+  const views = stats?.totalVerifiedViews ?? 0;
+  const available = stats?.availableToWithdraw ?? payables.reduce((s, p) => s + p.available, 0);
   const newOffers = (offers?.data ?? []).filter((o) => o.status === 'Sent');
   const needsMe = collabs.filter((c) => c.needsMyAction);
   const noVideo = assignments.filter((a) => a.status === 'Active' && !a.isTap && a.totalVerifiedViews === 0).slice(0, 3);
@@ -62,12 +65,15 @@ export function CreatorHomeScreen() {
       )}
 
       <Section title={t('Din översikt')} action={<Button variant="ghost" size="sm" to="/creator/analytics">{t('Statistik')}</Button>}>
-        {isLoading ? <SkeletonStats n={3} /> : (
-          <StatRow cols={3}>
-            <StatTile label={t('Intjänat')} value={money(earned)} />
-            <StatTile label={t('Views')} value={formatNumber(views)} />
-            <StatTile label={t('Att hämta ut')} value={money(available)} accent={available > 0} />
-          </StatRow>
+        {isLoading || loadingStats ? <SkeletonStats n={3} /> : (
+          <>
+            <StatRow cols={3}>
+              <StatTile label={t('Intjänat')} value={money(earned)} />
+              <StatTile label={t('Views')} value={formatNumber(views)} />
+              <StatTile label={t('Att hämta ut')} value={money(available)} accent={available > 0} />
+            </StatRow>
+            <SourceNote source="tiktok" at={stats?.metricsUpdatedAt} scope={t('alla dina kampanjvideos')} />
+          </>
         )}
       </Section>
 

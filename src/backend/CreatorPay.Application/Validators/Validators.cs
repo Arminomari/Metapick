@@ -1,5 +1,6 @@
 using CreatorPay.Application.DTOs;
 using FluentValidation;
+using CreatorPay.Domain.Common;
 
 namespace CreatorPay.Application.Validators;
 
@@ -31,7 +32,8 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
         When(x => x.Role == "Brand", () =>
         {
             RuleFor(x => x.CompanyName).NotEmpty().MaximumLength(200);
-            RuleFor(x => x.OrganizationNumber).NotEmpty().MaximumLength(50);
+            RuleFor(x => x.OrganizationNumber).NotEmpty().MaximumLength(50)
+                .Must(OrgNumber.IsValid).WithMessage("Organisationsnumret är inte giltigt — 10 siffror och kontrollsiffran måste stämma");
         });
         When(x => x.Role == "Creator", () =>
         {

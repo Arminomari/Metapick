@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { t } from '@/lib/i18n';
 import { money, formatDate, formatNumber } from '@/lib/utils';
 import { maskSwishNumber, maskBankAccount } from '@/lib/masks';
-import { useCreatorPayouts, usePayoutMethod, useSetPayoutMethod, useReceivedPrOffers } from '@/hooks/api';
+import { useCreatorPayouts, usePayoutMethod, useSetPayoutMethod, useCreatorAnalytics } from '@/hooks/api';
 import { usePayables, useRequestPayable } from '@/hooks/extra';
 import { useUgcCreatorProfile, useUpsertUgcCreatorProfile, useUgcPayoutStatus, useStartUgcPayoutOnboarding, apiError } from '@/hooks/ugc';
 import { useToast } from '@/components/vyrle/Toast';
@@ -23,7 +23,6 @@ export function EarningsScreen() {
   const { data: payables = [], isLoading } = usePayables();
   const request = useRequestPayable();
   const { data: pm } = usePayoutMethod();
-  const { data: offers } = useReceivedPrOffers();
   const { data: ugc } = useUgcCreatorProfile();
   const [tab, setTab] = useState<'pending' | 'approved' | 'paid'>('pending');
   const [page, setPage] = useState(1);
@@ -32,7 +31,8 @@ export function EarningsScreen() {
   const [how, setHow] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const available = payables.reduce((s, p) => s + p.available, 0);
-  const prValue = (offers?.data ?? []).filter((o) => o.status === 'Accepted' || o.status === 'Completed').reduce((s, o) => s + (o.productValue ?? 0) + (o.compensationAmount ?? 0), 0);
+  const { data: stats } = useCreatorAnalytics();
+  const prValue = stats?.prValueDeclared ?? 0;
   const rows = payouts?.data ?? [];
   const pages = payouts ? Math.ceil(payouts.totalCount / payouts.pageSize) : 1;
 
@@ -60,7 +60,7 @@ export function EarningsScreen() {
         <List>
           <ListRow title={t('Utbetalningsmetod')} subtitle={pm?.isConfigured ? `${METHOD[pm.method ?? '']?.label ?? pm.method} · ${pm.maskedDetails}` : t('Bankkonto, Swish eller PayPal')} badge={!pm?.isConfigured ? <Badge tone="warn">{t('Saknas')}</Badge> : undefined} onClick={() => setMethod(true)} />
           <ListRow title={t('Verifiering & skatt')} subtitle={ugc?.payoutOnboardingComplete ? t('Verifierad hos Stripe') : t('Krävs för betalda videouppdrag')} badge={ugc ? <Badge tone={ugc.status === 'Suspended' ? 'bad' : ugc.payoutOnboardingComplete ? 'ok' : 'neutral'}>{ugc.status === 'Suspended' ? t('Avstängd') : ugc.payoutOnboardingComplete ? t('Klar') : t('Valfri')}</Badge> : undefined} onClick={() => navigate('/creator/earnings/verification')} />
-          <ListRow title={t('PR-värde att deklarera')} subtitle={t('Produkter och ersättning från accepterade PR-erbjudanden')} value={money(prValue)} chevron={false} />
+          <ListRow title={t('PR-värde att deklarera')} subtitle={t('Belopp företagen angav i accepterade PR-erbjudanden — deklarerat av dem, inte verifierat av VYRLE')} wrapSubtitle value={money(prValue)} chevron={false} />
           <ListRow title={t('Från visning till pengar på kontot')} onClick={() => setHow(true)} />
         </List>
       </Section>

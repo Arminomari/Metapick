@@ -34,6 +34,11 @@ public class CreatorPayFactory : WebApplicationFactory<CreatorPay.Api.ApiMarker>
                 d => d.ServiceType.FullName?.Contains("Hangfire") == true).ToList();
             foreach (var d in hangfireDescriptors) services.Remove(d);
 
+            // Never call the EU VIES registry from tests.
+            var registry = services.Where(d => d.ServiceType == typeof(CreatorPay.Application.Interfaces.IOrgNumberRegistry)).ToList();
+            foreach (var d in registry) services.Remove(d);
+            services.AddSingleton<CreatorPay.Application.Interfaces.IOrgNumberRegistry, CreatorPay.Infrastructure.Services.NullOrgNumberRegistry>();
+
             // Add test PostgreSQL
             services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(_postgres.GetConnectionString(), npgsql =>

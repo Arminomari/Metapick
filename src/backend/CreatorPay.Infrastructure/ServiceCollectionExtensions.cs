@@ -40,6 +40,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IAdminUserService, AdminUserService>();
         services.AddScoped<IBrandService, BrandService>();
+        services.AddScoped<OrgVerificationService>();
+        services.AddScoped<IBrandAnalyticsService, BrandAnalyticsService>();
+        services.AddScoped<ICreatorAnalyticsService, CreatorAnalyticsService>();
         services.AddScoped<ICreatorService, CreatorService>();
         services.AddScoped<IPortfolioService, PortfolioService>();
         services.AddScoped<ICreatorDiscoveryService, CreatorDiscoveryService>();
@@ -110,6 +113,13 @@ public static class ServiceCollectionExtensions
                 options.CircuitBreaker.FailureRatio = 0.6;
                 options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(15);
             });
+        // Organisation numbers are verified against the EU VIES service (momsregistret).
+        // "OrgVerification:Provider" = "None" disables lookups (nothing ever verifies).
+        if (string.Equals(config["OrgVerification:Provider"], "None", StringComparison.OrdinalIgnoreCase))
+            services.AddSingleton<IOrgNumberRegistry, NullOrgNumberRegistry>();
+        else
+            services.AddHttpClient<IOrgNumberRegistry, ViesOrgNumberRegistry>();
+
         // Transactional email via Resend as soon as the API key is configured;
         // otherwise emails are logged and skipped.
         if (!string.IsNullOrWhiteSpace(config["Email:ResendApiKey"]))

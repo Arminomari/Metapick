@@ -265,3 +265,19 @@ public class SupportMessageController : BaseController
     public async Task<IActionResult> Reply([FromBody] SendSupportMessageRequest request, CancellationToken ct)
         => ToActionResult(await _support.ReplyAsync(GetUserId(), request, ct));
 }
+
+/// <summary>Admin decisions about brands that the registry cannot make.</summary>
+[Route("api/admin/brands")]
+[Authorize(Policy = "AdminOnly")]
+public class AdminBrandController : BaseController
+{
+    private readonly IBrandService _brands;
+    public AdminBrandController(IBrandService brands) => _brands = brands;
+
+    public record SetOrgVerifiedRequest(bool Verified, string? RegisteredName);
+
+    /// <summary>Sätt eller ta bort org.nr-verifiering manuellt (efter granskade dokument)</summary>
+    [HttpPost("{id:guid}/org-verified")]
+    public async Task<IActionResult> SetOrgVerified(Guid id, [FromBody] SetOrgVerifiedRequest request)
+        => ToActionResult(await _brands.SetOrgVerifiedByAdminAsync(id, GetUserId(), request.Verified, request.RegisteredName));
+}

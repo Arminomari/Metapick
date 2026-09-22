@@ -5,6 +5,7 @@ using CreatorPay.Domain.Entities;
 using CreatorPay.Domain.Enums;
 using CreatorPay.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using CreatorPay.Domain.Common;
 
 namespace CreatorPay.Application.Services;
 
@@ -187,7 +188,7 @@ public class CreatorService : ICreatorService
 
     public async Task<Result<PagedResult<CreatorListDto>>> ListCreatorsAsync(string? status, string? category, int page, int pageSize)
     {
-        var query = _creators.Query().AsQueryable();
+        var query = _creators.Query().Include(c => c.TikTokAccount).AsQueryable();
         if (Enum.TryParse<CreatorStatus>(status, out var s))
             query = query.Where(c => c.Status == s);
         if (!string.IsNullOrWhiteSpace(category))
@@ -200,7 +201,7 @@ public class CreatorService : ICreatorService
         return new PagedResult<CreatorListDto>
         {
             Data = items.Select(c => new CreatorListDto(c.Id, c.DisplayName, c.Category, c.Country,
-                c.FollowerCount, c.AverageViews, c.Status.ToString(), c.CreatedAt)).ToList(),
+                c.TikTokAccount.VerifiedFollowers(), c.Status.ToString(), c.CreatedAt)).ToList(),
             Page = page, PageSize = pageSize, TotalCount = totalCount
         };
     }
@@ -230,11 +231,14 @@ public class CreatorService : ICreatorService
 
     private static CreatorProfileDto MapToDto(CreatorProfile c) =>
         new(c.Id, c.UserId, c.DisplayName, c.Bio, c.Category, c.Country, c.Language,
-            c.AvatarUrl, c.FollowerCount, c.AverageViews, c.Status.ToString(),
-            c.TikTokAccount != null && c.TikTokAccount.IsActive,
+            c.AvatarUrl,
+            // Followers only from a verified (OAuth) TikTok connection; a typed handle shows 0.
+            c.TikTokAccount.VerifiedFollowers(), c.TikTokAccount.FollowersSyncedAt(),
+            c.Status.ToString(),
+            c.TikTokAccount != null && c.TikTokAccount.IsActive, c.TikTokAccount.IsVerified(),
             c.TikTokAccount?.TikTokUsername, c.CreatedAt,
             c.ProfileTags?.ToList() ?? [],
-            c.InstagramUsername, c.InstagramFollowerCount, c.Website, c.OpenToPrOffers);
+            c.InstagramUsername, c.Website, c.OpenToPrOffers, c.DateOfBirth);
 
     private async Task<CreatorProfile?> GetOrCreateCreatorProfileAsync(Guid userId)
     {

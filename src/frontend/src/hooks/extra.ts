@@ -20,6 +20,7 @@ export interface CreatorTap {
   cpm: number; payoutCapPerVideo?: number | null; monthlyCapPerCreator?: number | null;
   myMonthEarned: number; myMonthViews: number; myLifetimeEarned: number;
   tapMonthBudget: number; tapMonthSpent: number; briefUpdatedAt?: string | null;
+  tapMonthUsedPercent: number; calculatedAt?: string | null;
 }
 export const useCreatorTaps = () => useQuery({ queryKey: ['creator-taps'], queryFn: async () => (await api.get<ApiResponse<CreatorTap[]>>('/creator/taps')).data.data, refetchInterval: 60000 });
 
@@ -30,6 +31,7 @@ export interface TapDto {
   brief: string; contentInstructions?: string | null; requiredHashtag: string; category: string;
   monthSpent: number; monthRemaining: number; monthViews: number; activeCreatorsThisMonth: number;
   memberCount: number; briefUpdatedAt?: string | null; createdAt: string;
+  monthUsedPercent: number; calculatedAt?: string | null;
 }
 export const useBrandTaps = () => useQuery({ queryKey: ['brand-taps'], queryFn: async () => (await api.get<ApiResponse<TapDto[]>>('/brand/tap/all')).data.data });
 
@@ -71,6 +73,9 @@ export interface BrandPublicProfile {
   hasTap?: boolean; tapCpm?: number; tapName?: string | null; tapBrief?: string | null;
   tapHashtag?: string | null; tapCapPerVideo?: number | null; tapMonthlyCapPerCreator?: number | null;
   membershipStatus?: string | null;
+  /** Registry-verified organisation number — never inferred from the number being present. */
+  orgVerified: boolean;
+  metricsUpdatedAt?: string | null;
   taps?: { id: string; name: string; cpm: number; brief: string; requiredHashtag: string; capPerVideo?: number | null; monthlyCapPerCreator?: number | null; category: string }[] | null;
 }
 export const useBrandPublicProfile = (id?: string) => useQuery({
@@ -82,6 +87,7 @@ export const useBrandPublicProfile = (id?: string) => useQuery({
 export interface CommunityMember {
   creatorProfileId: string; displayName: string; avatarUrl?: string | null; tikTokUsername?: string | null; tikTokFollowers: number;
   status: string; source: string; joinedAt: string; lifetimeEarned: number; lifetimeViews: number; collaborations: number;
+  tikTokVerified: boolean; followersSyncedAt?: string | null;
 }
 export const useCommunityMembers = () => useQuery({
   queryKey: ['brand-community'],
@@ -92,6 +98,7 @@ export interface TapSubmission {
   submissionId: string; assignmentId: string; creatorName: string; creatorAvatarUrl?: string | null;
   creatorProfileId: string; videoUrl: string; videoId?: string | null; views: number;
   submittedAt: string; hoursUntilAutoApprove: number; tapId?: string | null; tapName?: string | null;
+  autoApproveAt?: string | null; metricsUpdatedAt?: string | null;
 }
 export const useTapSubmissions = () => useQuery({
   queryKey: ['tap-submissions'],

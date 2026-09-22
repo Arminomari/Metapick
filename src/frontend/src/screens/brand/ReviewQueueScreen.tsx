@@ -6,7 +6,7 @@ import { CheckCircle2 } from 'lucide-react';
 import api from '@/lib/api';
 import { t } from '@/lib/i18n';
 import { formatDate, formatNumber } from '@/lib/utils';
-import { useBrandCampaigns, useApproveSubmission, useRejectSubmission } from '@/hooks/api';
+import { useBrandCampaigns, useApproveSubmission, useRejectSubmission , useActionCounts } from '@/hooks/api';
 import { useTapSubmissions } from '@/hooks/extra';
 import { useToast } from '@/components/vyrle/Toast';
 import { TikTokEmbed } from '@/components/ui/TikTokEmbed';
@@ -24,6 +24,7 @@ export function ReviewQueueScreen() {
   const only = params.get('campaign') ? { kind: 'campaign', id: params.get('campaign')! } : params.get('tap') ? { kind: 'tap', id: params.get('tap')! } : null;
   const { data: campaignsRes, isLoading: loadingCampaigns } = useBrandCampaigns('Active', 1);
   const { data: tapSubs = [], isLoading: loadingTaps } = useTapSubmissions();
+  const { data: counts } = useActionCounts('brand');
   const campaigns = campaignsRes?.data ?? [];
   const analytics = useQueries({ queries: campaigns.map((c) => ({ queryKey: ['campaign-analytics', c.id], queryFn: async () => (await api.get<ApiResponse<CampaignAnalytics>>(`/campaigns/${c.id}/analytics`)).data.data })) });
   const approve = useApproveSubmission();
@@ -34,7 +35,7 @@ export function ReviewQueueScreen() {
 
   const items: Item[] = [
     ...tapSubs.map((s) => ({ submissionId: s.submissionId, assignmentId: s.assignmentId, creatorName: s.creatorName, creatorAvatarUrl: s.creatorAvatarUrl, videoUrl: s.videoUrl, videoId: s.videoId, views: s.views, submittedAt: s.submittedAt, hours: s.hoursUntilAutoApprove, source: s.tapName ?? t('Kran'), sourceId: s.tapId ?? '', kind: 'tap' as const })),
-    ...analytics.flatMap((q, i) => (q.data?.creatorPerformance ?? []).flatMap((cp) => cp.videos.filter((v) => v.submissionId && !['Approved', 'Rejected'].includes(v.status)).map((v) => ({ submissionId: v.submissionId!, assignmentId: cp.assignmentId, creatorName: cp.displayName, videoUrl: v.videoUrl, videoId: v.videoId, views: v.views, submittedAt: v.createdAt, hours: Math.max(0, 48 - Math.floor((Date.now() - +new Date(v.createdAt)) / 3600000)), source: campaigns[i].name, sourceId: campaigns[i].id, kind: 'campaign' as const, campaignId: campaigns[i].id })))),
+    ...analytics.flatMap((q, i) => (q.data?.creatorPerformance ?? []).flatMap((cp) => cp.videos.filter((v) => v.submissionId && !['Approved', 'Rejected'].includes(v.status)).map((v) => ({ submissionId: v.submissionId!, assignmentId: cp.assignmentId, creatorName: cp.displayName, videoUrl: v.videoUrl, videoId: v.videoId, views: v.views, submittedAt: v.createdAt, hours: v.autoApproveAt ? Math.max(0, Math.ceil((+new Date(v.autoApproveAt) - Date.now()) / 3600000)) : 0, source: campaigns[i].name, sourceId: campaigns[i].id, kind: 'campaign' as const, campaignId: campaigns[i].id })))),
   ].filter((x) => !only || x.sourceId === only.id || (only.kind === 'tap' && x.kind === 'tap' && !x.sourceId)).filter((x) => filter === 'all' || x.kind === filter).sort((a, b) => a.hours - b.hours);
   const loading = loadingCampaigns || loadingTaps || analytics.some((q) => q.isLoading);
   const bust = () => ['tap-submissions', 'campaign-analytics', 'brand-taps', 'action-counts'].forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
@@ -43,7 +44,7 @@ export function ReviewQueueScreen() {
   return (
     <Page>
       <PageHead title={t('Att granska')} back={{ onClick: () => navigate(-1) }} />
-      <p className="ds-caption ds-muted">{t('Videor som inte granskas inom 48 timmar godkänns automatiskt.')}</p>
+      <p className="ds-caption ds-muted">{counts?.reviewWindowHours ? `${t('Videor som inte granskas inom')} ${counts.reviewWindowHours} ${t('timmar godkänns automatiskt.')}` : t('Videor som inte granskas i tid godkänns automatiskt.')}</p>
       {!only && <Chips><Chip selected={filter === 'all'} onClick={() => setFilter('all')}>{t('Alla')}</Chip><Chip selected={filter === 'tap'} onClick={() => setFilter('tap')}>{t('Kranar')}</Chip><Chip selected={filter === 'campaign'} onClick={() => setFilter('campaign')}>{t('Kampanjer')}</Chip></Chips>}
       {loading && items.length === 0 ? <SkeletonList rows={2} /> : items.length === 0 ? <Card><EmptyState icon={<CheckCircle2 />} title={t('Allt är granskat')} description={t('Nya videor från din community dyker upp här.')} /></Card> : items.map((it) => (
         <Card key={it.submissionId}>

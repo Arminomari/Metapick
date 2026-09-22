@@ -439,26 +439,7 @@ app.MapHealthChecks("/health/ready",
     }
 
     // ── Seed demo content (Discover/Dashboard/Portfolio) ──
-    var seedDemoData = builder.Configuration.GetValue<bool?>("Bootstrap:SeedDemoDataEnabled") ?? false;
-    if (seedDemoData)
-    {
-        var demoEncryption = scope.ServiceProvider.GetRequiredService<CreatorPay.Application.Interfaces.IEncryptionService>();
-        await CreatorPay.Api.Bootstrap.DemoDataSeeder.SeedAsync(
-            db, demoEncryption, builder.Configuration["Bootstrap:DemoCreatorEmail"]);
-    }
-    else if (builder.Configuration.GetValue<bool?>("Bootstrap:CleanupDemoDataEnabled") ?? false)
-    {
-        // Pre-launch cleanup: purge everything the demo seeder created.
-        // Never allowed to block startup.
-        try
-        {
-            await CreatorPay.Api.Bootstrap.DemoDataSeeder.CleanupAsync(db);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Demo data cleanup failed — continuing startup");
-        }
-    }
+    // The demo-data seeder (fake views, payouts and portfolio brands) was removed: no fabricated numbers can be seeded into production.
 
     // ── Recurring jobs (only when the API hosts the Hangfire server) ──
     if (runHangfireServerInApi)
