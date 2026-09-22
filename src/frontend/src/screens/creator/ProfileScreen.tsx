@@ -112,8 +112,16 @@ export function CreatorProfileScreen() {
         </div>
       </ProfileHero>
 
+      {!p.visibleToBrands && (
+        <Card>
+          <Badge tone="warn">{t('Inte synlig för företag än')}</Badge>
+          {p.visibilityBlocker && <p className="ds-caption ds-muted" style={{ marginTop: 8 }}>{p.visibilityBlocker}</p>}
+          <div style={{ marginTop: 10 }}><Button size="sm" variant="secondary" to="/creator/onboarding">{t('Kom igång')}</Button></div>
+        </Card>
+      )}
+
       <ProfileChecklist items={[
-        { key: 'tiktok', label: t('Koppla TikTok'), done: !!p.tikTokVerified, to: '/creator/settings/tiktok' },
+        { key: 'tiktok', label: t('Koppla TikTok'), done: !!p.tikTokVerified, to: '/creator/onboarding' },
         { key: 'avatar', label: t('Lägg till profilbild'), done: !!p.avatarUrl, to: '/creator/profile/edit' },
         { key: 'cover', label: t('Lägg till cover'), done: !!p.coverUrl, to: '/creator/profile/edit' },
         { key: 'bio', label: t('Skriv en bio (minst 20 tecken)'), done: (p.bio ?? '').trim().length >= 20, to: '/creator/profile/edit' },
@@ -191,7 +199,7 @@ export function CreatorProfileEditScreen() {
               <Field label={t('Kategori')}><select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>{CATEGORIES.map((c) => <option key={c} value={c}>{t(c)}</option>)}</select></Field>
               <Field label={t('Land')}><select value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })}><option value="SE">{t('Sverige')}</option><option value="NO">{t('Norge')}</option><option value="DK">{t('Danmark')}</option><option value="FI">{t('Finland')}</option></select></Field>
             </div>
-            <Field label={t('Födelsedatum')}><DateInput value={form.dateOfBirth} onChange={(v) => setForm({ ...form, dateOfBirth: v })} className="ds-input" max={new Date(Date.now() - 13 * 365.25 * 86400000).toISOString().slice(0, 10)} /></Field>
+            <Field label={t('Födelsedatum')}><DateInput value={form.dateOfBirth} onChange={(v) => setForm({ ...form, dateOfBirth: v })} max={new Date(Date.now() - 13 * 365.25 * 86400000).toISOString().slice(0, 10)} /></Field>
           </div>
         </Card>
         <Card title={t('Konton & länkar')}>

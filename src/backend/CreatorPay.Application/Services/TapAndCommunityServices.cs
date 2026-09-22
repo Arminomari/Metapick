@@ -144,13 +144,16 @@ public class CommunityService : ICommunityService
     /// </summary>
     public async Task<Result<bool>> RequestMembershipAsync(Guid creatorUserId, Guid brandProfileId, CancellationToken ct = default)
     {
-        var creator = await _creators.Query().Include(c => c.User).FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
+        var creator = await _creators.Query().Include(c => c.User).Include(c => c.TikTokAccount).FirstOrDefaultAsync(c => c.UserId == creatorUserId, ct);
         if (creator == null) return Errors.NotFound("Creator");
         if (creator.Status != CreatorStatus.Approved)
             return Errors.Forbidden("Ditt konto måste vara godkänt först.");
         // Same rule as campaign applications: applying requires a proven inbox.
         if (creator.User is { EmailVerified: false })
             return Errors.Forbidden("Bekräfta din e-postadress först — kolla mejlet vi skickat, eller begär en ny länk i bannern högst upp.");
+        // ...and a real TikTok login: tap views are paid on verified numbers only.
+        if (!creator.TikTokAccount.IsVerified())
+            return Errors.Forbidden("Koppla ditt TikTok-konto via TikTok-inloggningen först — utan den kan dina views inte verifieras.");
 
         var brand = await _brands.Query().FirstOrDefaultAsync(b => b.Id == brandProfileId, ct);
         if (brand == null) return Errors.NotFound("Brand", brandProfileId);

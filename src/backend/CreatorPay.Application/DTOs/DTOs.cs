@@ -125,7 +125,9 @@ public record CreatorProfileDto(
     bool TikTokConnected, bool TikTokVerified, string? TikTokUsername, DateTime CreatedAt,
     List<string> ProfileTags,
     string? InstagramUsername, string? Website, bool OpenToPrOffers,
-    DateOnly? DateOfBirth = null, string? CoverUrl = null);
+    DateOnly? DateOfBirth = null, string? CoverUrl = null,
+    // Whether brands can find and open this profile (CreatorVisibility), and why not
+    bool VisibleToBrands = false, string? VisibilityBlocker = null);
 
 public record CreatorListDto(
     Guid Id, string DisplayName, string Category, string Country,

@@ -27,8 +27,8 @@ function FeeNote({ amountOre }: { amountOre: number }) {
 }
 function OrgNotice() {
   const { data: profile } = useBrandProfile();
-  if (!profile || profile.organizationNumber) return null;
-  return <Card><p className="ds-body" style={{ fontWeight: 600 }}>{t('Organisationsnummer saknas')}</p><p className="ds-caption ds-muted">{t('Ni kan fylla i beställningen nu, men den kan inte publiceras förrän organisationsnumret finns på företagsprofilen.')}</p><div style={{ marginTop: 8 }}><Button variant="secondary" size="sm" to="/brand/profile/edit">{t('Lägg till org.nr')}</Button></div></Card>;
+  if (!profile || profile.orgVerified) return null;
+  return <Card><p className="ds-body" style={{ fontWeight: 600 }}>{profile.organizationNumber ? t('Organisationsnumret är inte verifierat') : t('Organisationsnummer saknas')}</p><p className="ds-caption ds-muted">{t('Ni kan fylla i beställningen nu, men den kan inte publiceras förrän organisationsnumret är verifierat mot momsregistret (VIES) på företagsprofilen.')}</p><div style={{ marginTop: 8 }}><Button variant="secondary" size="sm" to="/brand/profile/edit">{t('Lägg till org.nr')}</Button></div></Card>;
 }
 
 /* ── Order detail ─────────────────────────────────────────── */
@@ -46,14 +46,14 @@ export function BrandOrderDetailScreen() {
   const [showDone, setShowDone] = useState(false);
   const [brief, setBrief] = useState(false);
   if (isLoading || !c) return <Page><PageHead title="" back={{ to: '/brand/campaigns?tab=orders' }} /><SkeletonList rows={3} /></Page>;
-  const needsOrg = !!profile && !profile.organizationNumber;
+  const needsOrg = !!profile && !profile.orgVerified;
   const open = apps.filter((a) => a.status === 'Applied' || a.status === 'Preselected');
   const done = apps.filter((a) => !open.includes(a));
   const run = (appId: string, act: 'preselect' | 'reject' | 'hire', n?: string) => decide.mutate({ id: appId, action: act, note: n }, {
     onSuccess: (res: unknown) => { if (act === 'hire') { toast.push(t('Anlitad! Läs och acceptera kontraktet för att betala.'), 'success'); navigate(`/brand/ugc/collabs/${(res as { id: string }).id}`); } else toast.push(act === 'preselect' ? t('Markerad som favorit') : t('Budet är avböjt'), 'success'); setRejecting(null); setNote(''); },
     onError: (e) => toast.push(apiError(e, t('Något gick fel')), 'error'),
   });
-  const publish = () => { if (needsOrg) { toast.push(t('Lägg till företagets organisationsnummer innan ni publicerar.'), 'error'); navigate('/brand/profile/edit'); return; } action.mutate({ id: c.id, action: 'publish' }, { onSuccess: () => toast.push(t('Publicerad — creators som matchar får en notis.'), 'success'), onError: (e) => toast.push(apiError(e, t('Kunde inte publicera')), 'error') }); };
+  const publish = () => { if (needsOrg) { toast.push(t('Verifiera företagets organisationsnummer innan ni publicerar.'), 'error'); navigate('/brand/profile/edit'); return; } action.mutate({ id: c.id, action: 'publish' }, { onSuccess: () => toast.push(t('Publicerad — creators som matchar får en notis.'), 'success'), onError: (e) => toast.push(apiError(e, t('Kunde inte publicera')), 'error') }); };
 
   return (
     <Page>
@@ -107,40 +107,52 @@ export function BrandOrderFormScreen() {
   const toast = useToast();
   const { data: existing, isLoading } = useUgcBrandCampaign(id ?? '');
   const { data: creator } = useCreatorPublicProfile(creatorId);
+  const { data: brandProfile } = useBrandProfile();
+  const needsOrg = !!brandProfile && !brandProfile.orgVerified;
   const save = useSaveUgcCampaign();
   const action = useUgcCampaignAction();
   const invite = useUgcDirectInvite();
   const [step, setStep] = useState(0);
   const [error, setError] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<UpsertUgcCampaign>({ title: '', brief: emptyBrief, region: '', categories: [], minFollowers: null, maxFollowers: null, compensation: 'Paid', budgetMinOre: 100_000, budgetMaxOre: 250_000, productDescription: '', productValueOre: null, rightsPackage: 'OrganicPlusAds6M', deadlineDays: 7, slots: 1, briefGeneratedByAi: false });
   const [amountOre, setAmountOre] = useState(150_000);
   const [loaded, setLoaded] = useState(false);
   useEffect(() => { if (existing && !loaded) { setForm({ title: existing.title, brief: { ...existing.brief, extraNotes: existing.brief.extraNotes ?? '' }, region: existing.region ?? '', categories: existing.categories, minFollowers: existing.minFollowers, maxFollowers: existing.maxFollowers, compensation: existing.compensation, budgetMinOre: existing.budgetMinOre, budgetMaxOre: existing.budgetMaxOre, productDescription: existing.productDescription ?? '', productValueOre: existing.productValueOre, rightsPackage: existing.rightsPackage, deadlineDays: existing.deadlineDays, slots: existing.slots, briefGeneratedByAi: existing.briefGeneratedByAi }); setLoaded(true); } }, [existing, loaded]);
-  const set = (p: Partial<UpsertUgcCampaign>) => setForm((f) => ({ ...f, ...p }));
-  const setBrief = (p: Partial<UgcBrief>) => setForm((f) => ({ ...f, brief: { ...f.brief, ...p } }));
+  const clearErr = (...keys: string[]) => setErrors((e) => { const n = { ...e }; keys.forEach((k) => delete n[k]); return n; });
+  const set = (p: Partial<UpsertUgcCampaign>) => { setForm((f) => ({ ...f, ...p })); clearErr(...Object.keys(p)); };
+  const setBrief = (p: Partial<UgcBrief>) => { setForm((f) => ({ ...f, brief: { ...f.brief, ...p } })); clearErr(...Object.keys(p)); };
   const direct = !!creatorId && !id;
   const paid = form.compensation !== 'ProductExchange';
   const steps = direct ? ['Brief', 'Ersättning', 'Granska'] : STEPS;
 
-  const validate = (s: string): string => {
+  /** All errors for the step at once, keyed by field. */
+  const validate = (s: string): Record<string, string> => {
+    const e: Record<string, string> = {};
     if (s === 'Brief') {
-      if (form.title.trim().length < 3) return t('Ge beställningen en titel (minst 3 tecken).');
-      if (!form.brief.goal.trim()) return t('Skriv vad videon ska åstadkomma.');
-      if (!form.brief.format.trim()) return t('Ange format.');
-      if (!(form.brief.lengthSeconds >= 5 && form.brief.lengthSeconds <= 180)) return t('Längd: 5–180 sekunder.');
-      if (!(form.brief.videoCount >= 1 && form.brief.videoCount <= 10)) return t('Antal videor: 1–10.');
-      if (!form.brief.callToAction.trim()) return t('Skriv en call to action.');
+      if (form.title.trim().length < 3) e.title = t('Ge beställningen en titel (minst 3 tecken).');
+      if (!form.brief.goal.trim()) e.goal = t('Skriv vad videon ska åstadkomma.');
+      if (!form.brief.format.trim()) e.format = t('Ange format.');
+      if (!(form.brief.lengthSeconds >= 5 && form.brief.lengthSeconds <= 180)) e.lengthSeconds = t('Längd: 5–180 sekunder.');
+      if (!(form.brief.videoCount >= 1 && form.brief.videoCount <= 10)) e.videoCount = t('Antal videor: 1–10.');
+      if (!form.brief.callToAction.trim()) e.callToAction = t('Skriv en call to action.');
     }
     if (s === 'Ersättning') {
-      if (!direct && paid && form.budgetMinOre < 5_000) return t('Minst 50 kr per video.');
-      if (!direct && paid && form.budgetMaxOre < form.budgetMinOre) return t('Max kan inte vara lägre än min.');
-      if (form.compensation !== 'Paid' && !(form.productDescription ?? '').trim()) return t('Beskriv produkten creatorn får.');
-      if (!(form.deadlineDays >= 1 && form.deadlineDays <= 60)) return t('Leveranstid: 1–60 dagar.');
-      if (!direct && !(form.slots >= 1 && form.slots <= 50)) return t('Antal creators: 1–50.');
+      if (!direct && paid && form.budgetMinOre < 5_000) e.budgetMinOre = t('Minst 50 kr per video.');
+      if (!direct && paid && form.budgetMaxOre < form.budgetMinOre) e.budgetMaxOre = t('Max kan inte vara lägre än min.');
+      if (form.compensation !== 'Paid' && !(form.productDescription ?? '').trim()) e.productDescription = t('Beskriv produkten creatorn får.');
+      if (!(form.deadlineDays >= 1 && form.deadlineDays <= 60)) e.deadlineDays = t('Leveranstid: 1–60 dagar.');
+      if (!direct && !(form.slots >= 1 && form.slots <= 50)) e.slots = t('Antal creators: 1–50.');
     }
-    return '';
+    return e;
   };
-  const next = () => { const e = validate(steps[step]); setError(e); if (!e) setStep(step + 1); };
+  const next = () => {
+    const e = validate(steps[step]);
+    setErrors(e);
+    const n = Object.keys(e).length;
+    setError(n ? `${t('Rätta de markerade fälten')} (${n})` : '');
+    if (!n) { setStep(step + 1); window.scrollTo({ top: 0 }); }
+  };
   const submit = async (publish: boolean) => {
     setError('');
     try {
@@ -162,15 +174,15 @@ export function BrandOrderFormScreen() {
       {cur === 'Brief' && (
         <Card>
           <div className="ds-stack" style={{ gap: 12 }}>
-            <Field label={t('Titel')}><input value={form.title} onChange={(e) => set({ title: e.target.value })} placeholder={t('t.ex. Lunchdeal-video för TikTok')} maxLength={200} /></Field>
-            <Field label={t('Mål')}><textarea rows={2} value={form.brief.goal} onChange={(e) => setBrief({ goal: e.target.value })} placeholder={t('Vad ska videon åstadkomma?')} /></Field>
-            <Field label={t('Format')}><input value={form.brief.format} onChange={(e) => setBrief({ format: e.target.value })} /></Field>
+            <Field label={t('Titel')} error={errors.title}><input value={form.title} onChange={(e) => set({ title: e.target.value })} placeholder={t('t.ex. Lunchdeal-video för TikTok')} maxLength={200} /></Field>
+            <Field label={t('Mål')} error={errors.goal}><textarea rows={2} value={form.brief.goal} onChange={(e) => setBrief({ goal: e.target.value })} placeholder={t('Vad ska videon åstadkomma?')} /></Field>
+            <Field label={t('Format')} error={errors.format}><input value={form.brief.format} onChange={(e) => setBrief({ format: e.target.value })} /></Field>
             <div className="ds-kv">
-              <Field label={t('Längd (sek)')}><input type="number" min={5} max={180} value={form.brief.lengthSeconds} onChange={(e) => setBrief({ lengthSeconds: Number(e.target.value) })} /></Field>
-              <Field label={t('Antal videor')}><input type="number" min={1} max={10} value={form.brief.videoCount} onChange={(e) => setBrief({ videoCount: Number(e.target.value) })} /></Field>
+              <Field label={t('Längd (sek)')} error={errors.lengthSeconds}><input type="number" min={5} max={180} value={form.brief.lengthSeconds} onChange={(e) => setBrief({ lengthSeconds: Number(e.target.value) })} /></Field>
+              <Field label={t('Antal videor')} error={errors.videoCount}><input type="number" min={1} max={10} value={form.brief.videoCount} onChange={(e) => setBrief({ videoCount: Number(e.target.value) })} /></Field>
             </div>
             <ListField label={t('Hooks (första meningen i bild)')} values={form.brief.hooks} onChange={(v) => setBrief({ hooks: v })} placeholder={t('Visste du att…')} />
-            <Field label={t('Call to action')}><input value={form.brief.callToAction} onChange={(e) => setBrief({ callToAction: e.target.value })} placeholder={t('t.ex. Boka bord via länken i bion')} /></Field>
+            <Field label={t('Call to action')} error={errors.callToAction}><input value={form.brief.callToAction} onChange={(e) => setBrief({ callToAction: e.target.value })} placeholder={t('t.ex. Boka bord via länken i bion')} /></Field>
             <ListField label={t('Gör')} values={form.brief.dos} onChange={(v) => setBrief({ dos: v })} />
             <ListField label={t('Undvik')} values={form.brief.donts} onChange={(v) => setBrief({ donts: v })} />
             {!direct && <ListField label={t('Referenser (länkar)')} values={form.brief.referenceUrls} onChange={(v) => setBrief({ referenceUrls: v })} />}
@@ -185,13 +197,13 @@ export function BrandOrderFormScreen() {
             <Field label={t('Ersättningstyp')}><select value={form.compensation} onChange={(e) => set({ compensation: e.target.value })}>{Object.entries(COMPENSATION_LABEL).map(([k, v]) => <option key={k} value={k}>{t(v)}</option>)}</select></Field>
             {paid && (direct
               ? <Field label={t('Ersättning till creatorn (kr)')}><input inputMode="decimal" value={oreToKronor(amountOre)} onChange={(e) => setAmountOre(kronorToOre(e.target.value))} /></Field>
-              : <div className="ds-kv"><Field label={t('Min per video (kr)')}><input inputMode="decimal" value={oreToKronor(form.budgetMinOre)} onChange={(e) => set({ budgetMinOre: kronorToOre(e.target.value) })} /></Field><Field label={t('Max per video (kr)')}><input inputMode="decimal" value={oreToKronor(form.budgetMaxOre)} onChange={(e) => set({ budgetMaxOre: kronorToOre(e.target.value) })} /></Field></div>)}
+              : <div className="ds-kv"><Field label={t('Min per video (kr)')} error={errors.budgetMinOre}><input inputMode="decimal" value={oreToKronor(form.budgetMinOre)} onChange={(e) => set({ budgetMinOre: kronorToOre(e.target.value) })} /></Field><Field label={t('Max per video (kr)')} error={errors.budgetMaxOre}><input inputMode="decimal" value={oreToKronor(form.budgetMaxOre)} onChange={(e) => set({ budgetMaxOre: kronorToOre(e.target.value) })} /></Field></div>)}
             {paid && <FeeNote amountOre={direct ? amountOre : form.budgetMaxOre} />}
-            {form.compensation !== 'Paid' && <><Field label={t('Produkt/tjänst creatorn får')}><input value={form.productDescription ?? ''} onChange={(e) => set({ productDescription: e.target.value })} placeholder={t('t.ex. Middag för två')} /></Field><Field label={t('Ungefärligt värde (kr)')}><input inputMode="decimal" value={oreToKronor(form.productValueOre)} onChange={(e) => set({ productValueOre: kronorToOre(e.target.value) || null })} /></Field></>}
+            {form.compensation !== 'Paid' && <><Field label={t('Produkt/tjänst creatorn får')} error={errors.productDescription}><input value={form.productDescription ?? ''} onChange={(e) => set({ productDescription: e.target.value })} placeholder={t('t.ex. Middag för två')} /></Field><Field label={t('Ungefärligt värde (kr)')}><input inputMode="decimal" value={oreToKronor(form.productValueOre)} onChange={(e) => set({ productValueOre: kronorToOre(e.target.value) || null })} /></Field></>}
             <Field label={t('Rättighetspaket')} hint={t(RIGHTS_HINT[form.rightsPackage])}><select value={form.rightsPackage} onChange={(e) => set({ rightsPackage: e.target.value })}>{Object.entries(RIGHTS_LABEL).map(([k, v]) => <option key={k} value={k}>{t(v)}</option>)}</select></Field>
             <div className="ds-kv">
-              <Field label={t('Leveranstid (dagar)')}><input type="number" min={1} max={60} value={form.deadlineDays} onChange={(e) => set({ deadlineDays: Number(e.target.value) })} /></Field>
-              {!direct && <Field label={t('Antal creators')}><input type="number" min={1} max={50} value={form.slots} onChange={(e) => set({ slots: Number(e.target.value) })} /></Field>}
+              <Field label={t('Leveranstid (dagar)')} error={errors.deadlineDays}><input type="number" min={1} max={60} value={form.deadlineDays} onChange={(e) => set({ deadlineDays: Number(e.target.value) })} /></Field>
+              {!direct && <Field label={t('Antal creators')} error={errors.slots}><input type="number" min={1} max={50} value={form.slots} onChange={(e) => set({ slots: Number(e.target.value) })} /></Field>}
             </div>
           </div>
         </Card>
@@ -218,13 +230,14 @@ export function BrandOrderFormScreen() {
             <div className="ds-fact"><span>{t('Format')}</span><span>{form.brief.lengthSeconds} s × {form.brief.videoCount}</span></div>
           </div>
           <p className="ds-caption ds-muted" style={{ marginTop: 10 }}>{direct ? t('Creatorn får ett kontrakt att acceptera när ni betalat.') : t('Creators som passar lägger bud inom er budget — ni betalar först när ni anlitar.')}</p>
-          {!direct && <div style={{ marginTop: 10 }}><Button variant="ghost" size="sm" loading={save.isPending} onClick={() => void submit(false)}>{t('Spara som utkast')}</Button></div>}
+          {!direct && !needsOrg && <div style={{ marginTop: 10 }}><Button variant="ghost" size="sm" loading={save.isPending} onClick={() => void submit(false)}>{t('Spara som utkast')}</Button></div>}
           {id && <Link to={`/brand/ugc/campaigns/${id}`} className="ds-link ds-caption">{t('Tillbaka till beställningen')}</Link>}
         </Card>
       )}
 
       {error && <p className="ds-body" style={{ color: 'var(--ds-bad)', fontWeight: 600 }}>{error}</p>}
-      <StickyAction>{step < steps.length - 1 ? <Button full onClick={next}>{t('Fortsätt')}</Button> : <Button full loading={save.isPending || action.isPending || invite.isPending} onClick={() => void submit(true)}>{direct ? t('Skicka inbjudan') : t('Publicera')}</Button>}</StickyAction>
+      {cur === 'Granska' && needsOrg && <Card><p className="ds-body" style={{ fontWeight: 600 }}>{t('Kan inte publiceras än')}</p><p className="ds-caption ds-muted">{t('Organisationsnumret måste vara verifierat innan beställningen går live. Spara som utkast och verifiera på företagsprofilen.')}</p><div style={{ marginTop: 8 }}><Button variant="secondary" size="sm" to="/brand/profile/edit">{t('Verifiera organisationsnumret')}</Button></div></Card>}
+      <StickyAction>{step < steps.length - 1 ? <Button full onClick={next}>{t('Fortsätt')}</Button> : needsOrg && !direct ? <Button full variant="secondary" loading={save.isPending} onClick={() => void submit(false)}>{t('Spara som utkast')}</Button> : <Button full loading={save.isPending || action.isPending || invite.isPending} onClick={() => void submit(true)}>{direct ? t('Skicka inbjudan') : t('Publicera')}</Button>}</StickyAction>
     </Page>
   );
 }

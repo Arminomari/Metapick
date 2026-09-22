@@ -19,8 +19,13 @@ export function CampaignFormScreen() {
   const create = useCreateCampaign();
   const [step, setStep] = useState(0);
   const [error, setError] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<CreateCampaignRequest>({ name: '', description: '', country: 'SE', category: 'Övrigt', requiredHashtag: '', payoutModel: 'Fixed', budget: 0, maxCreators: 10, requiredVideoCount: 1, startDate: '', endDate: '', reviewMode: 'ManualReview', minViews: 0, requirements: [], rules: [], payoutRules: [{ payoutType: 'FixedThreshold', minViews: 1000, amount: 500, sortOrder: 0 }], perks: '', contentTags: [] });
-  const set = (patch: Partial<CreateCampaignRequest>) => setForm((f) => ({ ...f, ...patch }));
+  const set = (patch: Partial<CreateCampaignRequest>) => {
+    setForm((f) => ({ ...f, ...patch }));
+    // Editing a field clears its own error; the rest stay until the next attempt.
+    setErrors((e) => { const n = { ...e }; Object.keys(patch).forEach((k) => delete n[k]); return n; });
+  };
   const num = (v: string) => Number(v.replace(/\D/g, '')) || 0;
   const setModel = (model: string) => {
     const rules: Rule[] = model === 'CPM' ? [{ payoutType: 'CPM', minViews: 0, amount: 50, sortOrder: 0 }]
@@ -38,22 +43,34 @@ export function CampaignFormScreen() {
   };
   const maxCost = () => { const r = form.payoutRules; if (!r.length) return 0; if (form.payoutModel === 'Fixed') return r[0].amount * form.maxCreators; if (form.payoutModel === 'CPM') return r[0].maxPayoutPerCreator ? r[0].maxPayoutPerCreator * form.maxCreators : 0; return Math.max(...r.map((x) => x.amount)) * form.maxCreators; };
 
-  const validate = (s: number): string => {
+  /** All errors for the step at once, keyed by field. */
+  const validate = (s: number): Record<string, string> => {
+    const e: Record<string, string> = {};
+    const today = new Date().toISOString().slice(0, 10);
     if (s === 0) {
-      if (!form.name.trim()) return t('Ge kampanjen ett namn.');
-      if (!form.description.trim()) return t('Skriv en beskrivning.');
-      if (!form.requiredHashtag.trim()) return t('Ange en hashtag.');
-      if (!form.startDate || !form.endDate) return t('Ange start- och slutdatum.');
-      if (form.endDate < form.startDate) return t('Slutdatumet måste vara efter startdatumet.');
-      if (form.endDate <= new Date().toISOString().slice(0, 10)) return t('Slutdatumet måste vara i framtiden.');
+      if (!form.name.trim()) e.name = t('Ge kampanjen ett namn.');
+      if (!form.description.trim()) e.description = t('Skriv en beskrivning.');
+      if (!form.requiredHashtag.trim()) e.requiredHashtag = t('Ange en hashtag.');
+      if (!form.startDate) e.startDate = t('Ange startdatum.');
+      if (!form.endDate) e.endDate = t('Ange slutdatum.');
+      else if (form.startDate && form.endDate < form.startDate) e.endDate = t('Slutdatumet måste vara efter startdatumet.');
+      else if (form.endDate <= today) e.endDate = t('Slutdatumet måste vara i framtiden.');
     }
     if (s === 1) {
-      if (form.budget <= 0) return t('Ange en budget.');
-      if (form.payoutRules.some((r) => r.amount <= 0)) return t('Alla utbetalningsbelopp måste vara större än 0.');
+      if (form.budget <= 0) e.budget = t('Ange en budget.');
+      if (form.maxCreators <= 0) e.maxCreators = t('Minst 1 creator.');
+      if (form.requiredVideoCount <= 0) e.requiredVideoCount = t('Minst 1 video.');
+      if (form.payoutRules.some((r) => r.amount <= 0)) e.payoutRules = t('Alla utbetalningsbelopp måste vara större än 0.');
     }
-    return '';
+    return e;
   };
-  const next = () => { const e = validate(step); setError(e); if (!e) setStep(step + 1); };
+  const next = () => {
+    const e = validate(step);
+    setErrors(e);
+    const n = Object.keys(e).length;
+    setError(n ? `${t('Rätta de markerade fälten')} (${n})` : '');
+    if (!n) { setStep(step + 1); window.scrollTo({ top: 0 }); }
+  };
   const submit = async () => {
     setError('');
     try {
@@ -70,15 +87,15 @@ export function CampaignFormScreen() {
       {step === 0 && (
         <Card>
           <div className="ds-stack" style={{ gap: 12 }}>
-            <Field label={t('Kampanjnamn')}><input value={form.name} onChange={(e) => set({ name: e.target.value })} /></Field>
-            <Field label={t('Beskrivning')} hint={t('Syns för creators i Upptäck.')}><textarea rows={3} value={form.description} onChange={(e) => set({ description: e.target.value })} /></Field>
+            <Field label={t('Kampanjnamn')} error={errors.name}><input value={form.name} onChange={(e) => set({ name: e.target.value })} /></Field>
+            <Field label={t('Beskrivning')} hint={t('Syns för creators i Upptäck.')} error={errors.description}><textarea rows={3} value={form.description} onChange={(e) => set({ description: e.target.value })} /></Field>
             <div className="ds-kv">
               <Field label={t('Kategori')}><select value={form.category} onChange={(e) => set({ category: e.target.value })}>{CATEGORIES.map((c) => <option key={c} value={c}>{t(c)}</option>)}</select></Field>
-              <Field label={t('Hashtag')}><input value={form.requiredHashtag} onChange={(e) => set({ requiredHashtag: e.target.value })} placeholder="#mittvarumärke" /></Field>
+              <Field label={t('Hashtag')} error={errors.requiredHashtag}><input value={form.requiredHashtag} onChange={(e) => set({ requiredHashtag: e.target.value })} placeholder="#mittvarumärke" /></Field>
             </div>
             <div className="ds-kv">
-              <Field label={t('Startdatum')}><DateInput value={form.startDate} onChange={(v) => set({ startDate: v })} className="ds-input" required /></Field>
-              <Field label={t('Slutdatum')}><DateInput value={form.endDate} onChange={(v) => set({ endDate: v })} className="ds-input" required /></Field>
+              <Field label={t('Startdatum')} error={errors.startDate}><DateInput value={form.startDate} onChange={(v) => set({ startDate: v })} required /></Field>
+              <Field label={t('Slutdatum')} error={errors.endDate}><DateInput value={form.endDate} onChange={(v) => set({ endDate: v })} min={form.startDate || undefined} required /></Field>
             </div>
           </div>
         </Card>
@@ -88,10 +105,10 @@ export function CampaignFormScreen() {
         <>
           <Card title={t('Budget & platser')}>
             <div className="ds-stack" style={{ gap: 12 }}>
-              <Field label={t('Total budget (kr)')}><input inputMode="numeric" value={form.budget || ''} onChange={(e) => set({ budget: num(e.target.value) })} placeholder="10000" /></Field>
+              <Field label={t('Total budget (kr)')} error={errors.budget}><input inputMode="numeric" value={form.budget || ''} onChange={(e) => set({ budget: num(e.target.value) })} placeholder="10000" /></Field>
               <div className="ds-kv">
-                <Field label={t('Max antal creators')}><input inputMode="numeric" value={form.maxCreators || ''} onChange={(e) => set({ maxCreators: num(e.target.value) })} /></Field>
-                <Field label={t('Videor per creator')}><input inputMode="numeric" value={form.requiredVideoCount || ''} onChange={(e) => set({ requiredVideoCount: num(e.target.value) })} /></Field>
+                <Field label={t('Max antal creators')} error={errors.maxCreators}><input inputMode="numeric" value={form.maxCreators || ''} onChange={(e) => set({ maxCreators: num(e.target.value) })} /></Field>
+                <Field label={t('Videor per creator')} error={errors.requiredVideoCount}><input inputMode="numeric" value={form.requiredVideoCount || ''} onChange={(e) => set({ requiredVideoCount: num(e.target.value) })} /></Field>
               </div>
             </div>
           </Card>
@@ -113,6 +130,7 @@ export function CampaignFormScreen() {
                   <Button variant="ghost" size="sm" onClick={() => { const last = form.payoutRules[form.payoutRules.length - 1]; set({ payoutRules: [...form.payoutRules, { payoutType: 'Tiered', minViews: (last?.maxViews ?? last?.minViews ?? 0) + 1, amount: 0, sortOrder: form.payoutRules.length }] }); }}>{t('+ Lägg till steg')}</Button>
                 </>
               )}
+              {errors.payoutRules && <p className="ds-field-error" role="alert">{errors.payoutRules}</p>}
               {summary() && <p className="ds-caption ds-muted"><strong>{t('Sammanfattning')}:</strong> {summary()}{maxCost() > 0 ? ` · ${t('max')} ${money(maxCost())} ${t('för')} ${form.maxCreators} ${t('creators')}` : ''}</p>}
               {maxCost() > 0 && form.budget > 0 && form.budget < maxCost() && <p className="ds-caption" style={{ color: 'var(--ds-warn)' }}>{t('Budgeten är lägre än maxkostnaden om alla creators får max.')}</p>}
             </div>

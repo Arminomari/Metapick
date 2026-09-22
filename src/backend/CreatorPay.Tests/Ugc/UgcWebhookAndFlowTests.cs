@@ -105,7 +105,7 @@ public class UgcWebhookAndFlowTests
             BrandUser = new User { Email = "brand@test.se", PasswordHash = "x", FirstName = "B", LastName = "B", Role = UserRole.Brand, Status = UserStatus.Active };
             CreatorUser = new User { Email = "creator@test.se", EmailVerified = true, PasswordHash = "x", FirstName = "Gustav", LastName = "L", Role = UserRole.Creator, Status = UserStatus.Active };
             AdminUser = new User { Email = "admin@test.se", PasswordHash = "x", FirstName = "A", LastName = "A", Role = UserRole.Admin, Status = UserStatus.Active };
-            Brand = new BrandProfile { UserId = BrandUser.Id, CompanyName = "Sushi Söder AB", OrganizationNumber = "556677-8899", Industry = "Mat", Country = "SE", Status = BrandStatus.Approved };
+            Brand = new BrandProfile { UserId = BrandUser.Id, CompanyName = "Sushi Söder AB", OrganizationNumber = "556677-8899", OrgVerified = true, OrgVerifiedAt = DateTime.UtcNow, Industry = "Mat", Country = "SE", Status = BrandStatus.Approved };
             Creator = new CreatorProfile { UserId = CreatorUser.Id, DisplayName = "Gustav", Category = "Mat", Country = "SE", Status = CreatorStatus.Approved, FollowerCount = 5000 };
             UgcCreator = new UgcCreatorProfile { CreatorProfileId = Creator.Id, Status = UgcCreatorStatus.Approved, StripeConnectAccountId = "acct_1", PayoutOnboardingComplete = true, Region = "Stockholm" };
             Db.AddRange(BrandUser, CreatorUser, AdminUser, Brand, Creator, UgcCreator);
@@ -393,10 +393,10 @@ public class UgcWebhookAndFlowTests
     }
 
     [Fact]
-    public async Task Brand_without_org_number_cannot_publish()
+    public async Task Brand_without_verified_org_number_cannot_publish()
     {
         using var w = new World();
-        w.Brand.OrganizationNumber = null; w.Db.SaveChanges();
+        w.Brand.OrgVerified = false; w.Db.SaveChanges();
         var c = await w.CampaignService.CreateAsync(w.BrandUser.Id, Campaign());
         var p = await w.CampaignService.PublishAsync(w.BrandUser.Id, c.Value!.Id);
         Assert.False(p.IsSuccess);

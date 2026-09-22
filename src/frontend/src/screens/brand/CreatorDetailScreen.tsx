@@ -64,7 +64,7 @@ function PrOfferSheet({ creatorProfileId, defaultCategory, onClose }: { creatorP
         <Field label={`${t('Ersättning (SEK)')}${needsCash ? ' *' : ''}`}><input inputMode="numeric" value={form.compensationAmount} onChange={(e) => setForm({ ...form, compensationAmount: e.target.value.replace(/\D/g, '') })} placeholder="0" /></Field>
         <Field label={t('Produktvärde (SEK)')}><input inputMode="numeric" value={form.productValue} onChange={(e) => setForm({ ...form, productValue: e.target.value.replace(/\D/g, '') })} placeholder="500" /></Field>
       </div>
-      <Field label="Deadline"><DateInput value={form.deadline} onChange={(v) => setForm({ ...form, deadline: v })} className="ds-input" /></Field>
+      <Field label="Deadline"><DateInput value={form.deadline} onChange={(v) => setForm({ ...form, deadline: v })} /></Field>
     </BottomSheet>
   );
 }

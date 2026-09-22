@@ -2,6 +2,7 @@
  * Creator Home: what needs me, three numbers, my taps, and the feed.
  * Everything else lives one tap deeper.
  */
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import { t } from '@/lib/i18n';
@@ -36,8 +37,20 @@ export function CreatorHomeScreen() {
   const needsMe = collabs.filter((c) => c.needsMyAction);
   const noVideo = assignments.filter((a) => a.status === 'Active' && !a.isTap && a.totalVerifiedViews === 0).slice(0, 3);
   const tiktokMissing = tiktok && !(tiktok.connected && tiktok.isOAuth);
-  const hasTodo = invites.length + needsMe.length + newOffers.length + noVideo.length + (available > 0 ? 1 : 0) + (tiktokMissing ? 1 : 0) > 0;
+  // Not visible to brands yet (no OAuth TikTok, or still under review): one row that says why.
+  const hidden = !!profile && !profile.visibleToBrands;
+  const hasTodo = invites.length + needsMe.length + newOffers.length + noVideo.length + (available > 0 ? 1 : 0) + (tiktokMissing || hidden ? 1 : 0) > 0;
   const name = profile?.displayName?.split(' ')[0];
+
+  // First login: the onboarding wizard, once per session, until TikTok is connected.
+  useEffect(() => {
+    if (!profile || profile.tikTokVerified) return;
+    let seen = false;
+    try { seen = sessionStorage.getItem('vyrle-onboarding-seen') === '1'; } catch { /* private mode */ }
+    if (seen) return;
+    try { sessionStorage.setItem('vyrle-onboarding-seen', '1'); } catch { /* private mode */ }
+    navigate('/creator/onboarding', { replace: true });
+  }, [profile, navigate]);
 
   return (
     <Page>
@@ -46,7 +59,8 @@ export function CreatorHomeScreen() {
       {hasTodo && (
         <Section title={t('Behöver dig')}>
           <List>
-            {tiktokMissing && <ListRow leading={<Avatar name="T" size="sm" />} title={t('Anslut ditt TikTok-konto')} subtitle={t('Krävs för att views ska verifieras och betalas')} to="/creator/settings/tiktok" />}
+            {hidden ? <ListRow leading={<Avatar name="T" size="sm" />} title={t('Profilen syns inte för företag än')} subtitle={profile?.visibilityBlocker ?? t('Koppla TikTok så blir profilen synlig')} to="/creator/onboarding" />
+              : tiktokMissing && <ListRow leading={<Avatar name="T" size="sm" />} title={t('Anslut ditt TikTok-konto')} subtitle={t('Krävs för att views ska verifieras och betalas')} to="/creator/settings/tiktok" />}
             {available > 0 && <ListRow leading={<Avatar name="kr" size="sm" />} title={`${money(available)} ${t('att hämta ut')}`} subtitle={t('Verifierade views är klara för utbetalning')} to="/creator/earnings" />}
             {invites.map((r) => (
               <ListRow key={r.brandProfileId} leading={<Avatar name={r.brandName} src={r.brandLogoUrl} size="sm" rounded />} title={`${r.brandName} ${t('bjöd in dig')}`} subtitle={t('Till sitt creator-community — svara under Förfrågningar')} to="/creator/messages?tab=requests" />

@@ -183,6 +183,9 @@ public class CampaignService : ICampaignService
             return Errors.Conflict("Campaign can only be submitted from Draft status");
         if (!campaign.PayoutRules.Any())
             return Errors.Validation("Campaign must have at least one payout rule");
+        // Going live is a commitment to pay creators: the company behind it must be a verified one.
+        if (!brand.OrgVerified)
+            return Errors.Validation("Verifiera företagets organisationsnummer under Profil innan kampanjen skickas in.");
 
         campaign.Status = CampaignStatus.PendingReview;
         campaign.ModerationStatus = ModerationStatus.Pending;

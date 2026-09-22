@@ -83,7 +83,7 @@ public sealed class UgcCampaignService : IUgcCampaignService
         if (fail != null) return fail;
         if (brand!.Status != BrandStatus.Approved) return Errors.Forbidden("Företagskontot måste vara godkänt innan ni kan beställa.");
 
-        var check = UgcCampaignStateMachine.Check(c!.Status, UgcCampaignStatus.Published, UgcActor.Brand, !string.IsNullOrWhiteSpace(brand.OrganizationNumber));
+        var check = UgcCampaignStateMachine.Check(c!.Status, UgcCampaignStatus.Published, UgcActor.Brand, brand.OrgVerified);
         if (!check.Allowed) return Errors.Conflict(check.Reason!);
         UgcCampaignStateMachine.Apply(c, UgcCampaignStatus.Published, UgcActor.Brand, DateTime.UtcNow, true);
         await _uow.SaveChangesAsync(ct);

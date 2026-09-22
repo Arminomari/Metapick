@@ -244,7 +244,9 @@ public class CreatorService : ICreatorService
             c.TikTokAccount != null && c.TikTokAccount.IsActive, c.TikTokAccount.IsVerified(),
             c.TikTokAccount?.TikTokUsername, c.CreatedAt,
             c.ProfileTags?.ToList() ?? [],
-            c.InstagramUsername, c.Website, c.OpenToPrOffers, c.DateOfBirth, c.CoverUrl);
+            c.InstagramUsername, c.Website, c.OpenToPrOffers, c.DateOfBirth, c.CoverUrl,
+            CreatorVisibility.IsVisibleToBrands(c.Status, c.TikTokAccount.IsVerified()),
+            CreatorVisibility.Blocker(c.Status, c.TikTokAccount.IsVerified()));
 
     private async Task<CreatorProfile?> GetOrCreateCreatorProfileAsync(Guid userId)
     {

@@ -353,10 +353,14 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
         string? search, string? category, string? country, int? minFollowers,
         string? tag, bool? openToPrOffers, string? sort, int page, int pageSize, CancellationToken ct = default)
     {
-        // Only approved creators are discoverable by brands.
+        // Only approved creators with an OAuth-verified TikTok connection are
+        // discoverable by brands (CreatorVisibility): a typed handle proves nothing.
         var query = _creators.Query()
             .Include(c => c.TikTokAccount)
-            .Where(c => c.Status == CreatorStatus.Approved);
+            .Where(c => c.Status == CreatorStatus.Approved
+                && c.TikTokAccount != null && c.TikTokAccount.IsActive
+                && c.TikTokAccount.Scopes != TikTokAccountExtensions.ManualScope
+                && c.TikTokAccount.AccessTokenEncrypted != "");
 
         if (!string.IsNullOrWhiteSpace(category))
             query = query.Where(c => c.Category == category);
@@ -457,7 +461,7 @@ public class CreatorDiscoveryService : ICreatorDiscoveryService
             .Include(c => c.PortfolioItems)
             .FirstOrDefaultAsync(c => c.Id == creatorProfileId, ct);
 
-        if (creator == null || creator.Status != CreatorStatus.Approved)
+        if (creator == null || !CreatorVisibility.IsVisibleToBrands(creator.Status, creator.TikTokAccount.IsVerified()))
             return Errors.NotFound("Creator", creatorProfileId);
 
         var reviews = await _reviews.Query()

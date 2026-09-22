@@ -94,7 +94,7 @@ public sealed class UgcCollabService : IUgcCollabService
         var brand = await _brands.Query().FirstOrDefaultAsync(b => b.UserId == brandUserId, ct);
         if (brand == null) return Errors.NotFound("Brand");
         if (brand.Status != BrandStatus.Approved) return Errors.Forbidden("Företagskontot måste vara godkänt innan ni kan beställa.");
-        if (string.IsNullOrWhiteSpace(brand.OrganizationNumber)) return Errors.Validation("Registrera organisationsnummer under Inställningar innan ni beställer.");
+        if (!brand.OrgVerified) return Errors.Validation("Verifiera företagets organisationsnummer under Profil innan ni beställer.");
 
         if (!Enum.TryParse<UgcCompensationType>(r.Compensation, true, out var comp)) return Errors.Validation("Okänd ersättningstyp.");
         if (!Enum.TryParse<UgcRightsPackage>(r.RightsPackage, true, out var rights)) return Errors.Validation("Okänt rättighetspaket.");
