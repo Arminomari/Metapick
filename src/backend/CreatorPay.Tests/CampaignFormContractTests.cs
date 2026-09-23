@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using CreatorPay.Tests.Infrastructure;
 
 namespace CreatorPay.Tests;
@@ -67,6 +68,19 @@ public class CampaignFormContractTests(CreatorPayFactory factory)
         var res = await brand.PostAsJsonAsync("/api/campaigns", FormPayload(model, rules));
         var body = await res.Content.ReadAsStringAsync();
         Assert.True(res.StatusCode == HttpStatusCode.OK, $"{model}: {(int)res.StatusCode} {res.StatusCode} {body}");
+    }
+
+    [Fact]
+    public async Task Submitting_from_the_wizard_leaves_the_campaign_in_review_not_as_a_draft()
+    {
+        var brand = await Brand();
+        // What the wizard's "Skicka för granskning" does: create, then publish.
+        var id = await (await brand.PostAsJsonAsync("/api/campaigns", FormPayload())).ReadId();
+        Assert.Equal(HttpStatusCode.OK, (await brand.PostAsync($"/api/campaigns/{id}/publish", null)).StatusCode);
+
+        var body = await (await brand.GetAsync($"/api/campaigns/{id}")).Content.ReadAsStringAsync();
+        var status = JsonDocument.Parse(body).RootElement.GetProperty("data").GetProperty("status").GetString();
+        Assert.Equal("PendingReview", status);
     }
 
     [Fact]

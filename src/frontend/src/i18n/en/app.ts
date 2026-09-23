@@ -571,4 +571,6 @@ export const app: Record<string, string> = {
   'om': 'in',
   'dag': 'day',
   'Startdatumet kan inte vara bakåt i tiden. Välj idag eller senare.': 'The start date cannot be in the past. Pick today or later.',
+  'Kampanjen är inskickad för granskning.': 'The campaign has been submitted for review.',
+  'Kampanjen sparades som utkast': 'The campaign was saved as a draft',
 };
