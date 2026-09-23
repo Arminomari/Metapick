@@ -176,23 +176,30 @@ public class CreateCampaignRequestValidator : AbstractValidator<CreateCampaignRe
 
     public CreateCampaignRequestValidator()
     {
-        RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.Description).NotEmpty().MaximumLength(5000);
-        RuleFor(x => x.Category).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.Country).NotEmpty().MaximumLength(2);
-        RuleFor(x => x.RequiredHashtag).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.PayoutModel).NotEmpty()
-            .Must(m => ValidPayoutModels.Contains(m)).WithMessage("Invalid payout model");
-        RuleFor(x => x.Budget).GreaterThan(0);
-        RuleFor(x => x.MaxCreators).GreaterThan(0).LessThanOrEqualTo(1000);
-        RuleFor(x => x.StartDate).GreaterThanOrEqualTo(DateTime.UtcNow.Date);
+        // These messages are shown to the brand as-is, so they are written for a
+        // person: what is wrong and what to do about it.
+        RuleFor(x => x.Name).NotEmpty().WithMessage("Ge kampanjen ett namn.")
+            .MaximumLength(200).WithMessage("Namnet får vara högst 200 tecken.");
+        RuleFor(x => x.Description).NotEmpty().WithMessage("Skriv en beskrivning som creators kan läsa.")
+            .MaximumLength(5000).WithMessage("Beskrivningen får vara högst 5 000 tecken.");
+        RuleFor(x => x.Category).NotEmpty().WithMessage("Välj en kategori.").MaximumLength(100);
+        RuleFor(x => x.Country).NotEmpty().WithMessage("Välj ett land.").MaximumLength(2);
+        RuleFor(x => x.RequiredHashtag).NotEmpty().WithMessage("Ange en hashtag som creators ska använda.")
+            .MaximumLength(100).WithMessage("Hashtaggen får vara högst 100 tecken.");
+        RuleFor(x => x.PayoutModel).NotEmpty().WithMessage("Välj en ersättningsmodell.")
+            .Must(m => ValidPayoutModels.Contains(m)).WithMessage("Ersättningsmodellen känns inte igen.");
+        RuleFor(x => x.Budget).GreaterThan(0).WithMessage("Ange en budget större än 0 kr.");
+        RuleFor(x => x.MaxCreators).GreaterThan(0).WithMessage("Kampanjen behöver plats för minst 1 creator.")
+            .LessThanOrEqualTo(1000).WithMessage("Högst 1 000 creators per kampanj.");
+        RuleFor(x => x.StartDate).GreaterThanOrEqualTo(DateTime.UtcNow.Date)
+            .WithMessage("Startdatumet kan inte vara bakåt i tiden. Välj idag eller senare.");
         RuleFor(x => x.EndDate).GreaterThan(x => x.StartDate)
-            .WithMessage("End date must be after start date");
-        RuleFor(x => x.MinViews).GreaterThanOrEqualTo(0);
+            .WithMessage("Slutdatumet måste vara efter startdatumet.");
+        RuleFor(x => x.MinViews).GreaterThanOrEqualTo(0).WithMessage("Minsta antal views kan inte vara negativt.");
 
         RuleForEach(x => x.PayoutRules).SetValidator(new PayoutRuleValidator());
         RuleFor(x => x.PayoutRules).Must(r => r != null && r.Count > 0)
-            .WithMessage("At least one payout rule required");
+            .WithMessage("Lägg till minst en utbetalningsregel.");
     }
 }
 
@@ -203,14 +210,15 @@ public class PayoutRuleValidator : AbstractValidator<PayoutRuleDto>
 
     public PayoutRuleValidator()
     {
-        RuleFor(x => x.PayoutType).NotEmpty();
-        RuleFor(x => x.Amount).GreaterThan(0);
+        RuleFor(x => x.PayoutType).NotEmpty().WithMessage("Välj en utbetalningstyp.");
+        RuleFor(x => x.Amount).GreaterThan(0).WithMessage("Utbetalningsbeloppet måste vara större än 0 kr.");
         RuleFor(x => x.Amount).GreaterThanOrEqualTo(MinCpmSek)
             .When(x => string.Equals(x.PayoutType, "CPM", StringComparison.OrdinalIgnoreCase))
             .WithMessage("Priset måste vara minst 20 kr per 1 000 visningar");
-        RuleFor(x => x.MinViews).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.MinViews).GreaterThanOrEqualTo(0).WithMessage("Antalet views kan inte vara negativt.");
         RuleFor(x => x.MaxViews).GreaterThan(x => x.MinViews)
-            .When(x => x.MaxViews.HasValue);
+            .When(x => x.MaxViews.HasValue)
+            .WithMessage("Trappstegets övre gräns måste vara högre än den undre.");
     }
 }
 

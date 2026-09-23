@@ -86,11 +86,13 @@ export function extractApiError(err: any, fallback: string): string {
   if (!err?.response) return t('Kunde inte nå servern. Försök igen om en stund.');
   if (err.response.status === 429) return t('För många försök. Vänta en minut och försök igen.');
   const resp = err.response.data;
+  // Our own envelope first; it carries a message written for the reader.
+  if (resp?.error?.message) return resp.error.message;
   if (resp?.errors && typeof resp.errors === 'object') {
-    const msgs = (Object.values(resp.errors) as string[][]).flat().filter(Boolean);
-    if (msgs.length) return msgs.join('. ');
+    const msgs = [...new Set((Object.values(resp.errors) as string[][]).flat().filter(Boolean))];
+    if (msgs.length) return msgs.join(' ');
   }
-  return resp?.error?.message || resp?.title || fallback;
+  return resp?.title || fallback;
 }
 
 export function useSocialLoginFlow(setError: (msg: string) => void, onNeedsRegistration: (p: PendingSocialSignup) => void) {
