@@ -570,4 +570,5 @@ export const app: Record<string, string> = {
   'Krävs för att publicera kampanjer och beställa video': 'Required to publish campaigns and order video',
   'om': 'in',
   'dag': 'day',
+  'Startdatumet kan inte vara bakåt i tiden. Välj idag eller senare.': 'The start date cannot be in the past. Pick today or later.',
 };

@@ -51,10 +51,36 @@ export function ErrorCard({ title, message, retry }: { title?: string; message?:
 }
 
 /** Reads the message the API sends back, or falls back to the given text. */
+/**
+ * The message a person should read. Two shapes reach us:
+ * our own envelope ({ error: { message } }), and ASP.NET's validation
+ * ProblemDetails, whose `errors` dictionary holds the real reasons while
+ * `title` is only "One or more validation errors occurred." Reading the
+ * dictionary is what turns that into something a brand can act on.
+ */
 export function apiMessage(err: unknown, fallback: string): string {
-  const e = err as { response?: { data?: { error?: { message?: string; details?: string[] }; title?: string } }; message?: string };
-  const api = e?.response?.data?.error;
-  return api?.details?.[0] ?? api?.message ?? e?.response?.data?.title ?? fallback;
+  const e = err as {
+    response?: { data?: { error?: { message?: string; details?: string[] }; title?: string; errors?: Record<string, string[] | string> } };
+    message?: string;
+  };
+  const data = e?.response?.data;
+  const api = data?.error;
+  if (api?.details?.[0]) return api.details[0];
+  if (api?.message) return api.message;
+
+  const fields = data?.errors;
+  if (fields && typeof fields === 'object') {
+    // Duplicates are common: the framework and FluentValidation both complain.
+    const seen = new Set<string>();
+    for (const value of Object.values(fields)) {
+      for (const message of Array.isArray(value) ? value : [value]) {
+        if (typeof message === 'string' && message.trim()) seen.add(message.trim());
+      }
+    }
+    if (seen.size) return [...seen].join(' ');
+  }
+
+  return data?.title ?? fallback;
 }
 
 /** Relative time in the app's own short form. */

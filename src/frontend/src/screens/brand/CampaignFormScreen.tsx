@@ -27,6 +27,8 @@ export function CampaignFormScreen() {
     setErrors((e) => { const n = { ...e }; Object.keys(patch).forEach((k) => delete n[k]); return n; });
   };
   const num = (v: string) => Number(v.replace(/\D/g, '')) || 0;
+  // A campaign cannot start in the past (server rule), so neither can the picker.
+  const today = new Date().toISOString().slice(0, 10);
   const setModel = (model: string) => {
     const rules: Rule[] = model === 'CPM' ? [{ payoutType: 'CPM', minViews: 0, amount: 50, sortOrder: 0 }]
       : model === 'Tiered' ? [{ payoutType: 'Tiered', minViews: 1000, maxViews: 4999, amount: 200, sortOrder: 0 }, { payoutType: 'Tiered', minViews: 5000, maxViews: 19999, amount: 500, sortOrder: 1 }, { payoutType: 'Tiered', minViews: 20000, amount: 1500, sortOrder: 2 }]
@@ -46,12 +48,13 @@ export function CampaignFormScreen() {
   /** All errors for the step at once, keyed by field. */
   const validate = (s: number): Record<string, string> => {
     const e: Record<string, string> = {};
-    const today = new Date().toISOString().slice(0, 10);
     if (s === 0) {
       if (!form.name.trim()) e.name = t('Ge kampanjen ett namn.');
       if (!form.description.trim()) e.description = t('Skriv en beskrivning.');
       if (!form.requiredHashtag.trim()) e.requiredHashtag = t('Ange en hashtag.');
       if (!form.startDate) e.startDate = t('Ange startdatum.');
+      // The server refuses a start date in the past; say so here instead.
+      else if (form.startDate < today) e.startDate = t('Startdatumet kan inte vara bakåt i tiden. Välj idag eller senare.');
       if (!form.endDate) e.endDate = t('Ange slutdatum.');
       else if (form.startDate && form.endDate < form.startDate) e.endDate = t('Slutdatumet måste vara efter startdatumet.');
       else if (form.endDate <= today) e.endDate = t('Slutdatumet måste vara i framtiden.');
@@ -94,8 +97,8 @@ export function CampaignFormScreen() {
               <Field label={t('Hashtag')} error={errors.requiredHashtag}><input value={form.requiredHashtag} onChange={(e) => set({ requiredHashtag: e.target.value })} placeholder="#mittvarumärke" /></Field>
             </div>
             <div className="ds-kv">
-              <Field label={t('Startdatum')} error={errors.startDate}><DateInput value={form.startDate} onChange={(v) => set({ startDate: v })} required /></Field>
-              <Field label={t('Slutdatum')} error={errors.endDate}><DateInput value={form.endDate} onChange={(v) => set({ endDate: v })} min={form.startDate || undefined} required /></Field>
+              <Field label={t('Startdatum')} error={errors.startDate}><DateInput value={form.startDate} onChange={(v) => set({ startDate: v })} min={today} required /></Field>
+              <Field label={t('Slutdatum')} error={errors.endDate}><DateInput value={form.endDate} onChange={(v) => set({ endDate: v })} min={form.startDate || today} required /></Field>
             </div>
           </div>
         </Card>
