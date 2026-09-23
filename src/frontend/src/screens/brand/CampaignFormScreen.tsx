@@ -5,11 +5,12 @@ import { t } from '@/lib/i18n';
 import { money, formatNumber } from '@/lib/utils';
 import { CATEGORIES } from '@/lib/categories';
 import { PLATFORM_TAGS, NICHE_TAGS } from '@/lib/tags';
-import { useCreateCampaign } from '@/hooks/api';
+import { useCreateCampaign, usePublishCampaign } from '@/hooks/api';
 import { DateInput } from '@/components/ui/DateInput';
 import type { CreateCampaignRequest } from '@/types';
 import { Button, Card, Chip, Chips, Field, Page, PageHead, StickyAction } from '@/components/ds';
 import { apiMessage } from '@/components/app/common';
+import { useToast } from '@/components/vyrle/Toast';
 
 type Rule = CreateCampaignRequest['payoutRules'][number];
 const STEPS = ['Grund', 'Ersättning', 'Brief', 'Granska'];
@@ -17,6 +18,8 @@ const STEPS = ['Grund', 'Ersättning', 'Brief', 'Granska'];
 export function CampaignFormScreen() {
   const navigate = useNavigate();
   const create = useCreateCampaign();
+  const publish = usePublishCampaign();
+  const toast = useToast();
   const [step, setStep] = useState(0);
   const [error, setError] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -74,10 +77,27 @@ export function CampaignFormScreen() {
     setError(n ? `${t('Rätta de markerade fälten')} (${n})` : '');
     if (!n) { setStep(step + 1); window.scrollTo({ top: 0 }); }
   };
-  const submit = async () => {
+  /**
+   * The last step does what its button says. "Skicka för granskning" creates the
+   * campaign and submits it in one go, instead of leaving a draft behind and
+   * asking the brand to press the same words again on the next screen.
+   * If submitting is refused (an unverified organisation number, say) the
+   * campaign is still saved, and the detail page explains what is missing.
+   */
+  const submit = async (forReview: boolean) => {
     setError('');
     try {
       const result = await create.mutateAsync({ ...form, startDate: `${form.startDate}T00:00:00`, endDate: `${form.endDate}T00:00:00` } as unknown as Record<string, unknown>);
+      if (forReview) {
+        try {
+          await publish.mutateAsync(result.id);
+          toast.push(t('Kampanjen är inskickad för granskning.'), 'success');
+        } catch (e) {
+          toast.push(apiMessage(e, t('Kampanjen sparades som utkast')), 'error');
+        }
+      } else {
+        toast.push(t('Utkastet är sparat'), 'success');
+      }
       navigate(`/brand/campaigns/${result.id}`);
     } catch (e) { setError(apiMessage(e, t('Kunde inte skapa kampanjen'))); }
   };
@@ -169,11 +189,12 @@ export function CampaignFormScreen() {
             <div className="ds-fact"><span>{t('Hashtag')}</span><span>{form.requiredHashtag}</span></div>
           </div>
           <p className="ds-caption ds-muted" style={{ marginTop: 10 }}>{t('Kampanjen granskas av VYRLE innan den öppnas för ansökningar.')}</p>
+          <div style={{ marginTop: 10 }}><Button variant="ghost" size="sm" loading={create.isPending} onClick={() => void submit(false)}>{t('Spara som utkast')}</Button></div>
         </Card>
       )}
 
       {error && <p className="ds-body" style={{ color: 'var(--ds-bad)', fontWeight: 600 }}>{error}</p>}
-      <StickyAction>{step < STEPS.length - 1 ? <Button full onClick={next}>{t('Fortsätt')}</Button> : <Button full loading={create.isPending} onClick={() => void submit()}>{t('Skicka för granskning')}</Button>}</StickyAction>
+      <StickyAction>{step < STEPS.length - 1 ? <Button full onClick={next}>{t('Fortsätt')}</Button> : <Button full loading={create.isPending || publish.isPending} onClick={() => void submit(true)}>{t('Skicka för granskning')}</Button>}</StickyAction>
     </Page>
   );
 }
